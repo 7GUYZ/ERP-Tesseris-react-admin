@@ -1,24 +1,20 @@
-import logo from './logo.svg';
-import './App.css';
+import "./App.css";
+import { Routes, Route, BrowserRouter } from "react-router-dom";
+import NoticeList from "./pages/jiyun/notice/NoticeList";
+import NoticeWrite from "./pages/jiyun/notice/NoticeWrite";
+import NoticeUpdate from "./pages/jiyun/notice/NoticeUpdate";
+import CommissionSetting from "./pages/jiyun/commission-setting/CommissionSetting";
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/notice" element={<NoticeList />} />
+        <Route path="/notice/write" element={<NoticeWrite />} />
+        <Route path="/notice/update/:noticeIndex" element={<NoticeUpdate />} />
+        <Route path="/commission-setting" element={<CommissionSetting />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
