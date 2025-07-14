@@ -1,9 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import MemberAssetSearchInput from "../../ui/jihun/MemberAssetSearchInput.jsx"
 import MemberAssetSearchSelect from "../../ui/jihun/MemberAssetSearchSelect.jsx"
 import MemberAssetSearchTable from "../../ui/jihun/MemberAssetSearchTable.jsx"
+import {
+  memberaccount,
+  memberaccountSearch,
+  memberaccountLookupRoles,
+  memberaccountLookupValueTypes,
+  memberaccountLookupPaymentTypes,
+  memberaccountLookupTransactionTypes
+} from "../../../api/Auth.jsx"
 import "../../../styles/jihun/MemberAssetSearchForm.css"
 
 const MemberAssetSearchForm = () => {
@@ -18,22 +26,53 @@ const MemberAssetSearchForm = () => {
   })
 
   const [searchResults, setSearchResults] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [options, setOptions] = useState({
+    roles: [],
+    valueTypes: [],
+    paymentTypes: [],
+    transactionTypes: []
+  })
 
-  const gradeOptions = [
-    { value: "bronze", label: "브론즈" },
-    { value: "silver", label: "실버" },
-    { value: "gold", label: "골드" },
-    { value: "platinum", label: "플래티넘" },
-    { value: "diamond", label: "다이아몬드" },
-  ]
+  // 컴포넌트 마운트 시 옵션 데이터 로드
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-  const amountOptions = [
-    { value: "all", label: "전체" },
-    { value: "under_10000", label: "10,000원 미만" },
-    { value: "10000_50000", label: "10,000원 ~ 50,000원" },
-    { value: "50000_100000", label: "50,000원 ~ 100,000원" },
-    { value: "over_100000", label: "100,000원 이상" },
-  ]
+        // 병렬로 모든 옵션 데이터 로드
+        const [rolesRes, valueTypesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
+          memberaccountLookupRoles(),
+          memberaccountLookupValueTypes(),
+          memberaccountLookupPaymentTypes(),
+          memberaccountLookupTransactionTypes()
+        ])
+
+        console.log("옵션 데이터 응답:", {
+          roles: rolesRes.data,
+          valueTypes: valueTypesRes.data,
+          paymentTypes: paymentTypesRes.data,
+          transactionTypes: transactionTypesRes.data
+        })
+
+        setOptions({
+          roles: rolesRes.data || [],
+          valueTypes: valueTypesRes.data || [],
+          paymentTypes: paymentTypesRes.data || [],
+          transactionTypes: transactionTypesRes.data || []
+        })
+      } catch (error) {
+        console.error("옵션 데이터 로드 실패:", error)
+        setError(error.message || "옵션 데이터를 불러오는데 실패했습니다.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadOptions()
+  }, [])
 
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({
@@ -53,45 +92,71 @@ const MemberAssetSearchForm = () => {
       amount: "",
     })
     setSearchResults([])
+    setError(null)
   }
 
-  const handleSearch = () => {
-    // 실제 검색 로직은 여기에 구현
-    console.log("검색 조건:", formData)
+  const handleSearch = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      console.log("검색 조건:", formData)
 
-    // 예시 데이터
-    const mockData = [
-      {
-        fromGrade: "골드",
-        fromId: "user001",
-        toGrade: "실버",
-        toId: "user002",
-        toName: "김철수",
-        transactionType: "출금",
-        amount: "50,000",
-        unit: "원",
-        usedValue: "45,000",
-        couponUsedValue: "5,000",
-        reason: "상품 구매",
-        occurredDate: "2024-01-15",
-      },
-      {
-        fromGrade: "플래티넘",
-        fromId: "user003",
-        toGrade: "골드",
-        toId: "user004",
-        toName: "이영희",
-        transactionType: "입금",
-        amount: "100,000",
-        unit: "원",
-        usedValue: "100,000",
-        couponUsedValue: "0",
-        reason: "포인트 충전",
-        occurredDate: "2024-01-14",
-      },
-    ]
+      // 백엔드 API 호출을 위한 검색 조건 매핑
+      const searchRequest = {
+        userIndexEventTrigger: formData.fromId || null,
+        userIndexEventParty: formData.toId || null,
+        userRoleIndex: formData.fromGrade ? parseInt(formData.fromGrade) : null,
+        userRoleIndex2: formData.toGrade ? parseInt(formData.toGrade) : null,
+        userCmLogValueTypeIndex: formData.amount ? parseInt(formData.amount) : null,
+        userCmLogCreateTimeStart: formData.fromDate || null,
+        userCmLogCreateTimeEnd: formData.toDate || null,
+        userCmLogPaymentIndex: null,
+        userCmLogTransactionTypeIndex: null,
+        page: 0,
+        size: 100
+      }
 
-    setSearchResults(mockData)
+      const response = await memberaccountSearch(searchRequest)
+      console.log("검색 응답:", response.data)
+
+      if (response.data && response.data.content) {
+        // 백엔드 응답을 프론트엔드 형식으로 변환
+        const transformedData = response.data.content.map(item => ({
+          fromGrade: item.eventTriggerUserRole || "알 수 없음",
+          fromId: item.eventTriggerUserId || "",
+          toGrade: item.eventPartyUserRole || "알 수 없음",
+          toId: item.eventPartyUserId || "",
+          toName: item.eventPartyUserName || "",
+          transactionType: item.transactionTypeName || "",
+          amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+          unit: "원",
+          usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+          couponUsedValue: item.userCouponValue ? item.userCouponValue.toString() : "0",
+          reason: item.userCmLogReason || "",
+          occurredDate: item.userCmLogCreateTime ?
+            new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
+        }))
+
+        setSearchResults(transformedData)
+        console.log("검색 결과:", transformedData)
+      } else {
+        setSearchResults([])
+      }
+    } catch (error) {
+      console.error("검색 실패:", error)
+      setError(error.message || "검색 중 오류가 발생했습니다.")
+      setSearchResults([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 옵션 데이터를 Select 컴포넌트 형식으로 변환
+  const getSelectOptions = (optionList) => {
+    return optionList.map(item => ({
+      value: item.index?.toString() || "",
+      label: item.name || ""
+    }))
   }
 
   return (
@@ -100,13 +165,31 @@ const MemberAssetSearchForm = () => {
         <h1 className="member-asset-search-title">회원 자산 내역</h1>
         <div className="member-asset-search-actions">
           <button className="member-asset-search-btn reset" onClick={handleReset}>
-            엑셀
+            초기화
           </button>
-          <button className="member-asset-search-btn search" onClick={handleSearch}>
-            조회
+          <button
+            className="member-asset-search-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
           </button>
         </div>
       </div>
+
+      {/* 에러 메시지 표시 */}
+      {error && (
+        <div style={{
+          color: 'red',
+          padding: '10px',
+          margin: '10px 0',
+          backgroundColor: '#ffe6e6',
+          border: '1px solid #ff9999',
+          borderRadius: '4px'
+        }}>
+          {error}
+        </div>
+      )}
 
       <div className="member-asset-search-form">
         <div className="member-asset-search-row">
@@ -144,24 +227,25 @@ const MemberAssetSearchForm = () => {
             label="FROM 등급"
             value={formData.fromGrade}
             onChange={(value) => handleInputChange("fromGrade", value)}
-            options={gradeOptions}
-            placeholder="등급을 여부"
+            options={getSelectOptions(options.roles)}
+            placeholder="등급을 선택하세요"
           />
           <MemberAssetSearchSelect
             label="TO 등급"
             value={formData.toGrade}
             onChange={(value) => handleInputChange("toGrade", value)}
-            options={gradeOptions}
-            placeholder="단위"
+            options={getSelectOptions(options.roles)}
+            placeholder="등급을 선택하세요"
           />
         </div>
 
         <div className="member-asset-search-row">
           <MemberAssetSearchSelect
-            label="가액"
+            label="가치 유형"
             value={formData.amount}
             onChange={(value) => handleInputChange("amount", value)}
-            options={amountOptions}
+            options={getSelectOptions(options.valueTypes)}
+            placeholder="가치 유형을 선택하세요"
           />
         </div>
 
