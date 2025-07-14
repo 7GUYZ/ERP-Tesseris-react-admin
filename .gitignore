@@ -29,4 +29,4 @@ yarn-error.log*
 
 /src/api/Auth.jsx
 /src/api/Http.jsx
-
+.env
