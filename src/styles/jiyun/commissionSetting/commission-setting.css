@@ -1,0 +1,120 @@
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", sans-serif;
+  background-color: #f5f7fa;
+}
+
+.commission-form {
+  width: 80%;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 40px;
+  background-color: #f5f7fa;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+  justify-content: space-between;
+}
+
+.header h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+.save-button {
+  padding: 10px 20px;
+  background-color: #387ddd;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  position: relative;
+  right: -60px;
+}
+
+.save-button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+.commission-container {
+  display: flex;
+  gap: 40px;
+  background: white;
+  border: 1px solid #dcdcdc;
+  padding: 40px;
+  border-radius: 12px;
+  width: 100%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+}
+
+.total-ratio {
+  flex: 1;
+  margin-left: 50px;
+}
+.grade-ratio {
+  flex: 1;
+}
+
+.total-ratio h2,
+.grade-ratio h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.ratio-row,
+.grade-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.ratio-row label,
+.grade-row label {
+  width: 120px;
+  font-weight: 500;
+}
+
+.ratio-total {
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.commission-input {
+  width: 80px;
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: right;
+  background-color: #fdfdfd;
+  transition: border-color 0.2s ease;
+}
+
+.commission-input:focus {
+  outline: none;
+}
+
+.grade-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.grade-sum {
+  font-weight: bold;
+  margin-top: 24px;
+  font-size: 16px;
+}
+
+.grade-sum.invalid {
+  color: red;
+}
