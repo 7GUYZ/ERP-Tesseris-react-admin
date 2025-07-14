@@ -1,0 +1,7 @@
+/* 공통 레이아웃 */
+html, body { height: 100vh; margin: 0; }
+.App, .App-container {
+  min-height: 100vh; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; background: #F5F5F9;
+  position: relative;
+}

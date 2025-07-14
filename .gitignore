@@ -21,7 +21,11 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.env
-src/App.js
-src/api/Auth.jsx
-src/api/Http.jsx
+
+
+# App.js 제외
+/src/App.js
+
+/src/api/Auth.jsx
+/src/api/Http.jsx
+
