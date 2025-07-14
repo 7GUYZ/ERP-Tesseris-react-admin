@@ -1,0 +1,260 @@
+/* 전체 레이아웃 */
+.login-container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #222E3C 0%, #3B4B6B 50%, #222E3C 100%);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding: 20px;
+  box-sizing: border-box;
+  position: relative;
+  overflow: hidden;
+}
+
+
+/* 헤더 */
+.login-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #222e3c;
+  text-align: center;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 4px rgba(34, 46, 60, 0.1);
+}
+
+.login-subtitle {
+  font-size: 14px;
+  color: #222e3c;
+  opacity: 0.7;
+  text-align: center;
+  margin-bottom: 40px;
+  font-weight: 400;
+}
+
+/* LoginForm - 폼 스타일 */
+.login-form {
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(59, 75, 107, 0.2);
+  padding: 50px 40px;
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(34, 46, 60, 0.15);
+  width: 100%;
+  max-width: 350px;
+  min-width: 280px;
+  position: relative;
+  z-index: 1;
+  animation: slideIn 0.6s ease-out;
+}
+
+/* 입력 필드 컨테이너 */
+.input-field-container {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.input-field-container.error {
+  margin-bottom: 8px;
+}
+
+/* 아이콘 */
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(34, 46, 60, 0.6);
+  transition: color 0.3s ease;
+  z-index: 1;
+}
+
+.input-icon.error {
+  color: #ff6b6b;
+}
+
+/* 입력 필드 */
+.input-field {
+  width: 100%;
+  padding: 16px 16px 16px 50px;
+  font-size: 16px;
+  border: 2px solid rgba(34, 46, 60, 0.2);
+  border-radius: 12px;
+  box-sizing: border-box;
+  transition: all 0.3s ease;
+  outline: none;
+  background-color: #fff;
+  color: #222e3c;
+}
+
+.input-field:focus {
+  border-color: #3b7ddd;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.2);
+  transform: translateY(-2px);
+}
+
+.input-field.error {
+  border-color: #ff6b6b;
+  background-color: rgba(255, 107, 107, 0.05);
+  color: #222e3c;
+}
+
+.input-field::placeholder {
+  color: rgba(34, 46, 60, 0.5);
+}
+
+.input-field.error::placeholder {
+  color: rgba(255, 107, 107, 0.7);
+}
+
+/* 에러 메시지 */
+.error-message {
+  color: #ff6b6b;
+  font-size: 14px;
+  margin-top: 4px;
+  margin-bottom: 16px;
+  margin-left: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: slideInError 0.3s ease-out;
+}
+
+@keyframes slideInError {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    top: 50px;
+    left: 50%; 
+    transform: translateX(-50%);
+    padding: 16px 20px;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 1000;
+    border: 1px solid;
+    box-shadow: 0 8px 32px rgba(23, 15, 88, 0.2);
+    animation: fadeSlideDownToast 0.25s ease-out;
+    max-width: 500px;
+    min-width: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+}
+.toast-success {
+    background-color: #FDCD00;
+    border-color: #FDD835;
+    color: #170F58;
+}
+.toast-error {
+    background-color: #ff6b6b;
+    border-color: #ff5252;
+    color: #fff;
+}
+.toast-info {
+    background-color: #F5F5F9;
+    border-color: #2D1B69;
+    color: #170F58;
+}
+.toast-close {
+    background: none;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 10px;
+    font-size: 18px;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.2s ease;
+}
+.toast-close:hover {
+    opacity: 1;
+}
+@keyframes fadeSlideDownToast {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* 반응형 */
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
+  }
+
+  .login-wrapper {
+    padding: 32px 24px;
+  }
+
+  .login-title {
+    font-size: 24px;
+  }
+
+  .input-field {
+    padding: 14px 16px;
+    font-size: 16px;
+  }
+
+  .toast {
+    max-width: 100vw;
+    min-width: 60vw;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .toast span {
+    font-size: 13px;
+  }
+}
+
+/* 로딩 상태 */
+.loading {
+  position: relative;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: auto;
+  border: 2px solid transparent;
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

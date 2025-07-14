@@ -21,3 +21,9 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# App.js 제외
+/src/App.js
+
+/src/api/Auth.jsx
+/src/api/Http.jsx
