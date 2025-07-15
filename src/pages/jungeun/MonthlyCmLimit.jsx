@@ -50,17 +50,14 @@ const MonthlyCmLimit = () => {
           <div className="header-actions">
             {!isEditing ? (
               <button className="edit-btn" onClick={handleEdit}>
-                <span className="btn-icon">✏️</span>
                 수정
               </button>
             ) : (
               <div className="edit-actions">
                 <button className="save-btn" onClick={handleSave}>
-                  <span className="btn-icon">✅</span>
                   저장
                 </button>
                 <button className="cancel-btn" onClick={handleCancel}>
-                  <span className="btn-icon">❌</span>
                   취소
                 </button>
               </div>
@@ -70,7 +67,7 @@ const MonthlyCmLimit = () => {
 
         <div className="card-content">
           <div className="value-display">
-            <div className="value-label">현재 설정값</div>
+            <div className="value-label">현재 월 CM 한도</div>
             {!isEditing ? (
               <div className="value-amount">
                 <span className="amount-number">{formatNumber(monthlyLimit)}</span>
