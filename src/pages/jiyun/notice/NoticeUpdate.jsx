@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { noticeDetail, noticeUpdate, noticeDelete } from "../../../api/auth";
+import { noticeDetail, noticeUpdate, noticeDelete } from "../../../api/Auth";
 import "../../../styles/jiyun/notice/notice-update.css";
 
 export default function NoticeUpdate() {

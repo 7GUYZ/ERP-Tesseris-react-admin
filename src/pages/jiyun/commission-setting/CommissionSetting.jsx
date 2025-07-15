@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { getCommissionSetting, setCommissionSetting } from "../../../api/auth";
+import { getCommissionSetting, setCommissionSetting } from "../../../api/Auth";
 import "../../../styles/jiyun/commissionSetting/commission-setting.css";
 
 export default function CommissionSetting() {

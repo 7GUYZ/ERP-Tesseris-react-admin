@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { noticeInsert } from "../../../api/auth";
+import { noticeInsert } from "../../../api/Auth";
 import "../../../styles/jiyun/notice/notice-write.css";
 
 export default function NoticeWrite() {
