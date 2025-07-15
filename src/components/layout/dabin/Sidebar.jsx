@@ -34,6 +34,7 @@ const menuItems = [
   { id: "member", label: "회원 관리", icon: Person, href: "/members" },
   { id: "business", label: "사업자 관리", icon: Store, href: "/businesses" },
   { id: "franchise", label: "가맹점 관리", icon: Store, href: "/franchises" },
+  { id: "salesPerformance", label: "영업실적 현황", icon: LocalOffer, href: "/sales-performance" },
   { id: "promotion", label: "홍보 관리", icon: Campaign, href: "/promotions" },
   { id: "customerService", label: "고객센터", icon: SupportAgent, href: "/customer-service" },
   { id: "log", label: "로그 관리", icon: Description, href: "/logs" },
