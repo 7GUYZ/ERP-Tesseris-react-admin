@@ -1,0 +1,87 @@
+.notice-page {
+  padding: 40px;
+  background-color: #F4F6FA; /* 변경된 회색 배경 */
+  min-height: 100vh;
+  font-family: 'Noto Sans KR', sans-serif;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.notice-page h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 24px;
+}
+
+.top-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.btn {
+  padding: 10px 18px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background-color: #387DDD; /* 파란색 → 변경됨 */
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2f6dbf; /* hover용으로 조금 더 진한 tone */
+}
+
+.notice-table-wrapper {
+  overflow-x: auto;
+}
+
+.notice-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.notice-table thead {
+  background-color: #f1f5f9;
+}
+
+.notice-table th, .notice-table td {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 14px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.notice-table th {
+  font-weight: 600;
+  color: #374151;
+}
+
+.notice-table td {
+  color: #4b5563;
+}
+
+.notice-link {
+  color: #111827; /* 거의 검정색 */
+  cursor: pointer;
+  text-decoration: none; /* 밑줄 제거 */
+  font-weight: 500;
+}
+
+.notice-link:hover {
+  color: #111827; /* hover에도 동일하게 유지 */
+}
+
