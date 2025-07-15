@@ -5,8 +5,8 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
-import { api } from '../../../api/http';
 import '../../../styles/StoreList.css'; 
+import { getStoreList } from '../../../api/auth';
 
 
 const columns = [
@@ -48,6 +48,7 @@ function StoreList() {
 
 const fetchStores = async (params = {}) => {
   try {
+    // 파라미터가 포함될지 검사
     const cleanedParams = {};
 
     // 문자열 필드 필터링
@@ -69,9 +70,9 @@ const fetchStores = async (params = {}) => {
     if (params.storeCreateDateEnd)
       cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
 
-    const response = await api.get('/store/list', {
-      params: Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined,
-    });
+    const response = await getStoreList( // 있는 데이터만 파라미터로 보냄
+      Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
+    );
 
     const data = response.data.map((item, index) => ({
       id: index + 1,
