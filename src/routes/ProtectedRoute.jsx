@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Outlet, useLocation } from 'react-router-dom';
-import useAuthStore from '../../store/jungeun/AuthStore';
-import ConfirmModal from "../../components/ui/jungeun/ConfirmModal";
+import useAuthStore from '../store/jungeun/AuthStore';
+import ConfirmModal from "../components/ui/jungeun/ConfirmModal";
 
 function ProtectedRoute() {
-  const isLoggedIn = useAuthStore((state) => state.zu_isLoggedIn);
+  const { zu_isLoggedIn } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
   const [showModal, setShowModal] = useState(false);
@@ -12,18 +12,18 @@ function ProtectedRoute() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // 로컬스토리지의 토큰과 Zustand 상태 모두 확인
+    // 로컬스토리지의 토큰과 Zustand 상태 확인
     const token = localStorage.getItem("access-token");
     const userInfo = localStorage.getItem("user-info");
     
     console.log("🔒 Admin ProtectedRoute 체크:", {
       token: !!token,
       userInfo: !!userInfo,
-      isLoggedIn,
+      zu_isLoggedIn,
       pathname: location.pathname
     });
     
-    if (!token || !userInfo || !isLoggedIn) {
+    if (!token || !userInfo || !zu_isLoggedIn) {
       console.log("❌ Admin 인증 실패 - ConfirmModal 표시");
       setShowModal(true);
       setIsAuthenticated(false);
@@ -34,7 +34,7 @@ function ProtectedRoute() {
     }
     
     setIsLoading(false);
-  }, [isLoggedIn, location.pathname]);
+  }, [zu_isLoggedIn, location.pathname]);
 
   const handleConfirm = () => {
     console.log("🔗 Admin 로그인 페이지로 이동");
