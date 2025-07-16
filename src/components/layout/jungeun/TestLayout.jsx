@@ -1,16 +1,20 @@
 import React from "react";
-import Header from "./TestHeader";
 import { Outlet } from "react-router-dom";
+import TestHeader from "./TestHeader";
+import TestNavi from "./TestNavi";
 
-const Layout = () => {
+const TestLayout = () => {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", width:"100vw"}}>
-      <Header />
-      <main style={{ display:"flex", flex: 1, justifyContent:"center", alignItems:"center", margin:"0 auto"}}>
-        <Outlet />
-      </main>
+    <div style={{ display: "flex" }}>
+      <TestNavi />
+      <div style={{ marginLeft: "200px", width: "100%"}}>
+        <TestHeader />
+        <main style={{ padding: "20px" }}>
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 };
 
-export default Layout;
+export default TestLayout;
