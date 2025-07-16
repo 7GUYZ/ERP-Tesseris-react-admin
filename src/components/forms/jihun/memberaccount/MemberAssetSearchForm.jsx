@@ -9,8 +9,8 @@ import {
   // memberaccountLookupValueTypes, // 가치 유형은 현재 사용하지 않지만 확장성을 위해 주석 처리
   memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
-} from "../../../api/auth/JihunAuth.jsx"
-import "../../../../styles/jihun/MemberAssetSearchForm.css"
+} from "../../../../api/auth/JihunAuth.jsx"
+import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
 /**
  * 회원 자산 검색 폼 컴포넌트

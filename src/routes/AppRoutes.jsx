@@ -7,10 +7,11 @@ import JihunRoute from './JihunRoute';
 import JiyoonRoute from './JiyoonRoute';
 import SichanRoute from './SichanRoute';
 import TaekjunRoute from './TaekjunRoute';
+import MainLayout from '../components/layout/jihun/maintemple/MainLayout';
 function AppRoutes() {
     return (
         <Routes>
-            <Route element={<TestLayout />}> {/* 임시Layout(임시Header+임시Navi) */}
+            <Route element={<MainLayout />}> {/* 임시Layout(임시Header+임시Navi) */}
                 {/* 팀원들 Routes */}
                 {DabinRoute()}
                 {DeokkyuRoute()}
