@@ -25,7 +25,7 @@ const MainHeader = () => {
     return (
         <header className="comfortable-header">
             <div className="header-left">
-                <h1 className="dashboard-title">CMBarter</h1>
+                <h1 className="dashboard-title">Tesseris - ERP System</h1>
             </div>
             <div className="header-right">
                 <button className="notification-button">
@@ -33,7 +33,7 @@ const MainHeader = () => {
                     <span className="notification-dot"></span>
                 </button>
                 <span className="logout-text" onClick={handleLogout}>
-                    로그아웃
+                    Logout
                 </span>
             </div>
         </header>

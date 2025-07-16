@@ -303,7 +303,7 @@ const MainNavi = () => {
   return (
     <div className={`sidebar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       <div className="sidebar-header">
-        <div className={`logo ${sidebarOpen ? "show" : "hide"}`}>CMBarter</div>
+        <div className={`logo ${sidebarOpen ? "show" : "hide"}`}>Tesseris</div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="menu-toggle">
           <Menu size={20} />
         </button>
