@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { noticeList } from "../../../api/Auth";
+import { noticeList } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/notice/notice.css";
 
 export default function NoticeList() {

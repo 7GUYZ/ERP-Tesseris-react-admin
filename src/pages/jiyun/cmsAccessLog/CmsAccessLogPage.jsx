@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { searchCmsAccessLogs, getAdminTypes } from "../../../api/Auth.jsx";
+import {
+  searchCmsAccessLogs,
+  getAdminTypes,
+} from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/cmsAccessLog/CmsAccessLogPage.css";
 
 const truncate = (str, maxLength = 30) => {

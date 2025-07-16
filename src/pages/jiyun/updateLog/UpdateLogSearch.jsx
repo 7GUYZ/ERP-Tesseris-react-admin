@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "../../../styles/jiyun/updateLog/update-log.css";
-import { getUpdateLog } from "../../../api/Auth";
+import { getUpdateLog } from "../../../api/auth/JiyoonAuth";
 
 const truncate = (str, maxLength = 30) => {
   if (!str) return "";
