@@ -24,11 +24,9 @@ function ProtectedRoute() {
     });
     
     if (!token || !userInfo || !zu_isLoggedIn) {
-      console.log("❌ Admin 인증 실패 - ConfirmModal 표시");
       setShowModal(true);
       setIsAuthenticated(false);
     } else {
-      console.log("✅ Admin 인증 성공 - 페이지 렌더링");
       setShowModal(false);
       setIsAuthenticated(true);
     }
