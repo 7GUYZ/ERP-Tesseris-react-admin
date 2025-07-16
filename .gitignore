@@ -29,4 +29,5 @@ yarn-error.log*
 
 # /src/api/Auth.jsx
 # /src/api/Http.jsx
+package-lock.json
 .env
