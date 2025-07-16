@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { searchCmsAccessLogs, getAdminTypes } from "../../../api/auth.jsx";
+import {
+  searchCmsAccessLogs,
+  getAdminTypes,
+} from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/cmsAccessLog/CmsAccessLogPage.css";
 
 const truncate = (str, maxLength = 30) => {
@@ -9,31 +12,34 @@ const truncate = (str, maxLength = 30) => {
 
 // 날짜 배열을 Date 객체로 변환하는 함수
 function parseDate(arr) {
-  if (!Array.isArray(arr) || arr.length < 3) return '';
+  if (!Array.isArray(arr) || arr.length < 3) return "";
   const [year, month, day, hour = 0, min = 0] = arr;
   return new Date(year, month - 1, day, hour, min, 0);
 }
 
 function formatDateToSecond(dateOrTimestamp) {
   let date;
-  if (!dateOrTimestamp) return '';
-  if (typeof dateOrTimestamp === 'number') {
+  if (!dateOrTimestamp) return "";
+  if (typeof dateOrTimestamp === "number") {
     date = new Date(dateOrTimestamp);
   } else if (Array.isArray(dateOrTimestamp)) {
     const [year, month, day, hour = 0, min = 0, sec = 0] = dateOrTimestamp;
     date = new Date(year, month - 1, day, hour, min, sec);
-  } else if (typeof dateOrTimestamp === 'string' && !isNaN(Number(dateOrTimestamp))) {
+  } else if (
+    typeof dateOrTimestamp === "string" &&
+    !isNaN(Number(dateOrTimestamp))
+  ) {
     date = new Date(Number(dateOrTimestamp));
   } else {
     date = new Date(dateOrTimestamp);
   }
-  if (!date || isNaN(date.getTime())) return '';
+  if (!date || isNaN(date.getTime())) return "";
   const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
-  const s = String(date.getSeconds()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
+  const s = String(date.getSeconds()).padStart(2, "0");
   return `${y}-${m}-${d} ${h}:${min}:${s}`;
 }
 
@@ -57,7 +63,7 @@ const CmsAccessLogPage = () => {
     "cmsAccessUserValue",
     "adminTypeName",
     "cmsAccessUserIp",
-    "cmsAccessUserTime"
+    "cmsAccessUserTime",
   ];
 
   // 처음 마운트 시 전체 데이터 자동 조회
@@ -70,8 +76,11 @@ const CmsAccessLogPage = () => {
         if (response.data.resultCode === 200) {
           // 2차원 배열을 객체 배열로 매핑
           const mapped = Array.isArray(response.data.data)
-            ? response.data.data.map(arr =>
-                keys.reduce((obj, key, idx) => ({ ...obj, [key]: arr[idx] }), {})
+            ? response.data.data.map((arr) =>
+                keys.reduce(
+                  (obj, key, idx) => ({ ...obj, [key]: arr[idx] }),
+                  {}
+                )
               )
             : [];
           setSearchResults(mapped);
@@ -118,7 +127,7 @@ const CmsAccessLogPage = () => {
       if (response.data.resultCode === 200) {
         // 2차원 배열을 객체 배열로 매핑
         const mapped = Array.isArray(response.data.data)
-          ? response.data.data.map(arr =>
+          ? response.data.data.map((arr) =>
               keys.reduce((obj, key, idx) => ({ ...obj, [key]: arr[idx] }), {})
             )
           : [];
@@ -254,7 +263,11 @@ const CmsAccessLogPage = () => {
                 </td>
                 <td>{log.adminTypeName || "-"}</td>
                 <td>{log.cmsAccessUserIp || "-"}</td>
-                <td>{log.cmsAccessUserTime ? formatDateToSecond(log.cmsAccessUserTime) : ''}</td>
+                <td>
+                  {log.cmsAccessUserTime
+                    ? formatDateToSecond(log.cmsAccessUserTime)
+                    : ""}
+                </td>
               </tr>
             ))}
           </tbody>
