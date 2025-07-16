@@ -17,6 +17,8 @@ const MainNavi = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [expandedMenus, setExpandedMenus] = useState([]);
+  const [activeMenuId, setActiveMenuId] = useState(null);
+  const [activeSubMenuId, setActiveSubMenuId] = useState(null);
 
   // 반응형을 위한 화면 크기 감지
   useEffect(() => {
@@ -213,6 +215,8 @@ const MainNavi = () => {
     switch (item.type) {
       case "link":
         // 페이지 이동
+        setActiveMenuId(item.id);
+        setActiveSubMenuId(null);
         navigate(item.href);
         break;
       case "expand":
@@ -221,9 +225,13 @@ const MainNavi = () => {
         if (isCurrentlyExpanded) {
           // 현재 열린 메뉴를 닫기
           setExpandedMenus(prev => prev.filter(id => id !== item.id));
+          setActiveMenuId(null);
+          setActiveSubMenuId(null);
         } else {
           // 다른 메뉴는 모두 닫고 해당 메뉴만 열기
           setExpandedMenus([item.id]);
+          setActiveMenuId(item.id);
+          setActiveSubMenuId(null);
         }
         break;
       case "action":
@@ -242,16 +250,19 @@ const MainNavi = () => {
     
     switch (subItem.type) {
       case "link":
+        setActiveSubMenuId(subItem.id);
         navigate(subItem.href);
         break;
       case "list":
         // 리스트 박스 - 액션 실행
+        setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
         }
         break;
       case "action":
         // 액션 실행
+        setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
         }
@@ -263,12 +274,13 @@ const MainNavi = () => {
 
   const renderMenuItem = (item) => {
     const Icon = item.icon;
+    const isActive = activeMenuId === item.id || (item.submenu && item.submenu.some(sub => sub.id === activeSubMenuId));
     
     return (
       <div key={item.id} className="nav-item">
         <button
           onClick={() => handleMenuClick(item)}
-          className={`nav-button ${!sidebarOpen ? "centered" : ""}`}
+          className={`nav-button ${!sidebarOpen ? "centered" : ""} ${isActive ? "active" : ""}`}
         >
           <div className="nav-button-content">
             <Icon size={20} />
@@ -288,7 +300,7 @@ const MainNavi = () => {
               <button
                 key={subItem.id}
                 onClick={(e) => handleSubMenuClick(subItem, e)}
-                className={`submenu-button ${subItem.type === "list" ? "list-item" : ""}`}
+                className={`submenu-button ${activeSubMenuId === subItem.id ? "active" : ""} ${subItem.type === "list" ? "list-item" : ""}`}
                 title={subItem.type === "list" ? "리스트 박스" : ""}
               >
                 {subItem.label}
