@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
-import MemberAssetSearchInput from "../../ui/jihun/MemberAssetSearchInput.jsx"
-import MemberAssetSearchSelect from "../../ui/jihun/MemberAssetSearchSelect.jsx"
-import MemberAssetSearchTable from "../../ui/jihun/MemberAssetSearchTable.jsx"
+import MemberAssetSearchInput from "../../../ui/jihun/memberaccount/MemberAssetSearchInput.jsx"
+import MemberAssetSearchSelect from "../../../ui/jihun/memberaccount/MemberAssetSearchSelect.jsx"
+import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetSearchTable.jsx"
 import {
   memberaccount,
   memberaccountSearch,
@@ -10,7 +10,7 @@ import {
   memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
 } from "../../../api/auth/JihunAuth.jsx"
-import "../../../styles/jihun/MemberAssetSearchForm.css"
+import "../../../../styles/jihun/MemberAssetSearchForm.css"
 
 /**
  * 회원 자산 검색 폼 컴포넌트
