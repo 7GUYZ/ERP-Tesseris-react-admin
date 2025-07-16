@@ -24,9 +24,10 @@ yarn-error.log*
 
 
 
-# App.js 제외
-/src/App.js
+# # App.js 제외 - 정은꺼로 pull 받고 나서는 gitignore에서 제외
+# /src/App.js
 
-/src/api/Auth.jsx
-/src/api/Http.jsx
+# /src/api/Auth.jsx
+# /src/api/Http.jsx
+package-lock.json
 .env
