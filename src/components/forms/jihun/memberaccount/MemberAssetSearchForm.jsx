@@ -6,7 +6,7 @@ import {
   memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
 } from "../../../../api/auth/JihunAuth.jsx"
-import * as XLSX from 'xlsx'
+import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
 /**
@@ -241,76 +241,24 @@ const MemberAssetSearchForm = () => {
 
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = useCallback(() => {
-    try {
-      // 체크된 항목이 없으면 안내 메시지
-      if (selectedRows.size === 0) {
-        alert("다운로드할 항목을 체크해주세요.\n\n체크박스를 클릭하여 원하는 항목을 선택한 후 다운로드 버튼을 눌러주세요.");
-        return;
-      }
+    // 데이터 변환 (순번 추가)
+    const excelData = searchResults.map((row, index) => ({
+      '순번': index + 1,
+      'FROM 등급': row.fromGrade || '',
+      'FROM ID': row.fromId || '',
+      'TO 등급': row.toGrade || '',
+      'TO ID': row.toId || '',
+      'TO 이름': row.toName || '',
+      '거래 유형': row.transactionType || '',
+      '금액': row.amount || 0,
+      '단위': row.unit || '',
+      '사용 금액': row.usedValue || 0,
+      '쿠폰 사용 금액': row.couponUsedValue || 0,
+      '사유': row.reason || '',
+      '발생일': row.occurredDate || ''
+    }));
 
-      // 체크된 항목만 필터링
-      const dataToExport = searchResults.filter((_, index) => selectedRows.has(index));
-
-      if (dataToExport.length === 0) {
-        alert("내보낼 데이터가 없습니다.");
-        return;
-      }
-
-      // 엑셀 데이터 준비
-      const excelData = dataToExport.map((row, index) => ({
-        '순번': index + 1,
-        'FROM 등급': row.fromGrade || '',
-        'FROM ID': row.fromId || '',
-        'TO 등급': row.toGrade || '',
-        'TO ID': row.toId || '',
-        'TO 이름': row.toName || '',
-        '거래 유형': row.transactionType || '',
-        '금액': row.amount || 0,
-        '단위': row.unit || '',
-        '사용 금액': row.usedValue || 0,
-        '쿠폰 사용 금액': row.couponUsedValue || 0,
-        '사유': row.reason || '',
-        '발생일': row.occurredDate || ''
-      }));
-
-      // 워크북 생성
-      const workbook = XLSX.utils.book_new();
-      
-      // 워크시트 생성
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-      // 컬럼 너비 설정
-      const columnWidths = [
-        { wch: 8 },   // 순번
-        { wch: 12 },  // FROM 등급
-        { wch: 15 },  // FROM ID
-        { wch: 12 },  // TO 등급
-        { wch: 15 },  // TO ID
-        { wch: 15 },  // TO 이름
-        { wch: 15 },  // 거래 유형
-        { wch: 12 },  // 금액
-        { wch: 8 },   // 단위
-        { wch: 12 },  // 사용 금액
-        { wch: 15 },  // 쿠폰 사용 금액
-        { wch: 20 },  // 사유
-        { wch: 12 }   // 발생일
-      ];
-      worksheet['!cols'] = columnWidths;
-
-      // 워크시트를 워크북에 추가
-      XLSX.utils.book_append_sheet(workbook, worksheet, '회원자산내역');
-
-      // 파일명 생성 (현재 날짜 포함)
-      const fileName = `회원자산내역_${new Date().toISOString().split('T')[0]}.xlsx`;
-
-      // 엑셀 파일 다운로드
-      XLSX.writeFile(workbook, fileName);
-
-      console.log(`엑셀 다운로드 완료: ${dataToExport.length}개 항목`);
-    } catch (error) {
-      console.error('엑셀 다운로드 오류:', error);
-      alert('엑셀 다운로드 중 오류가 발생했습니다.');
-    }
+    downloadSelectedExcel(excelData, selectedRows, '회원자산내역', '회원자산내역');
   }, [searchResults, selectedRows])
 
   // 오늘 날짜 구하기 (yyyy-mm-dd) - 성능 최적화
