@@ -5,7 +5,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 import { api } from '../../../api/http';
-import '../../../styles/StoreList.css'; 
+import '../../../styles/deokkyu/StoreList.css'; 
 
 
 const columns1 = [
@@ -81,10 +81,10 @@ const fetchCustomers = async (storeId) => {
   }
 };
 
-// 고객 클릭시 
+// 가맹점 클릭시 
 const handleStoreClick = (store) => {
   if (store && store.userId) {
-    fetchCustomers(store.userId); // 또는 store.storeId 등 식별자에 맞게 수정
+    fetchCustomers(store.userId); //
   }
 };
 
@@ -156,22 +156,24 @@ const handleStoreClick = (store) => {
           </Grid>
         </div>
 
-        <div className="data-grid-container1">
-          <DataGrid
-            rows={storerows}
-            columns={columns1}
-            pageSize={25}
-            rowsPerPageOptions={[25, 50, 100]}
-            onRowClick={(params) => handleStoreClick(params.row)}
-          />
-        </div>
-        <div className="data-grid-container2">
-          <DataGrid
-            rows={customerRows}
-            columns={columns2}
-            pageSize={25}
-            rowsPerPageOptions={[25, 50, 100]}
-          />
+        <div style={{ display: 'flex', gap: '24px' }}>
+          <div className="data-grid-container1">
+            <DataGrid
+              rows={storerows}
+              columns={columns1}
+              pageSize={25}
+              rowsPerPageOptions={[25, 50, 100]}
+              onRowClick={(params) => handleStoreClick(params.row)}
+            />
+          </div>
+          <div className="data-grid-container2">
+            <DataGrid
+              rows={customerRows}
+              columns={columns2}
+              pageSize={25}
+              rowsPerPageOptions={[25, 50, 100]}
+            />
+          </div>
         </div>
       </Box>
     </LocalizationProvider>

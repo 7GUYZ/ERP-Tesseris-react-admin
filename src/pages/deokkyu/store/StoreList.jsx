@@ -5,7 +5,7 @@ import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
-import '../../../styles/StoreList.css'; 
+import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList } from '../../../api/auth';
 
 
