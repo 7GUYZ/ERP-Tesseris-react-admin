@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AuthorityForm from '../../components/forms/taekjun/AuthorityForm.jsx';
-import { permissionApi } from '../../services/api';
-import '../../css/PermissionManagement.css';
+import { permissionApi } from '../../api/auth/TaekjunAuth';
+import '../../styles/taekjun/PermissionManagement.css';
 
 const PermissionManagement = () => {
   const [selectedAdminType, setSelectedAdminType] = useState('');
@@ -16,19 +16,7 @@ const PermissionManagement = () => {
   const [authorities, setAuthorities] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // API 연결 테스트
-  const testApiConnection = async () => {
-    try {
-      await fetch('http://192.168.0.23:8080/admin/permissionsettings/getadmintype');
-      // 사용하지 않는 data, errorText 삭제
-    } catch (error) {
-    }
-  };
 
-  // 컴포넌트 마운트 시 API 테스트
-  useEffect(() => {
-    testApiConnection();
-  }, []);
 
   // 데이터 조회
   useEffect(() => {
@@ -44,47 +32,76 @@ const PermissionManagement = () => {
 
   const fetchAdminTypes = async () => {
     try {
-      const data = await permissionApi.getAdminType();
-      if (data.length > 0) {
+      const response = await permissionApi.getAdminType();
+      const data = response.data || response;
+      if (Array.isArray(data) && data.length > 0) {
+        setAdminTypes(data);
+      } else {
+        setAdminTypes([]);
       }
-      setAdminTypes(data);
     } catch (error) {
+      console.error("관리자 타입 조회 실패:", error);
+      setAdminTypes([]);
     }
   };
 
-  const fetchMenus = async () => {
+  const fetchMenus = async (adminTypeIndex) => {
     try {
-      const data = await permissionApi.getMenu();
-      if (data.length > 0) {
+      console.log("메뉴 조회 시작, adminTypeIndex:", adminTypeIndex);
+      const response = await permissionApi.getMenu();
+      const data = response.data || response;
+      console.log("메뉴 데이터:", data);
+      if (Array.isArray(data) && data.length > 0) {
+        setMenus(data);
+      } else {
+        setMenus([]);
       }
-      setMenus(data);
     } catch (error) {
+      console.error("메뉴 조회 실패:", error);
+      setMenus([]);
     }
   };
 
   const fetchPrograms = async (menuIndex) => {
     try {
-      const data = await permissionApi.getProgram(menuIndex);
-      if (data.length > 0) {
+      console.log("프로그램 조회 시작, menuIndex:", menuIndex);
+      const response = await permissionApi.getProgram(menuIndex);
+      console.log("프로그램 API 응답:", response);
+      const data = response.data || response;
+      console.log("프로그램 데이터:", data);
+      if (Array.isArray(data) && data.length > 0) {
+        setPrograms(data);
+        console.log("프로그램 설정 완료:", data);
+      } else {
+        console.log("프로그램 데이터가 비어있음");
+        setPrograms([]);
       }
-      setPrograms(data);
     } catch (error) {
+      console.error("프로그램 조회 실패:", error);
+      setPrograms([]);
     }
   };
 
   const fetchAuthorities = useCallback(async (adminTypeIndex) => {
     try {
-      const data = await permissionApi.getAuthorityProgramsByAdmin(adminTypeIndex);
-      // programIndex로만 menuIndex를 programs에서 찾아서 추가
-      const authoritiesWithMenuIndex = data.map(auth => {
-        const matchedProgram = programs.find(p => String(p.programIndex) === String(auth.programIndex));
-        return {
-          ...auth,
-          menuIndex: matchedProgram ? matchedProgram.menuIndex : undefined,
-        };
-      });
-      setAuthorities(authoritiesWithMenuIndex);
+      const response = await permissionApi.getAuthorityProgramsByAdmin(adminTypeIndex);
+      const data = response.data || response;
+      if (Array.isArray(data)) {
+        // programIndex로만 menuIndex를 programs에서 찾아서 추가
+        const authoritiesWithMenuIndex = data.map(auth => {
+          const matchedProgram = programs.find(p => String(p.programIndex) === String(auth.programIndex));
+          return {
+            ...auth,
+            menuIndex: matchedProgram ? matchedProgram.menuIndex : undefined,
+          };
+        });
+        setAuthorities(authoritiesWithMenuIndex);
+      } else {
+        setAuthorities([]);
+      }
     } catch (error) {
+      console.error("권한 프로그램 조회 실패:", error);
+      setAuthorities([]);
     }
   }, [programs]);
 
@@ -98,17 +115,17 @@ const PermissionManagement = () => {
     setLoading(true);
     try {
       const response = await permissionApi.insertAuthority(formData);
+      console.log("추가 응답:", response);
       
-      if (response.ok) {
-        await response.text(); // 응답만 소비
+      if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 추가되었습니다.', severity: 'success' });
         setOpenDialog(false);
         fetchAuthorities(selectedAdminType);
       } else {
-        await response.text(); // 응답만 소비
         setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
       }
     } catch (error) {
+      console.error("추가 에러:", error);
       setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
     } finally {
       setLoading(false);
@@ -119,17 +136,17 @@ const PermissionManagement = () => {
     setLoading(true);
     try {
       const response = await permissionApi.updateAuthority(formData);
+      console.log("수정 응답:", response);
       
-      if (response.ok) {
-        await response.text();
+      if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 업데이트되었습니다.', severity: 'success' });
         setOpenDialog(false);
         fetchAuthorities(selectedAdminType);
       } else {
-        await response.text();
         setSnackbar({ open: true, message: '권한 업데이트에 실패했습니다.', severity: 'error' });
       }
     } catch (error) {
+      console.error("수정 에러:", error);
       setSnackbar({ open: true, message: '권한 업데이트에 실패했습니다.', severity: 'error' });
     } finally {
       setLoading(false);
@@ -140,16 +157,16 @@ const PermissionManagement = () => {
     setLoading(true);
     try {
       const response = await permissionApi.deleteAuthority(authorityTypeIndex);
+      console.log("삭제 응답:", response);
       
-      if (response.ok) {
-        await response.text();
+      if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 삭제되었습니다.', severity: 'success' });
         fetchAuthorities(selectedAdminType);
       } else {
-        await response.text();
         setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
       }
     } catch (error) {
+      console.error("삭제 에러:", error);
       setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
     } finally {
       setLoading(false);
@@ -221,11 +238,11 @@ const PermissionManagement = () => {
               }}
             >
               <option value="">선택하세요</option>
-              {adminTypes.map((adminType) => (
+              {adminTypes && Array.isArray(adminTypes) ? adminTypes.map((adminType) => (
                 <option key={adminType.adminTypeIndex} value={adminType.adminTypeIndex}>
                   {adminType.adminTypeName}
                 </option>
-              ))}
+              )) : null}
             </select>
           </div>
 
@@ -306,11 +323,12 @@ const PermissionManagement = () => {
                 onSubmit={handleSubmitAuthority}
                 onCancel={() => setOpenDialog(false)}
                 loading={loading}
+                fetchMenus={fetchMenus}
+                fetchPrograms={fetchPrograms}
                 selectedAdminType={selectedAdminType}
+                setSelectedAdminType={setSelectedAdminType}
                 selectedMenu={selectedMenu}
                 setSelectedMenu={setSelectedMenu}
-                fetchPrograms={fetchPrograms}
-                isAddMode={!editingAuthority}
                 authorities={authorities}
               />
             </div>

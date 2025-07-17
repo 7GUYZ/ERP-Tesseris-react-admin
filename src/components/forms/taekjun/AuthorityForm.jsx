@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../../css/AuthorityForm.css';
+import '../../../styles/taekjun/AuthorityForm.css';
 
 const AuthorityForm = ({
   adminTypes,
@@ -30,13 +30,25 @@ const AuthorityForm = ({
 
   useEffect(() => {
     if (editingAuthority) {
+      // 로컬스토리지에서 user_index 가져오기
+      const userInfo = localStorage.getItem('user-info');
+      let userIndex = '';
+      if (userInfo) {
+        try {
+          const parsedUserInfo = JSON.parse(userInfo);
+          userIndex = parsedUserInfo.user_index || '';
+        } catch (error) {
+          console.error('사용자 정보 파싱 실패:', error);
+        }
+      }
+
       setFormData({
         adminTypeIndex: editingAuthority.adminTypeIndex || '',
         programIndex: editingAuthority.programIndex ? String(editingAuthority.programIndex) : '',
         insertAuthority: editingAuthority.insertAuthority || 0,
         deleteAuthority: editingAuthority.deleteAuthority || 0,
         updateAuthority: editingAuthority.updateAuthority ? 1 : 0,
-        userIndex: '',
+        userIndex: userIndex,
         password: '',
       });
     } else {
@@ -72,9 +84,8 @@ const AuthorityForm = ({
     if (!formData.adminTypeIndex) newErrors.adminTypeIndex = '관리자 타입을 선택해주세요';
     if (!formData.programIndex) newErrors.programIndex = '프로그램을 선택해주세요';
     
-    // 수정 모드일 때만 사용자 정보 검증
+    // 수정 모드일 때만 비밀번호 검증
     if (editingAuthority) {
-      if (!formData.userIndex) newErrors.userIndex = '사용자 인덱스를 입력해주세요';
       if (!formData.password) newErrors.password = '비밀번호를 입력해주세요';
     }
     
@@ -138,15 +149,18 @@ const AuthorityForm = ({
               name="menuIndex"
               value={selectedMenu}
               onChange={e => {
+                console.log("메뉴 선택됨:", e.target.value);
                 setSelectedMenu(e.target.value);
                 setFormData(prev => ({ ...prev, programIndex: '' }));
-                fetchPrograms(e.target.value);
+                if (e.target.value) {
+                  fetchPrograms(e.target.value);
+                }
               }}
               className={errors.menuIndex ? 'error' : ''}
               disabled={!formData.adminTypeIndex}
             >
               <option value="">선택하세요</option>
-              {menus.map(menu => (
+              {Array.isArray(menus) && menus.map(menu => (
                 <option key={menu.menuIndex} value={menu.menuIndex}>
                   {menu.menuName}
                 </option>
@@ -170,7 +184,7 @@ const AuthorityForm = ({
               disabled={!selectedMenu}
           >
             <option value="">선택하세요</option>
-            {programs
+            {Array.isArray(programs) && programs
               .filter(program => {
                 // 이미 권한이 있는 프로그램은 제외
                 const hasAuthority = authorities.some(auth => 
@@ -241,36 +255,19 @@ const AuthorityForm = ({
       {editingAuthority && (
         <div className="form-section">
           <h4>사용자 정보</h4>
-          <div className="form-grid">
-            <div className="form-item">
-              <label htmlFor="userIndex">사용자 인덱스 *</label>
-              <input
-                type="number"
-                id="userIndex"
-                name="userIndex"
-                value={formData.userIndex}
-                onChange={handleChange}
-                className={errors.userIndex ? 'error' : ''}
-              />
-              {errors.userIndex && (
-                <span className="error-message">{errors.userIndex}</span>
-              )}
-            </div>
-
-            <div className="form-item">
-              <label htmlFor="password">비밀번호 *</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className={errors.password ? 'error' : ''}
-              />
-              {errors.password && (
-                <span className="error-message">{errors.password}</span>
-              )}
-            </div>
+          <div className="form-item">
+            <label htmlFor="password">비밀번호 *</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={errors.password ? 'error' : ''}
+            />
+            {errors.password && (
+              <span className="error-message">{errors.password}</span>
+            )}
           </div>
         </div>
       )}

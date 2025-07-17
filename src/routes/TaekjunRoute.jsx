@@ -1,5 +1,6 @@
 import { Route } from 'react-router-dom';
 import ProtectedRoute from "./ProtectedRoute";
+import PermissionManagement from '../pages/taekjun/PermissionManagement.jsx';
 
 function TaekjunRoute() {
     return (
