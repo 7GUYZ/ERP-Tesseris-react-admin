@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import "../../../styles/jiyun/updateLog/update-log.css";
-import { getUpdateLog } from "../../../api/auth";
+import { getUpdateLog } from "../../../api/auth/JiyoonAuth";
 
 const truncate = (str, maxLength = 30) => {
   if (!str) return "";
@@ -9,18 +9,18 @@ const truncate = (str, maxLength = 30) => {
 
 // 날짜 배열을 Date 객체로 변환하는 함수
 function parseDate(arr) {
-  if (!Array.isArray(arr) || arr.length < 3) return '';
+  if (!Array.isArray(arr) || arr.length < 3) return "";
   const [year, month, day, hour = 0, min = 0] = arr;
   return new Date(year, month - 1, day, hour, min, 0);
 }
 
 function formatDateToMinute(date) {
-  if (!date || isNaN(date.getTime())) return '';
+  if (!date || isNaN(date.getTime())) return "";
   const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  const h = String(date.getHours()).padStart(2, '0');
-  const min = String(date.getMinutes()).padStart(2, '0');
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(date.getHours()).padStart(2, "0");
+  const min = String(date.getMinutes()).padStart(2, "0");
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
@@ -190,7 +190,11 @@ const UpdateLogSearch = () => {
                 <td title={log.updateAfterData || ""}>
                   {truncate(log.updateAfterData)}
                 </td>
-                <td>{log.updateUserLogUpdateTime ? formatDateToMinute(parseDate(log.updateUserLogUpdateTime)) : ''}</td>
+                <td>
+                  {log.updateUserLogUpdateTime
+                    ? formatDateToMinute(parseDate(log.updateUserLogUpdateTime))
+                    : ""}
+                </td>
               </tr>
             ))}
           </tbody>

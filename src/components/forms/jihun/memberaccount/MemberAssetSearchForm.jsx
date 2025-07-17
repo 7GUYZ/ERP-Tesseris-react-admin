@@ -1,19 +1,31 @@
-"use client"
-
 import { useState, useEffect } from "react"
-import MemberAssetSearchInput from "../../ui/jihun/MemberAssetSearchInput.jsx"
-import MemberAssetSearchSelect from "../../ui/jihun/MemberAssetSearchSelect.jsx"
-import MemberAssetSearchTable from "../../ui/jihun/MemberAssetSearchTable.jsx"
+import MemberAssetSearchInput from "../../../ui/jihun/memberaccount/MemberAssetSearchInput.jsx"
+import MemberAssetSearchSelect from "../../../ui/jihun/memberaccount/MemberAssetSearchSelect.jsx"
+import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetSearchTable.jsx"
 import {
   memberaccount,
   memberaccountSearch,
   memberaccountLookupRoles,
-  memberaccountLookupValueTypes,
+  // memberaccountLookupValueTypes, // 가치 유형은 현재 사용하지 않지만 확장성을 위해 주석 처리
   memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
-} from "../../../api/Auth.jsx"
-import "../../../styles/jihun/MemberAssetSearchForm.css"
+} from "../../../../api/auth/JihunAuth.jsx"
+import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
+/**
+ * 회원 자산 검색 폼 컴포넌트
+ * 
+ * 주요 기능:
+ * 1. 회원 자산 내역 검색
+ * 2. 동적 검색 조건 지원
+ * 3. 페이징 처리된 결과 표시
+ * 
+ * 가치 유형 관련:
+ * - 현재는 가치 유형 선택 UI를 제공하지 않음
+ * - 검색 시 가치 유형을 null로 보내 전체 검색이 가능하도록 함
+ * - 향후 확장성을 고려하여 백엔드에서는 모든 가치 유형 데이터를 제공
+ * - 필요시 프론트엔드에서 가치 유형 선택 UI를 추가할 수 있음
+ */
 const MemberAssetSearchForm = () => {
   const [formData, setFormData] = useState({
     fromId: "",
@@ -22,7 +34,7 @@ const MemberAssetSearchForm = () => {
     toDate: "",
     fromGrade: "",
     toGrade: "",
-    amount: "",
+    // valueType: "", // 가치 유형 필드 (현재 사용하지 않지만 확장성을 위해 주석 처리)
   })
 
   const [searchResults, setSearchResults] = useState([])
@@ -30,9 +42,9 @@ const MemberAssetSearchForm = () => {
   const [error, setError] = useState(null)
   const [options, setOptions] = useState({
     roles: [],
-    valueTypes: [],
     paymentTypes: [],
     transactionTypes: []
+    // valueTypes: [], // 가치 유형은 현재 사용하지 않지만 확장성을 위해 주석 처리
   })
 
   // 컴포넌트 마운트 시 옵션 데이터 로드
@@ -43,25 +55,24 @@ const MemberAssetSearchForm = () => {
         setError(null)
 
         // 병렬로 모든 옵션 데이터 로드
-        const [rolesRes, valueTypesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
+        const [rolesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
           memberaccountLookupRoles(),
-          memberaccountLookupValueTypes(),
           memberaccountLookupPaymentTypes(),
           memberaccountLookupTransactionTypes()
+          // memberaccountLookupValueTypes(), // 가치 유형은 현재 사용하지 않지만 확장성을 위해 주석 처리
         ])
 
         console.log("옵션 데이터 응답:", {
           roles: rolesRes.data,
-          valueTypes: valueTypesRes.data,
           paymentTypes: paymentTypesRes.data,
           transactionTypes: transactionTypesRes.data
         })
 
         setOptions({
           roles: rolesRes.data || [],
-          valueTypes: valueTypesRes.data || [],
           paymentTypes: paymentTypesRes.data || [],
           transactionTypes: transactionTypesRes.data || []
+          // valueTypes: valueTypesRes.data || [], // 가치 유형은 현재 사용하지 않지만 확장성을 위해 주석 처리
         })
       } catch (error) {
         console.error("옵션 데이터 로드 실패:", error)
@@ -89,10 +100,16 @@ const MemberAssetSearchForm = () => {
       toDate: "",
       fromGrade: "",
       toGrade: "",
-      amount: "",
+      // valueType: "", // 가치 유형 필드 (현재 사용하지 않지만 확장성을 위해 주석 처리)
     })
     setSearchResults([])
     setError(null)
+  }
+
+  // 이메일에서 @ 뒤 도메인을 제거하는 함수
+  const extractEmailId = (email) => {
+    if (!email) return ""
+    return email.split('@')[0] || ""
   }
 
   const handleSearch = async () => {
@@ -107,7 +124,8 @@ const MemberAssetSearchForm = () => {
         userIndexEventParty: formData.toId || null,
         userRoleIndex: formData.fromGrade ? parseInt(formData.fromGrade) : null,
         userRoleIndex2: formData.toGrade ? parseInt(formData.toGrade) : null,
-        userCmLogValueTypeIndex: formData.amount ? parseInt(formData.amount) : null,
+        userCmLogValueTypeIndex: null, // 가치 유형은 전체 검색으로 처리 (확장성을 위해 null로 설정)
+        // 향후 가치 유형 선택 UI가 추가되면: userCmLogValueTypeIndex: formData.valueType ? parseInt(formData.valueType) : null,
         userCmLogCreateTimeStart: formData.fromDate || null,
         userCmLogCreateTimeEnd: formData.toDate || null,
         userCmLogPaymentIndex: null,
@@ -123,9 +141,9 @@ const MemberAssetSearchForm = () => {
         // 백엔드 응답을 프론트엔드 형식으로 변환
         const transformedData = response.data.content.map(item => ({
           fromGrade: item.eventTriggerUserRole || "알 수 없음",
-          fromId: item.eventTriggerUserId || "",
+          fromId: extractEmailId(item.eventTriggerUserEmail) || "",
           toGrade: item.eventPartyUserRole || "알 수 없음",
-          toId: item.eventPartyUserId || "",
+          toId: extractEmailId(item.eventPartyUserEmail) || "",
           toName: item.eventPartyUserName || "",
           transactionType: item.transactionTypeName || "",
           amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
@@ -239,15 +257,7 @@ const MemberAssetSearchForm = () => {
           />
         </div>
 
-        <div className="member-asset-search-row">
-          <MemberAssetSearchSelect
-            label="가치 유형"
-            value={formData.amount}
-            onChange={(value) => handleInputChange("amount", value)}
-            options={getSelectOptions(options.valueTypes)}
-            placeholder="가치 유형을 선택하세요"
-          />
-        </div>
+
 
         <MemberAssetSearchTable data={searchResults} />
       </div>
