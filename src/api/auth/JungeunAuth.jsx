@@ -88,3 +88,12 @@ export function setupInterceptors() {
 
 
 // 월 CM 한도 설정
+// 월 CM 한도 조회 ( 첫 화면 )
+export const cmLimit = () => 
+  api.get("/cmLimit")
+
+export const cmLimitSave = (settingValue) =>
+  api.post("/cmLimit/save", settingValue)
+
+export const pwCheck = ({username, password}) =>
+  api.post("/passwordCheck", {username, password})
