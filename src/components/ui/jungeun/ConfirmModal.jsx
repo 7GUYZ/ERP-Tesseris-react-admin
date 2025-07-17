@@ -12,7 +12,7 @@ const ConfirmModal = ({ message, onConfirm }) => {
         </div>
         <p>{message}</p>
         <button onClick={onConfirm}>
-          로그인하기
+          확인
         </button>
       </div>
     </div>
