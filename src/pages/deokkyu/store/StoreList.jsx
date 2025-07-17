@@ -6,7 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
 import '../../../styles/deokkyu/StoreList.css'; 
-import { getStoreList } from '../../../api/auth';
+import { getStoreList } from '../../../api/auth/DeokkyuAuth';
 
 
 const columns = [

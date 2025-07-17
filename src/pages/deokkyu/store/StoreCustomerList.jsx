@@ -4,7 +4,7 @@ import { TextField, Button, Grid, Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
-import { api } from '../../../api/http';
+import { getCustomerAllStoreList, getStoreCustomerList } from '../../../api/auth/DeokkyuAuth';
 import '../../../styles/deokkyu/StoreList.css'; 
 
 
@@ -49,9 +49,9 @@ const fetchStores = async (params = {}) => {
     });
 
 
-    const response = await api.get('/store/customerlist', {
-      params: Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined,
-    });
+    const response = await getCustomerAllStoreList ( // 있는 데이터만 파라미터로 보냄
+      Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
+    );
 
     const data = response.data.map((item, index) => ({
       id: index + 1,
@@ -69,7 +69,7 @@ const fetchStores = async (params = {}) => {
 // 고객 리스트 불러오는 함수
 const fetchCustomers = async (storeId) => {
   try {
-    const response = await api.get(`/store/customerlist/${storeId}`);
+    const response = await getStoreCustomerList(storeId);
     const data = response.data.map((item, index) => ({
       id: index + 1,
       ...item,
