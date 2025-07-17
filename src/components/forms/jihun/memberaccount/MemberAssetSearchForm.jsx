@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetSearchTable.jsx"
 import {
-  memberaccount,
   memberaccountSearch,
   memberaccountLookupRoles,
   memberaccountLookupPaymentTypes,
@@ -36,7 +35,6 @@ const MemberAssetSearchForm = () => {
 
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
   const [options, setOptions] = useState({
     roles: [],
@@ -44,43 +42,14 @@ const MemberAssetSearchForm = () => {
     transactionTypes: []
   })
 
-  // 단위 옵션 정의 (범용성을 위한 확장 가능한 구조) - 성능 최적화
-  const unitOptions = useMemo(() => [
-    { value: "", label: "전체" },
-    { value: "CMP", label: "CMP" },
-    { value: "CM", label: "CM" },
-    { value: "Cash", label: "Cash" }
-  ], [])
-
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        setLoading(true)
-        setError(null)
-        const [rolesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
-          memberaccountLookupRoles(),
-          memberaccountLookupPaymentTypes(),
-          memberaccountLookupTransactionTypes()
-        ])
-        setOptions({
-          roles: rolesRes.data || [],
-          paymentTypes: paymentTypesRes.data || [],
-          transactionTypes: transactionTypesRes.data || []
-        })
-        
-        // 초기 데이터 로딩
-        await loadInitialData()
-      } catch (error) {
-        setError(error.message || "옵션 데이터를 불러오는데 실패했습니다.")
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadOptions()
+  // 이메일에서 ID 추출 함수 (성능 최적화)
+  const extractEmailId = useCallback((email) => {
+    if (!email) return ""
+    return email.split('@')[0] || ""
   }, [])
 
   // 초기 데이터 로딩 함수
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     try {
       const initialRequest = {
         userIndexEventTrigger: null,
@@ -122,7 +91,35 @@ const MemberAssetSearchForm = () => {
       console.error("초기 데이터 로딩 중 오류:", error)
       setSearchResults([])
     }
-  }
+  }, [extractEmailId])
+  
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setLoading(true)
+        const [rolesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
+          memberaccountLookupRoles(),
+          memberaccountLookupPaymentTypes(),
+          memberaccountLookupTransactionTypes()
+        ])
+        setOptions({
+          roles: rolesRes.data || [],
+          paymentTypes: paymentTypesRes.data || [],
+          transactionTypes: transactionTypesRes.data || []
+        })
+        
+        // 초기 데이터 로딩
+        await loadInitialData()
+      } catch (error) {
+        setError(error.message || "옵션 데이터를 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadOptions()
+  }, [loadInitialData])
+
+
 
   // 폼 입력 변경 핸들러 (성능 최적화)
   const handleInputChange = useCallback((e) => {
@@ -130,41 +127,11 @@ const MemberAssetSearchForm = () => {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }, [])
 
-  const handleReset = async () => {
-    setFormData({
-      fromId: "",
-      toId: "",
-      fromDate: "",
-      toDate: "",
-      fromGrade: "",
-      toGrade: "",
-      transactionType: "",
-      unit: ""
-    })
-    setError(null)
-    
-    // 폼 리셋 후 초기 데이터 다시 로딩
-    try {
-      setLoading(true)
-      await loadInitialData()
-    } catch (error) {
-      console.error("초기화 후 데이터 로딩 중 오류:", error)
-      setSearchResults([])
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // 이메일에서 ID 추출 함수 (성능 최적화)
-  const extractEmailId = useCallback((email) => {
-    if (!email) return ""
-    return email.split('@')[0] || ""
-  }, [])
+  const [error, setError] = useState(null);
 
   const handleSearch = async () => {
     try {
       setLoading(true)
-      setError(null)
       
       // 검색 조건 준비 - 백엔드에서 동적 쿼리 지원을 위한 표준 형식
       const searchRequest = {
@@ -428,6 +395,11 @@ const MemberAssetSearchForm = () => {
       </div>
 
       {/* 에러 메시지는 콘솔에만 출력하고 화면에는 표시하지 않음 */}
+      {error && (
+        <div className="member-asset-search-error">
+          {error}
+        </div>
+      )}
 
       {/* 결과 테이블 섹션 */}
       <div className="member-asset-search-results-section">
