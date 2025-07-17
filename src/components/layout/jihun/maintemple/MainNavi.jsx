@@ -9,9 +9,13 @@ import {
   MessageSquare,
   ChevronDown,
   Menu,
-  UserCircleIcon
+  UserCircleIcon,
+  Flag,
+  Info,
+  FileChartColumn
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
+import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 
 const MainNavi = () => {
   const navigate = useNavigate();
@@ -20,8 +24,27 @@ const MainNavi = () => {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeSubMenuId, setActiveSubMenuId] = useState(null);
 
-  // 반응형을 위한 화면 크기 감지
   useEffect(() => {
+    // 1. 접속한 관리자의 권한 조회하고 오기
+    const getAuthority = async () => {
+      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const admin_type_index = userInfo?.admin_type_index;
+      if(admin_type_index){
+        try {
+          const response = await menuAuthority(admin_type_index);
+          console.log(response);
+          if(response.data.resultCode === 200){
+
+          }
+        } catch (error) {
+          
+        }
+      }
+    }
+
+    getAuthority();
+
+    // 2. 반응형을 위한 화면 크기 감지
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setSidebarOpen(false);
@@ -40,6 +63,8 @@ const MainNavi = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
+
+
   }, []);
 
   // 메뉴 설정 - 커스텀마이징이 쉬운 구조
@@ -69,14 +94,52 @@ const MainNavi = () => {
         href: "/TestMain"
       },
       {
-        id: "personal-management",
-        label: "택준이는 바보다?",
+        id: "company-management",
+        label: "본사 관리",
         icon: Users,
         type: "expand", // 확장 메뉴
         submenu: [
           { 
-            id: "personal-list", 
-            label: "본인 리스트", 
+            id: "coupon-management", 
+            label: "쿠폰 관리", 
+            type: "list", // list: 리스트 박스 (링크 없음)
+            action: () => console.log("본인 리스트 클릭") // 클릭 시 실행할 함수
+          },
+          { 
+            id: "brokerage-fee-setting", 
+            label: "중개수수료율 설정", 
+            type: "link",
+            href: "/memberaccount" 
+          },
+          { 
+            id: "admin-list", 
+            label: "CMS 관리자 명단", 
+            type: "list",
+            action: () => console.log("본인 승인 현황 클릭")
+          },
+          { 
+            id: "authority-management", 
+            label: "권한 관리", 
+            type: "list",
+            action: () => console.log("본인 출금 현황 클릭")
+          },
+          { 
+            id: "monthly-cm-limit", 
+            label: "월 CM사용한도", 
+            type: "list",
+            action: () => window.location.href="/MonthlyCmLimit"
+          },
+        ]
+      },
+      {
+        id: "member-management",
+        label: "회원 관리",
+        icon: Users,
+        type: "expand", // 확장 메뉴
+        submenu: [
+          { 
+            id: "member-list", 
+            label: "회원 리스트", 
             type: "list", // list: 리스트 박스 (링크 없음)
             action: () => console.log("본인 리스트 클릭") // 클릭 시 실행할 함수
           },
@@ -87,26 +150,26 @@ const MainNavi = () => {
             href: "/memberaccount" 
           },
           { 
-            id: "personal-approval", 
-            label: "본인 승인 현황", 
+            id: "member-assets-status", 
+            label: "회원 자산 현황", 
             type: "list",
             action: () => console.log("본인 승인 현황 클릭")
           },
           { 
-            id: "personal-withdrawal", 
-            label: "본인 출금 현황", 
+            id: "member-referral-status", 
+            label: "회원 추천 현황", 
             type: "list",
             action: () => console.log("본인 출금 현황 클릭")
           },
           { 
-            id: "personal-deposit", 
-            label: "본인 지급 내역", 
+            id: "member-payment-history", 
+            label: "정회원 결제내역", 
             type: "list",
             action: () => console.log("본인 지급 내역 클릭")
           },
           { 
-            id: "taekjun-babo", 
-            label: "바보인거 확인할려면 클릭 ㄱㄱ", 
+            id: "commision-history", 
+            label: "수당 지급 내역", 
             type: "link",
             href: "/",
           }
@@ -119,14 +182,32 @@ const MainNavi = () => {
         type: "expand",
         submenu: [
           { 
-            id: "business-list", 
-            label: "사업자 리스트", 
+            id: "business-performance-overview", 
+            label: "영업 실적 현황", 
             type: "list",
             action: () => console.log("사업자 리스트 클릭")
           },
           { 
-            id: "business-approval", 
-            label: "사업자 승인", 
+            id: "business-organization-chart", 
+            label: "사업자 조직도", 
+            type: "list",
+            action: () => console.log("사업자 승인 클릭")
+          },
+          { 
+            id: "business-member-list", 
+            label: "사업자 회원 리스트", 
+            type: "list",
+            action: () => console.log("사업자 리스트 클릭")
+          },
+          { 
+            id: "business-commission-history", 
+            label: "사업자 수당 내역", 
+            type: "list",
+            action: () => console.log("사업자 승인 클릭")
+          },
+          { 
+            id: "commission-setting", 
+            label: "직급별 수당 설정", 
             type: "list",
             action: () => console.log("사업자 승인 클릭")
           }
@@ -139,34 +220,100 @@ const MainNavi = () => {
         type: "expand",
         submenu: [
           { 
-            id: "franchise-list", 
-            label: "가맹점 리스트", 
+            id: "franchise-member-list", 
+            label: "가맹점 회원 리스트", 
             type: "list",
             action: () => console.log("가맹점 리스트 클릭")
           },
           { 
-            id: "franchise-registration", 
-            label: "가맹점 등록", 
+            id: "franchise-registration-status", 
+            label: "가맹점 신청현황", 
+            type: "list",
+            action: () => console.log("가맹점 등록 클릭")
+          },
+          { 
+            id: "franchise-customer-management", 
+            label: "가맹점 고객관리", 
             type: "list",
             action: () => console.log("가맹점 등록 클릭")
           }
         ]
       },
       {
-        id: "withdrawal-management",
+        id: "promotion-management",
+        label: "홍보 관리",
+        icon: Flag,
+        type: "expand",
+        submenu: [
+          { 
+            id: "advertisement-management", 
+            label: "광고 관리", 
+            type: "list",
+            action: () => console.log("출금 요청 클릭")
+          },
+          { 
+            id: "banner-management", 
+            label: "배너 관리", 
+            type: "list",
+            action: () => console.log("출금 승인 클릭")
+          }
+        ]
+      },
+      {
+        id: "customer-service",
+        label: "고객센터",
+        icon: Info,
+        type: "expand",
+        submenu: [
+          { 
+            id: "qna-management", 
+            label: "QNA 관리", 
+            type: "list",
+            action: () => console.log("출금 요청 클릭")
+          },
+          { 
+            id: "notice-management", 
+            label: "공지사항 관리", 
+            type: "list",
+            action: () => console.log("출금 승인 클릭")
+          }
+        ]
+      },
+      {
+        id: "log-management",
+        label: "로그 관리",
+        icon: FileChartColumn,
+        type: "expand",
+        submenu: [
+          { 
+            id: "account-modification-history", 
+            label: "계정 수정 기록", 
+            type: "list",
+            action: () => console.log("출금 요청 클릭")
+          },
+          { 
+            id: "cms-access-history", 
+            label: "CMS 접속 기록", 
+            type: "list",
+            action: () => console.log("출금 승인 클릭")
+          }
+        ]
+      },
+      {
+        id: "withdrawal-management-top",
         label: "출금 관리",
         icon: DollarSign,
         type: "expand",
         submenu: [
           { 
-            id: "withdrawal-requests", 
-            label: "출금 요청", 
+            id: "withdrawal-history", 
+            label: "출금 조회", 
             type: "list",
             action: () => console.log("출금 요청 클릭")
           },
           { 
-            id: "withdrawal-approval", 
-            label: "출금 승인", 
+            id: "withdrawal-management", 
+            label: "출금 관리", 
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -183,18 +330,6 @@ const MainNavi = () => {
             label: "채팅방 관리", 
             type: "list",
             action: () => console.log("채팅방 관리 클릭")
-          },
-          { 
-            id: "announcements", 
-            label: "공지사항", 
-            type: "list",
-            action: () => console.log("공지사항 클릭")
-          },
-          { 
-            id: "customer-support", 
-            label: "고객 지원", 
-            type: "list",
-            action: () => console.log("고객 지원 클릭")
           }
         ]
       }
