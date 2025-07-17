@@ -9,9 +9,6 @@ const MemberAssetSearch = () => {
     <div className="app">
       <div className="main-content">
         <div className="content-wrapper">
-          <div className="welcome-section">
-
-          </div>
           <MemberAssetSearchForm />
         </div>
       </div>
