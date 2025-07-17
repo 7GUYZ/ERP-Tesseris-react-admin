@@ -1,0 +1,344 @@
+/* Pretendard Variable 폰트 전역 적용 */
+body, #root, .permission-management,
+.filter-section, .authority-section, .filter-item, .btn, .page-title, .section-header, .authority-table, .filter-actions, .permission-btn {
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif !important;
+}
+
+/* 이하 기존 스타일 유지 */
+body, #root, .permission-management {
+  background: #f4f6fa;
+  min-height: 100vh;
+}
+
+/* 중앙 카드 */
+.filter-section {
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(34, 46, 60, 0.08);
+  padding: 40px 32px 32px 32px;
+  max-width: 1400px;
+  margin: 48px auto 0 auto;
+}
+
+.page-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0 auto 24px auto;
+  text-align: left;
+  max-width: 1400px;
+  padding-top: 32px;
+}
+
+/* 필터 그리드 */
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-row-gap: 24px;
+  grid-column-gap: 24px;
+  margin-bottom: 24px;
+}
+
+.filter-item label {
+  display: block;
+  font-size: 1rem;
+  color: #222e3c;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.filter-item select,
+.filter-item input[type="text"],
+.filter-item input[type="date"] {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e3e9;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #f4f6fa;
+  color: #222e3c;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+}
+.filter-item select:focus,
+.filter-item input[type="text"]:focus,
+.filter-item input[type="date"]:focus {
+  border: 1.5px solid #3b7ddd;
+  background: #fff;
+}
+
+/* 버튼 영역 */
+.permission-actions, .filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.permission-btn, .filter-actions button {
+  padding: 0 32px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(59, 125, 221, 0.08);
+  transition: background 0.2s, color 0.2s;
+}
+.permission-btn--reset, .filter-actions .reset {
+  background: #f4f6fa;
+  color: #3b7ddd;
+  border: 1px solid #e0e3e9;
+}
+.permission-btn--search, .filter-actions .search {
+  background: linear-gradient(90deg, #7b5cff 0%, #3b7ddd 100%);
+  color: #fff;
+}
+.permission-btn--search:hover, .filter-actions .search:hover {
+  background: linear-gradient(90deg, #3b7ddd 0%, #7b5cff 100%);
+}
+
+/* 권한 목록 테이블 */
+.authority-section {
+  max-width: 1400px;
+  margin: 32px auto 0 auto;
+  background: #fff;
+  border-radius: 24px;
+  box-shadow: 0 4px 24px rgba(34, 46, 60, 0.08);
+  padding: 32px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.authority-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #fff;
+}
+.authority-table th, .authority-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #f4f6fa;
+}
+.authority-table th {
+  background: #f4f6fa;
+  color: #222e3c;
+  font-weight: 600;
+}
+.authority-table td {
+  color: #222e3c;
+}
+.authority-table .text-center {
+  text-align: center;
+}
+.btn {
+  padding: 6px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 6px;
+  transition: background 0.2s;
+}
+.btn-primary {
+  background: #3b7ddd;
+  color: #fff;
+}
+.btn-secondary {
+  background: #f4f6fa;
+  color: #3b7ddd;
+  border: 1px solid #e0e3e9;
+}
+.btn-danger {
+  background: #ff4d4f;
+  color: #fff;
+}
+.btn-small {
+  padding: 4px 12px;
+  font-size: 0.95rem;
+}
+
+/* 모달, 스낵바 등은 기존 스타일 유지 */
+
+/* 모달 전체 배경 */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(34, 46, 60, 0.10); /* 더 연한 어두운 배경 */
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 모달 박스 */
+.modal {
+  background: #fff;
+  border-radius: 24px; /* 더 둥글게 */
+  min-width: 420px;
+  max-width: 96vw;
+  box-shadow: 0 8px 32px rgba(34,46,60,0.16), 0 1.5px 4px rgba(123,92,255,0.08);
+  padding: 40px 36px 32px 36px;
+  position: relative;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+/* 모달 헤더 */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+.modal-header h3 {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+
+/* 닫기 버튼 */
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  color: #b0b8c1;
+  cursor: pointer;
+  transition: color 0.2s;
+  line-height: 1;
+  padding: 0 8px;
+}
+.modal-close:hover {
+  color: #7b5cff;
+}
+
+/* 모달 내용 */
+.modal-content {
+  margin-top: 8px;
+}
+
+/* 모달 내 버튼 스타일 (AdminKit 스타일) */
+.modal .btn-primary {
+  background: linear-gradient(90deg, #7b5cff 0%, #3b7ddd 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0 32px;
+  height: 44px;
+  box-shadow: 0 2px 8px rgba(123,92,255,0.08);
+  transition: background 0.2s;
+}
+.modal .btn-primary:hover {
+  background: linear-gradient(90deg, #3b7ddd 0%, #7b5cff 100%);
+}
+.modal .btn-secondary {
+  background: #f4f6fa;
+  color: #3b7ddd;
+  border: 1px solid #e0e3e9;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 0 32px;
+  height: 44px;
+  margin-right: 8px;
+}
+
+/* 입력창 스타일도 AdminKit에 맞게 */
+.modal input,
+.modal select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e0e3e9;
+  border-radius: 12px;
+  font-size: 1rem;
+  background: #f4f6fa;
+  color: #222e3c;
+  outline: none;
+  transition: border 0.2s;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+.modal input:focus,
+.modal select:focus {
+  border: 1.5px solid #7b5cff;
+  background: #fff;
+}
+
+/* 체크박스 스타일 개선 */
+.modal input[type="checkbox"] {
+  accent-color: #7b5cff;
+  width: 18px;
+  height: 18px;
+}
+
+/* snackbar(알림) 스타일 */
+.snackbar {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  min-width: 320px;
+  max-width: 90vw;
+  background: #fff;
+  color: #222e3c;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(34,46,60,0.12);
+  padding: 20px 32px 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 2000;
+  font-size: 1.08rem;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  animation: snackbar-fadein 0.3s;
+}
+.snackbar-success {
+  border-left: 6px solid #7b5cff;
+}
+.snackbar-error {
+  border-left: 6px solid #ff4d4f;
+}
+.snackbar-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #b0b8c1;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: color 0.2s;
+}
+.snackbar-close:hover {
+  color: #7b5cff;
+}
+@keyframes snackbar-fadein {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 반응형 */
+@media (max-width: 1200px) {
+  .filter-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .authority-section, .filter-section {
+    padding: 16px;
+  }
+}
+@media (max-width: 700px) {
+  .filter-section, .authority-section {
+    padding: 8px;
+  }
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+} 
