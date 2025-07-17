@@ -50,7 +50,7 @@ const Toast = ({ type, message, onClose }) => {
 
         <div className={getTypeClass()} >
           {getIcon()}
-          <span>{message}</span>
+          <span style={{ fontSize: '1rem', fontWeight: 500 }}>{message}</span>
           <button
             className="toast-close"
             onClick={onClose}
