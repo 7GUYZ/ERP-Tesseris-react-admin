@@ -10,9 +10,13 @@ import {
   ChevronDown,
   Menu,
   UserCircleIcon,
+<<<<<<< HEAD
+  Building2Icon
+=======
   Flag,
   Info,
   FileChartColumn
+>>>>>>> dev
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
@@ -94,6 +98,30 @@ const MainNavi = () => {
         href: "/TestMain"
       },
       {
+<<<<<<< HEAD
+        id: "Headquarters-Management",
+        label: "본사 관리",
+        icon: Building2Icon,
+        type: "expand", // 확장 메뉴
+        submenu: [
+          {
+            id: "permission-management",
+            label: "권한 관리",
+            type: "link", 
+            href: "/PermissionManagement"
+          },
+        ]
+      },
+      {
+        id: "personal-management",
+        label: "택준이는 바보다?",
+        icon: Users,
+        type: "expand", // 확장 메뉴
+        submenu: [
+          {
+            id: "personal-list",
+            label: "본인 리스트",
+=======
         id: "company-management",
         label: "본사 관리",
         icon: Users,
@@ -140,15 +168,39 @@ const MainNavi = () => {
           { 
             id: "member-list", 
             label: "회원 리스트", 
+>>>>>>> dev
             type: "list", // list: 리스트 박스 (링크 없음)
             action: () => console.log("본인 리스트 클릭") // 클릭 시 실행할 함수
           },
-          { 
-            id: "member-assets", 
-            label: "회원 자산 내역", 
+          {
+            id: "member-assets",
+            label: "회원 자산 내역",
             type: "link",
-            href: "/memberaccount" 
+            href: "/memberaccount"
           },
+<<<<<<< HEAD
+          {
+            id: "personal-approval",
+            label: "본인 승인 현황",
+            type: "list",
+            action: () => console.log("본인 승인 현황 클릭")
+          },
+          {
+            id: "personal-withdrawal",
+            label: "본인 출금 현황",
+            type: "list",
+            action: () => console.log("본인 출금 현황 클릭")
+          },
+          {
+            id: "personal-deposit",
+            label: "본인 지급 내역",
+            type: "list",
+            action: () => console.log("본인 지급 내역 클릭")
+          },
+          {
+            id: "taekjun-babo",
+            label: "바보인거 확인할려면 클릭 ㄱㄱ",
+=======
           { 
             id: "member-assets-status", 
             label: "회원 자산 현황", 
@@ -170,6 +222,7 @@ const MainNavi = () => {
           { 
             id: "commision-history", 
             label: "수당 지급 내역", 
+>>>>>>> dev
             type: "link",
             href: "/",
           }
@@ -181,6 +234,17 @@ const MainNavi = () => {
         icon: Store,
         type: "expand",
         submenu: [
+<<<<<<< HEAD
+          {
+            id: "business-list",
+            label: "사업자 리스트",
+            type: "list",
+            action: () => console.log("사업자 리스트 클릭")
+          },
+          {
+            id: "business-approval",
+            label: "사업자 승인",
+=======
           { 
             id: "business-performance-overview", 
             label: "영업 실적 현황", 
@@ -208,6 +272,7 @@ const MainNavi = () => {
           { 
             id: "commission-setting", 
             label: "직급별 수당 설정", 
+>>>>>>> dev
             type: "list",
             action: () => console.log("사업자 승인 클릭")
           }
@@ -219,6 +284,17 @@ const MainNavi = () => {
         icon: ShoppingCart,
         type: "expand",
         submenu: [
+<<<<<<< HEAD
+          {
+            id: "franchise-list",
+            label: "가맹점 리스트",
+            type: "list",
+            action: () => console.log("가맹점 리스트 클릭")
+          },
+          {
+            id: "franchise-registration",
+            label: "가맹점 등록",
+=======
           { 
             id: "franchise-member-list", 
             label: "가맹점 회원 리스트", 
@@ -234,6 +310,7 @@ const MainNavi = () => {
           { 
             id: "franchise-customer-management", 
             label: "가맹점 고객관리", 
+>>>>>>> dev
             type: "list",
             action: () => console.log("가맹점 등록 클릭")
           }
@@ -305,6 +382,17 @@ const MainNavi = () => {
         icon: DollarSign,
         type: "expand",
         submenu: [
+<<<<<<< HEAD
+          {
+            id: "withdrawal-requests",
+            label: "출금 요청",
+            type: "list",
+            action: () => console.log("출금 요청 클릭")
+          },
+          {
+            id: "withdrawal-approval",
+            label: "출금 승인",
+=======
           { 
             id: "withdrawal-history", 
             label: "출금 조회", 
@@ -314,6 +402,7 @@ const MainNavi = () => {
           { 
             id: "withdrawal-management", 
             label: "출금 관리", 
+>>>>>>> dev
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -325,16 +414,31 @@ const MainNavi = () => {
         icon: MessageSquare,
         type: "expand",
         submenu: [
-          { 
-            id: "chat-rooms", 
-            label: "채팅방 관리", 
+          {
+            id: "chat-rooms",
+            label: "채팅방 관리",
             type: "list",
             action: () => console.log("채팅방 관리 클릭")
+<<<<<<< HEAD
+          },
+          {
+            id: "announcements",
+            label: "공지사항",
+            type: "list",
+            action: () => console.log("공지사항 클릭")
+          },
+          {
+            id: "customer-support",
+            label: "고객 지원",
+            type: "list",
+            action: () => console.log("고객 지원 클릭")
+=======
+>>>>>>> dev
           }
         ]
       }
     ],
-    
+
     // 스타일 설정
     styles: {
       sidebar: {
@@ -388,7 +492,7 @@ const MainNavi = () => {
 
   const handleSubMenuClick = (subItem, e) => {
     e.stopPropagation();
-    
+
     switch (subItem.type) {
       case "link":
         setActiveSubMenuId(subItem.id);
@@ -416,7 +520,7 @@ const MainNavi = () => {
   const renderMenuItem = (item) => {
     const Icon = item.icon;
     const isActive = activeMenuId === item.id || (item.submenu && item.submenu.some(sub => sub.id === activeSubMenuId));
-    
+
     return (
       <div key={item.id} className="nav-item">
         <button
