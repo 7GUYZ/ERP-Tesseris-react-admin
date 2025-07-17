@@ -1,8 +1,8 @@
 "use client"
 
 import React from "react"
-import MemberAssetSearchForm from "../../components/forms/jihun/MemberAssetSearchForm.jsx"
-import "../../styles/jihun/MemberAssetSearchLayout.css"
+import MemberAssetSearchForm from "../../../components/forms/jihun/memberaccount/MemberAssetSearchForm.jsx"
+import "../../../styles/jihun/memberaccount/MemberAssetSearchLayout.css"
 
 const MemberAssetSearch = () => {
   return (
