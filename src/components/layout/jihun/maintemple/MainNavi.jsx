@@ -2,14 +2,14 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Home,
-  User,
   Users,
   Store,
   ShoppingCart,
   DollarSign,
   MessageSquare,
   ChevronDown,
-  Menu
+  Menu,
+  UserCircleIcon
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 
@@ -64,13 +64,13 @@ const MainNavi = () => {
       {
         id: "mypage",
         label: "마이페이지",
-        icon: User,
+        icon: UserCircleIcon,
         type: "link",
         href: "/TestMain"
       },
       {
         id: "personal-management",
-        label: "본인 관리",
+        label: "택준이는 바보다?",
         icon: Users,
         type: "expand", // 확장 메뉴
         submenu: [
@@ -103,6 +103,12 @@ const MainNavi = () => {
             label: "본인 지급 내역", 
             type: "list",
             action: () => console.log("본인 지급 내역 클릭")
+          },
+          { 
+            id: "taekjun-babo", 
+            label: "바보인거 확인할려면 클릭 ㄱㄱ", 
+            type: "link",
+            href: "/",
           }
         ]
       },

@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Route} from 'react-router-dom';
 import ProtectedRoute from "./ProtectedRoute";
 import MemberAssetSearch from '../pages/jihun/memberaccount/MemberAssetSearch';
 

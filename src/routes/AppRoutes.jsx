@@ -1,6 +1,5 @@
 import { Routes, Route } from 'react-router-dom';
 import JungeunRoute from './JungeunRoute';
-import TestLayout from '../components/layout/jungeun/TestLayout';
 import DabinRoute from './DabinRoute';
 import DeokkyuRoute from './DeokkyuRoute';
 import JihunRoute from './JihunRoute';
