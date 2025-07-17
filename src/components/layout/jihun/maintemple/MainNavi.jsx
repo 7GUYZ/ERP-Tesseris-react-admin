@@ -222,8 +222,8 @@ const MainNavi = () => {
           { 
             id: "franchise-member-list", 
             label: "가맹점 회원 리스트", 
-            type: "list",
-            action: () => console.log("가맹점 리스트 클릭")
+            type: "link",
+            href: "/storelist"
           },
           { 
             id: "franchise-registration-status", 
@@ -234,8 +234,8 @@ const MainNavi = () => {
           { 
             id: "franchise-customer-management", 
             label: "가맹점 고객관리", 
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭")
+            type: "link",
+            href: "/storecustomerlist"
           }
         ]
       },
