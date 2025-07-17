@@ -97,3 +97,13 @@ export const cmLimitSave = (settingValue) =>
 
 export const pwCheck = ({username, password}) =>
   api.post("/passwordCheck", {username, password})
+
+export const menuAuthority = (adminTypeIndex) => {
+  const token = localStorage.getItem("access-token"); // 항상 최신 토큰
+  return api.get("/adminAuthority", {
+    params: { adminTypeIndex },
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
