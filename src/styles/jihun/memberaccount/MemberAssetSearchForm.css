@@ -41,6 +41,24 @@
   align-items: center;
 }
 
+.member-asset-search-selected-count {
+  padding: 8px 16px;
+  background: #dcfce7;
+  color: #166534;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #86efac;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.member-asset-search-selected-count::before {
+  content: "✓";
+  font-weight: bold;
+}
+
 /* 헤더 버튼 스타일 */
 .member-asset-search-btn {
   padding: 12px 24px;
