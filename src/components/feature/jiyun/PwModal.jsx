@@ -82,7 +82,7 @@ export default function PwModal({
             className="button confirmButton"
             disabled={isLoading}
           >
-            {isLoading ? "확인 중..." : "확인"}
+            {"확인"}
           </button>
         </div>
       </div>

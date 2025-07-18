@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { href, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -341,15 +341,15 @@ const MainNavi = () => {
             id: "account-modification-history",
             programIndex: 29,
             label: "계정 수정 기록",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/updateLog",
           },
           {
             id: "cms-access-history",
             programIndex: 28,
             label: "CMS 접속 기록",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
+            type: "link",
+            href: "/cmsAccessLog",
           },
         ],
       },
