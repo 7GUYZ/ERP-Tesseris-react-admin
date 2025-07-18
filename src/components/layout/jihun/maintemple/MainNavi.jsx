@@ -15,6 +15,7 @@ import {
   FileChartColumn,
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
+import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
 
@@ -264,22 +265,22 @@ const MainNavi = () => {
             id: "franchise-member-list",
             programIndex: 20,
             label: "가맹점 회원 리스트",
-            type: "list",
-            action: () => console.log("가맹점 리스트 클릭"),
+            type: "link",
+            href: "/storelist",
           },
           {
             id: "franchise-registration-status",
             programIndex: 33,
             label: "가맹점 신청 현황",
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭"),
+            type: "link",
+            href: "/storeregisterlist",
           },
           {
             id: "franchise-customer-management",
             programIndex: 30,
-            label: "가맹점 고객 관리",
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭"),
+            label: "가맹점 고객관리",
+            type: "link",
+            href: "/storecustomerlist",
           },
         ],
       },
@@ -532,7 +533,9 @@ const MainNavi = () => {
 
   return (
     <div
-      className={`sidebar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}
+      className={`sidebar sidebar-scrollbar ${
+        sidebarOpen ? "sidebar-open" : "sidebar-closed"
+      }`}
     >
       <div className="sidebar-header">
         <div className={`logo ${sidebarOpen ? "show" : "hide"}`}>Tesseris</div>
@@ -552,7 +555,9 @@ const MainNavi = () => {
         </div>
       </div>
 
-      <nav className="sidebar-nav">{filteredMenuItems.map(renderMenuItem)}</nav>
+      <nav className="sidebar-nav navigation-scrollbar">
+        {menuConfig.items.map(renderMenuItem)}
+      </nav>
     </div>
   );
 };
