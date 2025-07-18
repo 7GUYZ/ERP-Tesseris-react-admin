@@ -266,26 +266,24 @@ const MemberAssetSearchForm = () => {
 
   return (
     <div className="member-asset-search-container">
-      {/* 헤더 섹션 - 왼쪽 정렬 */}
-      <div className="member-asset-search-header">
-        <div className="member-asset-search-header-content">
-          <h1 className="member-asset-search-title">회원 자산 내역</h1>
-          <div className="member-asset-search-actions">
-            <button 
-              className="member-asset-search-btn excel" 
-              onClick={handleExcelDownload}
-              disabled={searchResults.length === 0}
-            >
-              엑셀 다운로드
-            </button>
-            <button
-              className="member-asset-search-btn search"
-              onClick={handleSearch}
-              disabled={loading}
-            >
-              {loading ? "조회 중..." : "조회"}
-            </button>
-          </div>
+      {/* 페이지 제목과 액션 버튼 */}
+      <div className="member-asset-search-page-header">
+        <h1 className="member-asset-search-page-title">회원 자산 내역</h1>
+        <div className="member-asset-search-actions">
+          <button 
+            className="member-asset-search-btn excel" 
+            onClick={handleExcelDownload}
+            disabled={searchResults.length === 0}
+          >
+            엑셀
+          </button>
+          <button
+            className="member-asset-search-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
+          </button>
         </div>
       </div>
 
@@ -433,7 +431,7 @@ const MemberAssetSearchForm = () => {
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-results-section">
+      <div className="member-asset-search-table-container">
         <MemberAssetSearchTable 
           data={searchResults} 
           onSelectionChange={handleSelectionChange}

@@ -25,7 +25,7 @@ const MainHeader = () => {
     return (
         <header className="comfortable-header">
             <div className="header-left">
-                <h1 className="dashboard-title">Tesseris - ERP System</h1>
+                {/* <h1 className="dashboard-title"></h1> */}
             </div>
             <div className="header-right">
                 <button className="notification-button">

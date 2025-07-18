@@ -15,6 +15,7 @@ import {
   FileChartColumn
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
+import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 
 const MainNavi = () => {
@@ -29,15 +30,15 @@ const MainNavi = () => {
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("user-info"));
       const admin_type_index = userInfo?.admin_type_index;
-      if(admin_type_index){
+      if (admin_type_index) {
         try {
           const response = await menuAuthority(admin_type_index);
           console.log(response);
-          if(response.data.resultCode === 200){
+          if (response.data.resultCode === 200) {
 
           }
         } catch (error) {
-          
+
         }
       }
     }
@@ -99,35 +100,35 @@ const MainNavi = () => {
         icon: Users,
         type: "expand", // 확장 메뉴
         submenu: [
-          { 
-            id: "coupon-management", 
-            label: "쿠폰 관리", 
+          {
+            id: "coupon-management",
+            label: "쿠폰 관리",
             type: "list", // list: 리스트 박스 (링크 없음)
             action: () => console.log("본인 리스트 클릭") // 클릭 시 실행할 함수
           },
-          { 
-            id: "brokerage-fee-setting", 
-            label: "중개수수료율 설정", 
+          {
+            id: "brokerage-fee-setting",
+            label: "중개수수료율 설정",
             type: "link",
-            href: "/memberaccount" 
+            href: "/memberaccount"
           },
-          { 
-            id: "admin-list", 
-            label: "CMS 관리자 명단", 
+          {
+            id: "admin-list",
+            label: "CMS 관리자 명단",
             type: "list",
             action: () => console.log("본인 승인 현황 클릭")
           },
-          { 
-            id: "authority-management", 
-            label: "권한 관리", 
+          {
+            id: "authority-management",
+            label: "권한 관리",
             type: "list",
             action: () => console.log("본인 출금 현황 클릭")
           },
-          { 
-            id: "monthly-cm-limit", 
-            label: "월 CM사용한도", 
+          {
+            id: "monthly-cm-limit",
+            label: "월 CM사용한도",
             type: "list",
-            action: () => window.location.href="/MonthlyCmLimit"
+            action: () => window.location.href = "/MonthlyCmLimit"
           },
         ]
       },
@@ -137,9 +138,9 @@ const MainNavi = () => {
         icon: Users,
         type: "expand", // 확장 메뉴
         submenu: [
-          { 
-            id: "member-list", 
-            label: "회원 리스트", 
+          {
+            id: "member-list",
+            label: "회원 리스트",
             type: "list", // list: 리스트 박스 (링크 없음)
             action: () => console.log("본인 리스트 클릭") // 클릭 시 실행할 함수
           },
@@ -149,27 +150,27 @@ const MainNavi = () => {
             type: "link",
             href: "/memberaccount"
           },
-          { 
-            id: "member-assets-status", 
-            label: "회원 자산 현황", 
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭")
+          {
+            id: "member-assets-status",
+            label: "회원 자산 현황",
+            type: "link",
+            href: "/memberassetdetails"
           },
-          { 
-            id: "member-referral-status", 
-            label: "회원 추천 현황", 
+          {
+            id: "member-referral-status",
+            label: "회원 추천 현황",
             type: "list",
             action: () => console.log("본인 출금 현황 클릭")
           },
-          { 
-            id: "member-payment-history", 
-            label: "정회원 결제내역", 
+          {
+            id: "member-payment-history",
+            label: "정회원 결제내역",
             type: "list",
             action: () => console.log("본인 지급 내역 클릭")
           },
-          { 
-            id: "commision-history", 
-            label: "수당 지급 내역", 
+          {
+            id: "commision-history",
+            label: "수당 지급 내역",
             type: "link",
             href: "/",
           }
@@ -181,33 +182,33 @@ const MainNavi = () => {
         icon: Store,
         type: "expand",
         submenu: [
-          { 
-            id: "business-performance-overview", 
-            label: "영업 실적 현황", 
+          {
+            id: "business-performance-overview",
+            label: "영업 실적 현황",
             type: "list",
             action: () => console.log("사업자 리스트 클릭")
           },
-          { 
-            id: "business-organization-chart", 
-            label: "사업자 조직도", 
+          {
+            id: "business-organization-chart",
+            label: "사업자 조직도",
             type: "list",
             action: () => console.log("사업자 승인 클릭")
           },
-          { 
-            id: "business-member-list", 
-            label: "사업자 회원 리스트", 
+          {
+            id: "business-member-list",
+            label: "사업자 회원 리스트",
             type: "list",
             action: () => console.log("사업자 리스트 클릭")
           },
-          { 
-            id: "business-commission-history", 
-            label: "사업자 수당 내역", 
+          {
+            id: "business-commission-history",
+            label: "사업자 수당 내역",
             type: "list",
             action: () => console.log("사업자 승인 클릭")
           },
-          { 
-            id: "commission-setting", 
-            label: "직급별 수당 설정", 
+          {
+            id: "commission-setting",
+            label: "직급별 수당 설정",
             type: "list",
             action: () => console.log("사업자 승인 클릭")
           }
@@ -219,21 +220,21 @@ const MainNavi = () => {
         icon: ShoppingCart,
         type: "expand",
         submenu: [
-          { 
-            id: "franchise-member-list", 
-            label: "가맹점 회원 리스트", 
+          {
+            id: "franchise-member-list",
+            label: "가맹점 회원 리스트",
             type: "list",
             action: () => console.log("가맹점 리스트 클릭")
           },
-          { 
-            id: "franchise-registration-status", 
-            label: "가맹점 신청현황", 
+          {
+            id: "franchise-registration-status",
+            label: "가맹점 신청현황",
             type: "list",
             action: () => console.log("가맹점 등록 클릭")
           },
-          { 
-            id: "franchise-customer-management", 
-            label: "가맹점 고객관리", 
+          {
+            id: "franchise-customer-management",
+            label: "가맹점 고객관리",
             type: "list",
             action: () => console.log("가맹점 등록 클릭")
           }
@@ -245,15 +246,15 @@ const MainNavi = () => {
         icon: Flag,
         type: "expand",
         submenu: [
-          { 
-            id: "advertisement-management", 
-            label: "광고 관리", 
+          {
+            id: "advertisement-management",
+            label: "광고 관리",
             type: "list",
             action: () => console.log("출금 요청 클릭")
           },
-          { 
-            id: "banner-management", 
-            label: "배너 관리", 
+          {
+            id: "banner-management",
+            label: "배너 관리",
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -265,15 +266,15 @@ const MainNavi = () => {
         icon: Info,
         type: "expand",
         submenu: [
-          { 
-            id: "qna-management", 
-            label: "QNA 관리", 
+          {
+            id: "qna-management",
+            label: "QNA 관리",
             type: "list",
             action: () => console.log("출금 요청 클릭")
           },
-          { 
-            id: "notice-management", 
-            label: "공지사항 관리", 
+          {
+            id: "notice-management",
+            label: "공지사항 관리",
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -285,15 +286,15 @@ const MainNavi = () => {
         icon: FileChartColumn,
         type: "expand",
         submenu: [
-          { 
-            id: "account-modification-history", 
-            label: "계정 수정 기록", 
+          {
+            id: "account-modification-history",
+            label: "계정 수정 기록",
             type: "list",
             action: () => console.log("출금 요청 클릭")
           },
-          { 
-            id: "cms-access-history", 
-            label: "CMS 접속 기록", 
+          {
+            id: "cms-access-history",
+            label: "CMS 접속 기록",
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -305,15 +306,15 @@ const MainNavi = () => {
         icon: DollarSign,
         type: "expand",
         submenu: [
-          { 
-            id: "withdrawal-history", 
-            label: "출금 조회", 
+          {
+            id: "withdrawal-history",
+            label: "출금 조회",
             type: "list",
             action: () => console.log("출금 요청 클릭")
           },
-          { 
-            id: "withdrawal-management", 
-            label: "출금 관리", 
+          {
+            id: "withdrawal-management",
+            label: "출금 관리",
             type: "list",
             action: () => console.log("출금 승인 클릭")
           }
@@ -454,7 +455,7 @@ const MainNavi = () => {
   };
 
   return (
-    <div className={`sidebar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+    <div className={`sidebar sidebar-scrollbar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       <div className="sidebar-header">
         <div className={`logo ${sidebarOpen ? "show" : "hide"}`}>Tesseris</div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="menu-toggle">
@@ -470,7 +471,7 @@ const MainNavi = () => {
         </div>
       </div>
 
-      <nav className="sidebar-nav">
+      <nav className="sidebar-nav navigation-scrollbar">
         {menuConfig.items.map(renderMenuItem)}
       </nav>
     </div>

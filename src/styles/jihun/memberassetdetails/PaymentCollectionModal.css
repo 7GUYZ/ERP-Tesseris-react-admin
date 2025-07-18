@@ -1,0 +1,298 @@
+
+/* 모달 오버레이 */
+.payment-collection-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* 모달 컨테이너 */
+.payment-collection-modal {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* 모달 헤더 */
+.payment-collection-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.payment-collection-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.payment-collection-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.payment-collection-modal-close:hover {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+/* 헤더 액션 버튼 영역 */
+.payment-collection-modal-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/* 탭 네비게이션 */
+.payment-collection-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.payment-collection-modal-tab {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-bottom: 2px solid transparent;
+}
+
+.payment-collection-modal-tab:hover {
+  background-color: #f9fafb;
+  color: #374151;
+}
+
+.payment-collection-modal-tab.active {
+  color: #2563eb;
+  border-bottom-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+/* 폼 컨테이너 */
+.payment-collection-modal-form {
+  padding: 24px;
+}
+
+/* 폼 행 */
+.payment-collection-modal-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.payment-collection-modal-row:last-child {
+  margin-bottom: 0;
+}
+
+/* 폼 필드 */
+.payment-collection-modal-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-collection-modal-field.full-width {
+  flex: 1;
+}
+
+/* 라벨 */
+.payment-collection-modal-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 6px;
+}
+
+/* 입력 필드 */
+.payment-collection-modal-input {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+}
+
+.payment-collection-modal-input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.payment-collection-modal-input:hover {
+  border-color: #9ca3af;
+}
+
+.payment-collection-modal-input[readonly] {
+  background-color: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.payment-collection-modal-input::placeholder {
+  color: #9ca3af;
+}
+
+/* 텍스트 영역 스타일 */
+.payment-collection-modal-textarea {
+  padding: 10px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: none;
+  min-height: 80px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  background-color: #fff;
+  width: 100%;
+  box-sizing: border-box;
+  line-height: 1.5;
+}
+
+.payment-collection-modal-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.payment-collection-modal-textarea:hover {
+  border-color: #9ca3af;
+}
+
+.payment-collection-modal-textarea::placeholder {
+  color: #9ca3af;
+}
+
+
+
+/* 버튼 스타일 */
+.payment-collection-modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.payment-collection-modal-btn.payment {
+  background-color: #2563eb;
+  color: white;
+}
+
+.payment-collection-modal-btn.payment:hover {
+  background-color: #1d4ed8;
+}
+
+.payment-collection-modal-btn.payment:active {
+  background-color: #1e40af;
+}
+
+.payment-collection-modal-btn.cancel {
+  background-color: #dc2626;
+  color: white;
+}
+
+.payment-collection-modal-btn.cancel:hover {
+  background-color: #b91c1c;
+}
+
+.payment-collection-modal-btn.cancel:active {
+  background-color: #991b1b;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .payment-collection-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .payment-collection-modal-header {
+    padding: 16px 20px;
+  }
+  
+  .payment-collection-modal-form {
+    padding: 20px;
+  }
+  
+  .payment-collection-modal-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .payment-collection-modal-tabs {
+    flex-wrap: wrap;
+  }
+  
+  .payment-collection-modal-tab {
+    flex: 1 1 50%;
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+  
+  .payment-collection-modal-actions {
+    flex-direction: column;
+  }
+  
+  .payment-collection-modal-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-collection-modal {
+    width: 98%;
+    margin: 10px;
+  }
+  
+  .payment-collection-modal-header {
+    padding: 12px 16px;
+  }
+  
+  .payment-collection-modal-title {
+    font-size: 16px;
+  }
+  
+  .payment-collection-modal-form {
+    padding: 16px;
+  }
+  
+  .payment-collection-modal-tab {
+    flex: 1 1 100%;
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+} 
