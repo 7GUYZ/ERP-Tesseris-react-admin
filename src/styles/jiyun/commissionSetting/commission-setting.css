@@ -7,11 +7,10 @@ body {
 }
 
 .commission-form {
-  width: 80%;
+  width: 95%;
   min-height: 100vh;
-  margin: 0 auto;
-  padding: 40px;
-  background-color: #f5f7fa;
+  text-align: center;
+  background-color: white;
 }
 
 .header {
@@ -19,6 +18,9 @@ body {
   align-items: center;
   margin-bottom: 30px;
   justify-content: space-between;
+  background: white;
+  padding: 10px;
+  width: 100%;
 }
 
 .header h1 {
@@ -36,7 +38,6 @@ body {
   cursor: pointer;
   transition: background-color 0.2s ease;
   position: relative;
-  right: -60px;
 }
 
 .save-button:disabled {
@@ -57,10 +58,10 @@ body {
 
 .total-ratio {
   flex: 1;
-  margin-left: 50px;
 }
 .grade-ratio {
   flex: 1;
+  transform: translateX(-100px);
 }
 
 .total-ratio h2,
@@ -76,6 +77,7 @@ body {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
+  justify-content: center;
 }
 
 .ratio-row label,
@@ -107,6 +109,7 @@ body {
 .grade-list {
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .grade-sum {

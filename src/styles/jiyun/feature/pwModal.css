@@ -16,8 +16,8 @@
   background: #ffffff;
   border-radius: 8px;
   box-shadow: 0 10px 25px rgba(34, 46, 60, 0.15);
-  width: 100%;
-  max-width: 420px;
+  width: 540px;
+  max-width: 400px;
   margin: 20px;
   overflow: hidden;
   animation: modalSlideIn 0.2s ease-out;

@@ -16,14 +16,14 @@ export default function NoticeWrite() {
     try {
       await noticeInsert(form);
       alert("공지사항이 등록되었습니다.");
-      navigate("/notice");
+      navigate("/notice/list");
     } catch {
       alert("등록 실패");
     }
   };
 
   const handleCancel = () => {
-    navigate("/notice");
+    navigate("/notice/list");
   };
 
   return (

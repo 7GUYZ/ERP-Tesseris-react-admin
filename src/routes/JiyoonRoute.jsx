@@ -13,10 +13,10 @@ function JiyoonRoute() {
       {/* 무조건 ProtectedRoute 안에 Route 넣으세요 - 인증 및 보안 필요해서 */}
       <Route element={<ProtectedRoute />}>
         <Route path="/commissionSetting" element={<CommissionSetting />} />
-        <Route path="/CmsAccessLog" element={<CmsAccessLog />} />
-        <Route path="/noticeList" element={<NoticeList />} />
-        <Route path="/noticeUpdate" element={<NoticeUpdate />} />
-        <Route path="/noticeWrite" element={<NoticeWrite />} />
+        <Route path="/cmsAccessLog" element={<CmsAccessLog />} />
+        <Route path="/notice/list" element={<NoticeList />} />
+        <Route path="/notice/update/:id" element={<NoticeUpdate />} />
+        <Route path="/notice/write" element={<NoticeWrite />} />
         <Route path="/updateLog" element={<UpdateLog />} />
       </Route>
     </>
