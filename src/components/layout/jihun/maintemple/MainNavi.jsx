@@ -266,22 +266,22 @@ const MainNavi = () => {
             id: "franchise-member-list", 
             programIndex: 20,
             label: "가맹점 회원 리스트", 
-            type: "list",
-            action: () => console.log("가맹점 리스트 클릭")
+            type: "link",
+            href: "/storelist"
           },
           { 
             id: "franchise-registration-status", 
             programIndex: 33,
             label: "가맹점 신청 현황", 
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭")
+            type: "link",
+            href: "/storeregisterlist"
           },
           { 
             id: "franchise-customer-management", 
-            programIndex: 30,
-            label: "가맹점 고객 관리", 
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭")
+             programIndex: 30,
+            label: "가맹점 고객관리", 
+            type: "link",
+            href: "/storecustomerlist"
           }
         ]
       },
