@@ -6,6 +6,7 @@ import {
   memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
 } from "../../../../api/auth/JihunAuth.jsx"
+import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
 /**
@@ -36,6 +37,7 @@ const MemberAssetSearchForm = () => {
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
   const [options, setOptions] = useState({
     roles: [],
     paymentTypes: [],
@@ -230,32 +232,59 @@ const MemberAssetSearchForm = () => {
 
 
 
-  // 엑셀 다운로드 핸들러 (임시로 비활성화)
-  const handleExcelDownload = useCallback(() => {
-    alert("엑셀 다운로드 기능이 준비 중입니다.")
+  // 선택된 행들 처리 핸들러
+  const handleSelectionChange = useCallback((newSelection) => {
+    // Set으로 안전한 선택 처리
+    const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
+    setSelectedRows(safeSelection);
+    console.log('선택된 행들:', Array.from(safeSelection));
   }, [])
+
+  // 엑셀 다운로드 핸들러
+  const handleExcelDownload = useCallback(() => {
+    // 데이터 변환 (순번 추가)
+    const excelData = searchResults.map((row, index) => ({
+      '순번': index + 1,
+      'FROM 등급': row.fromGrade || '',
+      'FROM ID': row.fromId || '',
+      'TO 등급': row.toGrade || '',
+      'TO ID': row.toId || '',
+      'TO 이름': row.toName || '',
+      '거래 유형': row.transactionType || '',
+      '금액': row.amount || 0,
+      '단위': row.unit || '',
+      '사용 금액': row.usedValue || 0,
+      '쿠폰 사용 금액': row.couponUsedValue || 0,
+      '사유': row.reason || '',
+      '발생일': row.occurredDate || ''
+    }));
+
+    downloadSelectedExcel(excelData, selectedRows, '회원자산내역', '회원자산내역');
+  }, [searchResults, selectedRows])
 
   // 오늘 날짜 구하기 (yyyy-mm-dd) - 성능 최적화
   const today = useMemo(() => new Date().toISOString().split('T')[0], [])
 
   return (
     <div className="member-asset-search-container">
-      {/* 헤더 섹션 - 왼쪽 정렬 */}
-      <div className="member-asset-search-header">
-        <div className="member-asset-search-header-content">
-          <h1 className="member-asset-search-title">회원 자산 내역</h1>
-          <div className="member-asset-search-actions">
-            <button className="member-asset-search-btn excel" onClick={handleExcelDownload}>
-              엑셀 다운로드
-            </button>
-            <button
-              className="member-asset-search-btn search"
-              onClick={handleSearch}
-              disabled={loading}
-            >
-              {loading ? "조회 중..." : "조회"}
-            </button>
-          </div>
+      {/* 페이지 제목과 액션 버튼 */}
+      <div className="member-asset-search-page-header">
+        <h1 className="member-asset-search-page-title">회원 자산 내역</h1>
+        <div className="member-asset-search-actions">
+          <button 
+            className="member-asset-search-btn excel" 
+            onClick={handleExcelDownload}
+            disabled={searchResults.length === 0}
+          >
+            엑셀
+          </button>
+          <button
+            className="member-asset-search-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
+          </button>
         </div>
       </div>
 
@@ -403,9 +432,10 @@ const MemberAssetSearchForm = () => {
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-results-section">
+      <div className="member-asset-search-table-container">
         <MemberAssetSearchTable 
           data={searchResults} 
+          onSelectionChange={handleSelectionChange}
         />
       </div>
     </div>

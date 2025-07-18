@@ -15,6 +15,7 @@ import {
   FileChartColumn
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
+import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
 
@@ -34,7 +35,7 @@ const MainNavi = () => {
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("user-info"));
       const admin_type_index = userInfo?.admin_type_index;
-      if(admin_type_index){
+      if (admin_type_index) {
         try {
           const response = await menuAuthority(admin_type_index);
           console.log(response);
@@ -135,7 +136,7 @@ const MainNavi = () => {
             programIndex: 9,
             label: "중개수수료율 설정", 
             type: "link",
-            href: "/memberaccount" 
+            href: "/memberaccount"
           },
           { 
             id: "admin-list", 
@@ -516,7 +517,7 @@ const MainNavi = () => {
   const filteredMenuItems = filterMenuByAuthority(menuConfig.items, authorityList);
 
   return (
-    <div className={`sidebar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
+    <div className={`sidebar sidebar-scrollbar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       <div className="sidebar-header">
         <div className={`logo ${sidebarOpen ? "show" : "hide"}`}>Tesseris</div>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className="menu-toggle">
@@ -532,8 +533,8 @@ const MainNavi = () => {
         </div>
       </div>
 
-      <nav className="sidebar-nav">
-        {filteredMenuItems.map(renderMenuItem)}
+      <nav className="sidebar-nav navigation-scrollbar">
+        {menuConfig.items.map(renderMenuItem)}
       </nav>
     </div>
   );
