@@ -1,4 +1,8 @@
 import { useState, useEffect } from "react"
+import {
+  ajgMemberAssetDetailsPayment,
+  ajgMemberAssetDetailsCollection
+} from "../../../../api/auth/JihunAuth.jsx"
 import "../../../../styles/jihun/memberassetdetails/PaymentCollectionModal.css"
 
 /**
@@ -44,7 +48,7 @@ const PaymentCollectionModal = ({
   }
 
   // 지급/회수 처리 핸들러
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     
     // 필수 필드 검증
@@ -58,23 +62,40 @@ const PaymentCollectionModal = ({
       return
     }
 
-    const paymentData = {
-      type: activeTab,
-      memberId: formData.id,
-      amount: formData.paymentAmount,
-      reason: formData.reason,
-      currentCmHeld: formData.cmHeld
-    }
+    try {
+      const paymentData = {
+        memberId: formData.id,
+        amount: parseInt(formData.paymentAmount),
+        reason: formData.reason,
+        currentCmHeld: parseInt(formData.cmHeld.replace(/,/g, ''))
+      }
 
-    console.log("지급/회수 데이터:", paymentData)
-    
-    // 부모 컴포넌트로 데이터 전달
-    if (onPaymentSubmit) {
-      onPaymentSubmit(paymentData)
+      console.log("지급/회수 데이터:", paymentData)
+      
+      let response;
+      if (activeTab === 'cm-payment') {
+        response = await ajgMemberAssetDetailsPayment(paymentData)
+      } else if (activeTab === 'cm-collection') {
+        response = await ajgMemberAssetDetailsCollection(paymentData)
+      }
+      
+      if (response && response.data && response.data.success) {
+        alert(`${activeTab === 'cm-payment' ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`)
+        
+        // 부모 컴포넌트로 데이터 전달
+        if (onPaymentSubmit) {
+          onPaymentSubmit(paymentData)
+        }
+        
+        // 모달 닫기
+        onClose()
+      } else {
+        alert("처리 중 오류가 발생했습니다.")
+      }
+    } catch (error) {
+      console.error("지급/회수 처리 중 오류:", error)
+      alert("처리 중 오류가 발생했습니다.")
     }
-    
-    // 모달 닫기
-    onClose()
   }
 
   // 모달 닫기 핸들러

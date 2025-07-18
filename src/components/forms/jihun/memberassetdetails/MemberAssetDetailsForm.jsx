@@ -2,7 +2,9 @@ import { useState, useEffect } from "react"
 import MemberAssetDetailsTable from "../../../ui/jihun/memberassetdetails/MemberAssetDetailsTable.jsx"
 import PaymentCollectionModal from "./PaymentCollectionModal.jsx"
 import {
-  memberassetdetailsLookupGrades
+  ajgMemberAssetDetails,
+  ajgMemberAssetDetailsSearch,
+  ajgMemberAssetDetailsLookupGrades
 } from "../../../../api/auth/JihunAuth.jsx"
 import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
@@ -38,90 +40,29 @@ const MemberAssetDetailsForm = () => {
   // 초기 데이터 로딩 함수
   const loadInitialData = async () => {
     try {
-      // 실제로는 API 호출이 들어갈 자리
-      // 현재는 더미 데이터로 "불러와졌다" 상태 표시
-      const dummyData = [
-        {
-          id: "store1",
-          name: "가맹점1",
-          phone: "",
-          grade: "일반",
-          franchiseName: "",
-          cmHeld: "0",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-07-17 03:42:55"
-        },
-        {
-          id: "yeomkh111",
-          name: "정택준",
-          phone: "",
-          grade: "일반",
-          franchiseName: "",
-          cmHeld: "2,600",
-          cmpHeld: "100",
-          cashHeld: "0",
-          registrationDate: "2025-07-14 08:31:58"
-        },
-        {
-          id: "lje3299",
-          name: "이정은",
-          phone: "",
-          grade: "일반",
-          franchiseName: "",
-          cmHeld: "100,000,600",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-06-30 01:28:22"
-        },
-        {
-          id: "gyu5922",
-          name: "세덕규",
-          phone: "",
-          grade: "가맹점",
-          franchiseName: "가맹점",
-          cmHeld: "100,000,600",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-07-02 03:06:38"
-        },
-        {
-          id: "gyu5921",
-          name: "두덕규",
-          phone: "",
-          grade: "사업자",
-          franchiseName: "",
-          cmHeld: "100,001,100",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-07-02 03:05:21"
-        },
-        {
-          id: "kaja7776",
-          name: "김자영",
-          phone: "",
-          grade: "가맹점",
-          franchiseName: "가맹점",
-          cmHeld: "1,500",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-06-30 01:28:22"
-        },
-        {
-          id: "5008LEE",
-          name: "이완택",
-          phone: "01087388877",
-          grade: "일반",
-          franchiseName: "",
-          cmHeld: "100",
-          cmpHeld: "0",
-          cashHeld: "0",
-          registrationDate: "2025-06-17 17:46:47"
-        }
-      ]
+      const response = await ajgMemberAssetDetails()
       
-      setSearchResults(dummyData)
-      console.log(`초기 데이터 로딩 완료: ${dummyData.length}개의 항목`)
+      if (response.data && response.data.content) {
+        const transformedData = response.data.content.map(item => ({
+          id: item.userId || "",
+          name: item.userName || "",
+          phone: item.userPhone || "",
+          grade: item.userRoleKorNm || "",
+          franchiseName: item.storeName || "",
+          cmHeld: item.userCmCurrent || "0",
+          cmpHeld: item.userCmpCurrent || "0",
+          cashHeld: item.userCashCurrent || "0",
+          registrationDate: item.userCreateTime ? 
+            new Date(item.userCreateTime).toISOString().split('T')[0] : ""
+        }))
+        
+        setSearchResults(transformedData)
+        console.log(`초기 데이터 로딩 완료: ${transformedData.length}개의 항목`)
+      } else {
+        // 데이터가 없거나 응답 형식이 다른 경우 빈 배열로 설정
+        setSearchResults([])
+        console.log("초기 데이터가 없거나 응답 형식이 다릅니다.")
+      }
     } catch (error) {
       console.error("초기 데이터 로딩 중 오류:", error)
       setSearchResults([])
@@ -132,9 +73,9 @@ const MemberAssetDetailsForm = () => {
     const loadOptions = async () => {
       try {
         setLoading(true)
-        const gradesRes = await memberassetdetailsLookupGrades()
+        const gradesRes = await ajgMemberAssetDetailsLookupGrades()
         setOptions({
-          grades: gradesRes.data || []
+          grades: gradesRes.data?.data || []
         })
         
         // 초기 데이터 로딩
@@ -172,10 +113,10 @@ const MemberAssetDetailsForm = () => {
       
       // 검색 조건 준비
       const searchRequest = {
-        id: formData.id ? formData.id.trim() : null,
-        name: formData.name ? formData.name.trim() : null,
-        phone: formData.phone ? formData.phone.trim() : null,
-        grade: formData.grade ? parseInt(formData.grade) : null,
+        userId: formData.id ? formData.id.trim() : null,
+        userName: formData.name ? formData.name.trim() : null,
+        userPhone: formData.phone ? formData.phone.trim() : null,
+        userRoleIndex: formData.grade ? parseInt(formData.grade) : null,
         page: 0,
         size: 1000
       }
@@ -187,46 +128,28 @@ const MemberAssetDetailsForm = () => {
       
       console.log("검색 요청:", cleanSearchRequest)
       
-      // 실제로는 API 호출이 들어갈 자리
-      // 현재는 더미 데이터로 "불러와졌다" 상태 표시
-      console.log("검색 조건:", formData)
+      const response = await ajgMemberAssetDetailsSearch(cleanSearchRequest)
       
-      // 검색 조건에 따른 필터링 (더미)
-      const filteredData = searchResults.filter(item => {
-        let matches = true
-        
-        if (formData.id && formData.id.trim() !== '') {
-          const searchTerm = formData.id.toLowerCase().trim()
-          if (!item.id.toLowerCase().includes(searchTerm)) {
-            matches = false
-          }
-        }
-        
-        if (formData.name && formData.name.trim() !== '') {
-          const searchTerm = formData.name.toLowerCase().trim()
-          if (!item.name.toLowerCase().includes(searchTerm)) {
-            matches = false
-          }
-        }
-        
-        if (formData.phone && formData.phone.trim() !== '') {
-          const searchTerm = formData.phone.toLowerCase().trim()
-          if (!item.phone.toLowerCase().includes(searchTerm)) {
-            matches = false
-          }
-        }
-        
-        if (formData.grade && formData.grade !== '') {
-          if (item.grade !== options.grades.find(g => g.index.toString() === formData.grade)?.name) {
-            matches = false
-          }
-        }
-        
-        return matches
-      })
+      if (response.data && response.data.content) {
+        const transformedData = response.data.content.map(item => ({
+          id: item.userId || "",
+          name: item.userName || "",
+          phone: item.userPhone || "",
+          grade: item.userRoleKorNm || "",
+          franchiseName: item.storeName || "",
+          cmHeld: item.userCmCurrent || "0",
+          cmpHeld: item.userCmpCurrent || "0",
+          cashHeld: item.userCashCurrent || "0",
+          registrationDate: item.userCreateTime ? 
+            new Date(item.userCreateTime).toISOString().split('T')[0] : ""
+        }))
 
-      console.log(`검색 완료: 총 ${filteredData.length}개의 결과를 찾았습니다.`)
-      setSearchResults(filteredData)
+        console.log(`검색 완료: 총 ${transformedData.length}개의 결과를 찾았습니다.`)
+        setSearchResults(transformedData)
+      } else {
+        console.log("검색 결과가 없거나 응답 형식이 다릅니다.")
+        setSearchResults([])
+      }
     } catch (error) {
       console.error("검색 중 오류 발생:", error)
       setError("검색 중 오류가 발생했습니다.")
@@ -310,20 +233,24 @@ const MemberAssetDetailsForm = () => {
   }
 
   // 지급/회수 제출 핸들러
-  const handlePaymentSubmit = (paymentData) => {
+  const handlePaymentSubmit = async (paymentData) => {
     console.log("지급/회수 데이터:", paymentData);
     
     // 다중선택된 항목들에 대해 처리
     if (selectedRows.size > 1) {
       const selectedMembers = Array.from(selectedRows).map(index => searchResults[index]);
       console.log("다중선택된 회원들:", selectedMembers);
-      alert(`${paymentData.type} 처리가 ${selectedRows.size}명의 회원에 대해 완료되었습니다. (더미 기능)`);
+      alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 ${selectedRows.size}명의 회원에 대해 완료되었습니다.`);
     } else {
-      alert(`${paymentData.type} 처리가 완료되었습니다. (더미 기능)`);
+      alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
     }
     
-    // 실제로는 여기서 API 호출을 통해 지급/회수 처리
-    // 예: await processPayment(paymentData);
+    // 처리 완료 후 데이터 새로고침
+    try {
+      await loadInitialData();
+    } catch (error) {
+      console.error("데이터 새로고침 중 오류:", error);
+    }
   }
 
   return (

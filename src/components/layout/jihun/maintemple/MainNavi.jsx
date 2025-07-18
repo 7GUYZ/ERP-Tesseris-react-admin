@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { href, useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -186,8 +186,8 @@ const MainNavi = () => {
             id: "member-assets-status", 
             programIndex: 11,
             label: "회원 자산 현황", 
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭")
+            type: "link",
+            href: "/memberassetdetails"
           },
           { 
             id: "member-referral-status", 
