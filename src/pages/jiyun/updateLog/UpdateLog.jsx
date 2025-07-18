@@ -24,7 +24,7 @@ function formatDateToMinute(date) {
   return `${y}-${m}-${d} ${h}:${min}`;
 }
 
-const UpdateLogSearch = () => {
+const UpdateLog = () => {
   const [searchParams, setSearchParams] = useState({
     updateUserId: "",
     inflictUserId: "",
@@ -207,4 +207,4 @@ const UpdateLogSearch = () => {
   );
 };
 
-export default UpdateLogSearch;
+export default UpdateLog;

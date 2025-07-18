@@ -14,6 +14,8 @@ export const getCommissionSetting = () =>
   api.get("/commission-setting/business-grades");
 export const setCommissionSetting = (data) =>
   api.post("/commission-setting/business-grades-update", data);
+export const pwCheck = (password) =>
+  api.post("/commission-setting/pwCheck", { password });
 
 //업데이트 로그 설정
 export const getUpdateLog = (params) =>

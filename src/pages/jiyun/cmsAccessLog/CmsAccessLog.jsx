@@ -43,7 +43,7 @@ function formatDateToSecond(dateOrTimestamp) {
   return `${y}-${m}-${d} ${h}:${min}:${s}`;
 }
 
-const CmsAccessLogPage = () => {
+const CmsAccessLog = () => {
   const [searchParams, setSearchParams] = useState({
     userId: "",
     userName: "",
@@ -280,4 +280,4 @@ const CmsAccessLogPage = () => {
   );
 };
 
-export default CmsAccessLogPage;
+export default CmsAccessLog;
