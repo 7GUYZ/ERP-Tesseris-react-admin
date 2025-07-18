@@ -273,21 +273,15 @@ const MainNavi = () => {
             id: "franchise-registration-status", 
             programIndex: 33,
             label: "가맹점 신청 현황", 
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭")
+            type: "link",
+            href: "/storeregisterlist"
           },
           { 
             id: "franchise-customer-management", 
-<<<<<<< HEAD
+             programIndex: 30,
             label: "가맹점 고객관리", 
             type: "link",
             href: "/storecustomerlist"
-=======
-            programIndex: 30,
-            label: "가맹점 고객 관리", 
-            type: "list",
-            action: () => console.log("가맹점 등록 클릭")
->>>>>>> dev
           }
         ]
       },

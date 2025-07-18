@@ -2,6 +2,7 @@ import { Route } from 'react-router-dom';
 import ProtectedRoute from "./ProtectedRoute";
 import StoreList from '../pages/deokkyu/store/StoreList';
 import StoreCustomerList from '../pages/deokkyu/store/StoreCustomerList';
+import StoreRegisterList from '../pages/deokkyu/store/StoreRegisterList';
 
 function DeokkyuRoute() {
     return (
@@ -10,6 +11,7 @@ function DeokkyuRoute() {
             <Route element={<ProtectedRoute />}>
                 <Route path='/storelist' element={<StoreList />} />
                 <Route path='/storecustomerlist' element={< StoreCustomerList/>} />
+                <Route path='/storeregisterlist' element={< StoreRegisterList/>} />
             </Route>
         </>
     );
