@@ -6,7 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
 import '../../../styles/deokkyu/StoreList.css'; 
-import { getStoreList } from '../../../api/auth/DeokkyuAuth';
+import { getStoreRegisterList } from '../../../api/auth/DeokkyuAuth';
 
 
 const columns = [
@@ -17,17 +17,16 @@ const columns = [
   { field: 'userName', headerName: '이름', width: 100 },
   { field: 'userPhone', headerName: '핸드폰 번호', width: 140 },
   { field: 'storeBossName', headerName: '대표자 이름', width: 140 },
-  { field: 'storeRegistrationNum', headerName: '사업자 등록번호', width: 160 },
-  { field: 'storeTypeTaxation', headerName: '세금 유형', width: 160 },
   { field: 'storeCorporateName', headerName: '상호명', width: 160 },
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
-  { field: 'storeCategoryName', headerName: '가맹점 유형', width: 160 }, 
-  { field: 'storePhone', headerName: '대표 번호', width: 160 },
   { field: 'storeRequestStatusName', headerName: '승인 여부', width: 100 },
   { field: 'storeTransactionStatus', headerName: '거래 상태', width: 100 },
   { field: 'userCmpInit', headerName: '초기지급 CMP', width: 100 },
   { field: 'totalCM', headerName: '보유 CM', width: 100 },
   { field: 'storeCreateDate', headerName: '신청일', width: 120 },
+  { field: 'storeSubscriptionFeeValue', headerName: '충전금액', width: 120 },
+  { field: 'franchiseFee', headerName: '가맹비', width: 120 },
+  { field: 'storeSubscriptionFeeCommissionCheck', headerName: '분배여부', width: 120 },
 ];
 
 function StoreList() {
@@ -70,7 +69,7 @@ const fetchStores = async (params = {}) => {
     if (params.storeCreateDateEnd)
       cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
 
-    const response = await getStoreList( // 있는 데이터만 파라미터로 보냄
+    const response = await getStoreRegisterList( // 있는 데이터만 파라미터로 보냄
       Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
     );
 
@@ -103,12 +102,12 @@ const fetchStores = async (params = {}) => {
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="store-list-container" >
-        <div className="store-list-title">가맹점 회원 리스트</div>
+        <div className="store-list-title">가맹점 신청 현황</div>
         <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
-          <Button variant="outlined" color="success" onClick={handleExcelDownload}>
+          <Button variant="contained" color="success" onClick={handleExcelDownload}>
              엑셀 다운로드
           </Button>
-          <Button variant="outlined" onClick={handleSearch}>
+          <Button variant="contained" onClick={handleSearch}>
              조회
           </Button>
         </Box>

@@ -100,11 +100,22 @@ const handleStoreClick = (store) => {
     fetchStores({ ...filter });
   };
 
+  const handleExcelDownload = () =>{
+    alert("엑셀 ")
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="store-list-container" >
-        <div className="store-list-title">가맹점 회원 리스트</div>
-
+        <div className="store-list-title">가맹점 고객관리</div>
+        <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
+          <Button variant="contained" color="success" onClick={handleExcelDownload}>
+            엑셀 다운로드
+          </Button>
+          <Button variant="contained" onClick={handleSearch}>
+            조회
+          </Button>
+        </Box>
         <div className="filter-card">
           <Grid container spacing={2} mb={2}>
             <Grid item xs={2}>
@@ -148,15 +159,10 @@ const handleStoreClick = (store) => {
               />
             </Grid>
 
-            <Grid item xs={3}>
-              <Button variant="contained" onClick={handleSearch} sx={{ mt: 1 }}>
-                조회
-              </Button>
-            </Grid>
           </Grid>
         </div>
 
-        <div style={{ display: 'flex', gap: '24px' }}>
+        <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
           <div className="data-grid-container1">
             <DataGrid
               rows={storerows}
