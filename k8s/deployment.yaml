@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: erp-tesseris-react-admin
-          image: <DOCKERHUB_USERNAME>/erp-tesseris-react-admin:latest
+          image: __DOCKER_IMAGE__:__TAG__
           ports:
             - containerPort: 80
 ---
