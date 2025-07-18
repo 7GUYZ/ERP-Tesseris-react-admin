@@ -1,0 +1,70 @@
+/* 네비게이션 전용 스크롤바 스타일링 */
+.navigation-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.navigation-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.navigation-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.navigation-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox 네비게이션 스크롤바 스타일링 */
+.navigation-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* 사이드바 전용 스크롤바 스타일링 */
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Firefox 사이드바 스크롤바 스타일링 */
+.sidebar-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+
+/* 강력한 스타일 - 모든 스크롤바 배경 완전 제거 */
+.sidebar::-webkit-scrollbar-track,
+.sidebar-nav::-webkit-scrollbar-track,
+.navigation-scrollbar::-webkit-scrollbar-track,
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.sidebar::-webkit-scrollbar,
+.sidebar-nav::-webkit-scrollbar {
+  background: transparent !important;
+}
+
+/* Firefox 강력한 스타일 */
+.sidebar,
+.sidebar-nav,
+.navigation-scrollbar,
+.sidebar-scrollbar {
+  scrollbar-color: #cbd5e1 transparent !important;
+} 
