@@ -135,6 +135,7 @@ const MemberAssetSearchForm = () => {
       
       // 검색 조건 준비 - 백엔드에서 동적 쿼리 지원을 위한 표준 형식
       const searchRequest = {
+        
         // 사용자 ID 검색 (LIKE 검색을 위한 새로운 파라미터)
         eventTriggerUserEmail: formData.fromId ? formData.fromId.trim() : null,
         eventPartyUserEmail: formData.toId ? formData.toId.trim() : null,
