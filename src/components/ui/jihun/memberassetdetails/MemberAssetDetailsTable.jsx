@@ -151,7 +151,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -384,7 +384,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -401,7 +401,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -418,7 +418,8 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: '100%', 
       overflow: 'hidden',
       borderRadius: '12px',
-      boxShadow: 'none'
+      boxShadow: 'none',
+      height: '500px'
     }}>
       {renderDataGrid()}
     </div>

@@ -206,6 +206,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid lightgray;
+  height: 500px;
 }
 
 .member-asset-search-results-section {
