@@ -70,11 +70,12 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
         <Checkbox
           checked={selectedRows.has(params.row.id)}
           onChange={(e) => {
+            const rowIndex = params.row.id;
             const newSelection = new Set(selectedRows);
             if (e.target.checked) {
-              newSelection.add(params.row.id);
+              newSelection.add(rowIndex);
             } else {
-              newSelection.delete(params.row.id);
+              newSelection.delete(rowIndex);
             }
             setSelectedRows(newSelection);
             setSelectAll(newSelection.size === processedData.length);
@@ -93,10 +94,9 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       flex: 1,
       sortable: false,
       align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => params.row.id + 1
+      headerAlign: 'center'
     },
-    { field: "memberId", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "id", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "phone", headerName: "전화번호", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "grade", headerName: "등급", width: 100, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },
@@ -195,6 +195,9 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
           disableColumnSelector
           disableDensitySelector
           getRowId={(row) => {
+            if (row && row.uniqueKey) {
+              return row.uniqueKey;
+            }
             if (row && typeof row.id !== 'undefined') {
               return row.id;
             }

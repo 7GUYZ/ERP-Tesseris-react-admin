@@ -81,22 +81,36 @@ export const downloadExcel = (data, fileName, sheetName = 'Sheet1', includeDate 
 
 /**
  * 선택된 항목만 엑셀로 다운로드하는 함수
- * @param {Array} allData - 전체 데이터 배열
- * @param {Set} selectedRows - 선택된 행들의 Set (인덱스)
+ * @param {Array} allData - 전체 데이터 배열 또는 선택된 데이터 배열
+ * @param {Set|Array} selectedRows - 선택된 행들의 Set (인덱스) 또는 선택된 데이터 배열
  * @param {string} fileName - 파일명 (확장자 제외)
  * @param {string} sheetName - 시트명 (기본값: 'Sheet1')
  * @param {boolean} includeDate - 파일명에 날짜 포함 여부 (기본값: true)
  */
 export const downloadSelectedExcel = (allData, selectedRows, fileName, sheetName = 'Sheet1', includeDate = true) => {
   try {
-    // 체크된 항목이 없으면 안내 메시지
-    if (selectedRows.size === 0) {
-      alert("다운로드할 항목을 체크해주세요.\n\n체크박스를 클릭하여 원하는 항목을 선택한 후 다운로드 버튼을 눌러주세요.");
+    let dataToExport;
+    
+    // selectedRows가 배열인 경우 (선택된 데이터가 직접 전달된 경우)
+    if (Array.isArray(selectedRows)) {
+      dataToExport = selectedRows;
+    } 
+    // selectedRows가 Set인 경우 (기존 방식 - 인덱스 기반)
+    else if (selectedRows instanceof Set) {
+      // 체크된 항목이 없으면 안내 메시지
+      if (selectedRows.size === 0) {
+        alert("다운로드할 항목을 체크해주세요.\n\n체크박스를 클릭하여 원하는 항목을 선택한 후 다운로드 버튼을 눌러주세요.");
+        return false;
+      }
+      
+      // 체크된 항목만 필터링
+      dataToExport = allData.filter((_, index) => selectedRows.has(index));
+    } 
+    // 그 외의 경우
+    else {
+      alert("선택된 데이터 형식이 올바르지 않습니다.");
       return false;
     }
-
-    // 체크된 항목만 필터링
-    const dataToExport = allData.filter((_, index) => selectedRows.has(index));
 
     if (dataToExport.length === 0) {
       alert("내보낼 데이터가 없습니다.");

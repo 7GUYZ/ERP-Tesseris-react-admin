@@ -43,8 +43,9 @@ const MemberAssetDetailsForm = () => {
       const response = await ajgMemberAssetDetails()
       
       if (response.data && response.data.content) {
-        const transformedData = response.data.content.map(item => ({
-          id: item.userId || "",
+        const transformedData = response.data.content.map((item, index) => ({
+          id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용
+          email: item.userEmail || item.userId || "", // 전체 이메일 주소도 저장
           name: item.userName || "",
           phone: item.userPhone || "",
           grade: item.userRoleKorNm || "",
@@ -53,15 +54,16 @@ const MemberAssetDetailsForm = () => {
           cmpHeld: item.userCmpCurrent || "0",
           cashHeld: item.userCashCurrent || "0",
           registrationDate: item.userCreateTime ? 
-            new Date(item.userCreateTime).toISOString().split('T')[0] : ""
+            new Date(item.userCreateTime).toISOString().split('T')[0] : "",
+          // 고유한 키를 위한 필드 추가
+          uniqueKey: item.userIndex || `row-${index}`,
+          // 순번 필드 추가
+          rowNumber: index + 1
         }))
         
         setSearchResults(transformedData)
-        console.log(`초기 데이터 로딩 완료: ${transformedData.length}개의 항목`)
       } else {
-        // 데이터가 없거나 응답 형식이 다른 경우 빈 배열로 설정
         setSearchResults([])
-        console.log("초기 데이터가 없거나 응답 형식이 다릅니다.")
       }
     } catch (error) {
       console.error("초기 데이터 로딩 중 오류:", error)
@@ -111,28 +113,37 @@ const MemberAssetDetailsForm = () => {
     try {
       setLoading(true)
       
-      // 검색 조건 준비
-      const searchRequest = {
-        userId: formData.id ? formData.id.trim() : null,
+      // 검색 조건 준비 - 새로운 구조로 묶어서 관리
+      const searchCriteria = {
+        userEmail: formData.id ? formData.id.trim() : null,
         userName: formData.name ? formData.name.trim() : null,
         userPhone: formData.phone ? formData.phone.trim() : null,
-        userRoleIndex: formData.grade ? parseInt(formData.grade) : null,
+        userRoleIndex: formData.grade ? parseInt(formData.grade) : null
+      }
+      
+      // 페이징 정보 준비
+      const paginationInfo = {
         page: 0,
         size: 1000
       }
       
       // null 값 제거하여 실제로 검색할 조건만 전달
-      const cleanSearchRequest = Object.fromEntries(
-        Object.entries(searchRequest).filter(([_, value]) => value !== null && value !== undefined)
+      const cleanSearchCriteria = Object.fromEntries(
+        Object.entries(searchCriteria).filter(([_, value]) => value !== null && value !== undefined)
       )
       
-      console.log("검색 요청:", cleanSearchRequest)
+      // 새로운 구조로 요청 데이터 구성
+      const searchRequest = {
+        searchCriteria: cleanSearchCriteria,
+        paginationInfo: paginationInfo
+      }
       
-      const response = await ajgMemberAssetDetailsSearch(cleanSearchRequest)
+              const response = await ajgMemberAssetDetailsSearch(searchRequest)
       
       if (response.data && response.data.content) {
-        const transformedData = response.data.content.map(item => ({
-          id: item.userId || "",
+        const transformedData = response.data.content.map((item, index) => ({
+          id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용
+          email: item.userEmail || item.userId || "", // 전체 이메일 주소 저장
           name: item.userName || "",
           phone: item.userPhone || "",
           grade: item.userRoleKorNm || "",
@@ -141,13 +152,15 @@ const MemberAssetDetailsForm = () => {
           cmpHeld: item.userCmpCurrent || "0",
           cashHeld: item.userCashCurrent || "0",
           registrationDate: item.userCreateTime ? 
-            new Date(item.userCreateTime).toISOString().split('T')[0] : ""
+            new Date(item.userCreateTime).toISOString().split('T')[0] : "",
+          // 고유한 키를 위한 필드 추가
+          uniqueKey: item.userIndex || `row-${index}`,
+          // 순번 필드 추가
+          rowNumber: index + 1
         }))
 
-        console.log(`검색 완료: 총 ${transformedData.length}개의 결과를 찾았습니다.`)
         setSearchResults(transformedData)
       } else {
-        console.log("검색 결과가 없거나 응답 형식이 다릅니다.")
         setSearchResults([])
       }
     } catch (error) {
@@ -163,15 +176,14 @@ const MemberAssetDetailsForm = () => {
     // Set으로 안전한 선택 처리
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
-    console.log('선택된 행들:', Array.from(safeSelection));
   }
 
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = () => {
-    // 데이터 변환 (순번 추가)
+    // 데이터 변환 (순번 추가) - 회원자산내역과 동일한 방식
     const excelData = searchResults.map((row, index) => ({
       '순번': index + 1,
-      '아이디': row.id || '',
+      '아이디': row.email ? row.email.split('@')[0] : '',
       '이름': row.name || '',
       '전화번호': row.phone || '',
       '등급': row.grade || '',
@@ -182,7 +194,15 @@ const MemberAssetDetailsForm = () => {
       '등록일': row.registrationDate || ''
     }));
 
-    downloadSelectedExcel(excelData, selectedRows, '회원자산현황', '회원자산현황');
+    // selectedRows는 ID를 담고 있으므로 인덱스로 변환
+    const selectedIndexes = new Set();
+    searchResults.forEach((row, index) => {
+      if (selectedRows.has(row.id)) {
+        selectedIndexes.add(index);
+      }
+    });
+
+    downloadSelectedExcel(excelData, selectedIndexes, '회원자산현황', '회원자산현황');
   }
 
   // 지급 및 회수 핸들러
@@ -192,25 +212,16 @@ const MemberAssetDetailsForm = () => {
       return;
     }
     
-    // 디버깅을 위한 로그
-    console.log("선택된 행들:", Array.from(selectedRows));
-    console.log("검색 결과:", searchResults);
-    
     // 다중선택 지원 - 첫 번째 선택된 항목으로 모달 열기 (대표 정보 표시용)
-    const selectedIndex = Array.from(selectedRows)[0];
-    console.log("선택된 인덱스:", selectedIndex);
-    console.log("검색 결과 길이:", searchResults.length);
+    const selectedId = Array.from(selectedRows)[0];
     
-    // 인덱스 범위 체크 및 안전한 처리
-    let member;
-    if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
-      member = searchResults[selectedIndex];
-    } else {
-      // 인덱스가 범위를 벗어난 경우, 첫 번째 데이터 사용
-      console.warn("인덱스 범위 오류, 첫 번째 데이터 사용:", selectedIndex);
+    // ID로 해당 회원 찾기
+    let member = searchResults.find(row => row.id === selectedId);
+    
+    if (!member) {
+      // ID를 찾을 수 없는 경우, 첫 번째 데이터 사용
       member = searchResults[0];
     }
-    console.log("선택된 회원:", member);
     
     if (!member) {
       alert("선택된 회원 정보를 찾을 수 없습니다.");
@@ -234,12 +245,11 @@ const MemberAssetDetailsForm = () => {
 
   // 지급/회수 제출 핸들러
   const handlePaymentSubmit = async (paymentData) => {
-    console.log("지급/회수 데이터:", paymentData);
-    
     // 다중선택된 항목들에 대해 처리
     if (selectedRows.size > 1) {
-      const selectedMembers = Array.from(selectedRows).map(index => searchResults[index]);
-      console.log("다중선택된 회원들:", selectedMembers);
+      const selectedMembers = Array.from(selectedRows).map(selectedId => 
+        searchResults.find(row => row.id === selectedId)
+      ).filter(Boolean);
       alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 ${selectedRows.size}명의 회원에 대해 완료되었습니다.`);
     } else {
       alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
