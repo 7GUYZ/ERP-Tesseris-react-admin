@@ -8,6 +8,7 @@ import dayjs from 'dayjs';
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
+import RealTimeChat from '../../../components/chat/RealTimeChat';
 
 
 const columns = [
@@ -39,8 +40,8 @@ function StoreList() {
     userName: '', // 
     userPhone: '', // 가맹점 번호
     storeBossName: '', // 대표자이름
-    storeRequestStatusName: '', // 승인여부 - 라디오
-    storeTransactionStatus: '',// 거래상태 - 라디오
+    storeRequestStatusName: '전체', // 승인여부 - 라디오
+    storeTransactionStatus: '전체',// 거래상태 - 라디오
     storeCorporateName: '', // 상호명
     storeName: '', // 가맹점 명
     businessUserName: '', // 사업자 이름
@@ -157,7 +158,7 @@ const fetchStores = async (params = {}) => {
                   />
                 </Grid>
                 <Grid item xs={2.5}>
-                  <FormControl fullWidth size="small" margin="dense">
+                  <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                     <InputLabel>승인 여부</InputLabel>
                     <Select
                       label="승인 여부"
@@ -175,7 +176,7 @@ const fetchStores = async (params = {}) => {
                 </Grid>
 
                 <Grid item xs={2.5}>
-                  <FormControl fullWidth size="small" margin="dense">
+                  <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                     <InputLabel>거래 상태</InputLabel>
                     <Select
                       label="거래 상태"
@@ -250,6 +251,7 @@ const fetchStores = async (params = {}) => {
               />
             </div>
           </Box>
+          <RealTimeChat />
         </LocalizationProvider>
   );
 }

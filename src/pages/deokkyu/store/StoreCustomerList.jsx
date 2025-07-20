@@ -6,6 +6,7 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 
 import { getCustomerAllStoreList, getStoreCustomerList } from '../../../api/auth/DeokkyuAuth';
 import '../../../styles/deokkyu/StoreList.css'; 
+import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 
 
 const columns1 = [
@@ -22,6 +23,7 @@ const columns2 = [
 ];
 
 function StoreCustomerList() {
+  const [loading, setLoading] = useState(false);
   const [storerows, setStoreRows] = useState([]);
   const [customerRows, setCustomerRows] = useState([]);
   const [filter, setFilter] = useState({
@@ -35,6 +37,7 @@ function StoreCustomerList() {
 
 const fetchStores = async (params = {}) => {
   try {
+    setLoading(true);
     const cleanedParams = {};
 
     // 문자열 필드 필터링
@@ -62,6 +65,8 @@ const fetchStores = async (params = {}) => {
   } catch (error) {
     console.error('조회 실패:', error);
     alert('데이터를 불러오는 데 실패했습니다.');
+  } finally {
+    setLoading(false); // 로딩 종료
   }
 };
 
@@ -170,6 +175,10 @@ const handleStoreClick = (store) => {
               pageSize={25}
               rowsPerPageOptions={[25, 50, 100]}
               onRowClick={(params) => handleStoreClick(params.row)}
+              loading={loading}
+              slots={{
+                  noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+                }}
             />
           </div>
           <div className="data-grid-container2">
@@ -178,6 +187,10 @@ const handleStoreClick = (store) => {
               columns={columns2}
               pageSize={25}
               rowsPerPageOptions={[25, 50, 100]}
+              loading={loading}
+              slots={{
+                  noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+                }}
             />
           </div>
         </div>

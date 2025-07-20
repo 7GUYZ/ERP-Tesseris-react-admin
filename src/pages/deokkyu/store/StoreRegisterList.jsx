@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreRegisterList } from '../../../api/auth/DeokkyuAuth';
+import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 
 
 const columns = [
@@ -30,6 +31,7 @@ const columns = [
 ];
 
 function StoreList() {
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState({
     userId: '',
@@ -47,6 +49,7 @@ function StoreList() {
 
 const fetchStores = async (params = {}) => {
   try {
+    setLoading(true);
     // 파라미터가 포함될지 검사
     const cleanedParams = {};
 
@@ -82,6 +85,8 @@ const fetchStores = async (params = {}) => {
   } catch (error) {
     console.error('조회 실패:', error);
     alert('데이터를 불러오는 데 실패했습니다.');
+  } finally {
+    setLoading(false); // 로딩 종료
   }
 };
 
@@ -154,7 +159,7 @@ const fetchStores = async (params = {}) => {
               />
             </Grid>
             <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
+              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                 <InputLabel>승인 여부</InputLabel>
                 <Select
                   label="승인 여부"
@@ -172,7 +177,7 @@ const fetchStores = async (params = {}) => {
             </Grid>
 
             <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
+              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                 <InputLabel>거래 상태</InputLabel>
                 <Select
                   label="거래 상태"
@@ -240,6 +245,10 @@ const fetchStores = async (params = {}) => {
             columns={columns}
             pageSize={25}
             rowsPerPageOptions={[25, 50, 100]}
+            loading={loading}
+              slots={{
+                noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+              }}
           />
         </div>
       </Box>
