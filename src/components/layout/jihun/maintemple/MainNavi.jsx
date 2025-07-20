@@ -73,7 +73,7 @@ const MainNavi = () => {
     };
 
 
-  }, []);
+  }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map(a => `${a.menuIndex}-${a.programIndex}`)
