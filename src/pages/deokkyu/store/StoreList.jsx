@@ -7,6 +7,7 @@ import dayjs from 'dayjs';
 
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList } from '../../../api/auth/DeokkyuAuth';
+import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 
 
 const columns = [
@@ -31,6 +32,7 @@ const columns = [
 ];
 
 function StoreList() {
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [filter, setFilter] = useState({
     userId: '',
@@ -48,10 +50,8 @@ function StoreList() {
 
 const fetchStores = async (params = {}) => {
   try {
-    // 파라미터가 포함될지 검사
+    setLoading(true); // 로딩 시작
     const cleanedParams = {};
-
-    // 문자열 필드 필터링
     const stringFields = [
       'userId', 'userName', 'userPhone', 'storeBossName',
       'storeRequestStatusName', 'storeTransactionStatus',
@@ -60,17 +60,16 @@ const fetchStores = async (params = {}) => {
 
     stringFields.forEach((key) => {
       if (params[key] !== '' && params[key] !== undefined) {
-          cleanedParams[key] = params[key];
+        cleanedParams[key] = params[key];
       }
     });
 
-    // 날짜 필드 포맷팅 (YYYY-MM-DD)
     if (params.storeCreateDateStart)
       cleanedParams.storeCreateDateStart = dayjs(params.storeCreateDateStart).format('YYYY-MM-DD');
     if (params.storeCreateDateEnd)
       cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
 
-    const response = await getStoreList( // 있는 데이터만 파라미터로 보냄
+    const response = await getStoreList(
       Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
     );
 
@@ -83,17 +82,20 @@ const fetchStores = async (params = {}) => {
   } catch (error) {
     console.error('조회 실패:', error);
     alert('데이터를 불러오는 데 실패했습니다.');
+  } finally {
+    setLoading(false); // 로딩 종료
   }
 };
 
+
   // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
   useEffect(() => {
-    fetchStores(); 
+    fetchStores({}); // 최초 진입 시에만 로딩중 표시
   }, []);
 
   // 조회 버튼 클릭 시 → 현재 검색 조건으로 조회
   const handleSearch = () => {
-    fetchStores({ ...filter });
+    fetchStores({ ...filter }); // 검색 시에는 로딩중 표시 안 함
   };
 
   const handleExcelDownload = () =>{
@@ -114,137 +116,141 @@ const fetchStores = async (params = {}) => {
         </Box>
         <div className="filter-card">
           <Grid container spacing={2} mb={2}>
-            <Grid item xs={2}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 ID"
-                value={filter.userId}
-                onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="이름"
-                value={filter.userName}
-                onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="핸드폰 번호"
-                value={filter.userPhone}
-                onChange={(e) => setFilter({ ...filter, userPhone: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="대표자 이름"
-                value={filter.storeBossName}
-                onChange={(e) => setFilter({ ...filter, storeBossName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
-                <InputLabel>승인 여부</InputLabel>
-                <Select
-                  label="승인 여부"
-                  value={filter.storeRequestStatusName}
-                  onChange={(e) => setFilter({ ...filter, storeRequestStatusName: e.target.value })}
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="승인">승인</MenuItem>
-                  <MenuItem value="대기">대기</MenuItem>
-                  <MenuItem value="거절">거절</MenuItem>
-                  <MenuItem value="보류">보류</MenuItem>
-                  <MenuItem value="해지">해지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+                <Grid item xs={2}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="가맹점 ID"
+                    value={filter.userId}
+                    onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="이름"
+                    value={filter.userName}
+                    onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="핸드폰 번호"
+                    value={filter.userPhone}
+                    onChange={(e) => setFilter({ ...filter, userPhone: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="대표자 이름"
+                    value={filter.storeBossName}
+                    onChange={(e) => setFilter({ ...filter, storeBossName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={2.5}>
+                  <FormControl fullWidth size="small" margin="dense">
+                    <InputLabel>승인 여부</InputLabel>
+                    <Select
+                      label="승인 여부"
+                      value={filter.storeRequestStatusName}
+                      onChange={(e) => setFilter({ ...filter, storeRequestStatusName: e.target.value })}
+                    >
+                      <MenuItem value="">전체</MenuItem>
+                      <MenuItem value="승인">승인</MenuItem>
+                      <MenuItem value="대기">대기</MenuItem>
+                      <MenuItem value="거절">거절</MenuItem>
+                      <MenuItem value="보류">보류</MenuItem>
+                      <MenuItem value="해지">해지</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
 
-            <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
-                <InputLabel>거래 상태</InputLabel>
-                <Select
-                  label="거래 상태"
-                  value={filter.storeTransactionStatus}
-                  onChange={(e) => setFilter({ ...filter, storeTransactionStatus: e.target.value })}
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="정상">정상</MenuItem>
-                  <MenuItem value="정지">정지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="상호명"
-                value={filter.storeCorporateName}
-                onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 명"
-                value={filter.storeName}
-                onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="사업자 이름"
-                value={filter.businessUserName}
-                onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <DatePicker
-                label="신청일 시작"
-                format="YYYY-MM-DD"
-                value={filter.storeCreateDateStart}
-                onChange={(date) => setFilter({ ...filter, storeCreateDateStart: date })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <DatePicker
-                label="신청일 종료"
-                format="YYYY-MM-DD"
-                value={filter.storeCreateDateEnd}
-                onChange={(date) => setFilter({ ...filter, storeCreateDateEnd: date })}
-              />
-            </Grid>
-          </Grid>
-        </div>
+                <Grid item xs={2.5}>
+                  <FormControl fullWidth size="small" margin="dense">
+                    <InputLabel>거래 상태</InputLabel>
+                    <Select
+                      label="거래 상태"
+                      value={filter.storeTransactionStatus}
+                      onChange={(e) => setFilter({ ...filter, storeTransactionStatus: e.target.value })}
+                    >
+                      <MenuItem value="">전체</MenuItem>
+                      <MenuItem value="정상">정상</MenuItem>
+                      <MenuItem value="정지">정지</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="상호명"
+                    value={filter.storeCorporateName}
+                    onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="가맹점 명"
+                    value={filter.storeName}
+                    onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="사업자 이름"
+                    value={filter.businessUserName}
+                    onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <DatePicker
+                    label="신청일 시작"
+                    format="YYYY-MM-DD"
+                    value={filter.storeCreateDateStart}
+                    onChange={(date) => setFilter({ ...filter, storeCreateDateStart: date })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <DatePicker
+                    label="신청일 종료"
+                    format="YYYY-MM-DD"
+                    value={filter.storeCreateDateEnd}
+                    onChange={(date) => setFilter({ ...filter, storeCreateDateEnd: date })}
+                  />
+                </Grid>
+              </Grid>
+            </div>
 
-        <div className="data-grid-container">
-          <DataGrid
-            rows={rows}
-            columns={columns}
-            pageSize={25}
-            rowsPerPageOptions={[25, 50, 100]}
-          />
-        </div>
-      </Box>
-    </LocalizationProvider>
+            <div className="data-grid-container">
+              <DataGrid
+                rows={rows}
+                columns={columns}
+                pageSize={25}
+                rowsPerPageOptions={[25, 50, 100]}
+                loading={loading}
+                slots={{
+                  noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+                }}
+              />
+            </div>
+          </Box>
+        </LocalizationProvider>
   );
 }
 
