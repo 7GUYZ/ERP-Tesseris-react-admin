@@ -39,3 +39,80 @@
   padding: 12px;
   border: 1px solid #dcdfe6;
 }
+.store-search-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.store-search-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: white;
+}
+
+.store-search-btn.search {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.store-search-btn.search:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.store-search-btn.search:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.store-search-btn.excel {
+  background-color: #10b981;
+  color: white;
+}
+
+.store-search-btn.excel:hover {
+  background-color: #059669;
+  transform: translateY(-1px);
+}
+
+.store-search-btn.excel:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.store-search-btn.all-excel {
+  background-color: #06b6d4;
+  color: white;
+}
+
+.store-search-btn.all-excel:hover {
+  background-color: #0891b2;
+  transform: translateY(-1px);
+}
+
+.store-search-btn.all-excel:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.store-list-container {
+  background: white;
+  border-radius: 12px;
+  overflow: visible;
+  border: 1px solid lightgray;
+}

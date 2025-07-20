@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { TextField, Button, Grid, Box,MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { TextField,  Grid, Box,MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+
 
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import RealTimeChat from '../../../components/chat/RealTimeChat';
+import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 
 const columns = [
@@ -35,6 +37,7 @@ const columns = [
 function StoreList() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
   const [filter, setFilter] = useState({
     userId: '',
     userName: '', // 
@@ -99,22 +102,64 @@ const fetchStores = async (params = {}) => {
     fetchStores({ ...filter }); // 검색 시에는 로딩중 표시 안 함
   };
 
-  const handleExcelDownload = () =>{
-    alert("엑셀");
+  const handleExcelDownload = () => {
+    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
+    const excelData = rows.map(row => {
+      const { id, ...dataWithoutId } = row;
+      return dataWithoutId;
+    });
+    
+    downloadExcel(excelData, '가맹점회원리스트', '가맹점회원정보');
+  }
+
+  const handleSelectedExcelDownload = () => {
+    if (!selectedRows || selectedRows.size === 0) {
+      alert('다운로드할 항목을 체크해주세요.');
+      return;
+    }
+    
+    // 선택된 행들의 실제 인덱스 계산 (id - 1)
+    const selectedIndices = new Set();
+    selectedRows.forEach(id => {
+      selectedIndices.add(id - 1); // id는 index + 1이므로 실제 인덱스는 id - 1
+    });
+    
+    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
+    const excelData = rows.map(row => {
+      const { id, ...dataWithoutId } = row;
+      return dataWithoutId;
+    });
+    
+    downloadSelectedExcel(excelData, selectedIndices, '가맹점회원리스트_선택항목', '가맹점회원정보');
   }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="store-list-container" >
         <div className="store-list-title">가맹점 회원 리스트</div>
-        <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
-          <Button variant="outlined" color="success" onClick={handleExcelDownload}>
-             엑셀 다운로드
-          </Button>
-          <Button variant="outlined" onClick={handleSearch}>
-             조회
-          </Button>
-        </Box>
+        <div className="member-asset-search-actions">
+          <button 
+            className="member-asset-search-btn excel" 
+            onClick={handleSelectedExcelDownload}
+            disabled={selectedRows.size === 0}
+          >
+            선택 엑셀
+          </button>
+          <button 
+            className="member-asset-search-btn excel" 
+            onClick={handleExcelDownload}
+            disabled={rows.length === 0}
+          >
+            전체 엑셀
+          </button>
+          <button
+            className="member-asset-search-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
+          </button>
+        </div>
         <div className="filter-card">
           <Grid container spacing={2} mb={2}>
                 <Grid item xs={2}>
@@ -165,7 +210,7 @@ const fetchStores = async (params = {}) => {
                       value={filter.storeRequestStatusName}
                       onChange={(e) => setFilter({ ...filter, storeRequestStatusName: e.target.value })}
                     >
-                      <MenuItem value="">전체</MenuItem>
+                      <MenuItem value="전체">전체</MenuItem>
                       <MenuItem value="승인">승인</MenuItem>
                       <MenuItem value="대기">대기</MenuItem>
                       <MenuItem value="거절">거절</MenuItem>
@@ -183,7 +228,7 @@ const fetchStores = async (params = {}) => {
                       value={filter.storeTransactionStatus}
                       onChange={(e) => setFilter({ ...filter, storeTransactionStatus: e.target.value })}
                     >
-                      <MenuItem value="">전체</MenuItem>
+                      <MenuItem value="전체">전체</MenuItem>
                       <MenuItem value="정상">정상</MenuItem>
                       <MenuItem value="정지">정지</MenuItem>
                     </Select>
@@ -245,6 +290,19 @@ const fetchStores = async (params = {}) => {
                 pageSize={25}
                 rowsPerPageOptions={[25, 50, 100]}
                 loading={loading}
+                checkboxSelection
+                disableRowSelectionOnClick
+                onRowSelectionModelChange={(newSelection) => {
+                  // newSelection이 객체이고 ids 속성이 있는 경우
+                  if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+                    setSelectedRows(newSelection.ids);
+                  } else if (Array.isArray(newSelection)) {
+                    // 배열인 경우 (이전 버전 호환성)
+                    setSelectedRows(new Set(newSelection));
+                  } else {
+                    setSelectedRows(new Set());
+                  }
+                }}
                 slots={{
                   noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
                 }}
