@@ -2,13 +2,11 @@ import React, { useState, useMemo } from "react";
 import { DataGrid } from '@mui/x-data-grid';
 import Checkbox from '@mui/material/Checkbox';
 
-const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
+const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [selectedRows, setSelectedRows] = useState(new Set());
 
-
-  
   // 메모이제이션으로 성능 최적화 및 안정성 확보
   const processedData = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
@@ -18,18 +16,15 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       id: index, 
       ...item,
       // 모든 필드가 존재하는지 확인
-      fromGrade: item?.fromGrade || '',
-      fromId: item?.fromId || '',
-      toGrade: item?.toGrade || '',
-      toId: item?.toId || '',
-      toName: item?.toName || '',
-      transactionType: item?.transactionType || '',
-      amount: item?.amount || 0,
-      unit: item?.unit || '',
-      usedValue: item?.usedValue || 0,
-      couponUsedValue: item?.couponUsedValue || 0,
-      reason: item?.reason || '',
-      occurredDate: item?.occurredDate || ''
+      memberId: item?.id || '',
+      name: item?.name || '',
+      phone: item?.phone || '',
+      grade: item?.grade || '',
+      franchiseName: item?.franchiseName || '',
+      cmHeld: item?.cmHeld || 0,
+      cmpHeld: item?.cmpHeld || 0,
+      cashHeld: item?.cashHeld || 0,
+      registrationDate: item?.registrationDate || ''
     }));
   }, [data]);
 
@@ -91,7 +86,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       ),
     },
     { 
-      field: "id", 
+      field: "rowNumber", 
       headerName: "순번", 
       width: 80, 
       minWidth: 80, 
@@ -101,30 +96,14 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       headerAlign: 'center',
       renderCell: (params) => params.row.id + 1
     },
-    { field: "fromGrade", headerName: "FROM 등급", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "fromId", headerName: "FROM ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toGrade", headerName: "TO 등급", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toId", headerName: "TO ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toName", headerName: "TO 이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "transactionType", headerName: "거래 유형", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "memberId", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "phone", headerName: "전화번호", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "grade", headerName: "등급", width: 100, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "franchiseName", headerName: "가맹점 명", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     {
-      field: "amount",
-      headerName: "금액",
-      width: 100,
-      minWidth: 100,
-      flex: 1,
-      type: 'number',
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
-      }
-    },
-    { field: "unit", headerName: "단위", width: 80, minWidth: 80, flex: 1, align: 'center', headerAlign: 'center' },
-    {
-      field: "usedValue",
-      headerName: "사용 금액",
+      field: "cmHeld",
+      headerName: "보유 CM",
       width: 120,
       minWidth: 120,
       flex: 1,
@@ -137,10 +116,10 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       }
     },
     {
-      field: "couponUsedValue",
-      headerName: "쿠폰 사용 금액",
-      width: 150,
-      minWidth: 150,
+      field: "cmpHeld",
+      headerName: "보유 CMP",
+      width: 120,
+      minWidth: 120,
       flex: 1,
       type: 'number',
       align: 'center',
@@ -150,20 +129,27 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
         return params.value.toLocaleString();
       }
     },
-    { field: "reason", headerName: "사유", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "occurredDate", headerName: "발생일", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' }
+    {
+      field: "cashHeld",
+      headerName: "보유 Cash",
+      width: 120,
+      minWidth: 120,
+      flex: 1,
+      type: 'number',
+      align: 'center',
+      headerAlign: 'center',
+      valueFormatter: (params) => {
+        if (params.value == null) return "0";
+        return params.value.toLocaleString();
+      }
+    },
+    { field: "registrationDate", headerName: "등록일", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
   ];
 
-
-
-
-
-
-  
   // 안전장치: data가 undefined나 null인 경우 처리
   if (data === undefined || data === null) {
     return (
-      <div className="member-asset-search-table-container" style={{ 
+      <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
         height: '400px',
         display: 'flex',
@@ -393,7 +379,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
   // 데이터가 없으면 로딩 상태 표시
   if (!Array.isArray(data)) {
     return (
-      <div className="member-asset-search-table-container" style={{ 
+      <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
         height: '400px',
         display: 'flex',
@@ -410,7 +396,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
   // 빈 데이터일 때 처리
   if (processedData.length === 0) {
     return (
-      <div className="member-asset-search-table-container" style={{ 
+      <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
         height: '400px',
         display: 'flex',
@@ -425,7 +411,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
   }
 
   return (
-    <div className="member-asset-search-table-container" style={{ 
+    <div className="member-asset-details-table-container" style={{ 
       width: '100%', 
       overflow: 'hidden',
       borderRadius: '12px',
@@ -436,4 +422,4 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
   );
 };
 
-export default MemberAssetSearchTable; 
+export default MemberAssetDetailsTable; 

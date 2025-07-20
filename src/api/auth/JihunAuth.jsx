@@ -1,10 +1,20 @@
 import { api } from "../Http"
+// 회원 자산 내역
 export const memberaccount = () => api.get("/memberaccount");
 export const memberaccountSearch = (data) => api.post("/memberaccount/search", data);
 export const memberaccountLookupRoles = () => api.get("/memberaccount/lookup/roles");
 export const memberaccountLookupValueTypes = () => api.get("/memberaccount/lookup/value-types");
 export const memberaccountLookupPaymentTypes = () => api.get("/memberaccount/lookup/payment-types");
 export const memberaccountLookupTransactionTypes = () => api.get("/memberaccount/lookup/transaction-types");
+
+// 회원 자산 현황
+export const memberassetdetails = () => api.get("/memberassetdetails");
+export const memberassetdetailsSearch = (data) => api.post("/memberassetdetails/search", data);
+export const memberassetdetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
+
+
+
+// ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
   // 요청 인터셉터
