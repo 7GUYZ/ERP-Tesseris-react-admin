@@ -82,6 +82,8 @@ textarea:focus {
   border-radius: 6px;
   border: none;
   cursor: pointer;
+  height: 40px;
+  width: 75px;
 }
 
 /* 파란 버튼 */

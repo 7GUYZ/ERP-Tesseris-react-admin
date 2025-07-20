@@ -15,7 +15,7 @@ function JiyoonRoute() {
         <Route path="/commissionSetting" element={<CommissionSetting />} />
         <Route path="/cmsAccessLog" element={<CmsAccessLog />} />
         <Route path="/notice/list" element={<NoticeList />} />
-        <Route path="/notice/update/:id" element={<NoticeUpdate />} />
+        <Route path="/notice/update/:noticeIndex" element={<NoticeUpdate />} />
         <Route path="/notice/write" element={<NoticeWrite />} />
         <Route path="/updateLog" element={<UpdateLog />} />
       </Route>

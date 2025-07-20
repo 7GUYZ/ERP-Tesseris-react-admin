@@ -6,11 +6,16 @@ import {
   noticeDelete,
 } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/notice/notice-update.css";
+import PwModal from "../../../components/feature/jiyun/PwModal";
+import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeUpdate() {
   const { noticeIndex } = useParams();
   const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
+  const [modalType, setModalType] = useState(null); // 'update' | 'delete' | null
+  const [isPwModalOpen, setIsPwModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchNotice = async () => {
@@ -22,7 +27,7 @@ export default function NoticeUpdate() {
         });
       } catch {
         alert("공지사항을 불러오지 못했습니다.");
-        navigate("/notice");
+        navigate("/notice/list");
       }
     };
     fetchNotice();
@@ -32,31 +37,47 @@ export default function NoticeUpdate() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  // 기존 handleSubmit → 모달 오픈으로 변경
+  const handleUpdateClick = (e) => {
     e.preventDefault();
-    try {
-      await noticeUpdate({ ...form, noticeIndex });
-      alert("공지사항이 수정되었습니다.");
-      navigate("/notice");
-    } catch {
-      alert("수정 실패");
-    }
+    setModalType("update");
+    setIsPwModalOpen(true);
   };
 
-  const handleDelete = async () => {
-    if (window.confirm("정말 삭제하시겠습니까?")) {
+  const handleDeleteClick = () => {
+    setModalType("delete");
+    setIsPwModalOpen(true);
+  };
+
+  // PwModal에서 확인 시 호출되는 콜백
+  const handlePwConfirm = async (password) => {
+    if (modalType === "update") {
       try {
-        await noticeDelete(noticeIndex);
-        alert("삭제되었습니다.");
-        navigate("/notice");
+        await noticeUpdate({ ...form, noticeIndex, password });
+        showToast("success", "공지사항이 수정되었습니다.");
+        setIsPwModalOpen(false);
+        navigate("/notice/list");
       } catch {
-        alert("삭제 실패");
+        showToast("error", "비밀번호가 일치하지 않습니다.");
+      }
+    } else if (modalType === "delete") {
+      try {
+        await noticeDelete({ noticeIndex, password });
+        showToast("success", "삭제되었습니다.");
+        setIsPwModalOpen(false);
+        navigate("/notice/list");
+      } catch {
+        showToast("error", "비밀번호가 일치하지 않습니다.");
       }
     }
   };
 
+  const handlePwModalClose = () => {
+    setIsPwModalOpen(false);
+  };
+
   const handleCancel = () => {
-    navigate("/notice");
+    navigate("/notice/list");
   };
 
   return (
@@ -65,7 +86,7 @@ export default function NoticeUpdate() {
         고객센터 관리 &gt; 공지사항 관리 &gt; 공지사항 수정
       </div>
       <h1>공지사항 수정</h1>
-      <form className="notice-form" onSubmit={handleSubmit}>
+      <form className="notice-form" onSubmit={handleUpdateClick}>
         <div className="form-group">
           <label htmlFor="noticeTitle">
             제목 <span className="required">*</span>
@@ -105,7 +126,7 @@ export default function NoticeUpdate() {
           <button
             type="button"
             className="btn btn-danger"
-            onClick={handleDelete}
+            onClick={handleDeleteClick}
           >
             삭제
           </button>
@@ -114,6 +135,12 @@ export default function NoticeUpdate() {
           </button>
         </div>
       </form>
+      <PwModal
+        isOpen={isPwModalOpen}
+        onClose={handlePwModalClose}
+        onConfirm={handlePwConfirm}
+        title={modalType === "delete" ? "삭제 비밀번호 확인" : "수정 비밀번호 확인"}
+      />
     </div>
   );
 }
