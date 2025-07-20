@@ -1,11 +1,24 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { DataGrid } from '@mui/x-data-grid';
 import Checkbox from '@mui/material/Checkbox';
 
-const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+const MemberAssetDetailsTable = ({ 
+  data = [], 
+  onSelectionChange, 
+  totalCount = 0,
+  currentPage = 0,
+  pageSize = 25,
+  onPageChange,
+  onPageSizeChange,
+  loading = false
+}) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
+
+  // 데이터가 변경될 때 선택된 행들 초기화
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setSelectAll(false);
+  }, [data]);
 
   // 메모이제이션으로 성능 최적화 및 안정성 확보
   const processedData = useMemo(() => {
@@ -15,18 +28,18 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     
     return data.map((item, index) => { 
       const processedItem = { 
-        id: index, 
-        ...item,
-        // 모든 필드가 존재하는지 확인
-        memberId: item?.id || '',
-        name: item?.name || '',
-        phone: item?.phone || '',
-        grade: item?.grade || '',
-        franchiseName: item?.franchiseName || '',
-        cmHeld: item?.cmHeld || 0,
-        cmpHeld: item?.cmpHeld || 0,
-        cashHeld: item?.cashHeld || 0,
-        registrationDate: item?.registrationDate || ''
+      id: index, 
+      ...item,
+      // 모든 필드가 존재하는지 확인
+      memberId: item?.id || '',
+      name: item?.name || '',
+      phone: item?.phone || '',
+      grade: item?.grade || '',
+      franchiseName: item?.franchiseName || '',
+      cmHeld: item?.cmHeld || 0,
+      cmpHeld: item?.cmpHeld || 0,
+      cashHeld: item?.cashHeld || 0,
+      registrationDate: item?.registrationDate || ''
       };
       
       return processedItem;
@@ -35,6 +48,9 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
+  
+  // 디버깅: rowCount 확인
+  console.log(`MemberAssetDetailsTable - 데이터 개수: ${rowsWithIds?.length || 0}, 전체 개수: ${totalCount || 0}`)
 
   // 전체 선택 상태
   const [selectAll, setSelectAll] = useState(false);
@@ -198,15 +214,38 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
         <DataGrid
           rows={rowsWithIds || []}
           columns={columns}
-          rowCount={rowsWithIds?.length || 0}
-          page={page || 0}
-          pageSize={pageSize || 25}
-          pageSizeOptions={[25, 50, 100]}
-          paginationMode="client"
-          onPageChange={(newPage) => setPage(newPage || 0)}
-          onPageSizeChange={(newSize) => setPageSize(newSize || 25)}
+          rowCount={totalCount > 0 ? totalCount : (rowsWithIds?.length || 0)}
+          pageSizeOptions={[25, 50, 75, 100]}
+          paginationMode="server"
+          paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
+          onPaginationModelChange={(model) => {
+            console.log(`DataGrid paginationModel 변경:`, model)
+            console.log(`현재 상태: currentPage=${currentPage}, pageSize=${pageSize}`)
+            
+            if (model.page !== currentPage) {
+              console.log(`페이지 변경 감지: ${currentPage} -> ${model.page}`)
+              if (onPageChange) {
+                console.log(`onPageChange 호출: ${model.page}`)
+                onPageChange(model.page)
+              } else {
+                console.warn('onPageChange 핸들러가 없습니다!')
+              }
+            }
+            
+            if (model.pageSize !== pageSize) {
+              console.log(`페이지 크기 변경 감지: ${pageSize} -> ${model.pageSize}`)
+              console.log(`페이지 크기 변경 이벤트 발생!`)
+              if (onPageSizeChange) {
+                console.log(`onPageSizeChange 호출: ${model.pageSize}`)
+                onPageSizeChange(model.pageSize)
+              } else {
+                console.warn('onPageSizeChange 핸들러가 없습니다!')
+              }
+            }
+          }}
+          loading={loading}
           autoHeight={false}
-          height={400}
+          height={500}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
@@ -227,9 +266,6 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
           density="standard"
 
           initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 25 },
-            },
             columns: {
               columnVisibilityModel: {},
             },

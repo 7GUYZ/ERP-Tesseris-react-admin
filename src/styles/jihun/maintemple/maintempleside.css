@@ -335,7 +335,7 @@
   border: 1px solid #e2e8f0;
   height: 100%;
   padding: 2rem;
-  overflow: auto;
+  overflow-y: auto;
   min-height: 0;
 }
 
