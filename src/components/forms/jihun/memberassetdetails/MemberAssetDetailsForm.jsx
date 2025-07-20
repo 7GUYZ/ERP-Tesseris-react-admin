@@ -4,7 +4,9 @@ import PaymentCollectionModal from "./PaymentCollectionModal.jsx"
 import {
   ajgMemberAssetDetails,
   ajgMemberAssetDetailsSearch,
-  ajgMemberAssetDetailsLookupGrades
+  ajgMemberAssetDetailsLookupGrades,
+  ajgMemberAssetDetailsPayment,
+  ajgMemberAssetDetailsCollection
 } from "../../../../api/auth/JihunAuth.jsx"
 import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
@@ -43,23 +45,40 @@ const MemberAssetDetailsForm = () => {
       const response = await ajgMemberAssetDetails()
       
       if (response.data && response.data.content) {
-        const transformedData = response.data.content.map((item, index) => ({
-          id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용
-          email: item.userEmail || item.userId || "", // 전체 이메일 주소도 저장
-          name: item.userName || "",
-          phone: item.userPhone || "",
-          grade: item.userRoleKorNm || "",
-          franchiseName: item.storeName || "",
-          cmHeld: item.userCmCurrent || "0",
-          cmpHeld: item.userCmpCurrent || "0",
-          cashHeld: item.userCashCurrent || "0",
-          registrationDate: item.userCreateTime ? 
-            new Date(item.userCreateTime).toISOString().split('T')[0] : "",
-          // 고유한 키를 위한 필드 추가
-          uniqueKey: item.userIndex || `row-${index}`,
-          // 순번 필드 추가
-          rowNumber: index + 1
-        }))
+        const transformedData = response.data.content.map((item, index) => {
+          // CM 값 변환 로직 개선
+          let cmHeld = 0;
+          if (item.userCmCurrent !== null && item.userCmCurrent !== undefined) {
+            if (typeof item.userCmCurrent === 'string') {
+              // 문자열인 경우 직접 parseInt 사용 (쉼표가 없으므로 replace 불필요)
+              cmHeld = parseInt(item.userCmCurrent) || 0;
+            } else if (typeof item.userCmCurrent === 'number') {
+              cmHeld = item.userCmCurrent;
+            }
+          }
+          
+          return {
+            id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용 (엑셀용)
+            email: item.userEmail || item.userId || "", // 전체 이메일 주소도 저장
+            name: item.userName || "",
+            phone: item.userPhone || "",
+            grade: item.userRoleKorNm || "",
+            franchiseName: item.storeName || "",
+            cmHeld: cmHeld,
+            cmpHeld: item.userCmpCurrent ? (typeof item.userCmpCurrent === 'string' ? parseInt(item.userCmpCurrent) : item.userCmpCurrent) || 0 : 0,
+            cashHeld: item.userCashCurrent ? (typeof item.userCashCurrent === 'string' ? parseInt(item.userCashCurrent) : item.userCashCurrent) || 0 : 0,
+            registrationDate: item.userCreateTime ? 
+              new Date(item.userCreateTime).toISOString().split('T')[0] : "",
+            // 고유한 키를 위한 필드 추가
+            uniqueKey: item.userIndex || `row-${index}`,
+            // 순번 필드 추가
+            rowNumber: index + 1,
+            // 지급/회수용 UUID 필드 추가
+            userIndex: item.userIndex || "",
+            // users.id (UUID) 필드 추가
+            usersId: item.userId || ""
+          };
+        });
         
         setSearchResults(transformedData)
       } else {
@@ -141,23 +160,40 @@ const MemberAssetDetailsForm = () => {
               const response = await ajgMemberAssetDetailsSearch(searchRequest)
       
       if (response.data && response.data.content) {
-        const transformedData = response.data.content.map((item, index) => ({
-          id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용
-          email: item.userEmail || item.userId || "", // 전체 이메일 주소 저장
-          name: item.userName || "",
-          phone: item.userPhone || "",
-          grade: item.userRoleKorNm || "",
-          franchiseName: item.storeName || "",
-          cmHeld: item.userCmCurrent || "0",
-          cmpHeld: item.userCmpCurrent || "0",
-          cashHeld: item.userCashCurrent || "0",
-          registrationDate: item.userCreateTime ? 
-            new Date(item.userCreateTime).toISOString().split('T')[0] : "",
-          // 고유한 키를 위한 필드 추가
-          uniqueKey: item.userIndex || `row-${index}`,
-          // 순번 필드 추가
-          rowNumber: index + 1
-        }))
+        const transformedData = response.data.content.map((item, index) => {
+          // CM 값 변환 로직 개선
+          let cmHeld = 0;
+          if (item.userCmCurrent !== null && item.userCmCurrent !== undefined) {
+            if (typeof item.userCmCurrent === 'string') {
+              // 문자열인 경우 직접 parseInt 사용 (쉼표가 없으므로 replace 불필요)
+              cmHeld = parseInt(item.userCmCurrent) || 0;
+            } else if (typeof item.userCmCurrent === 'number') {
+              cmHeld = item.userCmCurrent;
+            }
+          }
+          
+          return {
+            id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""), // 이메일에서 @ 앞부분만 추출, 없으면 userId 사용 (엑셀용)
+            email: item.userEmail || item.userId || "", // 전체 이메일 주소 저장
+            name: item.userName || "",
+            phone: item.userPhone || "",
+            grade: item.userRoleKorNm || "",
+            franchiseName: item.storeName || "",
+            cmHeld: cmHeld,
+            cmpHeld: item.userCmpCurrent ? (typeof item.userCmpCurrent === 'string' ? parseInt(item.userCmpCurrent) : item.userCmpCurrent) || 0 : 0,
+            cashHeld: item.userCashCurrent ? (typeof item.userCashCurrent === 'string' ? parseInt(item.userCashCurrent) : item.userCashCurrent) || 0 : 0,
+            registrationDate: item.userCreateTime ? 
+              new Date(item.userCreateTime).toISOString().split('T')[0] : "",
+            // 고유한 키를 위한 필드 추가
+            uniqueKey: item.userIndex || `row-${index}`,
+            // 순번 필드 추가
+            rowNumber: index + 1,
+            // 지급/회수용 UUID 필드 추가
+            userIndex: item.userIndex || "",
+            // users.id (UUID) 필드 추가
+            usersId: item.userId || ""
+          };
+        });
 
         setSearchResults(transformedData)
       } else {
@@ -245,21 +281,69 @@ const MemberAssetDetailsForm = () => {
 
   // 지급/회수 제출 핸들러
   const handlePaymentSubmit = async (paymentData) => {
-    // 다중선택된 항목들에 대해 처리
-    if (selectedRows.size > 1) {
+    try {
+      // 선택된 모든 회원들의 정보를 배열로 수집
       const selectedMembers = Array.from(selectedRows).map(selectedId => 
         searchResults.find(row => row.id === selectedId)
       ).filter(Boolean);
-      alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 ${selectedRows.size}명의 회원에 대해 완료되었습니다.`);
-    } else {
-      alert(`${paymentData.amount > 0 ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
-    }
-    
-    // 처리 완료 후 데이터 새로고침
-    try {
-      await loadInitialData();
+      
+      // 백엔드 API 요청 데이터 구성
+      const requestData = {
+        members: selectedMembers.map(member => ({
+          memberId: member.usersId, // UUID 사용
+          currentCmHeld: member.cmHeld
+        })),
+        amount: paymentData.amount, // 이미 양수/음수로 구분되어 있음
+        reason: paymentData.reason
+      };
+      
+      console.log("백엔드 요청 데이터:", requestData);
+      
+      // 백엔드 API 호출 (지급/회수 구분 없이 동일한 엔드포인트 사용)
+      const response = await ajgMemberAssetDetailsPayment(requestData);
+      
+      const result = response.data;
+      
+      if (result.success) {
+        // 처리 결과 알림
+        const totalCount = result.totalCount || selectedMembers.length;
+        const successCount = result.successCount || totalCount;
+        const failureCount = result.failureCount || 0;
+        const isPayment = paymentData.amount > 0;
+        
+        if (totalCount > 1) {
+          if (failureCount > 0) {
+            // 부분 실패 시 상세 정보 제공
+            const failedMembers = result.results?.filter(r => !r.success).map(r => r.memberId) || [];
+            alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리 결과:\n` +
+                  `전체: ${totalCount}명\n` +
+                  `성공: ${successCount}명\n` +
+                  `실패: ${failureCount}명\n` +
+                  `실패 회원: ${failedMembers.join(', ')}`);
+          } else {
+            alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
+          }
+        } else {
+          alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
+        }
+        
+        // 처리 완료 후 데이터 새로고침
+        await loadInitialData();
+      } else {
+        // 전체 실패 시 상세 정보 제공
+        const totalCount = result.totalCount || selectedMembers.length;
+        const failureCount = result.failureCount || totalCount;
+        const failedMembers = result.results?.filter(r => !r.success).map(r => r.memberId) || [];
+        
+        alert(`처리 실패:\n` +
+              `전체: ${totalCount}명\n` +
+              `실패: ${failureCount}명\n` +
+              `실패 회원: ${failedMembers.join(', ')}\n` +
+              `실패 원인: ${result.message}`);
+      }
     } catch (error) {
-      console.error("데이터 새로고침 중 오류:", error);
+      console.error("지급/회수 처리 중 오류:", error);
+      alert("처리 중 오류가 발생했습니다.");
     }
   }
 
@@ -277,18 +361,18 @@ const MemberAssetDetailsForm = () => {
             엑셀
           </button>
           <button
-            className="member-asset-details-btn search"
-            onClick={handleSearch}
-            disabled={loading}
-          >
-            {loading ? "조회 중..." : "조회"}
-          </button>
-          <button
             className="member-asset-details-btn payment"
             onClick={handlePaymentAndCollection}
             disabled={false}
           >
             지급 및 회수
+          </button>
+          <button
+            className="member-asset-details-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
           </button>
         </div>
       </div>

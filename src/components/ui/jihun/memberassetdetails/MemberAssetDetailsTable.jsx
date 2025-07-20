@@ -12,20 +12,25 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     if (!Array.isArray(data) || data.length === 0) {
       return []; // 빈 배열 반환
     }
-    return data.map((item, index) => ({ 
-      id: index, 
-      ...item,
-      // 모든 필드가 존재하는지 확인
-      memberId: item?.id || '',
-      name: item?.name || '',
-      phone: item?.phone || '',
-      grade: item?.grade || '',
-      franchiseName: item?.franchiseName || '',
-      cmHeld: item?.cmHeld || 0,
-      cmpHeld: item?.cmpHeld || 0,
-      cashHeld: item?.cashHeld || 0,
-      registrationDate: item?.registrationDate || ''
-    }));
+    
+    return data.map((item, index) => { 
+      const processedItem = { 
+        id: index, 
+        ...item,
+        // 모든 필드가 존재하는지 확인
+        memberId: item?.id || '',
+        name: item?.name || '',
+        phone: item?.phone || '',
+        grade: item?.grade || '',
+        franchiseName: item?.franchiseName || '',
+        cmHeld: item?.cmHeld || 0,
+        cmpHeld: item?.cmpHeld || 0,
+        cashHeld: item?.cashHeld || 0,
+        registrationDate: item?.registrationDate || ''
+      };
+      
+      return processedItem;
+    });
   }, [data]);
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
@@ -107,12 +112,22 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        // params 자체가 값이므로 params.value 대신 params 사용
+        const value = params.value !== undefined ? params.value : params;
+        
+        // null, undefined, 빈 문자열 체크
+        if (value == null || value === '') {
+          return "0";
+        }
+        
+        // 숫자로 변환 후 포맷팅
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        
+        const result = isNaN(numValue) ? "0" : numValue.toLocaleString();
+        return result;
       }
     },
     {
@@ -121,12 +136,13 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     {
@@ -135,12 +151,13 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     { field: "registrationDate", headerName: "등록일", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
