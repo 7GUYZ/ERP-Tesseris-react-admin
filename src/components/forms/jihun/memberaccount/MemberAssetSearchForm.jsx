@@ -3,7 +3,6 @@ import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetS
 import {
   memberaccountSearch,
   memberaccountLookupRoles,
-  memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
 } from "../../../../api/auth/JihunAuth.jsx"
 import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
@@ -159,7 +158,7 @@ const MemberAssetSearchForm = () => {
       } finally {
       setLoading(false)
     }
-  }, [extractEmailId, pageSize])
+  }, [extractEmailId, pageSize, formData])
 
   // 초기 데이터 로딩 함수 (서버 사이드 페이징 사용)
   const loadInitialData = useCallback(async () => {
@@ -233,14 +232,13 @@ const MemberAssetSearchForm = () => {
     const loadOptions = async () => {
       try {
         setLoading(true)
-        const [rolesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
+        const [rolesRes, transactionTypesRes] = await Promise.all([
           memberaccountLookupRoles(),
-          memberaccountLookupPaymentTypes(),
           memberaccountLookupTransactionTypes()
         ])
         setOptions({
           roles: rolesRes.data || [],
-          paymentTypes: paymentTypesRes.data || [],
+          paymentTypes: [],
           transactionTypes: transactionTypesRes.data || []
         })
         

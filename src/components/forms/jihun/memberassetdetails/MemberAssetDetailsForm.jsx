@@ -5,8 +5,7 @@ import {
   ajgMemberAssetDetails,
   ajgMemberAssetDetailsSearch,
   ajgMemberAssetDetailsLookupGrades,
-  ajgMemberAssetDetailsPayment,
-  ajgMemberAssetDetailsCollection
+  ajgMemberAssetDetailsPayment
 } from "../../../../api/auth/JihunAuth.jsx"
 import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
@@ -140,7 +139,7 @@ const MemberAssetDetailsForm = () => {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [formData])
 
   // 초기 데이터 로딩 함수
   const loadInitialData = useCallback(async () => {

@@ -14,6 +14,9 @@ const MemberAssetDetailsTable = ({
 }) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
 
+  // 전체 선택 상태
+  const [selectAll, setSelectAll] = useState(false);
+
   // 데이터가 변경될 때 선택된 행들 초기화
   useEffect(() => {
     setSelectedRows(new Set());
@@ -48,11 +51,6 @@ const MemberAssetDetailsTable = ({
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
-  
-
-
-  // 전체 선택 상태
-  const [selectAll, setSelectAll] = useState(false);
 
   // Data Grid 컬럼 정의
   const columns = [

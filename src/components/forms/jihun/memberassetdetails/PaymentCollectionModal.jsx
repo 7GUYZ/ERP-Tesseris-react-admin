@@ -1,8 +1,4 @@
 import { useState, useEffect } from "react"
-import {
-  ajgMemberAssetDetailsPayment,
-  ajgMemberAssetDetailsCollection
-} from "../../../../api/auth/JihunAuth.jsx"
 import "../../../../styles/jihun/memberassetdetails/PaymentCollectionModal.css"
 
 /**

@@ -70,9 +70,11 @@ export const downloadExcel = (data, fileName, sheetName = 'Sheet1', includeDate 
     // 엑셀 파일 다운로드
     XLSX.writeFile(workbook, finalFileName);
 
+    // eslint-disable-next-line no-console
     console.log(`엑셀 다운로드 완료: ${data.length}개 항목`);
     return true;
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('엑셀 다운로드 오류:', error);
     alert('엑셀 다운로드 중 오류가 발생했습니다.');
     return false;
@@ -120,13 +122,16 @@ export const downloadSelectedExcel = (allData, selectedRows, fileName, sheetName
     // 엑셀 다운로드 실행
     return downloadExcel(dataToExport, fileName, sheetName, includeDate);
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('선택 항목 엑셀 다운로드 오류:', error);
     alert('엑셀 다운로드 중 오류가 발생했습니다.');
     return false;
   }
 }
 
-export default {
+const excelUtils = {
   downloadExcel,
   downloadSelectedExcel
-} 
+}
+
+export default excelUtils 

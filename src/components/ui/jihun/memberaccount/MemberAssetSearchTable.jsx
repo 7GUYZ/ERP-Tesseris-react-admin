@@ -15,12 +15,14 @@ const MemberAssetSearchTable = ({
 
   const [selectedRows, setSelectedRows] = useState(new Set());
 
+  // 전체 선택 상태
+  const [selectAll, setSelectAll] = useState(false);
+
   // 데이터가 변경될 때 선택된 행들 초기화
   useEffect(() => {
     setSelectedRows(new Set());
     setSelectAll(false);
   }, [data]);
-
 
   
   // 메모이제이션으로 성능 최적화 및 안정성 확보
@@ -49,11 +51,6 @@ const MemberAssetSearchTable = ({
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
-  
-
-
-  // 전체 선택 상태
-  const [selectAll, setSelectAll] = useState(false);
 
   // Data Grid 컬럼 정의
   const columns = [
@@ -278,6 +275,8 @@ const MemberAssetSearchTable = ({
               }
             },
             '& .MuiDataGrid-root': {
+              overflow: 'auto !important',
+              maxHeight: '400px !important',
               border: "none",
               backgroundColor: 'white',
               borderRadius: '12px',
@@ -400,10 +399,6 @@ const MemberAssetSearchTable = ({
             },
             '& .MuiDataGrid-virtualScrollerContent': {
               overflow: 'auto !important'
-            },
-            '& .MuiDataGrid-root': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important'
             }
           }}
         />

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { href, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -38,11 +38,13 @@ const MainNavi = () => {
       if (admin_type_index) {
         try {
           const response = await menuAuthority(admin_type_index);
+          // eslint-disable-next-line no-console
           console.log(response);
           if(response.data.resultCode === 200){
             setAuthorityList(response.data.data);
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.log("권한 조회 실패 : ", error);
           showToast("error", "메뉴를 불러올 수 없습니다.");
         }
@@ -72,7 +74,7 @@ const MainNavi = () => {
     };
 
 
-  }, []);
+  }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map(a => `${a.menuIndex}-${a.programIndex}`)
@@ -514,8 +516,6 @@ const MainNavi = () => {
     );
   };
 
-  const filteredMenuItems = filterMenuByAuthority(menuConfig.items, authorityList);
-
   return (
     <div className={`sidebar sidebar-scrollbar ${sidebarOpen ? "sidebar-open" : "sidebar-closed"}`}>
       <div className="sidebar-header">
@@ -534,7 +534,7 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {menuConfig.items.map(renderMenuItem)}
+        {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
       </nav>
     </div>
   );
