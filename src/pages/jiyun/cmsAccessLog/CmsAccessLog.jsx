@@ -290,20 +290,20 @@ const CmsAccessLog = () => {
   ];
 
   return (
-    <div className="member-asset-search-container">
+    <div className="cms-accesslog-container">
       {/* 페이지 제목과 액션 버튼 */}
-      <div className="member-asset-search-page-header">
-        <h1 className="member-asset-search-page-title">CMS 접속 기록</h1>
-        <div className="member-asset-search-actions">
+      <div className="cms-accesslog-page-header">
+        <h1 className="cms-accesslog-page-title">CMS 접속 기록</h1>
+        <div className="cms-accesslog-actions">
           <button 
-            className="member-asset-search-btn excel" 
+            className="cms-accesslog-btn excel" 
             onClick={handleExcelDownload}
             disabled={searchResults.length === 0}
           >
             엑셀
           </button>
           <button
-            className="member-asset-search-btn search"
+            className="cms-accesslog-btn search"
             onClick={handleSearch}
             disabled={loading}
           >
@@ -313,48 +313,48 @@ const CmsAccessLog = () => {
       </div>
 
       {/* 검색 조건 섹션 */}
-      <div className="member-asset-search-section">
+      <div className="cms-accesslog-section">
         {/* 검색 조건 토글 헤더 */}
-        <div className="member-asset-search-toggle-header">
+        <div className="cms-accesslog-toggle-header">
           <button 
-            className="member-asset-search-toggle-btn"
+            className="cms-accesslog-toggle-btn"
             onClick={() => setIsSearchFormOpen(!isSearchFormOpen)}
           >
-            <span className="member-asset-search-toggle-text">검색 조건</span>
-            <span className={`member-asset-search-toggle-icon ${isSearchFormOpen ? 'open' : 'closed'}`}>
+            <span className="cms-accesslog-toggle-text">검색 조건</span>
+            <span className={`cms-accesslog-toggle-icon ${isSearchFormOpen ? 'open' : 'closed'}`}>
               ▼
             </span>
           </button>
         </div>
         
         {/* 검색 조건 폼 */}
-        <div className={`member-asset-search-form ${isSearchFormOpen ? 'open' : 'closed'}`}>
+        <div className={`cms-accesslog-form ${isSearchFormOpen ? 'open' : 'closed'}`}>
           {/* 첫 번째 행: 아이디, 이름, IP */}
-          <div className="member-asset-search-row">
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">아이디</label>
+          <div className="cms-accesslog-row">
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">아이디</label>
               <input
-                className="member-asset-search-input"
+                className="cms-accesslog-input"
                 name="userId"
                 value={searchParams.userId}
                 onChange={handleInputChange}
                 placeholder="검색명을 입력하세요."
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">이름</label>
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">이름</label>
               <input
-                className="member-asset-search-input"
+                className="cms-accesslog-input"
                 name="userName"
                 value={searchParams.userName}
                 onChange={handleInputChange}
                 placeholder="검색명을 입력하세요."
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">IP</label>
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">IP</label>
               <input
-                className="member-asset-search-input"
+                className="cms-accesslog-input"
                 name="cmsAccessUserIp"
                 value={searchParams.cmsAccessUserIp}
                 onChange={handleInputChange}
@@ -364,11 +364,11 @@ const CmsAccessLog = () => {
           </div>
 
           {/* 두 번째 행: 등급, 발생일 */}
-          <div className="member-asset-search-row">
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">등급</label>
+          <div className="cms-accesslog-row">
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">등급</label>
               <select
-                className="member-asset-search-select"
+                className="cms-accesslog-select"
                 name="adminTypeIndex"
                 value={searchParams.adminTypeIndex}
                 onChange={handleInputChange}
@@ -381,10 +381,10 @@ const CmsAccessLog = () => {
                 ))}
               </select>
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">발생일(시작)</label>
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">발생일(시작)</label>
               <input
-                className="member-asset-search-input"
+                className="cms-accesslog-input"
                 type="date"
                 name="cmsAccessUserTimeStart"
                 value={searchParams.cmsAccessUserTimeStart}
@@ -393,10 +393,10 @@ const CmsAccessLog = () => {
                 placeholder="연도-월-일"
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">발생일(종료)</label>
+            <div className="cms-accesslog-field">
+              <label className="cms-accesslog-label">발생일(종료)</label>
               <input
-                className="member-asset-search-input"
+                className="cms-accesslog-input"
                 type="date"
                 name="cmsAccessUserTimeEnd"
                 value={searchParams.cmsAccessUserTimeEnd}
@@ -411,15 +411,15 @@ const CmsAccessLog = () => {
 
       {/* 에러 메시지 */}
       {error && (
-        <div className="member-asset-search-error">
+        <div className="cms-accesslog-error">
           {error}
         </div>
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-table-container">
+      <div className="cms-accesslog-table-container">
         {processedData.length === 0 && !loading ? (
-          <div className="member-asset-search-no-results">
+          <div className="cms-accesslog-no-results">
             검색 결과가 없습니다.
           </div>
         ) : (
