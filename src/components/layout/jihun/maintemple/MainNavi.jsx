@@ -26,6 +26,7 @@ const MainNavi = () => {
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeSubMenuId, setActiveSubMenuId] = useState(null);
   const [authorityList, setAuthorityList] = useState([]);
+  const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
   const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
   const userName = userInfo.name || "";
@@ -72,7 +73,7 @@ const MainNavi = () => {
     };
 
 
-  }, []);
+  }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map(a => `${a.menuIndex}-${a.programIndex}`)
@@ -413,7 +414,7 @@ const MainNavi = () => {
     }
   };
 
-  const handleMenuClick = (item) => {
+  const handleMenuClick = (item, event) => {
     switch (item.type) {
       case "link":
         // 페이지 이동
@@ -434,6 +435,15 @@ const MainNavi = () => {
           setExpandedMenus([item.id]);
           setActiveMenuId(item.id);
           setActiveSubMenuId(null);
+          
+          // 축소된 상태에서 하위 메뉴 위치 계산
+          if (!sidebarOpen && event) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            setSubmenuPosition({
+              top: rect.top,
+              left: rect.right + 10
+            });
+          }
         }
         break;
       case "action":
@@ -449,6 +459,13 @@ const MainNavi = () => {
 
   const handleSubMenuClick = (subItem, e) => {
     e.stopPropagation();
+
+    // 축소된 상태에서 하위 메뉴 클릭 시 메뉴 닫기
+    if (!sidebarOpen) {
+      setExpandedMenus(prev => prev.filter(id => id !== activeMenuId));
+      setActiveMenuId(null);
+      setActiveSubMenuId(null);
+    }
 
     switch (subItem.type) {
       case "link":
@@ -481,8 +498,9 @@ const MainNavi = () => {
     return (
       <div key={item.id} className="nav-item">
         <button
-          onClick={() => handleMenuClick(item)}
+          onClick={(e) => handleMenuClick(item, e)}
           className={`nav-button ${!sidebarOpen ? "centered" : ""} ${isActive ? "active" : ""}`}
+          title={!sidebarOpen ? item.label : ""}
         >
           <div className="nav-button-content">
             <Icon size={20} />
@@ -496,8 +514,16 @@ const MainNavi = () => {
           )}
         </button>
 
-        {sidebarOpen && item.type === "expand" && expandedMenus.includes(item.id) && (
-          <div className={`submenu ${expandedMenus.includes(item.id) ? "open" : ""}`}>
+        {item.type === "expand" && expandedMenus.includes(item.id) && (
+          <div 
+            className={`submenu ${expandedMenus.includes(item.id) ? "open" : ""} ${!sidebarOpen ? "submenu-collapsed" : ""}`}
+            style={!sidebarOpen ? {
+              position: 'fixed',
+              top: `${submenuPosition.top}px`,
+              left: `${submenuPosition.left}px`,
+              zIndex: 1000
+            } : {}}
+          >
             {item.submenu.map((subItem) => (
               <button
                 key={subItem.id}
@@ -534,7 +560,7 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {menuConfig.items.map(renderMenuItem)}
+        {filteredMenuItems.map(renderMenuItem)}
       </nav>
     </div>
   );
