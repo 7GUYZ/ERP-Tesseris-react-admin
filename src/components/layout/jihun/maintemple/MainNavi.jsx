@@ -118,7 +118,8 @@ const MainNavi = () => {
         label: "마이페이지",
         icon: UserCircleIcon,
         type: "link",
-        href: "/TestMain",
+        href: "/adminmypage"
+
       },
       {
         id: "company-management",
@@ -148,12 +149,12 @@ const MainNavi = () => {
             type: "list",
             action: () => console.log("본인 승인 현황 클릭"),
           },
-          {
-            id: "authority-management",
-            programIndex: 8,
-            label: "권한 관리",
-            type: "list",
-            action: () => console.log("본인 출금 현황 클릭"),
+          { 
+            id: "authority-management", 
+            label: "권한 관리", 
+            type: "link",
+            href: "/PermissionManagement"
+
           },
           {
             id: "monthly-cm-limit",
