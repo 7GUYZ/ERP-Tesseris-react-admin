@@ -71,9 +71,7 @@ const MemberAssetSearchForm = () => {
 
   // 서버 사이드 페이징을 위한 검색 함수
   const performSearch = useCallback(async (page = 0, size = pageSize, searchFormData = formData) => {
-    console.log(`performSearch 호출 - page: ${page}, size: ${size}, pageSize: ${pageSize}`)
     try {
-      console.log(`검색 실행 - 페이지: ${page}, 크기: ${size}`)
       setLoading(true)
       
       // 검색 조건 준비 - 백엔드에서 동적 쿼리 지원을 위한 표준 형식
@@ -100,8 +98,6 @@ const MemberAssetSearchForm = () => {
         size: size  // 서버 사이드 페이징을 위해 size 사용
       }
       
-      console.log(`API 요청 파라미터 - page: ${page}, size: ${size}`)
-      
       // null 값 제거하여 실제로 검색할 조건만 전달 (페이징 정보는 항상 포함)
       const cleanSearchRequest = Object.fromEntries(
         Object.entries(searchRequest).filter(([key, value]) => {
@@ -114,11 +110,7 @@ const MemberAssetSearchForm = () => {
         })
       )
       
-      console.log("정제된 검색 요청:", cleanSearchRequest)
-      console.log("페이징 정보 확인 - page:", cleanSearchRequest.page, "size:", cleanSearchRequest.size)
-      
       const response = await memberaccountSearch(cleanSearchRequest)
-      console.log("API 응답:", response)
       
       if (response.data && response.data.content) {
         let transformedData = response.data.content.map(item => ({
@@ -140,7 +132,6 @@ const MemberAssetSearchForm = () => {
         // 서버 사이드 페이징에서는 클라이언트 사이드 필터링 제거
         // 백엔드에서 이미 필터링된 데이터를 받아옴
 
-        console.log(`검색 완료: 총 ${transformedData.length}개의 결과를 찾았습니다.`)
         setSearchResults(transformedData)
         
         // 서버에서 받은 총 개수 설정 (개선된 로직)
@@ -151,28 +142,21 @@ const MemberAssetSearchForm = () => {
           // 현재 페이지의 데이터가 요청한 크기보다 적으면 마지막 페이지로 간주
           if (transformedData.length < size) {
             totalElements = (page * size) + transformedData.length
-            console.log(`백엔드에서 totalElements를 제공하지 않음. 추정 전체 개수: ${totalElements}`)
           } else {
             // 더 많은 데이터가 있을 수 있으므로 임시로 큰 값 설정
             totalElements = (page + 1) * size + 100
-            console.log(`백엔드에서 totalElements를 제공하지 않음. 임시 전체 개수: ${totalElements}`)
           }
         }
         
-        console.log(`서버 응답 - 현재 페이지 데이터: ${transformedData.length}, 전체 개수: ${totalElements}`)
-        console.log(`서버 응답 전체:`, response.data)
-        console.log(`totalCount 설정: ${totalElements}`)
         setTotalCount(totalElements)
-      } else {
-        console.log("검색 결과가 없습니다.")
+              } else {
+          setSearchResults([])
+          setTotalCount(0)
+        }
+      } catch (error) {
         setSearchResults([])
         setTotalCount(0)
-      }
-    } catch (error) {
-      console.error("검색 중 오류 발생:", error)
-      setSearchResults([])
-      setTotalCount(0)
-    } finally {
+      } finally {
       setLoading(false)
     }
   }, [extractEmailId, pageSize])
@@ -181,11 +165,8 @@ const MemberAssetSearchForm = () => {
   const loadInitialData = useCallback(async () => {
     try {
       // 서버 사이드 페이징을 위해 performSearch 함수 사용
-      console.log("초기 데이터 로딩 시작 - 서버 사이드 페이징")
-      console.log(`loadInitialData - pageSize: ${pageSize}`)
       await performSearch(0, pageSize)
     } catch (error) {
-      console.error("초기 데이터 로딩 중 오류:", error)
       setSearchResults([])
       setTotalCount(0)
     }
@@ -205,13 +186,10 @@ const MemberAssetSearchForm = () => {
     // Set으로 안전한 선택 처리
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
-    console.log('선택된 행들:', Array.from(safeSelection));
   }, [])
 
   // 페이지 변경 핸들러
   const handlePageChange = useCallback((newPage) => {
-    console.log(`페이지 변경: ${newPage}, 페이지 크기: ${pageSize}`)
-    console.log(`performSearch 호출: 페이지 ${newPage}, 크기 ${pageSize}`)
     setCurrentPage(newPage)
     // 새로운 페이지로 검색 실행
     performSearch(newPage, pageSize, formData)
@@ -219,8 +197,6 @@ const MemberAssetSearchForm = () => {
 
   // 페이지 크기 변경 핸들러
   const handlePageSizeChange = useCallback((newPageSize) => {
-    console.log(`페이지 크기 변경: ${newPageSize}`)
-    console.log(`performSearch 호출: 페이지 0, 크기 ${newPageSize}`)
     setPageSize(newPageSize)
     setCurrentPage(0) // 페이지 크기 변경 시 첫 페이지로 이동
     // 새로운 페이지 크기로 검색 실행 (명시적으로 newPageSize 전달)

@@ -69,7 +69,7 @@ const PaymentCollectionModal = ({
         currentCmHeld: parseInt(selectedMember.cmHeld.toString().replace(/,/g, '')) || 0
       }
 
-      console.log("지급/회수 데이터:", paymentData)
+
       
       // 부모 컴포넌트로 데이터 전달 (다중 처리)
         if (onPaymentSubmit) {
@@ -79,7 +79,6 @@ const PaymentCollectionModal = ({
         // 모달 닫기
         onClose()
     } catch (error) {
-      console.error("지급/회수 처리 중 오류:", error)
       alert("처리 중 오류가 발생했습니다.")
     }
   }

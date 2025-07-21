@@ -49,8 +49,7 @@ const MemberAssetDetailsTable = ({
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
   
-  // 디버깅: rowCount 확인
-  console.log(`MemberAssetDetailsTable - 데이터 개수: ${rowsWithIds?.length || 0}, 전체 개수: ${totalCount || 0}`)
+
 
   // 전체 선택 상태
   const [selectAll, setSelectAll] = useState(false);
@@ -201,13 +200,11 @@ const MemberAssetDetailsTable = ({
     try {
       // 데이터 유효성 검사 강화
       if (!Array.isArray(rowsWithIds)) {
-        console.warn('rowsWithIds is not an array:', rowsWithIds);
         return null;
       }
       
       // 컬럼 유효성 검사
       if (!Array.isArray(columns) || columns.length === 0) {
-        console.warn('columns is not valid:', columns);
         return null;
       }
       return (
@@ -219,27 +216,15 @@ const MemberAssetDetailsTable = ({
           paginationMode="server"
           paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
           onPaginationModelChange={(model) => {
-            console.log(`DataGrid paginationModel 변경:`, model)
-            console.log(`현재 상태: currentPage=${currentPage}, pageSize=${pageSize}`)
-            
             if (model.page !== currentPage) {
-              console.log(`페이지 변경 감지: ${currentPage} -> ${model.page}`)
               if (onPageChange) {
-                console.log(`onPageChange 호출: ${model.page}`)
                 onPageChange(model.page)
-              } else {
-                console.warn('onPageChange 핸들러가 없습니다!')
               }
             }
             
             if (model.pageSize !== pageSize) {
-              console.log(`페이지 크기 변경 감지: ${pageSize} -> ${model.pageSize}`)
-              console.log(`페이지 크기 변경 이벤트 발생!`)
               if (onPageSizeChange) {
-                console.log(`onPageSizeChange 호출: ${model.pageSize}`)
                 onPageSizeChange(model.pageSize)
-              } else {
-                console.warn('onPageSizeChange 핸들러가 없습니다!')
               }
             }
           }}
@@ -407,7 +392,6 @@ const MemberAssetDetailsTable = ({
         />
       );
     } catch (error) {
-      console.error('DataGrid render error:', error);
       return (
         <div style={{ 
           width: '100%', 

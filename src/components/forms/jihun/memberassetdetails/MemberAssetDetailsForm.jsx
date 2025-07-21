@@ -47,7 +47,7 @@ const MemberAssetDetailsForm = () => {
   // 페이징 전용 데이터 로드 함수
   const loadDataWithPagination = useCallback(async (page, size, searchFormData = formData) => {
     try {
-      console.log(`데이터 로드: 페이지 ${page}, 크기 ${size}`)
+
       setLoading(true)
       
       // 검색 조건이 있는 경우와 없는 경우를 구분
@@ -78,14 +78,10 @@ const MemberAssetDetailsForm = () => {
           paginationInfo: paginationInfo
         }
         
-        console.log(`검색 API 호출:`, searchRequest)
         response = await ajgMemberAssetDetailsSearch(searchRequest)
-        console.log(`검색 API 응답:`, response)
       } else {
         // 검색 조건이 없는 경우 - GET 요청 사용
-        console.log(`API 호출 - 페이지: ${page}, 크기: ${size}`)
         response = await ajgMemberAssetDetails(page, size)
-        console.log(`API 응답:`, response)
       }
       
       if (response.data && response.data.content) {
@@ -127,23 +123,18 @@ const MemberAssetDetailsForm = () => {
           // 현재 페이지의 데이터가 요청한 크기보다 적으면 마지막 페이지로 간주
           if (transformedData.length < size) {
             totalElements = (page * size) + transformedData.length
-            console.log(`백엔드에서 totalElements를 제공하지 않음. 추정 전체 개수: ${totalElements}`)
           } else {
             // 더 많은 데이터가 있을 수 있으므로 임시로 큰 값 설정
             totalElements = (page + 1) * size + 100
-            console.log(`백엔드에서 totalElements를 제공하지 않음. 임시 전체 개수: ${totalElements}`)
           }
         }
         
-        console.log(`서버 응답 - 현재 페이지 데이터: ${transformedData.length}, 전체 개수: ${totalElements}`)
-        console.log(`서버 응답 전체:`, response.data)
         setTotalCount(totalElements)
       } else {
         setSearchResults([])
         setTotalCount(0)
       }
     } catch (error) {
-      console.error("페이징 데이터 로딩 중 오류:", error)
       setSearchResults([])
       setTotalCount(0)
     } finally {
@@ -168,7 +159,6 @@ const MemberAssetDetailsForm = () => {
         // 초기 데이터 로딩
         await loadInitialData()
       } catch (error) {
-        console.error("옵션 데이터 로딩 중 오류:", error)
         // 기본 등급 옵션 설정
         setOptions({
           grades: [
@@ -203,7 +193,6 @@ const MemberAssetDetailsForm = () => {
       
       await loadDataWithPagination(0, pageSize, formData)
     } catch (error) {
-      console.error("검색 중 오류 발생:", error)
       setError("검색 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
@@ -219,13 +208,11 @@ const MemberAssetDetailsForm = () => {
 
   // 서버 사이드 페이징 핸들러
   const handlePageChange = useCallback(async (newPage) => {
-    console.log(`페이지 변경: ${newPage}, 페이지 크기: ${pageSize}`)
     setCurrentPage(newPage)
     await loadDataWithPagination(newPage, pageSize, formData)
   }, [loadDataWithPagination, pageSize, formData])
 
   const handlePageSizeChange = useCallback(async (newPageSize) => {
-    console.log(`페이지 크기 변경: ${newPageSize}`)
     setPageSize(newPageSize)
     setCurrentPage(0) // 페이지 크기 변경 시 첫 페이지로 리셋
     await loadDataWithPagination(0, newPageSize, formData)
@@ -305,16 +292,16 @@ const MemberAssetDetailsForm = () => {
       ).filter(Boolean);
       
       // 백엔드 API 요청 데이터 구성
-      const requestData = {
-        members: selectedMembers.map(member => ({
-          memberId: member.usersId, // UUID 사용
-          currentCmHeld: member.cmHeld
-        })),
-        amount: paymentData.amount, // 이미 양수/음수로 구분되어 있음
-        reason: paymentData.reason
-      };
+              const requestData = {
+          members: selectedMembers.map(member => ({
+            memberId: member.userIndex.toString(), // user_index를 문자열로 변환
+            currentCmHeld: member.cmHeld
+          })),
+          amount: paymentData.amount, // 이미 양수/음수로 구분되어 있음
+          reason: paymentData.reason
+        };
       
-      console.log("백엔드 요청 데이터:", requestData);
+      
       
       // 백엔드 API 호출 (지급/회수 구분 없이 동일한 엔드포인트 사용)
       const response = await ajgMemberAssetDetailsPayment(requestData);
@@ -359,7 +346,6 @@ const MemberAssetDetailsForm = () => {
               `실패 원인: ${result.message}`);
       }
     } catch (error) {
-      console.error("지급/회수 처리 중 오류:", error);
       alert("처리 중 오류가 발생했습니다.");
     }
   }
