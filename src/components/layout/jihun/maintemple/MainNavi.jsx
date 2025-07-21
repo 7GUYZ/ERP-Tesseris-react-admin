@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { href, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -246,9 +246,9 @@ const MainNavi = () => {
           {
             id: "business-commission-history",
             programIndex: 37,
-            label: "사업자 수당 내역",
-            type: "list",
-            action: () => console.log("사업자 승인 클릭"),
+            label: "사업자 수당 내역", 
+            type: "link",
+            href: "/businessAllowance"
           },
           {
             id: "commission-setting",

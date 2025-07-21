@@ -4,9 +4,14 @@ import { TextField, Button, Grid, Box,MenuItem, Select, InputLabel, FormControl 
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import DownloadIcon from '@mui/icons-material/Download';
+import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import SearchIcon from '@mui/icons-material/Search';
 
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreRegisterList } from '../../../api/auth/DeokkyuAuth';
+import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
+import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 
 const columns = [
@@ -30,7 +35,9 @@ const columns = [
 ];
 
 function StoreList() {
+  const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
   const [filter, setFilter] = useState({
     userId: '',
     userName: '', // 
@@ -47,6 +54,7 @@ function StoreList() {
 
 const fetchStores = async (params = {}) => {
   try {
+    setLoading(true);
     // 파라미터가 포함될지 검사
     const cleanedParams = {};
 
@@ -82,6 +90,8 @@ const fetchStores = async (params = {}) => {
   } catch (error) {
     console.error('조회 실패:', error);
     alert('데이터를 불러오는 데 실패했습니다.');
+  } finally {
+    setLoading(false); // 로딩 종료
   }
 };
 
@@ -95,8 +105,35 @@ const fetchStores = async (params = {}) => {
     fetchStores({ ...filter });
   };
 
-  const handleExcelDownload = () =>{
-    alert("엑셀");
+  const handleExcelDownload = () => {
+    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
+    const excelData = rows.map(row => {
+      const { id, ...dataWithoutId } = row;
+      return dataWithoutId;
+    });
+    
+    downloadExcel(excelData, '가맹점신청현황', '가맹점신청정보');
+  }
+
+  const handleSelectedExcelDownload = () => {
+    if (!selectedRows || selectedRows.size === 0) {
+      alert('다운로드할 항목을 체크해주세요.');
+      return;
+    }
+    
+    // 선택된 행들의 실제 인덱스 계산 (id - 1)
+    const selectedIndices = new Set();
+    selectedRows.forEach(id => {
+      selectedIndices.add(id - 1); // id는 index + 1이므로 실제 인덱스는 id - 1
+    });
+    
+    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
+    const excelData = rows.map(row => {
+      const { id, ...dataWithoutId } = row;
+      return dataWithoutId;
+    });
+    
+    downloadSelectedExcel(excelData, selectedIndices, '가맹점신청현황_선택항목', '가맹점신청정보');
   }
 
   return (
@@ -104,11 +141,38 @@ const fetchStores = async (params = {}) => {
       <Box className="store-list-container" >
         <div className="store-list-title">가맹점 신청 현황</div>
         <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
-          <Button variant="contained" color="success" onClick={handleExcelDownload}>
-             엑셀 다운로드
+          <Button
+            variant="contained"
+            color="success"
+            startIcon={<FileDownloadOutlinedIcon />}
+            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+            onClick={handleSelectedExcelDownload}
+          >
+            선택 엑셀
           </Button>
-          <Button variant="contained" onClick={handleSearch}>
-             조회
+          <Button
+            variant="contained"
+            color="info"
+            startIcon={<DownloadIcon />}
+            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+            onClick={handleExcelDownload}
+          >
+            전체 엑셀
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<SearchIcon />}
+            sx={{
+              borderRadius: 2,
+              px: 2.5,
+              height: 44,
+              boxShadow: 2,
+              textTransform: 'none',
+            }}
+            onClick={handleSearch}
+          >
+            조회
           </Button>
         </Box>
         <div className="filter-card">
@@ -154,7 +218,7 @@ const fetchStores = async (params = {}) => {
               />
             </Grid>
             <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
+              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                 <InputLabel>승인 여부</InputLabel>
                 <Select
                   label="승인 여부"
@@ -172,7 +236,7 @@ const fetchStores = async (params = {}) => {
             </Grid>
 
             <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense">
+              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
                 <InputLabel>거래 상태</InputLabel>
                 <Select
                   label="거래 상태"
@@ -240,6 +304,23 @@ const fetchStores = async (params = {}) => {
             columns={columns}
             pageSize={25}
             rowsPerPageOptions={[25, 50, 100]}
+            loading={loading}
+            checkboxSelection
+            disableRowSelectionOnClick
+            onRowSelectionModelChange={(newSelection) => {
+              // newSelection이 객체이고 ids 속성이 있는 경우
+              if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+                setSelectedRows(newSelection.ids);
+              } else if (Array.isArray(newSelection)) {
+                // 배열인 경우 (이전 버전 호환성)
+                setSelectedRows(new Set(newSelection));
+              } else {
+                setSelectedRows(new Set());
+              }
+            }}
+              slots={{
+                noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+              }}
           />
         </div>
       </Box>
