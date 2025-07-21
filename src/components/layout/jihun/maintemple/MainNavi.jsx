@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { href, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -39,11 +39,13 @@ const MainNavi = () => {
       if (admin_type_index) {
         try {
           const response = await menuAuthority(admin_type_index);
+          // eslint-disable-next-line no-console
           console.log(response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.log("권한 조회 실패 : ", error);
           showToast("error", "메뉴를 불러올 수 없습니다.");
         }
@@ -71,6 +73,8 @@ const MainNavi = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
+
+
   }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -114,7 +118,8 @@ const MainNavi = () => {
         label: "마이페이지",
         icon: UserCircleIcon,
         type: "link",
-        href: "/TestMain",
+        href: "/adminmypage"
+
       },
       {
         id: "company-management",
@@ -144,12 +149,12 @@ const MainNavi = () => {
             type: "list",
             action: () => console.log("본인 승인 현황 클릭"),
           },
-          {
-            id: "authority-management",
-            programIndex: 8,
-            label: "권한 관리",
-            type: "list",
-            action: () => console.log("본인 출금 현황 클릭"),
+          { 
+            id: "authority-management", 
+            label: "권한 관리", 
+            type: "link",
+            href: "/PermissionManagement"
+
           },
           {
             id: "monthly-cm-limit",
@@ -184,9 +189,9 @@ const MainNavi = () => {
           {
             id: "member-assets-status",
             programIndex: 11,
-            label: "회원 자산 현황",
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭"),
+            label: "회원 자산 현황", 
+            type: "link",
+            href: "/memberassetdetails"
           },
           {
             id: "member-referral-status",
@@ -242,9 +247,9 @@ const MainNavi = () => {
           {
             id: "business-commission-history",
             programIndex: 37,
-            label: "사업자 수당 내역",
-            type: "list",
-            action: () => console.log("사업자 승인 클릭"),
+            label: "사업자 수당 내역", 
+            type: "link",
+            href: "/businessAllowance"
           },
           {
             id: "commission-setting",
@@ -552,11 +557,6 @@ const MainNavi = () => {
     );
   };
 
-  const filteredMenuItems = filterMenuByAuthority(
-    menuConfig.items,
-    authorityList
-  );
-
   return (
     <div
       className={`sidebar sidebar-scrollbar ${
@@ -582,7 +582,7 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {filteredMenuItems.map(renderMenuItem)}
+        {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
       </nav>
     </div>
   );
