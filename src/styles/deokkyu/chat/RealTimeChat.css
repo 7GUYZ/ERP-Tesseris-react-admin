@@ -1,0 +1,265 @@
+/* 🎨 실시간 채팅 시스템 CSS */
+
+/* 🔵 채팅 버튼 애니메이션 */
+.chat-button-pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+  }
+}
+
+/* 🪟 채팅창 스크롤바 커스텀 */
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 📱 반응형 디자인 */
+@media (max-width: 768px) {
+  .chat-main-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    left: 0 !important;
+    top: 0 !important;
+    border-radius: 0 !important;
+  }
+  
+  .chat-room-window {
+    width: 100vw !important;
+    height: 100vh !important;
+    left: 0 !important;
+    top: 0 !important;
+    border-radius: 0 !important;
+  }
+  
+  .chat-button {
+    right: 20px !important;
+    bottom: 80px !important;
+  }
+}
+
+/* ✨ 메시지 입력 애니메이션 */
+.message-input-focused {
+  transform: scale(1.02);
+  transition: transform 0.2s ease;
+}
+
+/* 🎯 드래그 커서 상태 */
+.dragging {
+  cursor: grabbing !important;
+}
+
+.draggable {
+  cursor: grab;
+}
+
+/* 📧 메시지 버블 애니메이션 */
+.message-bubble {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 💬 타이핑 인디케이터 */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  animation: fadeIn 0.3s ease;
+}
+
+.typing-dots {
+  display: flex;
+  gap: 2px;
+}
+
+.typing-dot {
+  width: 4px;
+  height: 4px;
+  background-color: #999;
+  border-radius: 50%;
+  animation: typingDots 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingDots {
+  0%, 60%, 100% {
+    transform: translateY(0);
+    opacity: 0.4;
+  }
+  30% {
+    transform: translateY(-10px);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 🏷️ 상태 표시 점 */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 2px solid white;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+}
+
+.status-online {
+  background-color: #4CAF50;
+}
+
+.status-away {
+  background-color: #FF9800;
+}
+
+.status-offline {
+  background-color: #757575;
+}
+
+/* 🎨 탭 컨테이너 스타일 */
+.chat-tabs {
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  border-bottom: 1px solid #dee2e6;
+}
+
+/* 🔍 검색창 포커스 효과 */
+.search-input:focus-within {
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+  border-color: #2196F3;
+}
+
+/* 📋 리스트 아이템 호버 효과 */
+.list-item-hover:hover {
+  background-color: #f5f5f5;
+  transform: translateX(2px);
+  transition: all 0.2s ease;
+  border-left: 3px solid #2196F3;
+}
+
+/* 🔔 알림 배지 펄스 */
+.notification-badge {
+  animation: badgePulse 1s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* 🎪 그룹 채팅 참여자 칩 */
+.participant-chip {
+  margin: 2px;
+  transition: all 0.2s ease;
+}
+
+.participant-chip:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* 🌟 현재 사용자 강조 */
+.current-user-chip {
+  background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);
+  color: white;
+  font-weight: bold;
+}
+
+/* 📞 통화 버튼 호버 효과 */
+.call-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+  transition: all 0.2s ease;
+}
+
+/* 🎨 그라데이션 헤더 */
+.chat-header-main {
+  background: linear-gradient(45deg, #2196F3 30%, #21CBF3 90%);
+}
+
+.chat-header-room {
+  background: linear-gradient(45deg, #4CAF50 30%, #66BB6A 90%);
+}
+
+/* 📱 모바일 최적화 */
+@media (max-width: 480px) {
+  .message-bubble {
+    max-width: 250px;
+  }
+  
+  .participant-chip {
+    font-size: 0.7rem;
+  }
+  
+  .chat-input {
+    font-size: 16px; /* iOS 확대 방지 */
+  }
+}
+
+/* 🎭 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+  .chat-main-window,
+  .chat-room-window {
+    background-color: #2d3748;
+    color: white;
+  }
+  
+  .message-bubble.other-user {
+    background-color: #4a5568;
+    color: white;
+  }
+  
+  .chat-tabs {
+    background: linear-gradient(to right, #2d3748, #4a5568);
+  }
+} 

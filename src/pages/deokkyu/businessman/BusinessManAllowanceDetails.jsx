@@ -16,40 +16,35 @@ import { downloadExcel, downloadSelectedExcel } from '../../../components/featur
 const columns = [
   { field: 'businessUserId', headerName: '사업자 ID', width: 120 },
   { field: 'businessUserName', headerName: '사업자 이름', width: 120 },
-  { field: 'businessGradeName', headerName: '사업자 등급', width: 120 },
-  { field: 'userId', headerName: '가맹점 ID', width: 120 },
-  { field: 'userName', headerName: '이름', width: 100 },
-  { field: 'userPhone', headerName: '핸드폰 번호', width: 140 },
-  { field: 'storeBossName', headerName: '대표자 이름', width: 140 },
-  { field: 'storeRegistrationNum', headerName: '사업자 등록번호', width: 160 },
-  { field: 'storeTypeTaxation', headerName: '세금 유형', width: 160 },
-  { field: 'storeCorporateName', headerName: '상호명', width: 160 },
+  { field: 'businessGradeName', headerName: '사업자 등급', width: 120 }, 
+  { field: 'businessUserPhone', headerName: '핸드폰 번호', width: 140 }, // ++ businessman 테이블
+  { field: 'businessAreaIndex', headerName: '담당 구역', width: 140 }, // ++ businessman 테이블
+  
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
-  { field: 'storeCategoryName', headerName: '가맹점 유형', width: 160 }, 
-  { field: 'storePhone', headerName: '대표 번호', width: 160 },
-  { field: 'storeRequestStatusName', headerName: '승인 여부', width: 100 },
-  { field: 'storeTransactionStatus', headerName: '거래 상태', width: 100 },
-  { field: 'userCmpInit', headerName: '초기지급 CMP', width: 100 },
-  { field: 'totalCM', headerName: '보유 CM', width: 100 },
-  { field: 'storeCreateDate', headerName: '신청일', width: 120 },
+  { field: 'userId', headerName: '가맹점 ID', width: 120 },
+  { field: 'userName', headerName: '회원 이름', width: 100 },
+
+  { field: 'temporaryStoreMasterChargeTime', headerName: '분배시간', width: 120 }, // ++ temporary_store_master 테이블
+  { field: 'temporaryStoreCmValue', headerName: '중개수수료 CM', width: 120 }, // ++ temporary_store_master 테이블
+  { field: 'temporaryStoreCashValue', headerName: '중개수수료 Cash', width: 120 }, // ++ temporary_store_master 테이블
+  { field: 'temporaryStoreTotalValue', headerName: '중개수수료 합계', width: 120 }, // ++ temporary_store_master 테이블
 ];
 
-function StoreList() {
+function BusinessManAllowanceDetails() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [filter, setFilter] = useState({
-    userId: '',
-    userName: '', // 
-    userPhone: '', // 가맹점 번호
-    storeBossName: '', // 대표자이름
-    storeRequestStatusName: '전체', // 승인여부 - 라디오
-    storeTransactionStatus: '전체',// 거래상태 - 라디오
-    storeCorporateName: '', // 상호명
-    storeName: '', // 가맹점 명
+    businessUserId: '', // 사업자 ID
     businessUserName: '', // 사업자 이름
-    storeCreateDateStart: null, 
-    storeCreateDateEnd: null,
+    businessGradeName: '전체', // 사업자 등급
+    businessUserPhone: '', // 사업자 핸드폰 번호
+    businessAreaIndex: '', // 담당 구역
+    storeName: '', // 가맹점 명
+    userId: '', // 가맹점 ID
+    userName: '', // 회원 이름
+    temporaryStoreMasterChargeTimeStart: null, // 분배시간 시작
+    temporaryStoreMasterChargeTimeEnd: null, // 분배시간 종료
   });
 
 const fetchStores = async (params = {}) => {
@@ -57,21 +52,21 @@ const fetchStores = async (params = {}) => {
     setLoading(true); // 로딩 시작
     const cleanedParams = {};
     const stringFields = [
-      'userId', 'userName', 'userPhone', 'storeBossName',
-      'storeRequestStatusName', 'storeTransactionStatus',
-      'storeCorporateName', 'storeName', 'businessUserName'
+      'businessUserId', 'businessUserName', 'businessGradeName',
+      'businessUserPhone', 'businessAreaIndex', 'storeName',
+      'userId', 'userName'
     ];
 
     stringFields.forEach((key) => {
-      if (params[key] !== '' && params[key] !== undefined) {
+      if (params[key] !== '' && params[key] !== undefined && params[key] !== '전체') {
         cleanedParams[key] = params[key];
       }
     });
 
-    if (params.storeCreateDateStart)
-      cleanedParams.storeCreateDateStart = dayjs(params.storeCreateDateStart).format('YYYY-MM-DD');
-    if (params.storeCreateDateEnd)
-      cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
+    if (params.temporaryStoreMasterChargeTimeStart)
+      cleanedParams.temporaryStoreMasterChargeTimeStart = dayjs(params.temporaryStoreMasterChargeTimeStart).format('YYYY-MM-DD');
+    if (params.temporaryStoreMasterChargeTimeEnd)
+      cleanedParams.temporaryStoreMasterChargeTimeEnd = dayjs(params.temporaryStoreMasterChargeTimeEnd).format('YYYY-MM-DD');
 
     const response = await getStoreList(
       Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
@@ -109,7 +104,7 @@ const fetchStores = async (params = {}) => {
       return dataWithoutId;
     });
     
-    downloadExcel(excelData, '가맹점회원리스트', '가맹점회원정보');
+    downloadExcel(excelData, '사업자수당상세리스트', '사업자수당상세정보');
   }
 
   const handleSelectedExcelDownload = () => {
@@ -130,13 +125,13 @@ const fetchStores = async (params = {}) => {
       return dataWithoutId;
     });
     
-    downloadSelectedExcel(excelData, selectedIndices, '가맹점회원리스트_선택항목', '가맹점회원정보');
+    downloadSelectedExcel(excelData, selectedIndices, '사업자수당상세리스트_선택항목', '사업자수당상세정보');
   }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="store-list-container" >
-        <div className="store-list-title">가맹점 회원 리스트</div>
+        <div className="store-list-title">사업자 수당 내역</div>
         <div className="store-search-actions">
           <button 
             className="store-search-btn excel" 
@@ -162,14 +157,14 @@ const fetchStores = async (params = {}) => {
         </div>
         <div className="filter-card">
           <Grid container spacing={2} mb={2}>
-                <Grid item xs={2}>
+                <Grid item xs={3}>
                   <TextField
                     fullWidth
                     size="small"
                     margin="dense"
-                    label="가맹점 ID"
-                    value={filter.userId}
-                    onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
+                    label="사업자 ID"
+                    value={filter.businessUserId}
+                    onChange={(e) => setFilter({ ...filter, businessUserId: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={3}>
@@ -177,60 +172,23 @@ const fetchStores = async (params = {}) => {
                     fullWidth
                     size="small"
                     margin="dense"
-                    label="이름"
-                    value={filter.userName}
-                    onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
+                    label="사업자 이름"
+                    value={filter.businessUserName}
+                    onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    label="핸드폰 번호"
-                    value={filter.userPhone}
-                    onChange={(e) => setFilter({ ...filter, userPhone: e.target.value })}
-                  />
-                </Grid>
-                <Grid item xs={3}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    margin="dense"
-                    label="대표자 이름"
-                    value={filter.storeBossName}
-                    onChange={(e) => setFilter({ ...filter, storeBossName: e.target.value })}
-                  />
-                </Grid>
-                <Grid item xs={2.5}>
                   <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
-                    <InputLabel>승인 여부</InputLabel>
+                    <InputLabel>사업자 등급</InputLabel>
                     <Select
-                      label="승인 여부"
-                      value={filter.storeRequestStatusName}
-                      onChange={(e) => setFilter({ ...filter, storeRequestStatusName: e.target.value })}
+                      label="사업자 등급"
+                      value={filter.businessGradeName}
+                      onChange={(e) => setFilter({ ...filter, businessGradeName: e.target.value })}
                     >
                       <MenuItem value="전체">전체</MenuItem>
-                      <MenuItem value="승인">승인</MenuItem>
-                      <MenuItem value="대기">대기</MenuItem>
-                      <MenuItem value="거절">거절</MenuItem>
-                      <MenuItem value="보류">보류</MenuItem>
-                      <MenuItem value="해지">해지</MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={2.5}>
-                  <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
-                    <InputLabel>거래 상태</InputLabel>
-                    <Select
-                      label="거래 상태"
-                      value={filter.storeTransactionStatus}
-                      onChange={(e) => setFilter({ ...filter, storeTransactionStatus: e.target.value })}
-                    >
-                      <MenuItem value="전체">전체</MenuItem>
-                      <MenuItem value="정상">정상</MenuItem>
-                      <MenuItem value="정지">정지</MenuItem>
+                      <MenuItem value="A등급">A등급</MenuItem>
+                      <MenuItem value="B등급">B등급</MenuItem>
+                      <MenuItem value="C등급">C등급</MenuItem>
                     </Select>
                   </FormControl>
                 </Grid>
@@ -239,9 +197,19 @@ const fetchStores = async (params = {}) => {
                     fullWidth
                     size="small"
                     margin="dense"
-                    label="상호명"
-                    value={filter.storeCorporateName}
-                    onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
+                    label="사업자 핸드폰 번호"
+                    value={filter.businessUserPhone}
+                    onChange={(e) => setFilter({ ...filter, businessUserPhone: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="담당 구역"
+                    value={filter.businessAreaIndex}
+                    onChange={(e) => setFilter({ ...filter, businessAreaIndex: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={3}>
@@ -259,25 +227,35 @@ const fetchStores = async (params = {}) => {
                     fullWidth
                     size="small"
                     margin="dense"
-                    label="사업자 이름"
-                    value={filter.businessUserName}
-                    onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
+                    label="가맹점 ID"
+                    value={filter.userId}
+                    onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
+                  />
+                </Grid>
+                <Grid item xs={3}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    margin="dense"
+                    label="회원 이름"
+                    value={filter.userName}
+                    onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={3}>
                   <DatePicker
-                    label="신청일 시작"
+                    label="분배시간 시작"
                     format="YYYY-MM-DD"
-                    value={filter.storeCreateDateStart}
-                    onChange={(date) => setFilter({ ...filter, storeCreateDateStart: date })}
+                    value={filter.temporaryStoreMasterChargeTimeStart}
+                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterChargeTimeStart: date })}
                   />
                 </Grid>
                 <Grid item xs={3}>
                   <DatePicker
-                    label="신청일 종료"
+                    label="분배시간 종료"
                     format="YYYY-MM-DD"
-                    value={filter.storeCreateDateEnd}
-                    onChange={(date) => setFilter({ ...filter, storeCreateDateEnd: date })}
+                    value={filter.temporaryStoreMasterChargeTimeEnd}
+                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterChargeTimeEnd: date })}
                   />
                 </Grid>
               </Grid>
@@ -314,4 +292,4 @@ const fetchStores = async (params = {}) => {
   );
 }
 
-export default StoreList;
+export default BusinessManAllowanceDetails;
