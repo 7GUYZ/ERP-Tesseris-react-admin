@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { adminMyPageApi } from '../../api/auth/TaekjunAuth';
 import '../../styles/taekjun/AdminMyPage.css';
 
@@ -25,16 +25,24 @@ const AdminMyPage = () => {
   const [passwordErrors, setPasswordErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // 임시 사용자 인덱스 (실제로는 로그인된 사용자 정보에서 가져와야 함)
-  const userIndex = "1"; // 실제 구현시 로그인된 사용자의 userIndex로 변경
+  // 로그인된 사용자 정보에서 userIndex 가져오기
+  const getUserIndex = () => {
+    const userInfo = localStorage.getItem('user-info');
+    if (userInfo) {
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        return parsedUserInfo.user_index || "1";
+      } catch (error) {
+        console.error('사용자 정보 파싱 실패:', error);
+        return "1";
+      }
+    }
+    return "1";
+  };
+  
+  const userIndex = getUserIndex();
 
-  useEffect(() => {
-    fetchUserInfo();
-    // 카카오 주소 API 로드
-    loadKakaoAddressAPI();
-  }, []);
-
-  const fetchUserInfo = async () => {
+  const fetchUserInfo = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
@@ -46,7 +54,13 @@ const AdminMyPage = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userIndex]);
+
+  useEffect(() => {
+    fetchUserInfo();
+    // 카카오 주소 API 로드
+    loadKakaoAddressAPI();
+  }, [fetchUserInfo]);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -479,6 +493,13 @@ const AdminMyPage = () => {
                 </div>
               </div>
               <div className="modal-actions">
+                    <button 
+                      className="btn btn-primary"
+                      onClick={handlePasswordSubmit}
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? '변경 중...' : '변경'}
+                    </button>
                 <button 
                   className="btn btn-secondary"
                   onClick={() => {
@@ -492,13 +513,6 @@ const AdminMyPage = () => {
                   }}
                 >
                   취소
-                </button>
-                <button 
-                  className="btn btn-primary"
-                  onClick={handlePasswordSubmit}
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? '변경 중...' : '변경'}
                 </button>
               </div>
             </div>
