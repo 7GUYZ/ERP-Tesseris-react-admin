@@ -39,11 +39,13 @@ const MainNavi = () => {
       if (admin_type_index) {
         try {
           const response = await menuAuthority(admin_type_index);
+          // eslint-disable-next-line no-console
           console.log(response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
           }
         } catch (error) {
+          // eslint-disable-next-line no-console
           console.log("권한 조회 실패 : ", error);
           showToast("error", "메뉴를 불러올 수 없습니다.");
         }
@@ -71,6 +73,8 @@ const MainNavi = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
+
+
   }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -184,9 +188,9 @@ const MainNavi = () => {
           {
             id: "member-assets-status",
             programIndex: 11,
-            label: "회원 자산 현황",
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭"),
+            label: "회원 자산 현황", 
+            type: "link",
+            href: "/memberassetdetails"
           },
           {
             id: "member-referral-status",
@@ -552,11 +556,6 @@ const MainNavi = () => {
     );
   };
 
-  const filteredMenuItems = filterMenuByAuthority(
-    menuConfig.items,
-    authorityList
-  );
-
   return (
     <div
       className={`sidebar sidebar-scrollbar ${
@@ -582,7 +581,7 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {filteredMenuItems.map(renderMenuItem)}
+        {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
       </nav>
     </div>
   );

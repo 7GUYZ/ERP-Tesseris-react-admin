@@ -1,12 +1,28 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { DataGrid } from '@mui/x-data-grid';
 import Checkbox from '@mui/material/Checkbox';
 
-const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+const MemberAssetSearchTable = ({ 
+  data = [], 
+  onSelectionChange,
+  totalCount = 0,
+  currentPage = 0,
+  pageSize = 25,
+  onPageChange,
+  onPageSizeChange,
+  loading = false
+}) => {
+
   const [selectedRows, setSelectedRows] = useState(new Set());
 
+  // 전체 선택 상태
+  const [selectAll, setSelectAll] = useState(false);
+
+  // 데이터가 변경될 때 선택된 행들 초기화
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setSelectAll(false);
+  }, [data]);
 
   
   // 메모이제이션으로 성능 최적화 및 안정성 확보
@@ -35,9 +51,6 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
-
-  // 전체 선택 상태
-  const [selectAll, setSelectAll] = useState(false);
 
   // Data Grid 컬럼 정의
   const columns = [
@@ -99,7 +112,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       sortable: false,
       align: 'center',
       headerAlign: 'center',
-      renderCell: (params) => params.row.id + 1
+      renderCell: (params) => (currentPage * pageSize) + params.row.id + 1
     },
     { field: "fromGrade", headerName: "FROM 등급", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "fromId", headerName: "FROM ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
@@ -113,12 +126,22 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       width: 100,
       minWidth: 100,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        // params 자체가 값이므로 params.value 대신 params 사용
+        const value = params.value !== undefined ? params.value : params;
+        
+        // null, undefined, 빈 문자열 체크
+        if (value == null || value === '') {
+          return "0";
+        }
+        
+        // 숫자로 변환 후 포맷팅
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        
+        const result = isNaN(numValue) ? "0" : numValue.toLocaleString();
+        return result;
       }
     },
     { field: "unit", headerName: "단위", width: 80, minWidth: 80, flex: 1, align: 'center', headerAlign: 'center' },
@@ -128,12 +151,13 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     {
@@ -142,12 +166,13 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
       width: 150,
       minWidth: 150,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     { field: "reason", headerName: "사유", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
@@ -165,7 +190,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-search-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -182,28 +207,38 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
     try {
       // 데이터 유효성 검사 강화
       if (!Array.isArray(rowsWithIds)) {
-        console.warn('rowsWithIds is not an array:', rowsWithIds);
         return null;
       }
       
       // 컬럼 유효성 검사
       if (!Array.isArray(columns) || columns.length === 0) {
-        console.warn('columns is not valid:', columns);
         return null;
       }
       return (
         <DataGrid
           rows={rowsWithIds || []}
           columns={columns}
-          rowCount={rowsWithIds?.length || 0}
-          page={page || 0}
-          pageSize={pageSize || 25}
-          pageSizeOptions={[25, 50, 100]}
-          paginationMode="client"
-          onPageChange={(newPage) => setPage(newPage || 0)}
-          onPageSizeChange={(newSize) => setPageSize(newSize || 25)}
+          rowCount={totalCount > 0 ? totalCount : (rowsWithIds?.length || 0)}
+          pageSizeOptions={[25, 50, 75, 100]}
+          paginationMode="server"
+          paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
+          onPaginationModelChange={(model) => {
+            if (model.page !== currentPage) {
+              if (onPageChange) {
+                onPageChange(model.page)
+              }
+            }
+            
+            if (model.pageSize !== pageSize) {
+              if (onPageSizeChange) {
+                onPageSizeChange(model.pageSize)
+              }
+            }
+          }}
+          loading={loading}
           autoHeight={false}
           height={400}
+          maxHeight={400}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
@@ -220,14 +255,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
           disableVirtualization={false}
           density="standard"
 
-          initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 25 },
-            },
-            columns: {
-              columnVisibilityModel: {},
-            },
-          }}
+          // initialState 제거 - paginationModel과 충돌 방지
           sx={{
             border: 'none',
             borderRadius: '12px',
@@ -247,6 +275,8 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
               }
             },
             '& .MuiDataGrid-root': {
+              overflow: 'auto !important',
+              maxHeight: '400px !important',
               border: "none",
               backgroundColor: 'white',
               borderRadius: '12px',
@@ -345,6 +375,8 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
               borderRadius: '12px'
             },
             '& .MuiDataGrid-virtualScroller': {
+              overflow: 'auto !important',
+              maxHeight: '400px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
@@ -360,12 +392,18 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
               '&::-webkit-scrollbar-corner': {
                 backgroundColor: '#f1f5f9'
               }
+            },
+            '& .MuiDataGrid-main': {
+              overflow: 'auto !important',
+              maxHeight: '400px !important'
+            },
+            '& .MuiDataGrid-virtualScrollerContent': {
+              overflow: 'auto !important'
             }
           }}
         />
       );
     } catch (error) {
-      console.error('DataGrid render error:', error);
       return (
         <div style={{ 
           width: '100%', 
@@ -395,7 +433,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-search-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -412,7 +450,7 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-search-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -427,9 +465,11 @@ const MemberAssetSearchTable = ({ data = [], onSelectionChange }) => {
   return (
     <div className="member-asset-search-table-container" style={{ 
       width: '100%', 
-      overflow: 'hidden',
+      overflow: 'auto',
       borderRadius: '12px',
-      boxShadow: 'none'
+      boxShadow: 'none',
+      height: '500px',
+      maxHeight: '500px'
     }}>
       {renderDataGrid()}
     </div>
