@@ -151,6 +151,7 @@ const MainNavi = () => {
           },
           { 
             id: "authority-management", 
+            programIndex: 8,
             label: "권한 관리", 
             type: "link",
             href: "/PermissionManagement"
