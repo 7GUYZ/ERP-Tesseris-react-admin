@@ -137,23 +137,23 @@ const fetchStores = async (params = {}) => {
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="store-list-container" >
         <div className="store-list-title">가맹점 회원 리스트</div>
-        <div className="member-asset-search-actions">
+        <div className="store-search-actions">
           <button 
-            className="member-asset-search-btn excel" 
+            className="store-search-btn excel" 
             onClick={handleSelectedExcelDownload}
             disabled={selectedRows.size === 0}
           >
             선택 엑셀
           </button>
           <button 
-            className="member-asset-search-btn excel" 
+            className="store-search-btn all-excel" 
             onClick={handleExcelDownload}
             disabled={rows.length === 0}
           >
             전체 엑셀
           </button>
           <button
-            className="member-asset-search-btn search"
+            className="store-search-btn search"
             onClick={handleSearch}
             disabled={loading}
           >
