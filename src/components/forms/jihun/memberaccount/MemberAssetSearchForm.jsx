@@ -3,9 +3,9 @@ import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetS
 import {
   memberaccountSearch,
   memberaccountLookupRoles,
-  memberaccountLookupPaymentTypes,
   memberaccountLookupTransactionTypes
 } from "../../../../api/auth/JihunAuth.jsx"
+import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
 /**
@@ -36,11 +36,17 @@ const MemberAssetSearchForm = () => {
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
   const [options, setOptions] = useState({
     roles: [],
     paymentTypes: [],
     transactionTypes: []
   })
+  
+  // 서버 사이드 페이징 상태
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageSize, setPageSize] = useState(25)
+  const [totalCount, setTotalCount] = useState(0)
 
   // 이메일에서 ID 추출 함수 (성능 최적화)
   const extractEmailId = useCallback((email) => {
@@ -48,76 +54,9 @@ const MemberAssetSearchForm = () => {
     return email.split('@')[0] || ""
   }, [])
 
-  // 초기 데이터 로딩 함수
-  const loadInitialData = useCallback(async () => {
-    try {
-      const initialRequest = {
-        userIndexEventTrigger: null,
-        userIndexEventParty: null,
-        userRoleIndex: null,
-        userRoleIndex2: null,
-        userCmLogValueTypeIndex: null,
-        userCmLogCreateTimeStart: null,
-        userCmLogCreateTimeEnd: null,
-        userCmLogPaymentIndex: null,
-        userCmLogTransactionTypeIndex: null,
-        page: 0,
-        size: 100 // 초기에는 적당한 양만 로딩
-      }
-      
-      const response = await memberaccountSearch(initialRequest)
-      
-      if (response.data && response.data.content) {
-        const transformedData = response.data.content.map(item => ({
-          fromGrade: item.eventTriggerUserRole || "알 수 없음",
-          fromId: extractEmailId(item.eventTriggerUserEmail) || "",
-          toGrade: item.eventPartyUserRole || "알 수 없음",
-          toId: extractEmailId(item.eventPartyUserEmail) || "",
-          toName: item.eventPartyUserName || "",
-          transactionType: item.transactionTypeName || "",
-          amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
-          unit: "원",
-          usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
-          couponUsedValue: item.userCouponValue ? item.userCouponValue.toString() : "0",
-          reason: item.userCmLogReason || "",
-          occurredDate: item.userCmLogCreateTime ?
-            new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
-        }))
-        
-        setSearchResults(transformedData)
-        console.log(`초기 데이터 로딩 완료: ${transformedData.length}개의 항목`)
-      }
-    } catch (error) {
-      console.error("초기 데이터 로딩 중 오류:", error)
-      setSearchResults([])
-    }
-  }, [extractEmailId])
+
   
-  useEffect(() => {
-    const loadOptions = async () => {
-      try {
-        setLoading(true)
-        const [rolesRes, paymentTypesRes, transactionTypesRes] = await Promise.all([
-          memberaccountLookupRoles(),
-          memberaccountLookupPaymentTypes(),
-          memberaccountLookupTransactionTypes()
-        ])
-        setOptions({
-          roles: rolesRes.data || [],
-          paymentTypes: paymentTypesRes.data || [],
-          transactionTypes: transactionTypesRes.data || []
-        })
-        
-        // 초기 데이터 로딩
-        await loadInitialData()
-      } catch (error) {
-        setError(error.message || "옵션 데이터를 불러오는데 실패했습니다.");
-      } finally {
-        setLoading(false)
-      }
-    }
-    loadOptions()
-  }, [loadInitialData])
+
 
 
 
@@ -129,38 +68,46 @@ const MemberAssetSearchForm = () => {
 
   const [error, setError] = useState(null);
 
-  const handleSearch = async () => {
+  // 서버 사이드 페이징을 위한 검색 함수
+  const performSearch = useCallback(async (page = 0, size = pageSize, searchFormData = formData) => {
     try {
       setLoading(true)
       
       // 검색 조건 준비 - 백엔드에서 동적 쿼리 지원을 위한 표준 형식
       const searchRequest = {
+        
         // 사용자 ID 검색 (LIKE 검색을 위한 새로운 파라미터)
-        eventTriggerUserEmail: formData.fromId ? formData.fromId.trim() : null,
-        eventPartyUserEmail: formData.toId ? formData.toId.trim() : null,
-        eventPartyUserName: formData.toId ? formData.toId.trim() : null, // 이름으로도 검색
+        eventTriggerUserEmail: searchFormData.fromId ? searchFormData.fromId.trim() : null,
+        eventPartyUserEmail: searchFormData.toId ? searchFormData.toId.trim() : null,
+        eventPartyUserName: searchFormData.toId ? searchFormData.toId.trim() : null, // 이름으로도 검색
         
         // 기존 검색 조건들
         userIndexEventTrigger: null,
         userIndexEventParty: null,
-        userRoleIndex: formData.fromGrade ? parseInt(formData.fromGrade) : null,
-        userRoleIndex2: formData.toGrade ? parseInt(formData.toGrade) : null,
+        userRoleIndex: searchFormData.fromGrade ? parseInt(searchFormData.fromGrade) : null,
+        userRoleIndex2: searchFormData.toGrade ? parseInt(searchFormData.toGrade) : null,
         userCmLogValueTypeIndex: null,
-        userCmLogCreateTimeStart: formData.fromDate || null,
-        userCmLogCreateTimeEnd: formData.toDate || null,
+        userCmLogCreateTimeStart: searchFormData.fromDate || null,
+        userCmLogCreateTimeEnd: searchFormData.toDate || null,
         userCmLogPaymentIndex: null,
-        userCmLogTransactionTypeIndex: formData.transactionType ? parseInt(formData.transactionType) : null,
+        userCmLogTransactionTypeIndex: searchFormData.transactionType ? parseInt(searchFormData.transactionType) : null,
         
-        page: 0,
-        size: 1000
+        // 페이징 정보 - 명시적으로 포함
+        page: page,
+        size: size  // 서버 사이드 페이징을 위해 size 사용
       }
       
-      // null 값 제거하여 실제로 검색할 조건만 전달
+      // null 값 제거하여 실제로 검색할 조건만 전달 (페이징 정보는 항상 포함)
       const cleanSearchRequest = Object.fromEntries(
-        Object.entries(searchRequest).filter(([_, value]) => value !== null && value !== undefined)
+        Object.entries(searchRequest).filter(([key, value]) => {
+          // 페이징 정보는 항상 포함
+          if (key === 'page' || key === 'size') {
+            return true
+          }
+          // 다른 필드는 null/undefined가 아닌 경우만 포함
+          return value !== null && value !== undefined
+        })
       )
-      
-      console.log("정제된 검색 요청:", cleanSearchRequest)
       
       const response = await memberaccountSearch(cleanSearchRequest)
       
@@ -181,80 +128,151 @@ const MemberAssetSearchForm = () => {
             new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
         }))
 
-        // 백엔드에서 LIKE 검색이 완전히 지원되지 않는 경우를 대비한 클라이언트 사이드 필터링
-        transformedData = transformedData.filter(item => {
-          let matches = true
-          
-          // FROM ID LIKE 검색
-          if (formData.fromId && formData.fromId.trim() !== '') {
-            const searchTerm = formData.fromId.toLowerCase().trim()
-            if (!item.fromId.toLowerCase().includes(searchTerm)) {
-              matches = false
-            }
-          }
-          
-          // TO ID 또는 TO Name LIKE 검색
-          if (formData.toId && formData.toId.trim() !== '') {
-            const searchTerm = formData.toId.toLowerCase().trim()
-            const matchesId = item.toId.toLowerCase().includes(searchTerm)
-            const matchesName = item.toName.toLowerCase().includes(searchTerm)
-            
-            if (!matchesId && !matchesName) {
-              matches = false
-            }
-          }
-          
-          return matches
-        })
+        // 서버 사이드 페이징에서는 클라이언트 사이드 필터링 제거
+        // 백엔드에서 이미 필터링된 데이터를 받아옴
 
-        console.log(`검색 완료: 총 ${transformedData.length}개의 결과를 찾았습니다.`)
         setSearchResults(transformedData)
-      } else {
-        console.log("검색 결과가 없습니다.")
+        
+        // 서버에서 받은 총 개수 설정 (개선된 로직)
+        let totalElements = response.data.totalElements || response.data.total || 0
+        
+        // 백엔드에서 totalElements를 제공하지 않는 경우, 현재 페이지가 마지막 페이지인지 확인
+        if (totalElements === 0 && transformedData.length > 0) {
+          // 현재 페이지의 데이터가 요청한 크기보다 적으면 마지막 페이지로 간주
+          if (transformedData.length < size) {
+            totalElements = (page * size) + transformedData.length
+          } else {
+            // 더 많은 데이터가 있을 수 있으므로 임시로 큰 값 설정
+            totalElements = (page + 1) * size + 100
+          }
+        }
+        
+        setTotalCount(totalElements)
+              } else {
+          setSearchResults([])
+          setTotalCount(0)
+        }
+      } catch (error) {
         setSearchResults([])
-      }
-    } catch (error) {
-      console.error("검색 중 오류 발생:", error)
-      // 에러 발생 시 전체 데이터라도 보여주기 위해 초기 데이터 로딩 시도
-      try {
-        await loadInitialData()
-      } catch (initError) {
-        console.error("초기 데이터 로딩도 실패:", initError)
-        setSearchResults([])
-      }
-    } finally {
+        setTotalCount(0)
+      } finally {
       setLoading(false)
     }
-  }
+  }, [extractEmailId, pageSize, formData])
+
+  // 초기 데이터 로딩 함수 (서버 사이드 페이징 사용)
+  const loadInitialData = useCallback(async () => {
+    try {
+      // 서버 사이드 페이징을 위해 performSearch 함수 사용
+      await performSearch(0, pageSize)
+    } catch (error) {
+      setSearchResults([])
+      setTotalCount(0)
+    }
+  }, [performSearch, pageSize])
+
+  // 기존 검색 핸들러 (첫 페이지 검색용)
+  const handleSearch = useCallback(() => {
+    setCurrentPage(0)
+    setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
+    performSearch(0, pageSize, formData)
+  }, [performSearch, pageSize, formData])
 
 
 
-  // 엑셀 다운로드 핸들러 (임시로 비활성화)
-  const handleExcelDownload = useCallback(() => {
-    alert("엑셀 다운로드 기능이 준비 중입니다.")
+  // 선택된 행들 처리 핸들러
+  const handleSelectionChange = useCallback((newSelection) => {
+    // Set으로 안전한 선택 처리
+    const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
+    setSelectedRows(safeSelection);
   }, [])
+
+  // 페이지 변경 핸들러
+  const handlePageChange = useCallback((newPage) => {
+    setCurrentPage(newPage)
+    // 새로운 페이지로 검색 실행
+    performSearch(newPage, pageSize, formData)
+  }, [performSearch, pageSize, formData])
+
+  // 페이지 크기 변경 핸들러
+  const handlePageSizeChange = useCallback((newPageSize) => {
+    setPageSize(newPageSize)
+    setCurrentPage(0) // 페이지 크기 변경 시 첫 페이지로 이동
+    // 새로운 페이지 크기로 검색 실행 (명시적으로 newPageSize 전달)
+    performSearch(0, newPageSize, formData)
+  }, [performSearch, formData])
+
+  // 엑셀 다운로드 핸들러
+  const handleExcelDownload = useCallback(() => {
+    // 데이터 변환 (순번 추가)
+    const excelData = searchResults.map((row, index) => ({
+      '순번': index + 1,
+      'FROM 등급': row.fromGrade || '',
+      'FROM ID': row.fromId || '',
+      'TO 등급': row.toGrade || '',
+      'TO ID': row.toId || '',
+      'TO 이름': row.toName || '',
+      '거래 유형': row.transactionType || '',
+      '금액': row.amount || 0,
+      '단위': row.unit || '',
+      '사용 금액': row.usedValue || 0,
+      '쿠폰 사용 금액': row.couponUsedValue || 0,
+      '사유': row.reason || '',
+      '발생일': row.occurredDate || ''
+    }));
+
+    downloadSelectedExcel(excelData, selectedRows, '회원자산내역', '회원자산내역');
+  }, [searchResults, selectedRows])
 
   // 오늘 날짜 구하기 (yyyy-mm-dd) - 성능 최적화
   const today = useMemo(() => new Date().toISOString().split('T')[0], [])
 
+  // 초기 데이터 로딩 useEffect (모든 함수 정의 후에 배치)
+  useEffect(() => {
+    const loadOptions = async () => {
+      try {
+        setLoading(true)
+        const [rolesRes, transactionTypesRes] = await Promise.all([
+          memberaccountLookupRoles(),
+          memberaccountLookupTransactionTypes()
+        ])
+        setOptions({
+          roles: rolesRes.data || [],
+          paymentTypes: [],
+          transactionTypes: transactionTypesRes.data || []
+        })
+        
+        // 초기 데이터 로딩
+        await loadInitialData()
+      } catch (error) {
+        setError(error.message || "옵션 데이터를 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadOptions()
+  }, [loadInitialData])
+
   return (
     <div className="member-asset-search-container">
-      {/* 헤더 섹션 - 왼쪽 정렬 */}
-      <div className="member-asset-search-header">
-        <div className="member-asset-search-header-content">
-          <h1 className="member-asset-search-title">회원 자산 내역</h1>
-          <div className="member-asset-search-actions">
-            <button className="member-asset-search-btn excel" onClick={handleExcelDownload}>
-              엑셀 다운로드
-            </button>
-            <button
-              className="member-asset-search-btn search"
-              onClick={handleSearch}
-              disabled={loading}
-            >
-              {loading ? "조회 중..." : "조회"}
-            </button>
-          </div>
+      {/* 페이지 제목과 액션 버튼 */}
+      <div className="member-asset-search-page-header">
+        <h1 className="member-asset-search-page-title">회원 자산 내역</h1>
+        <div className="member-asset-search-actions">
+          <button 
+            className="member-asset-search-btn excel" 
+            onClick={handleExcelDownload}
+            disabled={searchResults.length === 0}
+          >
+            엑셀
+          </button>
+          <button
+            className="member-asset-search-btn search"
+            onClick={handleSearch}
+            disabled={loading}
+          >
+            {loading ? "조회 중..." : "조회"}
+          </button>
         </div>
       </div>
 
@@ -402,9 +420,16 @@ const MemberAssetSearchForm = () => {
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-results-section">
+      <div className="member-asset-search-table-container">
         <MemberAssetSearchTable 
           data={searchResults} 
+          onSelectionChange={handleSelectionChange}
+          totalCount={totalCount}
+          currentPage={currentPage}
+          pageSize={pageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          loading={loading}
         />
       </div>
     </div>

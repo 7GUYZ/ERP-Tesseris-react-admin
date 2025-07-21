@@ -134,6 +134,7 @@
 
 .nav-item {
   margin-bottom: 0.5rem;
+  position: relative;
 }
 
 .nav-button {
@@ -166,6 +167,33 @@
 
 .nav-button.centered {
   justify-content: center;
+  position: relative;
+}
+
+.nav-button.centered::after {
+  content: attr(title);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: #333;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 1001;
+  margin-left: 0.5rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.1s ease, visibility 0.1s ease;
+  pointer-events: none;
+}
+
+.nav-button.centered:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .nav-button-content {
@@ -198,6 +226,23 @@
   margin-left: 1.5rem;
   margin-top: 0.5rem;
   border-left: 2px solid #4a5568;
+  position: relative;
+}
+
+.submenu-collapsed {
+  background-color: #222e3c;
+  border: 1px solid #4a5568;
+  border-radius: 0.5rem;
+  min-width: 150px;
+  max-width: 180px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-left: 0;
+  border-left: none;
+  padding: 0.5rem;
+  margin-top: 0;
+}
+
+.submenu {
   padding-left: 1rem;
 }
 
@@ -216,6 +261,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.submenu-collapsed .submenu-button {
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  border-radius: 0.25rem;
 }
 
 .submenu-button:hover {
@@ -335,7 +386,7 @@
   border: 1px solid #e2e8f0;
   height: 100%;
   padding: 2rem;
-  overflow: auto;
+  overflow-y: auto;
   min-height: 0;
 }
 

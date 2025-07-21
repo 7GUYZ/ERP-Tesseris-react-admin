@@ -2,7 +2,10 @@ import { useEffect, useState } from "react";
 import {
   getCommissionSetting,
   setCommissionSetting,
+  pwCheck,
 } from "../../../api/auth/JiyoonAuth";
+import PwModal from "../../../components/feature/jiyun/PwModal";
+import { useToast } from "../../../context/jungeun/ToastContext";
 import "../../../styles/jiyun/commissionSetting/commission-setting.css";
 
 export default function CommissionSetting() {
@@ -10,6 +13,8 @@ export default function CommissionSetting() {
   const [originalSetting, setOriginalSetting] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const { showToast } = useToast();
 
   useEffect(() => {
     const fetchCommissionSetting = async () => {
@@ -38,17 +43,34 @@ export default function CommissionSetting() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    const payload = setting.map((item) => ({
-      ...item,
-      businessGradeRate: Number(item.businessGradeRate) / 10,
-    }));
+    setShowPasswordModal(true);
+  };
+
+  const handlePasswordConfirm = async (password) => {
     try {
-      await setCommissionSetting(payload);
-      alert("저장 성공!");
-      setOriginalSetting(setting);
-    } catch (e) {
-      alert("저장 실패");
+      const response = await pwCheck(password);
+      if (response.data.success) {
+        // 비밀번호 확인 성공 - 실제 저장 로직 실행
+        const payload = setting.map((item) => ({
+          ...item,
+          businessGradeRate: Number(item.businessGradeRate) / 10,
+        }));
+        
+        await setCommissionSetting(payload);
+        showToast("success", "수수료율 설정 변경 완료");
+        setOriginalSetting(setting);
+        setShowPasswordModal(false); // 모달 닫기
+        return true; // 성공 시 true 반환
+      } else {
+        throw new Error(response.data.message || "비밀번호가 일치하지 않습니다.");
+      }
+    } catch (error) {
+      throw new Error(error.message || "비밀번호 확인에 실패했습니다.");
     }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordModal(false);
   };
 
   const getRateByIndex = (index) => {
@@ -147,6 +169,14 @@ export default function CommissionSetting() {
           </div>
         </div>
       </div>
+
+      {/* PwModal 컴포넌트 사용 */}
+      <PwModal
+        isOpen={showPasswordModal}
+        onClose={handlePasswordCancel}
+        onConfirm={handlePasswordConfirm}
+        title="수수료율 설정 변경"
+      />
     </form>
   );
 }
