@@ -244,8 +244,8 @@ const MainNavi = () => {
             id: "business-commission-history", 
             programIndex: 37,
             label: "사업자 수당 내역", 
-            type: "list",
-            action: () => console.log("사업자 승인 클릭")
+            type: "link",
+            href: "/businessAllowance"
           },
           { 
             id: "commission-setting", 
