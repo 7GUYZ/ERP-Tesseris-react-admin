@@ -23,3 +23,15 @@ export const permissionApi = {
   // 권한 삭제
   deleteAuthority: (authorityTypeIndex) => api.post(`/admin/permissionsettings/deleteauthority`, { authorityTypeIndex })
 }; 
+
+// 어드민 마이페이지 API
+export const adminMyPageApi = {
+  // 마이페이지 정보 조회
+  getMyPageInfo: (userIndex) => api.get(`admin/mypage/getmypage`, { params: { userIndex } }),
+
+  // 마이페이지 정보 수정
+  updateMyPageInfo: (userIndex, data) => api.post(`admin/mypage/changemyinpo`, data, { params: { userIndex } }),
+
+  // 비밀번호 변경
+  changePassword: (userIndex, passwordData) => api.post(`admin/mypage/changepassword`, passwordData, { params: { userIndex } })
+}; 
