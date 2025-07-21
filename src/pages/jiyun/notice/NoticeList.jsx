@@ -52,10 +52,11 @@ export default function NoticeList() {
 
   return (
     <div className="notice-page">
+      <div className="breadcrumb">고객센터 관리 &gt; 공지사항 관리</div>
       <h1>공지사항 목록</h1>
       <div className="top-bar">
         <button
-          className="btn btn-primary"
+          className="btn-n btn-primary"
           onClick={() => navigate("/notice/write")}
         >
           공지사항 등록
