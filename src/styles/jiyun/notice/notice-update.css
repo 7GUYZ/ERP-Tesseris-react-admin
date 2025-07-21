@@ -1,26 +1,22 @@
-/* 공통 컨테이너 */
 .notice-page {
   padding: 40px;
-  background-color: #f4f6fa; /* 회색 배경 */
+  background-color: #f4f6fa;
   min-height: 100vh;
   font-family: "Noto Sans KR", sans-serif;
 }
 
-/* 상단 경로 */
 .breadcrumb {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 8px;
 }
 
-/* 제목 */
 .notice-page h1 {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 24px;
 }
 
-/* 입력 폼 */
 .notice-form {
   background-color: #ffffff;
   padding: 24px;
@@ -28,7 +24,6 @@
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-/* 입력 필드 라벨 */
 .form-group {
   margin-bottom: 20px;
 }
@@ -68,7 +63,6 @@ textarea:focus {
   background-color: #fff;
 }
 
-/* 버튼 정렬 */
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -82,9 +76,10 @@ textarea:focus {
   border-radius: 6px;
   border: none;
   cursor: pointer;
+  height: 40px;
+  width: 75px;
 }
 
-/* 파란 버튼 */
 .btn-primary {
   background-color: #387ddd;
   color: white;
@@ -94,7 +89,6 @@ textarea:focus {
   background-color: #2f6dbf;
 }
 
-/* 빨간 버튼 */
 .btn-danger {
   background-color: #ef4444;
   color: white;
@@ -104,7 +98,6 @@ textarea:focus {
   background-color: #dc2626;
 }
 
-/* 회색 버튼 */
 .btn-secondary {
   background-color: #f9fafb;
   color: #374151;
