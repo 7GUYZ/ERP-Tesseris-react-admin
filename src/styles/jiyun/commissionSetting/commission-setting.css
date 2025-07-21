@@ -1,19 +1,16 @@
-body {
+.commission-form {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Segoe UI", sans-serif;
   background-color: #f5f7fa;
-}
-
-.commission-form {
   width: 95%;
   min-height: 800px;
   text-align: center;
   background-color: white;
 }
 
-.header {
+.commission-header {
   display: flex;
   align-items: center;
   margin-bottom: 30px;
@@ -23,7 +20,7 @@ body {
   width: 100%;
 }
 
-.header h1 {
+.commission-header h1 {
   font-size: 1.5rem;
   font-weight: bold;
 }

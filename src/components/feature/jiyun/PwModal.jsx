@@ -48,7 +48,7 @@ export default function PwModal({
   return (
     <div className="overlay" onClick={handleCancel}>
       <div className="modal" onClick={(e) => e.stopPropagation()}>
-        <div className="header">
+        <div className="pwmodal-header">
           <h2 className="title">{title}</h2>
         </div>
 
