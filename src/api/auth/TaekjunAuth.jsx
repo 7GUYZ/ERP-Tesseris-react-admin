@@ -35,3 +35,11 @@ export const adminMyPageApi = {
   // 비밀번호 변경
   changePassword: (userIndex, passwordData) => api.post(`admin/mypage/changepassword`, passwordData, { params: { userIndex } })
 }; 
+
+// 대시보드 통계 조회
+export const dashboardApi = {
+  getStatistics: () => api.get('dashboard/statistics'),
+  getCmStatistics: () => api.get('dashboard/cm-statistics'),
+  getCommissionStatistics: () => api.get('dashboard/commission-statistics'),
+  getStoreStatistics: () => api.get('dashboard/store-statistics'),
+}; 

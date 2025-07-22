@@ -107,7 +107,7 @@ const AuthorityForm = ({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="authority-form">
+    <form onSubmit={handleSubmit} className="authority-form authority-modal">
       <div className="form-grid">
         <div className="form-item">
           <label htmlFor="adminTypeIndex">관리자 타입 *</label>
@@ -273,11 +273,11 @@ const AuthorityForm = ({
       )}
 
       <div className="form-actions">
-        <button type="button" className="btn btn-secondary" onClick={onCancel}>
-          취소
-        </button>
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? '처리중...' : (editingAuthority ? '수정' : '추가')}
+        </button>
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          취소
         </button>
       </div>
     </form>

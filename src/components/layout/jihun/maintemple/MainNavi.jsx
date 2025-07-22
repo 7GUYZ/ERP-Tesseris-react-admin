@@ -111,7 +111,7 @@ const MainNavi = () => {
         label: "대시 보드",
         icon: Home,
         type: "link", // link: 페이지 이동, expand: 확장 메뉴, action: 액션 실행
-        href: "/TestMain",
+        href: "/dashboard",
       },
       {
         id: "mypage",
@@ -151,11 +151,10 @@ const MainNavi = () => {
           },
           { 
             id: "authority-management", 
-            programIndex: 8,
+            programIndex: 8, 
             label: "권한 관리", 
             type: "link",
             href: "/PermissionManagement"
-
           },
           {
             id: "monthly-cm-limit",
