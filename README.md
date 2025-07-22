@@ -33,5 +33,8 @@ npm install @mui/icons-material @mui/x-data-grid @mui/x-date-pickers dayjs lucid
 (조직도)
 npm install gojs gojs-react
 
+(그래프)
+npm install recharts
+
 
 ^^
