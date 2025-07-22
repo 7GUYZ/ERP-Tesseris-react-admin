@@ -8,6 +8,18 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // 차트 색상 배열
+  const chartColors = [
+    '#3b7ddd', // 파란색
+    '#10b981', // 초록색
+    '#f59e0b', // 주황색
+    '#ef4444', // 빨간색
+    '#8b5cf6', // 보라색
+    '#06b6d4', // 청록색
+    '#f97316', // 주황색
+    '#ec4899', // 분홍색
+  ];
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -45,7 +57,17 @@ const Dashboard = () => {
       .replace(/\bPending\b/g, '대기')
       .replace(/\bStore\b/g, '가맹점')
       .replace(/\bMan\b/g, '사업자')
+      .replace(/\bCompleted\b/g, '완료')
       .trim();
+  };
+
+  // 배열을 원하는 크기로 나누는 함수
+  const chunkArray = (array, size) => {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += size) {
+      chunks.push(array.slice(i, i + size));
+    }
+    return chunks;
   };
 
   const groups = [
@@ -54,7 +76,8 @@ const Dashboard = () => {
       keys: [
         'chargedCmTotal', 'chargedCmYesterday', 'chargedCmToday',
         'companyPaidCmTotal', 'companyPaidCmYesterday', 'companyPaidCmToday',
-        'companyCollectedCmTotal', 'companyCollectedCmYesterday', 'companyCollectedCmToday'
+        'companyCollectedCmTotal', 'companyCollectedCmYesterday', 'companyCollectedCmToday',
+        'giftCmTotal', 'giftCmYesterday', 'giftCmToday'
       ]
     },
     {
@@ -63,14 +86,22 @@ const Dashboard = () => {
         'commissionRevenueTotal', 'commissionRevenueYesterday', 'commissionRevenueToday',
         'companyCashCommissionTotal', 'companyCashCommissionYesterday', 'companyCashCommissionToday',
         'businessCashCommissionTotal', 'businessCashCommissionYesterday', 'businessCashCommissionToday',
-        'businessCmCommissionTotal', 'businessCmCommissionYesterday', 'businessCmCommissionToday'
+        'businessCmCommissionTotal', 'businessCmCommissionYesterday', 'businessCmCommissionToday',
+        'companyCmCashTotal', 'companyCmCashYesterday', 'companyCmCashToday'
       ]
     },
     {
-      title: '가맹점/기타',
+      title: '가맹점/사업자',
       keys: [
         'approvedStoreTotal', 'approvedStoreYesterday', 'approvedStoreToday',
-        'pendingStoreTotal', 'pendingStoreYesterday', 'pendingStoreToday'
+        'businessManTotal', 'businessManYesterday', 'businessManToday',
+        'pendingStoreTotal'
+      ]
+    },
+    {
+      title: '기타',
+      keys: [
+        'withdrawalCompletedTotal', 'withdrawalCompletedYesterday', 'withdrawalCompletedToday'
       ]
     }
   ];
@@ -99,6 +130,14 @@ const Dashboard = () => {
         { name: '전체', value: stats?.companyCollectedCmTotal ?? 0 },
         { name: '어제', value: stats?.companyCollectedCmYesterday ?? 0 },
         { name: '오늘', value: stats?.companyCollectedCmToday ?? 0 },
+      ],
+    },
+    {
+      title: '선물 CM 차트',
+      data: [
+        { name: '전체', value: stats?.giftCmTotal ?? 0 },
+        { name: '어제', value: stats?.giftCmYesterday ?? 0 },
+        { name: '오늘', value: stats?.giftCmToday ?? 0 },
       ],
     },
   ];
@@ -137,6 +176,46 @@ const Dashboard = () => {
         { name: '오늘', value: stats?.businessCmCommissionToday ?? 0 },
       ],
     },
+    {
+      title: '본사 CM Cash 차트',
+      data: [
+        { name: '전체', value: stats?.companyCmCashTotal ?? 0 },
+        { name: '어제', value: stats?.companyCmCashYesterday ?? 0 },
+        { name: '오늘', value: stats?.companyCmCashToday ?? 0 },
+      ],
+    },
+  ];
+
+  // 가맹점/사업자 차트 구성 배열
+  const chartConfigsStore = [
+    {
+      title: '승인된 가맹점 차트',
+      data: [
+        { name: '전체', value: stats?.approvedStoreTotal ?? 0 },
+        { name: '어제', value: stats?.approvedStoreYesterday ?? 0 },
+        { name: '오늘', value: stats?.approvedStoreToday ?? 0 },
+      ],
+    },
+    {
+      title: '사업자 차트',
+      data: [
+        { name: '전체', value: stats?.businessManTotal ?? 0 },
+        { name: '어제', value: stats?.businessManYesterday ?? 0 },
+        { name: '오늘', value: stats?.businessManToday ?? 0 },
+      ],
+    },
+  ];
+
+  // 기타 차트 구성 배열
+  const chartConfigsOther = [
+    {
+      title: '출금 신청 완료 차트',
+      data: [
+        { name: '전체', value: stats?.withdrawalCompletedTotal ?? 0 },
+        { name: '어제', value: stats?.withdrawalCompletedYesterday ?? 0 },
+        { name: '오늘', value: stats?.withdrawalCompletedToday ?? 0 },
+      ],
+    },
   ];
 
   return (
@@ -151,20 +230,71 @@ const Dashboard = () => {
           groups.map(group => (
             <section key={group.title} className="dashboard-group">
               <h2 className="dashboard-group-title">{group.title}</h2>
-              <div className="dashboard-grid">
-                {group.keys.map(key => (
-                  stats && stats[key] !== undefined && (
-                    <div className="dashboard-card" key={key}>
-                      <div className="card-label">{formatKey(key)}</div>
-                      <div className="card-value">
-                        {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+              
+              {/* CM 관련과 수수료 관련은 3개씩, 가맹점/사업자는 2개씩, 기타는 1개씩 나누어서 렌더링 */}
+              {group.title === 'CM 관련' || group.title === '수수료 관련' ? (
+                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
+                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
+                    {chunk.map(key => (
+                      stats && stats[key] !== undefined && (
+                        <div className="dashboard-card" key={key}>
+                          <div className="card-label">{formatKey(key)}</div>
+                          <div className="card-value">
+                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ))
+              ) : group.title === '가맹점/사업자' ? (
+                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
+                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
+                    {chunk.map(key => (
+                      stats && stats[key] !== undefined && (
+                        <div className="dashboard-card" key={key}>
+                          <div className="card-label">{formatKey(key)}</div>
+                          <div className="card-value">
+                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ))
+              ) : group.title === '기타' ? (
+                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
+                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
+                    {chunk.map(key => (
+                      stats && stats[key] !== undefined && (
+                        <div className="dashboard-card" key={key}>
+                          <div className="card-label">{formatKey(key)}</div>
+                          <div className="card-value">
+                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+                          </div>
+                        </div>
+                      )
+                    ))}
+                  </div>
+                ))
+              ) : (
+                /* 기본 렌더링 (사용되지 않음) */
+                <div className="dashboard-grid">
+                  {group.keys.map(key => (
+                    stats && stats[key] !== undefined && (
+                      <div className="dashboard-card" key={key}>
+                        <div className="card-label">{formatKey(key)}</div>
+                        <div className="card-value">
+                          {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+                        </div>
                       </div>
-                    </div>
-                  )
-                ))}
-              </div>
+                    )
+                  ))}
+                </div>
+              )}
+              
               {group.title === 'CM 관련' && chartConfigs.length > 0 && (
-                chartConfigs.map(cfg => (
+                chartConfigs.map((cfg, index) => (
                   <div key={cfg.title} className="dashboard-chart-row">
                     <span className="dashboard-chart-label">{cfg.title}</span>
                     <ResponsiveContainer width="100%" height={160}>
@@ -203,7 +333,7 @@ const Dashboard = () => {
                         />
                         <Bar
                           dataKey="value"
-                          fill="#3b7ddd"
+                          fill={chartColors[index % chartColors.length]}
                           radius={[8, 8, 0, 0]}
                           label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
                           barSize={24}
@@ -214,7 +344,7 @@ const Dashboard = () => {
                 ))
               )}
               {group.title === '수수료 관련' && chartConfigsFee.length > 0 && (
-                chartConfigsFee.map(cfg => (
+                chartConfigsFee.map((cfg, index) => (
                   <div key={cfg.title} className="dashboard-chart-row">
                     <span className="dashboard-chart-label">{cfg.title}</span>
                     <ResponsiveContainer width="100%" height={160}>
@@ -253,7 +383,107 @@ const Dashboard = () => {
                         />
                         <Bar
                           dataKey="value"
-                          fill="#3b7ddd"
+                          fill={chartColors[(index + 4) % chartColors.length]}
+                          radius={[8, 8, 0, 0]}
+                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
+                          barSize={24}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ))
+              )}
+              {group.title === '가맹점/사업자' && chartConfigsStore.length > 0 && (
+                chartConfigsStore.map((cfg, index) => (
+                  <div key={cfg.title} className="dashboard-chart-row">
+                    <span className="dashboard-chart-label">{cfg.title}</span>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <BarChart
+                        data={cfg.data}
+                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
+                        barCategoryGap={24}
+                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
+                      >
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
+                          axisLine={{ stroke: '#e5eaf2' }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
+                          axisLine={{ stroke: '#e5eaf2' }}
+                          tickLine={false}
+                          tickFormatter={value => {
+                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
+                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
+                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
+                            return value;
+                          }}
+                        />
+                        <Tooltip
+                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
+                          cursor={{ fill: '#e5eaf2' }}
+                        />
+                        <Legend
+                          verticalAlign="top"
+                          height={24}
+                          iconType="rect"
+                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill={chartColors[(index + 9) % chartColors.length]}
+                          radius={[8, 8, 0, 0]}
+                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
+                          barSize={24}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ))
+              )}
+              {group.title === '기타' && chartConfigsOther.length > 0 && (
+                chartConfigsOther.map((cfg, index) => (
+                  <div key={cfg.title} className="dashboard-chart-row">
+                    <span className="dashboard-chart-label">{cfg.title}</span>
+                    <ResponsiveContainer width="100%" height={160}>
+                      <BarChart
+                        data={cfg.data}
+                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
+                        barCategoryGap={24}
+                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
+                      >
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
+                          axisLine={{ stroke: '#e5eaf2' }}
+                          tickLine={false}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
+                          axisLine={{ stroke: '#e5eaf2' }}
+                          tickLine={false}
+                          tickFormatter={value => {
+                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
+                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
+                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
+                            return value;
+                          }}
+                        />
+                        <Tooltip
+                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
+                          cursor={{ fill: '#e5eaf2' }}
+                        />
+                        <Legend
+                          verticalAlign="top"
+                          height={24}
+                          iconType="rect"
+                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill={chartColors[(index + 11) % chartColors.length]}
                           radius={[8, 8, 0, 0]}
                           label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
                           barSize={24}
