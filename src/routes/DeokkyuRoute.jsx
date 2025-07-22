@@ -4,6 +4,7 @@ import StoreList from '../pages/deokkyu/store/StoreList';
 import StoreCustomerList from '../pages/deokkyu/store/StoreCustomerList';
 import StoreRegisterList from '../pages/deokkyu/store/StoreRegisterList';
 import BusinessManAllowanceDetails from '../pages/deokkyu/businessman/BusinessManAllowanceDetails';
+import BusinessManOrgChart from '../pages/deokkyu/businessman/BusinessManOrgChart';
 
 
 function DeokkyuRoute() {
@@ -14,7 +15,8 @@ function DeokkyuRoute() {
                 <Route path='/storelist' element={<StoreList />} />
                 <Route path='/storecustomerlist' element={< StoreCustomerList/>} />
                 <Route path='/storeregisterlist' element={< StoreRegisterList/>} />
-                <Route path='/businessAllowance' element={< BusinessManAllowanceDetails/>} />
+                <Route path='/businessallowance' element={< BusinessManAllowanceDetails/>} />
+                <Route path='/businessorgchart' element={< BusinessManOrgChart/>} />
             </Route>
         </>
     );
