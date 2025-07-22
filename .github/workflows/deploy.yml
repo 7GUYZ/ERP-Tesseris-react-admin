@@ -23,6 +23,11 @@ jobs:
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Set homepage and basename for production (hardcoded)
+        run: |
+          sed -i "s#__PUBLIC_URL__#/reactadmin#g" package.json
+          echo "REACT_APP_BASENAME=/reactadmin" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
         with:
