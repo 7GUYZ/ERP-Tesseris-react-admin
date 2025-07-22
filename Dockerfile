@@ -5,6 +5,11 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm install --legacy-peer-deps
 COPY . .
+
+# 환경변수 전달 (빌드 시점에)
+ARG REACT_APP_BASENAME
+ENV REACT_APP_BASENAME=$REACT_APP_BASENAME
+
 RUN npm run build
 
 # 2단계: Nginx을 이용한 정적 파일 서빙
