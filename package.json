@@ -7,8 +7,9 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
-    "@mui/x-data-grid": "^8.8.0",
-    "@mui/x-date-pickers": "^8.8.0",
+
+    "@mui/x-data-grid": "^8.9.1",
+    "@mui/x-date-pickers": "^8.9.0",
     "@stomp/stompjs": "^7.1.1",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
@@ -23,7 +24,7 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-hot-toast": "^2.5.2",
-    "react-router-dom": "^7.6.3",
+    "react-router-dom": "^7.7.0",
     "react-scripts": "^5.0.1",
     "socket.io-client": "^4.8.1",
     "sockjs-client": "^1.6.1",
@@ -38,6 +39,7 @@
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:19091",
+  "homepage": "/",
   "eslintConfig": {
     "extends": [
       "react-app",

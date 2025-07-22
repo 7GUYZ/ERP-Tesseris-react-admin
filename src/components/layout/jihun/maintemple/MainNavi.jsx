@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import {useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -151,6 +151,7 @@ const MainNavi = () => {
           },
           { 
             id: "authority-management", 
+            programIndex: 8,
             label: "권한 관리", 
             type: "link",
             href: "/PermissionManagement"
