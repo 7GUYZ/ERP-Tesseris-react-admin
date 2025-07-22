@@ -42,11 +42,11 @@ jobs:
 
       - name: Replace image tag and apply deployment
         run: |
-          sed "s#__DOCKER_IMAGE__#${{ secrets.DOCKER_IMAGE }}#g" k8s/deployment.yaml | \
-          sed "s#__TAG__#${{ github.sha }}#g" > k8s/deployment.generated.yaml
+          sed "s#__DOCKER_IMAGE__#${{ secrets.DOCKER_IMAGE }}#g" my-k8s-app/final/reactadmin_deployment.yaml | \
+          sed "s#__TAG__#${{ github.sha }}#g" > my-k8s-app/final/reactadmin_deployment.generated.yaml
 
-          kubectl apply -f k8s/deployment.generated.yaml
+          kubectl apply -f my-k8s-app/final/reactadmin_deployment.generated.yaml
 
       - name: Apply service
         run: |
-          kubectl apply -f k8s/service.yaml
+          kubectl apply -f my-k8s-app/final/reactadmin_service.yaml
