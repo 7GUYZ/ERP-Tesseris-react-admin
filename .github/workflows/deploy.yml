@@ -26,8 +26,6 @@ jobs:
       - name: Set homepage and basename for production (hardcoded)
         run: |
           sed -i "s#__PUBLIC_URL__#/reactadmin#g" package.json
-          echo "REACT_APP_BASENAME=/reactadmin" >> $GITHUB_ENV
-          echo "REACT_APP_API_BASE_URL=/reactadmin" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
@@ -37,6 +35,7 @@ jobs:
           tags: ${{ secrets.DOCKER_IMAGE }}:${{ github.sha }}
           build-args: |
             REACT_APP_BASENAME=/reactadmin
+            REACT_APP_API_BASE_URL=/reactadmin
 
       - name: Set up Kubeconfig
         uses: azure/setup-kubectl@v4
