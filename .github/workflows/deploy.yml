@@ -27,6 +27,7 @@ jobs:
         run: |
           sed -i "s#__PUBLIC_URL__#/reactadmin#g" package.json
           echo "REACT_APP_BASENAME=/reactadmin" >> $GITHUB_ENV
+          echo "REACT_APP_API_BASE_URL=/reactadmin" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v4
