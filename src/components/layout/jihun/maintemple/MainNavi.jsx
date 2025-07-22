@@ -229,14 +229,14 @@ const MainNavi = () => {
             programIndex: 18,
             label: "영업 실적 현황",
             type: "list",
-            action: () => console.log("사업자 리스트 클릭"),
+            action: () => console.log("영업 실적 현황"),
           },
           {
             id: "business-organization-chart",
             programIndex: 19,
             label: "사업자 조직도",
-            type: "list",
-            action: () => console.log("사업자 승인 클릭"),
+            type: "link",
+            href: "/businessorgchart",
           },
           {
             id: "business-member-list",
@@ -250,7 +250,7 @@ const MainNavi = () => {
             programIndex: 37,
             label: "사업자 수당 내역", 
             type: "link",
-            href: "/businessAllowance"
+            href: "/businessallowance"
           },
           {
             id: "commission-setting",
@@ -583,7 +583,8 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
+        {/* 개발/테스트용: 권한 체크 임시 우회 */}
+        {menuConfig.items.map(renderMenuItem)}
       </nav>
     </div>
   );

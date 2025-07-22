@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 
 
 import '../../../styles/deokkyu/StoreList.css'; 
-import { getStoreList } from '../../../api/auth/DeokkyuAuth';
+import { getAllowanceList } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
@@ -18,13 +18,13 @@ const columns = [
   { field: 'businessUserName', headerName: '사업자 이름', width: 120 },
   { field: 'businessGradeName', headerName: '사업자 등급', width: 120 }, 
   { field: 'businessUserPhone', headerName: '핸드폰 번호', width: 140 }, // ++ businessman 테이블
-  { field: 'businessAreaIndex', headerName: '담당 구역', width: 140 }, // ++ businessman 테이블
+  { field: 'businessAreaName', headerName: '담당 구역', width: 140 }, // ++ businessman 테이블
   
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
-  { field: 'userId', headerName: '가맹점 ID', width: 120 },
-  { field: 'userName', headerName: '회원 이름', width: 100 },
+  { field: 'storeUserId', headerName: '가맹점 ID', width: 120 },
+  { field: 'storeUserName', headerName: '회원 이름', width: 100 },
 
-  { field: 'temporaryStoreMasterChargeTime', headerName: '분배시간', width: 120 }, // ++ temporary_store_master 테이블
+  { field: 'temporaryStoreMasterDistributionTime', headerName: '분배시간', width: 120 }, // ++ temporary_store_master 테이블
   { field: 'temporaryStoreCmValue', headerName: '중개수수료 CM', width: 120 }, // ++ temporary_store_master 테이블
   { field: 'temporaryStoreCashValue', headerName: '중개수수료 Cash', width: 120 }, // ++ temporary_store_master 테이블
   { field: 'temporaryStoreTotalValue', headerName: '중개수수료 합계', width: 120 }, // ++ temporary_store_master 테이블
@@ -39,22 +39,22 @@ function BusinessManAllowanceDetails() {
     businessUserName: '', // 사업자 이름
     businessGradeName: '전체', // 사업자 등급
     businessUserPhone: '', // 사업자 핸드폰 번호
-    businessAreaIndex: '', // 담당 구역
+    businessAreaName: '', // 담당 구역
     storeName: '', // 가맹점 명
-    userId: '', // 가맹점 ID
-    userName: '', // 회원 이름
-    temporaryStoreMasterChargeTimeStart: null, // 분배시간 시작
-    temporaryStoreMasterChargeTimeEnd: null, // 분배시간 종료
+    storeUserId: '', // 가맹점 ID
+    storeUserName: '', // 회원 이름
+    temporaryStoreMasterDistributionTimeStart: null,  // 분배시간 시작
+    temporaryStoreMasterDistributionTimeEnd: null, // 분배시간 종료
   });
 
-const fetchStores = async (params = {}) => {
+const fetchAllowance = async (params = {}) => {
   try {
     setLoading(true); // 로딩 시작
     const cleanedParams = {};
     const stringFields = [
       'businessUserId', 'businessUserName', 'businessGradeName',
-      'businessUserPhone', 'businessAreaIndex', 'storeName',
-      'userId', 'userName'
+      'businessUserPhone', 'businessAreaName', 'storeName',
+      'storeUserId', 'storeUserName'
     ];
 
     stringFields.forEach((key) => {
@@ -63,14 +63,18 @@ const fetchStores = async (params = {}) => {
       }
     });
 
-    if (params.temporaryStoreMasterChargeTimeStart)
-      cleanedParams.temporaryStoreMasterChargeTimeStart = dayjs(params.temporaryStoreMasterChargeTimeStart).format('YYYY-MM-DD');
-    if (params.temporaryStoreMasterChargeTimeEnd)
-      cleanedParams.temporaryStoreMasterChargeTimeEnd = dayjs(params.temporaryStoreMasterChargeTimeEnd).format('YYYY-MM-DD');
+    if (params.temporaryStoreMasterDistributionTimeStart)
+      cleanedParams.temporaryStoreMasterDistributionTimeStart = dayjs(params.temporaryStoreMasterDistributionTimeStart).format('YYYY-MM-DD');
+    if (params.temporaryStoreMasterDistributionTimeEnd)
+      cleanedParams.temporaryStoreMasterDistributionTimeEnd = dayjs(params.temporaryStoreMasterDistributionTimeEnd).format('YYYY-MM-DD');
 
-    const response = await getStoreList(
+    console.log('🔍 백엔드로 전송할 파라미터:', cleanedParams);
+    
+    const response = await getAllowanceList(
       Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
     );
+    
+    console.log('✅ 백엔드 응답:', response);
 
     const data = response.data.map((item, index) => ({
       id: index + 1,
@@ -79,8 +83,9 @@ const fetchStores = async (params = {}) => {
 
     setRows(data);
   } catch (error) {
-    console.error('조회 실패:', error);
-    alert('데이터를 불러오는 데 실패했습니다.');
+    console.error('🚨 API 호출 실패:', error);
+    console.error('🚨 에러 상세 정보:', error.response?.data || error.message);
+    alert(`데이터를 불러오는 데 실패했습니다: ${error.response?.data?.message || error.message}`);
   } finally {
     setLoading(false); // 로딩 종료
   }
@@ -89,12 +94,12 @@ const fetchStores = async (params = {}) => {
 
   // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
   useEffect(() => {
-    fetchStores({}); // 최초 진입 시에만 로딩중 표시
+    fetchAllowance({}); // 최초 진입 시에만 로딩중 표시
   }, []);
 
   // 조회 버튼 클릭 시 → 현재 검색 조건으로 조회
   const handleSearch = () => {
-    fetchStores({ ...filter }); // 검색 시에는 로딩중 표시 안 함
+    fetchAllowance({ ...filter }); // 검색 시에는 로딩중 표시 안 함
   };
 
   const handleExcelDownload = () => {
@@ -208,8 +213,8 @@ const fetchStores = async (params = {}) => {
                     size="small"
                     margin="dense"
                     label="담당 구역"
-                    value={filter.businessAreaIndex}
-                    onChange={(e) => setFilter({ ...filter, businessAreaIndex: e.target.value })}
+                    value={filter.businessAreaName}
+                    onChange={(e) => setFilter({ ...filter, businessAreaName: e.target.value })}
                   />
                 </Grid>
                 <Grid item xs={3}>
@@ -246,16 +251,16 @@ const fetchStores = async (params = {}) => {
                   <DatePicker
                     label="분배시간 시작"
                     format="YYYY-MM-DD"
-                    value={filter.temporaryStoreMasterChargeTimeStart}
-                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterChargeTimeStart: date })}
+                    value={filter.temporaryStoreMasterDistributionTimeStart}
+                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterDistributionTimeStart: date })}
                   />
                 </Grid>
                 <Grid item xs={3}>
                   <DatePicker
                     label="분배시간 종료"
                     format="YYYY-MM-DD"
-                    value={filter.temporaryStoreMasterChargeTimeEnd}
-                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterChargeTimeEnd: date })}
+                    value={filter.temporaryStoreMasterDistributionTimeEnd}
+                    onChange={(date) => setFilter({ ...filter, temporaryStoreMasterDistributionTimeEnd: date })}
                   />
                 </Grid>
               </Grid>
@@ -271,13 +276,21 @@ const fetchStores = async (params = {}) => {
                 checkboxSelection
                 disableRowSelectionOnClick
                 onRowSelectionModelChange={(newSelection) => {
-                  // newSelection이 객체이고 ids 속성이 있는 경우
-                  if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
-                    setSelectedRows(newSelection.ids);
-                  } else if (Array.isArray(newSelection)) {
-                    // 배열인 경우 (이전 버전 호환성)
+                  console.log('🔍 선택된 항목:', newSelection, typeof newSelection);
+                  
+                  // MUI DataGrid 버전별 안전한 처리
+                  if (Array.isArray(newSelection)) {
+                    // 배열인 경우
                     setSelectedRows(new Set(newSelection));
+                  } else if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+                    // 객체에 ids 속성이 있는 경우
+                    setSelectedRows(new Set(newSelection.ids));
+                  } else if (newSelection && typeof newSelection === 'object') {
+                    // 다른 객체 형태인 경우 - 빈 Set으로 초기화
+                    console.warn('예상치 못한 선택 데이터 형태:', newSelection);
+                    setSelectedRows(new Set());
                   } else {
+                    // 그 외의 경우
                     setSelectedRows(new Set());
                   }
                 }}
