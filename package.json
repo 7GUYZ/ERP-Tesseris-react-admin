@@ -7,6 +7,7 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.2.0",
     "@mui/material": "^7.2.0",
+
     "@mui/x-data-grid": "^8.9.1",
     "@mui/x-date-pickers": "^8.9.0",
     "@stomp/stompjs": "^7.1.1",
@@ -36,6 +37,7 @@
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:19091",
+  "homepage": "/",
   "eslintConfig": {
     "extends": [
       "react-app",
