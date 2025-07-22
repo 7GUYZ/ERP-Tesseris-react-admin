@@ -45,7 +45,7 @@ jobs:
           sed "s#__DOCKER_IMAGE__#${{ secrets.DOCKER_IMAGE }}#g" k8s/deployment.yaml | \
           sed "s#__TAG__#${{ github.sha }}#g" > k8s/deployment.generated.yaml
 
-          kubectl apply -f k8s/deployment.genrated.yaml
+          kubectl apply -f k8s/deployment.generated.yaml
 
       - name: Apply service
         run: |
