@@ -1,0 +1,321 @@
+/* AdminMyPage.css */
+.admin-mypage {
+  background: #f4f6fa;
+  min-height: 100vh;
+  font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+}
+
+.admin-mypage-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+
+.modify-button {
+  background: linear-gradient(135deg, #7b5cff 0%, #3b7ddd 100%);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(59, 125, 221, 0.2);
+}
+
+.modify-button:hover {
+  background: linear-gradient(135deg, #6a4cff 0%, #2d6bcc 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 125, 221, 0.3);
+}
+
+.modify-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.info-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(34, 46, 60, 0.08);
+  padding: 32px;
+  margin-bottom: 24px;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #222e3c;
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f4f6fa;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.info-value {
+  font-size: 1rem;
+  color: #222e3c;
+  font-weight: 500;
+  padding: 12px 16px;
+  background: #f8f9fa;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+}
+
+.info-value.editable {
+  background: #fff;
+  border-color: #d1d5db;
+  transition: border-color 0.2s ease;
+}
+
+.info-value.editable:focus {
+  outline: none;
+  border-color: #3b7ddd;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.info-value.error {
+  border-color: #ef4444;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* 비밀번호 변경 모달 */
+.password-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(34, 46, 60, 0.1);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.password-modal-content {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  max-width: 480px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(34, 46, 60, 0.16);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.modal-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.2s;
+  padding: 4px;
+}
+
+.modal-close:hover {
+  color: #3b7ddd;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.password-input {
+  display: flex;
+  flex-direction: column;
+}
+
+.password-input label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.password-input input {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.password-input input:focus {
+  outline: none;
+  border-color: #3b7ddd;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.password-input input.error {
+  border-color: #ef4444;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.btn {
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #7b5cff 0%, #3b7ddd 100%);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(59, 125, 221, 0.2);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #6a4cff 0%, #2d6bcc 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 125, 221, 0.3);
+}
+
+.btn-secondary {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover {
+  background: #e5e7eb;
+  color: #1f2937;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 성별 선택 스타일 */
+.gender-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #fff;
+  color: #222e3c;
+  transition: border-color 0.2s ease;
+}
+
+.gender-select:focus {
+  outline: none;
+  border-color: #3b7ddd;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .admin-mypage-container {
+    padding: 16px;
+  }
+  
+  .page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .info-card {
+    padding: 24px;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-title {
+    font-size: 1.5rem;
+  }
+  
+  .info-card {
+    padding: 20px;
+  }
+  
+  .password-modal-content {
+    padding: 24px;
+  }
+} 

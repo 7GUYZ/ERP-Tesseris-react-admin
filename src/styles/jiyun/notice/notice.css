@@ -1,13 +1,12 @@
 .notice-page {
   padding: 40px;
-  background-color: #F4F6FA; /* 변경된 회색 배경 */
-  min-height: 100vh;
-  font-family: 'Noto Sans KR', sans-serif;
+  min-height: 800px;
+  font-family: "Noto Sans KR", sans-serif;
+  background-color: white;
 }
 
 .breadcrumb {
   font-size: 14px;
-  color: #6b7280;
   margin-bottom: 8px;
 }
 
@@ -23,18 +22,23 @@
   margin-bottom: 20px;
 }
 
-.btn {
+.btn-n {
   padding: 10px 18px;
   font-size: 14px;
   border-radius: 6px;
   border: none;
   cursor: pointer;
+  width: 130px;
+  height: 40px;
 }
 
 .btn-primary {
-  background-color: #387DDD; /* 파란색 → 변경됨 */
+  background-color: #387ddd;
+  width: 130px;
+  height: 40px;
   color: white;
   transition: background-color 0.3s ease;
+  border: none;
 }
 
 .btn-primary:hover {
@@ -58,7 +62,8 @@
   background-color: #f1f5f9;
 }
 
-.notice-table th, .notice-table td {
+.notice-table th,
+.notice-table td {
   padding: 14px 16px;
   text-align: left;
   font-size: 14px;
@@ -84,4 +89,3 @@
 .notice-link:hover {
   color: #111827; /* hover에도 동일하게 유지 */
 }
-

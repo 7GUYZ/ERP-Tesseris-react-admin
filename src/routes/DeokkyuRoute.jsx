@@ -3,6 +3,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import StoreList from '../pages/deokkyu/store/StoreList';
 import StoreCustomerList from '../pages/deokkyu/store/StoreCustomerList';
 import StoreRegisterList from '../pages/deokkyu/store/StoreRegisterList';
+import BusinessManAllowanceDetails from '../pages/deokkyu/businessman/BusinessManAllowanceDetails';
+
 
 function DeokkyuRoute() {
     return (
@@ -12,6 +14,7 @@ function DeokkyuRoute() {
                 <Route path='/storelist' element={<StoreList />} />
                 <Route path='/storecustomerlist' element={< StoreCustomerList/>} />
                 <Route path='/storeregisterlist' element={< StoreRegisterList/>} />
+                <Route path='/businessAllowance' element={< BusinessManAllowanceDetails/>} />
             </Route>
         </>
     );

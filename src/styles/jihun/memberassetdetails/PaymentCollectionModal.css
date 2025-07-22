@@ -1,3 +1,7 @@
+/* Pretendard 폰트 적용 */
+* {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
 
 /* 모달 오버레이 */
 .payment-collection-modal-overlay {
@@ -221,16 +225,19 @@
 }
 
 .payment-collection-modal-btn.cancel {
-  background-color: #dc2626;
-  color: white;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #d1d5db;
 }
 
 .payment-collection-modal-btn.cancel:hover {
-  background-color: #b91c1c;
+  background-color: #f9fafb;
+  border-color: #9ca3af;
 }
 
 .payment-collection-modal-btn.cancel:active {
-  background-color: #991b1b;
+  background-color: #f3f4f6;
+  border-color: #6b7280;
 }
 
 /* 반응형 디자인 */

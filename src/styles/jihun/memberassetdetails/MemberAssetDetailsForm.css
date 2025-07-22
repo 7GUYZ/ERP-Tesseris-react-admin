@@ -1,11 +1,13 @@
+/* Pretendard 폰트 적용 */
+* {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
 .member-asset-details-container {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  padding: 24px;
-  background-color: none;
-  min-height: 100vh;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 .member-asset-details-page-header {
@@ -202,6 +204,7 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid lightgray;
+  height: 500px;
 }
 
 .member-asset-details-error {

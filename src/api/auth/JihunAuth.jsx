@@ -11,6 +11,11 @@ export const memberaccountLookupTransactionTypes = () => api.get("/memberaccount
 export const memberassetdetails = () => api.get("/memberassetdetails");
 export const memberassetdetailsSearch = (data) => api.post("/memberassetdetails/search", data);
 export const memberassetdetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
+export const ajgMemberAssetDetails = (page = 0, size = 25) => api.get(`/memberassetdetails?page=${page}&size=${size}`);
+export const ajgMemberAssetDetailsSearch = (data) => api.post("/memberassetdetails/search", data);
+export const ajgMemberAssetDetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
+export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdetails/payment", data);
+export const ajgMemberAssetDetailsCollection = (data) => api.post("/memberassetdetails/collection", data);
 
 
 

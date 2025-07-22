@@ -1,18 +1,36 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { DataGrid } from '@mui/x-data-grid';
 import Checkbox from '@mui/material/Checkbox';
 
-const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+const MemberAssetDetailsTable = ({ 
+  data = [], 
+  onSelectionChange, 
+  totalCount = 0,
+  currentPage = 0,
+  pageSize = 25,
+  onPageChange,
+  onPageSizeChange,
+  loading = false
+}) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
+
+  // 전체 선택 상태
+  const [selectAll, setSelectAll] = useState(false);
+
+  // 데이터가 변경될 때 선택된 행들 초기화
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setSelectAll(false);
+  }, [data]);
 
   // 메모이제이션으로 성능 최적화 및 안정성 확보
   const processedData = useMemo(() => {
     if (!Array.isArray(data) || data.length === 0) {
       return []; // 빈 배열 반환
     }
-    return data.map((item, index) => ({ 
+    
+    return data.map((item, index) => { 
+      const processedItem = { 
       id: index, 
       ...item,
       // 모든 필드가 존재하는지 확인
@@ -25,14 +43,14 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       cmpHeld: item?.cmpHeld || 0,
       cashHeld: item?.cashHeld || 0,
       registrationDate: item?.registrationDate || ''
-    }));
+      };
+      
+      return processedItem;
+    });
   }, [data]);
 
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
-
-  // 전체 선택 상태
-  const [selectAll, setSelectAll] = useState(false);
 
   // Data Grid 컬럼 정의
   const columns = [
@@ -70,11 +88,12 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
         <Checkbox
           checked={selectedRows.has(params.row.id)}
           onChange={(e) => {
+            const rowIndex = params.row.id;
             const newSelection = new Set(selectedRows);
             if (e.target.checked) {
-              newSelection.add(params.row.id);
+              newSelection.add(rowIndex);
             } else {
-              newSelection.delete(params.row.id);
+              newSelection.delete(rowIndex);
             }
             setSelectedRows(newSelection);
             setSelectAll(newSelection.size === processedData.length);
@@ -93,10 +112,9 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       flex: 1,
       sortable: false,
       align: 'center',
-      headerAlign: 'center',
-      renderCell: (params) => params.row.id + 1
+      headerAlign: 'center'
     },
-    { field: "memberId", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "id", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "phone", headerName: "전화번호", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "grade", headerName: "등급", width: 100, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },
@@ -107,12 +125,22 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        // params 자체가 값이므로 params.value 대신 params 사용
+        const value = params.value !== undefined ? params.value : params;
+        
+        // null, undefined, 빈 문자열 체크
+        if (value == null || value === '') {
+          return "0";
+        }
+        
+        // 숫자로 변환 후 포맷팅
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        
+        const result = isNaN(numValue) ? "0" : numValue.toLocaleString();
+        return result;
       }
     },
     {
@@ -121,12 +149,13 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     {
@@ -135,12 +164,13 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: 120,
       minWidth: 120,
       flex: 1,
-      type: 'number',
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        if (params.value == null) return "0";
-        return params.value.toLocaleString();
+        const value = params.value !== undefined ? params.value : params;
+        if (value == null || value === '') return "0";
+        const numValue = typeof value === 'string' ? parseInt(value) : value;
+        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     { field: "registrationDate", headerName: "등록일", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
@@ -151,7 +181,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -168,33 +198,45 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     try {
       // 데이터 유효성 검사 강화
       if (!Array.isArray(rowsWithIds)) {
-        console.warn('rowsWithIds is not an array:', rowsWithIds);
         return null;
       }
       
       // 컬럼 유효성 검사
       if (!Array.isArray(columns) || columns.length === 0) {
-        console.warn('columns is not valid:', columns);
         return null;
       }
       return (
         <DataGrid
           rows={rowsWithIds || []}
           columns={columns}
-          rowCount={rowsWithIds?.length || 0}
-          page={page || 0}
-          pageSize={pageSize || 25}
-          pageSizeOptions={[25, 50, 100]}
-          paginationMode="client"
-          onPageChange={(newPage) => setPage(newPage || 0)}
-          onPageSizeChange={(newSize) => setPageSize(newSize || 25)}
+          rowCount={totalCount > 0 ? totalCount : (rowsWithIds?.length || 0)}
+          pageSizeOptions={[25, 50, 75, 100]}
+          paginationMode="server"
+          paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
+          onPaginationModelChange={(model) => {
+            if (model.page !== currentPage) {
+              if (onPageChange) {
+                onPageChange(model.page)
+              }
+            }
+            
+            if (model.pageSize !== pageSize) {
+              if (onPageSizeChange) {
+                onPageSizeChange(model.pageSize)
+              }
+            }
+          }}
+          loading={loading}
           autoHeight={false}
-          height={400}
+          height={500}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
           getRowId={(row) => {
+            if (row && row.uniqueKey) {
+              return row.uniqueKey;
+            }
             if (row && typeof row.id !== 'undefined') {
               return row.id;
             }
@@ -207,9 +249,6 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
           density="standard"
 
           initialState={{
-            pagination: {
-              paginationModel: { page: 0, pageSize: 25 },
-            },
             columns: {
               columnVisibilityModel: {},
             },
@@ -351,7 +390,6 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
         />
       );
     } catch (error) {
-      console.error('DataGrid render error:', error);
       return (
         <div style={{ 
           width: '100%', 
@@ -381,7 +419,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -398,7 +436,7 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
     return (
       <div className="member-asset-details-table-container" style={{ 
         width: '100%', 
-        height: '400px',
+        height: '500px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -415,7 +453,8 @@ const MemberAssetDetailsTable = ({ data = [], onSelectionChange }) => {
       width: '100%', 
       overflow: 'hidden',
       borderRadius: '12px',
-      boxShadow: 'none'
+      boxShadow: 'none',
+      height: '500px'
     }}>
       {renderDataGrid()}
     </div>
