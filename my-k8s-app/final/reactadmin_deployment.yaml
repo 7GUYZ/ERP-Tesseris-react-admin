@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: reactadmin
-          image: <DOCKERHUB_USERNAME>/react-admin:latest
+          image: __DOCKER_IMAGE__:__TAG__
           ports:
             - containerPort: 80
           imagePullPolicy: Always 
