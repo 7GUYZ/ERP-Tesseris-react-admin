@@ -30,6 +30,10 @@ function ChatRoomWindow({
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
   
+  // 메시지 중복 처리 방지
+  const processedMessagesRef = useRef(new Set());
+  const messageCounterRef = useRef(0);
+  
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
 
@@ -87,6 +91,9 @@ function ChatRoomWindow({
   // 채팅방 입장 시 초기화
   useEffect(() => {
     if (open && roomData && socket) {
+      // 메시지 중복 처리 초기화
+      processedMessagesRef.current.clear();
+      
       // 채팅방 입장
       socket.emit('joinRoom', { 
         roomId: roomData.id, 
@@ -102,28 +109,45 @@ function ChatRoomWindow({
   useEffect(() => {
     if (!socket) return;
 
-    // 룸 메시지 수신
-    socket.on('roomMessage', (message) => {
+    // 룸 메시지 수신 - 중복 방지 로직 추가
+    const handleRoomMessage = (message) => {
+      // 고유 메시지 키 생성
+      const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
+      
+      // 이미 처리된 메시지인지 확인
+      if (processedMessagesRef.current.has(messageKey)) {
+        console.log('🔄 중복 룸 메시지 무시:', messageKey);
+        return;
+      }
+      
+      // 처리된 메시지로 마킹
+      processedMessagesRef.current.add(messageKey);
+      
       console.log('룸 메시지 수신:', message);
       setMessages(prev => [...prev, message]);
-    });
+    };
 
     // 기존 메시지 목록 수신
-    socket.on('roomMessages', (messageList) => {
+    const handleRoomMessages = (messageList) => {
       if (Array.isArray(messageList)) {
+        // 기존 메시지들도 중복 처리 마킹
+        messageList.forEach(message => {
+          const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
+          processedMessagesRef.current.add(messageKey);
+        });
         setMessages(messageList);
       }
-    });
+    };
 
     // 참여자 목록 수신
-    socket.on('roomParticipants', (participants) => {
+    const handleRoomParticipants = (participants) => {
       if (Array.isArray(participants)) {
         setRoomParticipants(participants);
       }
-    });
+    };
 
     // 타이핑 상태 수신
-    socket.on('userTyping', ({ userId, userName, isTyping: typing }) => {
+    const handleUserTyping = ({ userId, userName, isTyping: typing }) => {
       if (userId !== currentUser?.id) {
         setTypingUsers(prev => {
           if (typing) {
@@ -133,13 +157,20 @@ function ChatRoomWindow({
           }
         });
       }
-    });
+    };
 
+    // 이벤트 리스너 등록
+    socket.on('roomMessage', handleRoomMessage);
+    socket.on('roomMessages', handleRoomMessages);
+    socket.on('roomParticipants', handleRoomParticipants);
+    socket.on('userTyping', handleUserTyping);
+
+    // 정리 함수
     return () => {
-      socket.off('roomMessage');
-      socket.off('roomMessages');
-      socket.off('roomParticipants');
-      socket.off('userTyping');
+      socket.off('roomMessage', handleRoomMessage);
+      socket.off('roomMessages', handleRoomMessages);
+      socket.off('roomParticipants', handleRoomParticipants);
+      socket.off('userTyping', handleUserTyping);
     };
   }, [socket, currentUser]);
 
@@ -169,12 +200,16 @@ function ChatRoomWindow({
 
   const handleSendMessage = () => {
     if (newMessage.trim() && socket && currentUser && roomData) {
+      // 고유 ID 생성 (중복 방지를 위해 더 정확한 ID 생성)
+      messageCounterRef.current += 1;
+      const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
+      
       const message = {
-        id: `${currentUser.id}_${Date.now()}`,
+        id: uniqueId,
         text: newMessage,
         sender: currentUser,
         roomId: roomData.id,
-        timestamp: new Date(),
+        timestamp: new Date().toISOString(),
         type: 'user'
       };
 
@@ -292,9 +327,9 @@ function ChatRoomWindow({
           {roomData.participants && roomData.participants.length > 2 && (
             <Box sx={{ p: 1, borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
               <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                {roomParticipants.map((participant) => (
+                {roomParticipants.map((participant, index) => (
                   <Chip
-                    key={participant.id}
+                    key={participant.id || `participant_${index}`}
                     avatar={<Avatar sx={{ width: 20, height: 20, fontSize: '0.7rem' }}>
                       {participant.name ? participant.name[0] : 'U'}
                     </Avatar>}
@@ -317,71 +352,76 @@ function ChatRoomWindow({
               backgroundColor: '#fafafa'
             }}
           >
-            {messages.map((message) => (
-              <Box key={message.id || Math.random()} sx={{ mb: 1 }}>
-                {message.type === 'system' ? (
-                  <Box sx={{ textAlign: 'center', my: 1 }}>
-                    <Chip
-                      label={message.text}
-                      size="small"
-                      sx={{ fontSize: '0.7rem', backgroundColor: '#e3f2fd' }}
-                    />
-                  </Box>
-                ) : (
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      justifyContent: message.sender?.id === currentUser?.id ? 'flex-end' : 'flex-start',
-                      alignItems: 'flex-start',
-                      gap: 1
-                    }}
-                  >
-                    {message.sender?.id !== currentUser?.id && (
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>
-                        {message.sender?.name ? message.sender.name[0] : 'U'}
-                      </Avatar>
-                    )}
-                    <Box>
+            {messages.map((message, index) => {
+              // 안전한 key 생성 (message.id가 있으면 사용, 없으면 index와 timestamp 조합)
+              const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
+              
+              return (
+                <Box key={safeKey} sx={{ mb: 1 }}>
+                  {message.type === 'system' ? (
+                    <Box sx={{ textAlign: 'center', my: 1 }}>
+                      <Chip
+                        label={message.text}
+                        size="small"
+                        sx={{ fontSize: '0.7rem', backgroundColor: '#e3f2fd' }}
+                      />
+                    </Box>
+                  ) : (
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: message.sender?.id === currentUser?.id ? 'flex-end' : 'flex-start',
+                        alignItems: 'flex-start',
+                        gap: 1
+                      }}
+                    >
                       {message.sender?.id !== currentUser?.id && (
-                        <Typography variant="caption" sx={{ color: '#666', ml: 1 }}>
-                          {message.sender?.name || 'Unknown'}
-                        </Typography>
+                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>
+                          {message.sender?.name ? message.sender.name[0] : 'U'}
+                        </Avatar>
                       )}
-                      <Paper
-                        sx={{
-                          p: 1.5,
-                          maxWidth: 280,
-                          backgroundColor: message.sender?.id === currentUser?.id ? '#4CAF50' : 'white',
-                          color: message.sender?.id === currentUser?.id ? 'white' : 'black',
-                          borderRadius: 2,
-                          boxShadow: 1
-                        }}
-                      >
-                        <Typography variant="body2">
-                          {message.text}
-                        </Typography>
-                        <Typography
-                          variant="caption"
+                      <Box>
+                        {message.sender?.id !== currentUser?.id && (
+                          <Typography variant="caption" sx={{ color: '#666', ml: 1 }}>
+                            {message.sender?.name || 'Unknown'}
+                          </Typography>
+                        )}
+                        <Paper
                           sx={{
-                            display: 'block',
-                            mt: 0.5,
-                            opacity: 0.7,
-                            fontSize: '0.6rem'
+                            p: 1.5,
+                            maxWidth: 280,
+                            backgroundColor: message.sender?.id === currentUser?.id ? '#4CAF50' : 'white',
+                            color: message.sender?.id === currentUser?.id ? 'white' : 'black',
+                            borderRadius: 2,
+                            boxShadow: 1
                           }}
                         >
-                          {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
-                        </Typography>
-                      </Paper>
+                          <Typography variant="body2">
+                            {message.text}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              mt: 0.5,
+                              opacity: 0.7,
+                              fontSize: '0.6rem'
+                            }}
+                          >
+                            {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
+                          </Typography>
+                        </Paper>
+                      </Box>
+                      {message.sender?.id === currentUser?.id && (
+                        <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>
+                          {message.sender?.name ? message.sender.name[0] : 'U'}
+                        </Avatar>
+                      )}
                     </Box>
-                    {message.sender?.id === currentUser?.id && (
-                      <Avatar sx={{ width: 32, height: 32, fontSize: '0.8rem' }}>
-                        {message.sender?.name ? message.sender.name[0] : 'U'}
-                      </Avatar>
-                    )}
-                  </Box>
-                )}
-              </Box>
-            ))}
+                  )}
+                </Box>
+              );
+            })}
 
             {/* 타이핑 인디케이터 */}
             {typingUsers.length > 0 && (

@@ -222,6 +222,7 @@ const PermissionManagement = () => {
   return (
     <div className="permission-management">
       <h1 className="page-title">권한 관리</h1>
+      <div className="divider"></div>
 
       {/* 필터 섹션 */}
       <div className="filter-section">
@@ -314,7 +315,7 @@ const PermissionManagement = () => {
               <h3>{editingAuthority ? '권한 수정' : '권한 추가'}</h3>
               <button className="modal-close" onClick={() => setOpenDialog(false)}>×</button>
             </div>
-            <div className="modal-content">
+            <div className="permission-admin-contents">
               <AuthorityForm
                 adminTypes={adminTypes}
                 menus={menus}
