@@ -40,7 +40,6 @@
     "eject": "react-scripts eject"
   },
   "proxy": "http://localhost:19091",
-  "homepage": "/",
   "eslintConfig": {
     "extends": [
       "react-app",
@@ -63,5 +62,6 @@
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.11"
-  }
+  },
+  "homepage": "__PUBLIC_URL__"
 }

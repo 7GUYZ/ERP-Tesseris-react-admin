@@ -10,5 +10,4 @@ const AdminLogin = () => {
     </div>
   )
 }
-
-export default AdminLogin
+export default AdminLogin;
