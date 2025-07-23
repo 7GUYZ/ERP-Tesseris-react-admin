@@ -420,3 +420,133 @@ body, #root, .permission-management {
     padding: 16px 4px;
   }
 } 
+
+/* 체크박스와 텍스트 수직 중앙 정렬 */
+.authority-table th, .authority-table td {
+  vertical-align: middle !important;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+
+/* 체크박스 중앙 정렬 및 크기 통일 */
+.authority-table input[type="checkbox"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+/* 버튼(수정/삭제) 정렬 및 간격 */
+.authority-table td:last-child {
+  display: flex !important;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* 버튼 높이 통일 */
+.authority-table .btn {
+  height: 36px;
+  min-width: 60px;
+  padding: 0 16px;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* 테이블 테두리 일관성 */
+.authority-table {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  width: 100%;
+  background: #fff;
+}
+
+/* 헤더와 바디 구분선 */
+.authority-table th {
+  border-bottom: 2px solid #e5e7eb !important;
+  background: #f8fafc;
+  color: #222e3c;
+  font-weight: 600;
+  text-align: center;
+}
+
+.authority-table td {
+  border-bottom: 1px solid #e5e7eb !important;
+  text-align: center;
+  background: #fff;
+}
+
+/* 첫 행(헤더) 위쪽에 선 추가 */
+.authority-table thead tr:first-child th {
+  border-top: 2px solid #e5e7eb !important;
+}
+
+/* 마지막 행 아래쪽에 선 추가 */
+.authority-table tr:last-child td {
+  border-bottom: 2px solid #e5e7eb !important;
+}
+
+/* 행 hover 효과 */
+.authority-table tr:hover {
+  background: #f5f6fa !important;
+} 
+
+/* 모든 셀(헤더/바디) 동일하게 */
+.authority-table th,
+.authority-table td {
+  border-bottom: 1.5px solid #e5e7eb !important;
+  padding: 14px 16px !important;
+  text-align: center !important;
+  background: #fff !important;
+  vertical-align: middle !important;
+  height: 56px !important;
+  font-size: 1rem;
+}
+
+/* 헤더만 더 진한 선 */
+.authority-table th {
+  border-bottom: 2.5px solid #e5e7eb !important;
+  background: #f8fafc !important;
+  font-weight: 600 !important;
+}
+
+/* 마지막 행 아래쪽에 선 추가 */
+.authority-table tr:last-child td {
+  border-bottom: 2.5px solid #e5e7eb !important;
+}
+
+/* 버튼 셀도 일반 셀처럼 */
+.authority-table td:last-child {
+  display: table-cell !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+}
+
+/* 버튼끼리 가로 간격만 */
+.authority-table .btn {
+  display: inline-block;
+  margin: 0 4px;
+  vertical-align: middle;
+}
+
+/* 체크박스 중앙 정렬 */
+.authority-table input[type="checkbox"] {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+
+/* 행 hover 효과 */
+.authority-table tr:hover {
+  background: #f5f6fa !important;
+} 
