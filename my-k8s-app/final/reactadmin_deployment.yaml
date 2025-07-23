@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reactadmin-deployment
+  labels:
+    app: reactadmin
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: reactadmin
+  template:
+    metadata:
+      labels:
+        app: reactadmin
+    spec:
+      containers:
+        - name: reactadmin
+          image: __DOCKER_IMAGE__:__TAG__
+          ports:
+            - containerPort: 80
+          imagePullPolicy: Always 
