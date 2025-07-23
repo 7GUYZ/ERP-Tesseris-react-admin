@@ -4,8 +4,7 @@ name: Deploy React App to Kubernetes
 on:
   push:
     branches:
-      - sichan  # 또는 배포 브랜치명
-
+      - main  # 또는 배포 브랜치명
 
 jobs:
   build-and-deploy:
