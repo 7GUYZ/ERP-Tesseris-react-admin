@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { TextField, Button, Grid, Box,MenuItem, Select, InputLabel, FormControl } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { Box } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
-import DownloadIcon from '@mui/icons-material/Download';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import SearchIcon from '@mui/icons-material/Search';
 
-import '../../../styles/deokkyu/StoreList.css'; 
-import { getStoreRegisterList } from '../../../api/auth/DeokkyuAuth';
+import '../../../styles/deokkyu/common.css';
+import '../../../styles/deokkyu/StoreRegisterList.css'; 
+import { getStoreRegisterList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
-
 
 const columns = [
   { field: 'businessUserId', headerName: '사업자 ID', width: 120 },
@@ -34,79 +31,78 @@ const columns = [
   { field: 'storeSubscriptionFeeCommissionCheck', headerName: '분배여부', width: 120 },
 ];
 
-function StoreList() {
+function StoreRegisterList() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [filter, setFilter] = useState({
     userId: '',
-    userName: '', // 
-    userPhone: '', // 가맹점 번호
-    storeBossName: '', // 대표자이름
-    storeRequestStatusName: '', // 승인여부 - 라디오
-    storeTransactionStatus: '',// 거래상태 - 라디오
-    storeCorporateName: '', // 상호명
-    storeName: '', // 가맹점 명
-    businessUserName: '', // 사업자 이름
+    userName: '',
+    userPhone: '',
+    storeBossName: '',
+    storeRequestStatusName: '',
+    storeTransactionStatus: '',
+    storeCorporateName: '',
+    storeName: '',
+    businessUserName: '',
     storeCreateDateStart: null, 
     storeCreateDateEnd: null,
   });
 
-const fetchStores = async (params = {}) => {
-  try {
-    setLoading(true);
-    // 파라미터가 포함될지 검사
-    const cleanedParams = {};
+  const fetchStores = async (params = {}) => {
+    try {
+      setLoading(true);
+      const cleanedParams = {};
 
-    // 문자열 필드 필터링
-    const stringFields = [
-      'userId', 'userName', 'userPhone', 'storeBossName',
-      'storeRequestStatusName', 'storeTransactionStatus',
-      'storeCorporateName', 'storeName', 'businessUserName'
-    ];
+      const stringFields = [
+        'userId', 'userName', 'userPhone', 'storeBossName',
+        'storeRequestStatusName', 'storeTransactionStatus',
+        'storeCorporateName', 'storeName', 'businessUserName'
+      ];
 
-    stringFields.forEach((key) => {
-      if (params[key] !== '' && params[key] !== undefined) {
+      stringFields.forEach((key) => {
+        if (params[key] !== '' && params[key] !== undefined) {
           cleanedParams[key] = params[key];
-      }
-    });
+        }
+      });
 
-    // 날짜 필드 포맷팅 (YYYY-MM-DD)
-    if (params.storeCreateDateStart)
-      cleanedParams.storeCreateDateStart = dayjs(params.storeCreateDateStart).format('YYYY-MM-DD');
-    if (params.storeCreateDateEnd)
-      cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
+      if (params.storeCreateDateStart)
+        cleanedParams.storeCreateDateStart = dayjs(params.storeCreateDateStart).format('YYYY-MM-DD');
+      if (params.storeCreateDateEnd)
+        cleanedParams.storeCreateDateEnd = dayjs(params.storeCreateDateEnd).format('YYYY-MM-DD');
 
-    const response = await getStoreRegisterList( // 있는 데이터만 파라미터로 보냄
-      Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
-    );
+      const response = await getStoreRegisterList(
+        Object.keys(cleanedParams).length > 0 ? cleanedParams : undefined
+      );
 
-    const data = response.data.map((item, index) => ({
-      id: index + 1,
-      ...item,
-    }));
+      const data = response.data.map((item, index) => ({
+        id: index + 1,
+        ...item,
+      }));
 
-    setRows(data);
-  } catch (error) {
-    console.error('조회 실패:', error);
-    alert('데이터를 불러오는 데 실패했습니다.');
-  } finally {
-    setLoading(false); // 로딩 종료
-  }
-};
+      setRows(data);
+    } catch (error) {
+      console.error('조회 실패:', error);
+      alert('데이터를 불러오는 데 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
   useEffect(() => {
-    fetchStores(); 
+    // 인터셉터 설정 (인증 토큰 자동 추가)
+    setupInterceptors();
+    
+    // 데이터 로딩
+    fetchStores();
   }, []);
 
-  // 조회 버튼 클릭 시 → 현재 검색 조건으로 조회
   const handleSearch = () => {
     fetchStores({ ...filter });
   };
 
   const handleExcelDownload = () => {
-    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
     const excelData = rows.map(row => {
       const { id, ...dataWithoutId } = row;
       return dataWithoutId;
@@ -121,13 +117,11 @@ const fetchStores = async (params = {}) => {
       return;
     }
     
-    // 선택된 행들의 실제 인덱스 계산 (id - 1)
     const selectedIndices = new Set();
     selectedRows.forEach(id => {
-      selectedIndices.add(id - 1); // id는 index + 1이므로 실제 인덱스는 id - 1
+      selectedIndices.add(id - 1);
     });
     
-    // id 필드를 제외하고 엑셀 다운로드용 데이터 준비
     const excelData = rows.map(row => {
       const { id, ...dataWithoutId } = row;
       return dataWithoutId;
@@ -138,167 +132,172 @@ const fetchStores = async (params = {}) => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box className="store-list-container" >
-        <div className="store-list-title">가맹점 신청 현황</div>
-        <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<FileDownloadOutlinedIcon />}
-            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+      <Box className="deokkyu-container">
+        <div className="deokkyu-page-title">가맹점 신청 현황</div>
+        <div className="deokkyu-actions">
+          <button 
+            className="deokkyu-btn excel" 
             onClick={handleSelectedExcelDownload}
+            disabled={selectedRows.size === 0}
           >
             선택 엑셀
-          </Button>
-          <Button
-            variant="contained"
-            color="info"
-            startIcon={<DownloadIcon />}
-            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+          </button>
+          <button 
+            className="deokkyu-btn all-excel" 
             onClick={handleExcelDownload}
+            disabled={rows.length === 0}
           >
             전체 엑셀
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SearchIcon />}
-            sx={{
-              borderRadius: 2,
-              px: 2.5,
-              height: 44,
-              boxShadow: 2,
-              textTransform: 'none',
-            }}
+          </button>
+          <button
+            className="deokkyu-btn search"
             onClick={handleSearch}
+            disabled={loading}
           >
-            조회
-          </Button>
-        </Box>
-        <div className="filter-card">
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={2}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 ID"
-                value={filter.userId}
-                onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="이름"
-                value={filter.userName}
-                onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="핸드폰 번호"
-                value={filter.userPhone}
-                onChange={(e) => setFilter({ ...filter, userPhone: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="대표자 이름"
-                value={filter.storeBossName}
-                onChange={(e) => setFilter({ ...filter, storeBossName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
-                <InputLabel>승인 여부</InputLabel>
-                <Select
-                  label="승인 여부"
+            {loading ? "조회 중..." : "조회"}
+          </button>
+        </div>
+        
+        {/* 필터 섹션 */}
+        <div className="store-register-filter-card">
+          {/* 필터 토글 헤더 */}
+          <div className="deokkyu-filter-toggle-header">
+            <button 
+              className="deokkyu-filter-toggle-btn"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+            >
+              <span className="deokkyu-filter-toggle-text">검색 조건</span>
+              <span className={`deokkyu-filter-toggle-icon ${isFilterOpen ? 'open' : 'closed'}`}>
+                ▼
+              </span>
+            </button>
+          </div>
+          
+          {/* 필터 폼 */}
+          <div className={`deokkyu-filter-form ${isFilterOpen ? 'open' : 'closed'}`}>
+            {/* 첫 번째 행: 가맹점 ID, 이름, 핸드폰 번호, 대표자 이름 */}
+            <div className="deokkyu-filter-row">
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">가맹점 ID</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.userId}
+                  onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
+                  placeholder="가맹점 ID를 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">이름</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.userName}
+                  onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
+                  placeholder="이름을 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">핸드폰 번호</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.userPhone}
+                  onChange={(e) => setFilter({ ...filter, userPhone: e.target.value })}
+                  placeholder="핸드폰 번호를 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">대표자 이름</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.storeBossName}
+                  onChange={(e) => setFilter({ ...filter, storeBossName: e.target.value })}
+                  placeholder="대표자 이름을 입력하세요"
+                />
+              </div>
+            </div>
+
+            {/* 두 번째 행: 승인 여부, 거래 상태, 상호명, 가맹점 명 */}
+            <div className="deokkyu-filter-row">
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">승인 여부</label>
+                <select
+                  className="deokkyu-filter-select"
                   value={filter.storeRequestStatusName}
                   onChange={(e) => setFilter({ ...filter, storeRequestStatusName: e.target.value })}
                 >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="승인">승인</MenuItem>
-                  <MenuItem value="대기">대기</MenuItem>
-                  <MenuItem value="거절">거절</MenuItem>
-                  <MenuItem value="보류">보류</MenuItem>
-                  <MenuItem value="해지">해지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-
-            <Grid item xs={2.5}>
-              <FormControl fullWidth size="small" margin="dense" sx={{ minWidth: 120 }}>
-                <InputLabel>거래 상태</InputLabel>
-                <Select
-                  label="거래 상태"
+                  <option value="">전체</option>
+                  <option value="승인">승인</option>
+                  <option value="대기">대기</option>
+                  <option value="거절">거절</option>
+                  <option value="보류">보류</option>
+                  <option value="해지">해지</option>
+                </select>
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">거래 상태</label>
+                <select
+                  className="deokkyu-filter-select"
                   value={filter.storeTransactionStatus}
                   onChange={(e) => setFilter({ ...filter, storeTransactionStatus: e.target.value })}
                 >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="정상">정상</MenuItem>
-                  <MenuItem value="정지">정지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="상호명"
-                value={filter.storeCorporateName}
-                onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 명"
-                value={filter.storeName}
-                onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="사업자 이름"
-                value={filter.businessUserName}
-                onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <DatePicker
-                label="신청일 시작"
-                format="YYYY-MM-DD"
-                value={filter.storeCreateDateStart}
-                onChange={(date) => setFilter({ ...filter, storeCreateDateStart: date })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <DatePicker
-                label="신청일 종료"
-                format="YYYY-MM-DD"
-                value={filter.storeCreateDateEnd}
-                onChange={(date) => setFilter({ ...filter, storeCreateDateEnd: date })}
-              />
-            </Grid>
-          </Grid>
+                  <option value="">전체</option>
+                  <option value="정상">정상</option>
+                  <option value="정지">정지</option>
+                </select>
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">상호명</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.storeCorporateName}
+                  onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
+                  placeholder="상호명을 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">가맹점 명</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.storeName}
+                  onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
+                  placeholder="가맹점 명을 입력하세요"
+                />
+              </div>
+            </div>
+
+            {/* 세 번째 행: 사업자 이름, 신청일 시작, 신청일 종료 */}
+            <div className="deokkyu-filter-row">
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">사업자 이름</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.businessUserName}
+                  onChange={(e) => setFilter({ ...filter, businessUserName: e.target.value })}
+                  placeholder="사업자 이름을 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">신청일 시작</label>
+                <input
+                  className="deokkyu-filter-input"
+                  type="date"
+                  value={filter.storeCreateDateStart ? dayjs(filter.storeCreateDateStart).format('YYYY-MM-DD') : ''}
+                  onChange={(e) => setFilter({ ...filter, storeCreateDateStart: e.target.value ? dayjs(e.target.value) : null })}
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">신청일 종료</label>
+                <input
+                  className="deokkyu-filter-input"
+                  type="date"
+                  value={filter.storeCreateDateEnd ? dayjs(filter.storeCreateDateEnd).format('YYYY-MM-DD') : ''}
+                  onChange={(e) => setFilter({ ...filter, storeCreateDateEnd: e.target.value ? dayjs(e.target.value) : null })}
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="data-grid-container">
+        <div className="deokkyu-data-grid">
           <DataGrid
             rows={rows}
             columns={columns}
@@ -308,19 +307,17 @@ const fetchStores = async (params = {}) => {
             checkboxSelection
             disableRowSelectionOnClick
             onRowSelectionModelChange={(newSelection) => {
-              // newSelection이 객체이고 ids 속성이 있는 경우
               if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
                 setSelectedRows(newSelection.ids);
               } else if (Array.isArray(newSelection)) {
-                // 배열인 경우 (이전 버전 호환성)
                 setSelectedRows(new Set(newSelection));
               } else {
                 setSelectedRows(new Set());
               }
             }}
-              slots={{
-                noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
-              }}
+            slots={{
+              noRowsOverlay: () => <NoRowsOverlay loading={loading} />,
+            }}
           />
         </div>
       </Box>
@@ -328,4 +325,4 @@ const fetchStores = async (params = {}) => {
   );
 }
 
-export default StoreList;
+export default StoreRegisterList;

@@ -1,12 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 import * as go from 'gojs';
 import { ReactDiagram } from 'gojs-react';
-import { getBusinessManList } from '../../../api/auth/DeokkyuAuth';
+import { getBusinessManList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import '../../../styles/deokkyu/BusinessManOrgChart.css';
 
 const BusinessManOrgChart = () => {
   const diagramRef = useRef();
   const [businessManData, setBusinessManData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   // 백엔드에서 사업자 데이터 가져오기
   const fetchBusinessManData = async () => {
@@ -43,29 +45,34 @@ const BusinessManOrgChart = () => {
     console.log('🔄 원본 백엔드 데이터:', apiData);
 
     return apiData.map((item, index) => {
-      // 등급별 색상 설정
+      // 등급별 색상 설정 (거의 흰색 계열)
       const gradeColors = {
-        'A등급': '#f9c74f',   // 노란색 (최고 등급)
-        'B등급': '#90be6d',   // 초록색 
-        'C등급': '#f94144',   // 빨간색
-        'D등급': '#577590',   // 파란색
-        '기본': '#43aa8b'     // 청록색
+        'A등급': '#f8f9fa',   // 매우 연한 회색
+        'B등급': '#f1f3f4',   // 연한 회색
+        'C등급': '#e8eaed',   // 약간 진한 회색
+        'D등급': '#dadce0',   // 중간 회색
+        '기본': '#f8f9fa'     // 매우 연한 회색
       };
 
       const transformedItem = {
         // GoJS TreeModel 필수 속성
-        key: item.BusinessUserId,                    // 고유 ID
-        parent: item.bossUserId || undefined,        // 상급자 ID (null/undefined면 최상위)
+        key: item.businessManId,                     // user_index로 얻은 users_id
+        parent: item.bossUserIndex || undefined,     // boss_user_index로 얻은 users_id (null/undefined면 최상위)
         
         // 노드에 표시할 기본 정보
-        name: item.BusinessUsername || '이름없음',   // 사업자 이름
-        userId: item.BusinessUserId || '미지정',     // 사업자 ID
+        name: item.businessManName || '이름없음',    // users 테이블에서 얻은 name
+        userId: item.businessManId || '미지정',      // 사업자 ID
         
         // 상세 정보
-        grade: item.businessGradeName || '미지정',   // 등급
-        area: item.businessAreaName || '미지정',     // 담당구역  
-        totalStore: item.totalStore || 0,            // 가맹점 수
-        totalCm: item.totalCm || 0,                  // 수당
+        grade: item.businessGradeName || '미지정',   // business_grade 테이블에서 얻은 business_grade_name
+        area: item.businessAreaName || '미지정',     // business_area 테이블에서 얻은 business_area_name
+        
+        // 개인 실적
+        currentTotalStore: item.currentTotalStore || 0,  // 본인 담당 가맹점 수
+        
+        // 하위 직원들 집계 (백엔드에서 계산된 값)
+        totalStore: item.totalStore || 0,            // 하위 사업자들의 currentTotalStore 합계
+        allowance: item.allowance || 0,              // temporary_store_detail 테이블의 temporary_store_cm_value 합계
         
         // 스타일
         color: gradeColors[item.businessGradeName] || gradeColors['기본']
@@ -85,9 +92,10 @@ const BusinessManOrgChart = () => {
         userId: 'CEO001',
         grade: '총재', 
         area: '전국', 
+        currentTotalStore: 5,
         totalStore: 50,
-        totalCm: 5000000,
-        color: '#f9c74f',
+        allowance: 5000000,
+        color: '#f8f9fa',
         parent: undefined  // 최상위
       },
       { 
@@ -96,9 +104,10 @@ const BusinessManOrgChart = () => {
         userId: 'MGR001',
         grade: '부총재', 
         area: '서울', 
+        currentTotalStore: 3,
         totalStore: 25,
-        totalCm: 2500000,
-        color: '#90be6d',
+        allowance: 2500000,
+        color: '#f1f3f4',
         parent: 'CEO001'
       },
       { 
@@ -107,9 +116,10 @@ const BusinessManOrgChart = () => {
         userId: 'MGR002',
         grade: '부총재', 
         area: '부산', 
+        currentTotalStore: 2,
         totalStore: 20,
-        totalCm: 2000000,
-        color: '#90be6d',
+        allowance: 2000000,
+        color: '#f1f3f4',
         parent: 'CEO001'
       },
       { 
@@ -118,9 +128,10 @@ const BusinessManOrgChart = () => {
         userId: 'TL001',
         grade: '단장', 
         area: '강남구', 
+        currentTotalStore: 12,
         totalStore: 12,
-        totalCm: 1200000,
-        color: '#f94144',
+        allowance: 1200000,
+        color: '#e8eaed',
         parent: 'MGR001'
       },
       { 
@@ -129,9 +140,10 @@ const BusinessManOrgChart = () => {
         userId: 'TL002',
         grade: '단장', 
         area: '서초구', 
+        currentTotalStore: 13,
         totalStore: 13,
-        totalCm: 1300000,
-        color: '#f94144',
+        allowance: 1300000,
+        color: '#e8eaed',
         parent: 'MGR001'
       },
       { 
@@ -140,9 +152,10 @@ const BusinessManOrgChart = () => {
         userId: 'TL003',
         grade: '단장', 
         area: '해운대구', 
+        currentTotalStore: 20,
         totalStore: 20,
-        totalCm: 2000000,
-        color: '#f94144',
+        allowance: 2000000,
+        color: '#e8eaed',
         parent: 'MGR002'
       },
     ];
@@ -159,8 +172,8 @@ const BusinessManOrgChart = () => {
         // 트리 레이아웃 (위에서 아래로)
         layout: $(go.TreeLayout, {
           angle: 90,           // 90도 = 위에서 아래로 (피라미드 형태)
-          layerSpacing: 60,    // 레벨 간 간격
-          nodeSpacing: 20,     // 노드 간 간격
+          layerSpacing: 80,    // 레벨 간 간격 (더 넓게)
+          nodeSpacing: 30,     // 노드 간 간격 (더 넓게)
           sorting: go.TreeLayout.SortingAscending  // 정렬
         }),
         
@@ -170,7 +183,15 @@ const BusinessManOrgChart = () => {
         // 드래그 허용 (문제가 되던 설정 제거)
         allowDrop: false,
         hasHorizontalScrollbar: true,
-        hasVerticalScrollbar: true
+        hasVerticalScrollbar: true,
+        
+        // CSS 스타일링을 위한 설정
+        'toolManager.mouseWheelBehavior': go.ToolManager.WheelZoom,  // 마우스 휠로 줌
+        'animationManager.isEnabled': true,                          // 애니메이션 활성화
+        'animationManager.duration': 400,                            // 애니메이션 지속시간
+        'grid.visible': false,                                       // 그리드 숨김 (깔끔하게)
+        
+
       });
 
     // Node template - 사업자 정보를 더 자세히 표시
@@ -180,29 +201,48 @@ const BusinessManOrgChart = () => {
         'Auto',
         { 
           selectionAdorned: true,
-          // 노드 크기 자동 조절
-          resizable: false 
+          resizable: false,
+          // CSS 클래스 적용
+          _cssClass: 'org-chart-node',
+          // 호버 효과를 위한 마우스 이벤트
+          mouseEnter: function(e, node) {
+            node.findObject("SHAPE").stroke = "#2196F3";
+            node.findObject("SHAPE").strokeWidth = 2;
+          },
+          mouseLeave: function(e, node) {
+            if (!node.isSelected) {
+              node.findObject("SHAPE").stroke = "#e0e0e0";
+              node.findObject("SHAPE").strokeWidth = 1;
+            }
+          }
         },
+        // 배경 Shape (그림자 효과 없이)
         $(go.Shape, 'RoundedRectangle',
           {
+            name: "SHAPE",
             fill: 'white',
-            stroke: 'gray',
-            strokeWidth: 2,
-            minSize: new go.Size(120, 80)
+            stroke: '#e0e0e0',
+            strokeWidth: 1,
+            minSize: new go.Size(140, 100)
           },
-          new go.Binding('fill', 'color')
+          new go.Binding('fill', 'color'),
+          // 선택 시 파란색 테두리
+          new go.Binding('stroke', '', function() { 
+            return this.isSelected ? '#2196F3' : '#e0e0e0'; 
+          }).ofObject()
         ),
         
         // 여러 줄 텍스트 정보 표시
         $(go.Panel, 'Vertical',
-          { margin: 8 },
+          { margin: 12 },
           
           // 사업자 이름 (큰 글씨)
           $(go.TextBlock,
             { 
-              font: 'bold 14px sans-serif',
-              margin: new go.Margin(2, 0, 2, 0),
-              editable: false 
+              font: 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              margin: new go.Margin(0, 0, 4, 0),
+              editable: false,
+              stroke: '#2c3e50'
             },
             new go.Binding('text', 'name')
           ),
@@ -210,9 +250,9 @@ const BusinessManOrgChart = () => {
           // 등급
           $(go.TextBlock,
             { 
-              font: '11px sans-serif',
-              margin: new go.Margin(1, 0, 1, 0),
-              stroke: '#666'
+              font: '12px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              margin: new go.Margin(2, 0, 2, 0),
+              stroke: '#7f8c8d'
             },
             new go.Binding('text', 'grade', (grade) => `🏅 ${grade}`)
           ),
@@ -220,44 +260,83 @@ const BusinessManOrgChart = () => {
           // 담당구역
           $(go.TextBlock,
             { 
-              font: '10px sans-serif',
-              margin: new go.Margin(1, 0, 1, 0),
-              stroke: '#666'
+              font: '11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              margin: new go.Margin(2, 0, 2, 0),
+              stroke: '#7f8c8d'
             },
             new go.Binding('text', 'area', (area) => `📍 ${area}`)
           ),
           
-          // 가맹점 수와 수당
+          // 구분선
+          $(go.Shape, 'LineH',
+            { 
+              stroke: '#ecf0f1', 
+              strokeWidth: 1,
+              margin: new go.Margin(4, 0, 4, 0)
+            }
+          ),
+          
+          // 개인 담당 가맹점 수
+          $(go.TextBlock,
+            { 
+              font: '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              stroke: '#95a5a6',
+              margin: new go.Margin(2, 0, 2, 0)
+            },
+            new go.Binding('text', 'currentTotalStore', (count) => `🏪 개인: ${count}개`)
+          ),
+          
+          // 하위 직원들 집계 정보
           $(go.Panel, 'Horizontal',
             { margin: new go.Margin(2, 0, 0, 0) },
             
             $(go.TextBlock,
               { 
-                font: '9px sans-serif',
-                stroke: '#888',
-                margin: new go.Margin(0, 4, 0, 0)
+                font: '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                stroke: '#95a5a6',
+                margin: new go.Margin(0, 8, 0, 0)
               },
-              new go.Binding('text', 'totalStore', (count) => `🏪 ${count}개`)
+              new go.Binding('text', 'totalStore', (count) => `📊 총: ${count}개`)
             ),
             
             $(go.TextBlock,
               { 
-                font: '9px sans-serif',
-                stroke: '#888'
+                font: '10px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+                stroke: '#95a5a6'
               },
-              new go.Binding('text', 'totalCm', (cm) => `💰 ${cm?.toLocaleString() || 0}`)
+              new go.Binding('text', 'allowance', (allowance) => `💰 ${allowance?.toLocaleString() || 0}`)
             )
           )
         )
       );
 
-    // Link template
+    // Link template - 더 예쁜 연결선
     diagram.linkTemplate =
       $(
         go.Link,
-        { routing: go.Link.Orthogonal },
-        $(go.Shape),
-        $(go.Shape, { toArrow: 'Standard' })
+        { 
+          routing: go.Link.Orthogonal,
+          corner: 5,
+          selectionAdorned: true
+        },
+        $(go.Shape,
+          { 
+            stroke: '#bdc3c7',
+            strokeWidth: 2,
+            // 선택 시 색상 변경
+            strokeDashArray: [0, 0]
+          },
+          new go.Binding('stroke', '', function() { return '#3498db'; }).ofObject('isSelected')
+        ),
+        $(go.Shape, 
+          { 
+            toArrow: 'Standard',
+            fill: '#bdc3c7',
+            stroke: '#bdc3c7'
+          },
+          new go.Binding('fill', '', function() { return '#3498db'; }).ofObject('isSelected'),
+          new go.Binding('stroke', '', function() { return '#3498db'; }).ofObject('isSelected')
+        )
       );
 
     // 실제 사업자 데이터로 모델 설정 (처음에는 빈 배열)
@@ -276,16 +355,52 @@ const BusinessManOrgChart = () => {
 🆔 사업자 ID: ${data.userId}
 🏅 등급: ${data.grade}
 📍 담당구역: ${data.area}
-🏪 담당 가맹점 수: ${data.totalStore}개
-💰 총 수당: ${data.totalCm?.toLocaleString() || 0}원
+🏪 개인 담당 가맹점: ${data.currentTotalStore}개
+📊 하위 직원들 총 가맹점: ${data.totalStore}개
+💰 총 수당: ${data.allowance?.toLocaleString() || 0}원
 ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
       `.trim();
       
       alert(detailInfo);
     });
 
+
+
     return diagram;
   };
+
+  // 검색 기능
+  const searchNode = (searchTerm) => {
+    if (!diagramRef.current || !searchTerm.trim()) return;
+    
+    const diagram = diagramRef.current.getDiagram();
+    if (!diagram) return;
+
+    // 모든 노드에서 검색
+    const foundNode = diagram.findNodeForKey(searchTerm) || 
+                     diagram.findNodeByDataKey('name', searchTerm) ||
+                     diagram.findNodeByDataKey('userId', searchTerm);
+
+    if (foundNode) {
+      // 해당 노드로 줌 및 하이라이트
+      diagram.select(foundNode);
+      diagram.scrollToRect(foundNode.actualBounds);
+      
+      // 하이라이트 효과
+      foundNode.isSelected = true;
+      setTimeout(() => {
+        foundNode.isSelected = false;
+      }, 2000);
+      
+      // 검색 성공 시 추가 처리 없음
+    } else {
+      alert('검색 결과가 없습니다.');
+    }
+  };
+
+
+
+
 
   // 데이터가 변경될 때 다이어그램 업데이트
   const updateDiagram = () => {
@@ -298,8 +413,12 @@ ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
     }
   };
 
-  // 컴포넌트 마운트 시 데이터 로딩
+  // 컴포넌트 마운트 시 인터셉터 설정 및 데이터 로딩
   useEffect(() => {
+    // 인터셉터 설정 (인증 토큰 자동 추가)
+    setupInterceptors();
+    
+    // 데이터 로딩
     fetchBusinessManData();
   }, []);
 
@@ -312,13 +431,12 @@ ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
     <div style={{ width: '100%', height: '600px', position: 'relative' }}>
       {/* 로딩 상태 표시 */}
       {loading && (
-        <div style={{
+        <div className="org-chart-loading" style={{
           position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(255, 255, 255, 0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -330,33 +448,49 @@ ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
         </div>
       )}
       
-      {/* 새로고침 버튼 */}
-      <div style={{
+      {/* 검색 및 컨트롤 패널 */}
+      <div className="org-chart-controls" style={{
         position: 'absolute',
-        top: 10,
-        right: 10,
-        zIndex: 999
+        top: 15,
+        left: 15,
+        zIndex: 999,
+        display: 'flex',
+        gap: '12px',
+        alignItems: 'center',
+        padding: '12px 16px'
       }}>
-        <button
-          onClick={fetchBusinessManData}
-          disabled={loading}
+        {/* 검색 입력 */}
+        <input
+          type="text"
+          className="org-chart-search-input"
+          placeholder="사업자 ID 또는 이름으로 검색..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          onKeyPress={(e) => e.key === 'Enter' && searchNode(searchTerm)}
           style={{
-            padding: '8px 16px',
-            backgroundColor: '#2196F3',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-            opacity: loading ? 0.6 : 1
+            padding: '10px 16px',
+            width: '280px',
+            fontSize: '14px',
+            outline: 'none'
+          }}
+        />
+        <button
+          className="org-chart-button org-chart-search-button"
+          onClick={() => searchNode(searchTerm)}
+          style={{
+            padding: '10px 20px',
+            fontSize: '14px'
           }}
         >
-          {loading ? '로딩중...' : '🔄 새로고침'}
+          🔍 검색
         </button>
       </div>
 
+
+
       <ReactDiagram
         initDiagram={initDiagram}
-        divClassName="diagram-component"
+        divClassName="org-chart-diagram"
         style={{ width: '100%', height: '100%' }}
         ref={diagramRef}
       />
