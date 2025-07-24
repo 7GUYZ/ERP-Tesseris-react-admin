@@ -10,6 +10,26 @@ function DetailModal({
   customContent = null,
   customFooter = null 
 }) {
+  // ESC 키로 모달 닫기 (Hook은 항상 조건부 반환 전에 호출되어야 함)
+  React.useEffect(() => {
+    if (!isOpen) return; // isOpen이 false면 이벤트 리스너 등록하지 않음
+
+    const handleEscKey = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
+
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
+
+  // 조건부 반환은 모든 Hook 호출 후에
   if (!isOpen) return null;
 
   // 오버레이 클릭 시 모달 닫기
@@ -18,25 +38,6 @@ function DetailModal({
       onClose();
     }
   };
-
-  // ESC 키로 모달 닫기
-  React.useEffect(() => {
-    const handleEscKey = (e) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
-    }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscKey);
-      document.body.style.overflow = 'unset';
-    };
-  }, [isOpen, onClose]);
 
   // 필드 값 포맷팅
   const formatValue = (value, type = 'text') => {

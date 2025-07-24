@@ -25,7 +25,7 @@ const MainNavi = () => {
   const [expandedMenus, setExpandedMenus] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeSubMenuId, setActiveSubMenuId] = useState(null);
-  const [authorityList, setAuthorityList] = useState([]);
+  const [authorityList, setAuthorityList] = useState([]); // eslint-disable-line no-unused-vars
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
   const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
@@ -76,6 +76,8 @@ const MainNavi = () => {
 
 
   }, [showToast]);
+  
+  // eslint-disable-next-line no-unused-vars
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map((a) => `${a.menuIndex}-${a.programIndex}`)

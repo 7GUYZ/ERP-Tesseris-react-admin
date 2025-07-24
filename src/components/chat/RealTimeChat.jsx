@@ -105,6 +105,7 @@ function RealTimeChat() {
         socketConnection.disconnect();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentUser?.id, currentView]);
 
   // 버튼 클릭 핸들러 - ChatMainWindow 열기
