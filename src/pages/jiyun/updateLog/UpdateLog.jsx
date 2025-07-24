@@ -209,11 +209,11 @@ const UpdateLog = () => {
       headerAlign: 'center',
       renderCell: (params) => params.row.id + 1
     },
-    { field: "updateUserId", headerName: "수정자 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateUserRoleNm1", headerName: "수정자 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "inflictUserId", headerName: "대상 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateUserRoleNm2", headerName: "대상 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateDataValue", headerName: "프로그램명", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "updateUserId", headerName: "수정자 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateUserRoleNm1", headerName: "수정자 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "inflictUserId", headerName: "대상 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateUserRoleNm2", headerName: "대상 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateDataValue", headerName: "프로그램명", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
     { 
       field: "updateBeforeData", 
       headerName: "수정 전 데이터", 
@@ -221,7 +221,8 @@ const UpdateLog = () => {
       minWidth: 200, 
       flex: 1, 
       align: 'center', 
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' || params.value === 0 ? '-' : params.value)
     },
     { 
       field: "updateAfterData", 
@@ -230,9 +231,10 @@ const UpdateLog = () => {
       minWidth: 200, 
       flex: 1, 
       align: 'center', 
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' || params.value === 0 ? '-' : params.value)
     },
-    { field: "updateUserLogUpdateTime", headerName: "수정 시간", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
+    { field: "updateUserLogUpdateTime", headerName: "수정 시간", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) }
   ];
 
   return (
