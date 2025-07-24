@@ -114,7 +114,7 @@ const MemberAssetDetailsTable = ({
       align: 'center',
       headerAlign: 'center'
     },
-    { field: "id", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "email", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "phone", headerName: "전화번호", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "grade", headerName: "등급", width: 100, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },

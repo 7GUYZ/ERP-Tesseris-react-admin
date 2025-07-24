@@ -1,142 +1,155 @@
-==========================================
-ExcelCommon.jsx 사용법 가이드
-==========================================
+# ExcelCommon.jsx 사용법
 
-📁 파일 위치: src/components/feature/jihun/common/ExcelCommon.jsx
+## 주요 특징
+- 클라이언트 사이드 Excel 파일 생성
+- 대용량 데이터 처리 지원
+- 페이징 데이터 처리
+- 새로운 엑셀 다운로드 API 지원
 
-==========================================
-1. 기본 엑셀 다운로드
-==========================================
+## 기본 사용법
 
-import { downloadExcel } from '@/components/feature/jihun/common/ExcelCommon'
+### 1. import
+```javascript
+import { downloadExcel } from '../../../../components/feature/jihun/common/ExcelCommon';
+```
 
-// 기본 사용법
+### 2. 기본 다운로드
+```javascript
 const data = [
-  { '이름': '홍길동', '나이': 25, '직업': '개발자' },
-  { '이름': '김철수', '나이': 30, '직업': '디자이너' }
-]
+  { '이름': '홍길동', '나이': 30 },
+  { '이름': '김철수', '나이': 25 }
+];
 
-downloadExcel(data, '회원목록', '회원정보')
+downloadExcel(data, '파일명', '시트명');
+```
 
-// 파라미터 설명
-downloadExcel(
-  data,           // 다운로드할 데이터 배열 (객체 배열)
-  fileName,       // 파일명 (확장자 제외)
-  sheetName,      // 시트명 (기본값: 'Sheet1')
-  includeDate     // 파일명에 날짜 포함 여부 (기본값: true)
-)
+## 페이징 처리된 화면에서의 사용법
 
-==========================================
-2. 선택된 항목만 다운로드
-==========================================
+### 1. 상태 관리
+```javascript
+const [selectedRows, setSelectedRows] = useState(new Set()); // 현재 페이지 선택
+const [allSelectedRows, setAllSelectedRows] = useState(new Map()); // 전체 페이지 선택
+```
 
-import { downloadSelectedExcel } from '@/components/feature/jihun/common/ExcelCommon'
+### 2. 선택 처리
+```javascript
+const handleSelectionChange = (newSelection) => {
+  setSelectedRows(newSelection);
+  
+  // 현재 페이지 데이터를 allSelectedRows에 저장
+  const currentPageKey = currentPage;
+  const currentPageData = searchResults.filter((_, index) => newSelection.has(index));
+  setAllSelectedRows(prev => new Map(prev).set(currentPageKey, currentPageData));
+};
+```
 
-// 선택된 항목만 다운로드
-downloadSelectedExcel(allData, selectedRows, '선택항목', '시트명')
+### 3. 엑셀 다운로드 핸들러
+```javascript
+const handleExcelDownload = useCallback(async () => {
+  try {
+    const hasSelection = selectedRows.size > 0 || allSelectedRows.size > 0;
+    
+    if (hasSelection) {
+      // 선택된 항목만 다운로드
+      let allSelectedData = [];
+      for (const [pageKey, pageData] of allSelectedRows) {
+        allSelectedData = allSelectedData.concat(pageData);
+      }
+      const excelData = allSelectedData.map((row, index) => ({
+        'No.': index + 1,
+        // ... 데이터 매핑
+      }));
+      downloadExcel(excelData, '파일명_선택항목', '시트명', true, toast);
+    } else {
+      // 전체 데이터 다운로드 (새로운 API 사용)
+      setLoading(true);
+      
+      // 새로운 엑셀 다운로드 API 사용
+      const countResponse = await excelDownloadMemberAccount(0, 1);
+      const totalCount = countResponse.data.totalElements || 0;
+      
+      if (totalCount <= 50000) {
+        // 5만개 이하면 한 번에 받기
+        const response = await excelDownloadMemberAccount(0, totalCount);
+        const data = response.data;
+        if (data.content) {
+          const allData = data.content.map((item, index) => ({
+            'No.': index + 1,
+            // ... 데이터 매핑
+          }));
+          downloadExcel(allData, '파일명_전체', '시트명', true, toast);
+        }
+      } else {
+        // 5만개 초과면 청크 단위로 받기
+        const chunkSize = 50000;
+        const totalChunks = Math.ceil(totalCount / chunkSize);
+        let allData = [];
+        
+        for (let i = 0; i < totalChunks; i++) {
+          const chunkResponse = await excelDownloadMemberAccount(i, chunkSize);
+          const chunkData = chunkResponse.data;
+          if (chunkData.content) {
+            const chunkExcelData = chunkData.content.map((item, index) => ({
+              'No.': allData.length + index + 1,
+              // ... 데이터 매핑
+            }));
+            allData = allData.concat(chunkExcelData);
+          }
+          console.log(`엑셀 다운로드 진행률: ${i + 1}/${totalChunks}`);
+        }
+        downloadExcel(allData, '파일명_전체', '시트명', true, toast);
+      }
+      setLoading(false);
+    }
+  } catch (error) {
+    console.error('엑셀 다운로드 오류:', error);
+    toast.error('엑셀 다운로드 중 오류가 발생했습니다.');
+    setLoading(false);
+  }
+}, [selectedRows, allSelectedRows, toast]);
+```
 
-// 파라미터 설명
-downloadSelectedExcel(
-  allData,        // 전체 데이터 배열
-  selectedRows,   // 선택된 행들의 Set (인덱스)
-  fileName,       // 파일명 (확장자 제외)
-  sheetName,      // 시트명 (기본값: 'Sheet1')
-  includeDate     // 파일명에 날짜 포함 여부 (기본값: true)
-)
+## 새로운 엑셀 다운로드 API 엔드포인트
 
-==========================================
-3. 실제 사용 예시
-==========================================
+### 1. 회원 자산 내역
+```javascript
+import { excelDownloadMemberAccount } from '../../../../api/auth/JihunAuth';
 
-// 예시 1: 회원 목록 다운로드
-const memberData = [
-  { '순번': 1, '이름': '홍길동', '이메일': 'hong@test.com', '가입일': '2024-01-01' },
-  { '순번': 2, '이름': '김철수', '이메일': 'kim@test.com', '가입일': '2024-01-02' }
-]
+// 사용법
+const response = await excelDownloadMemberAccount(page, size);
+```
 
-downloadExcel(memberData, '회원목록', '회원정보')
+### 2. 회원 자산 현황
+```javascript
+import { excelDownloadMemberAssetDetails } from '../../../../api/auth/JihunAuth';
 
-// 예시 2: 선택된 회원만 다운로드
-const selectedRows = new Set([0, 2, 5]) // 0번, 2번, 5번 행 선택
-downloadSelectedExcel(memberData, selectedRows, '선택회원', '선택회원정보')
+// 사용법
+const response = await excelDownloadMemberAssetDetails(page, size);
+```
 
-// 예시 3: 날짜 없이 다운로드
-downloadExcel(memberData, '회원목록', '회원정보', false)
+### API 특징
+- 기본 size: 50,000개
+- 최대 size: 100,000개
+- EntityNotFoundException 방지
+- 메모리 효율적 처리
+- 엑셀 다운로드에 최적화된 응답 형식
 
-==========================================
-4. 데이터 구조 예시
-==========================================
+### 응답 형식
+```json
+{
+  "content": [...],
+  "totalElements": 350000,
+  "totalPages": 7,
+  "currentPage": 0,
+  "size": 50000,
+  "hasNext": true,
+  "hasPrevious": false
+}
+```
 
-// 다양한 데이터 구조 지원
-const data1 = [
-  { 'ID': 1, 'Name': 'John', 'Age': 25 },
-  { 'ID': 2, 'Name': 'Jane', 'Age': 30 }
-]
-
-const data2 = [
-  { '상품코드': 'A001', '상품명': '노트북', '가격': 1000000, '재고': 50 },
-  { '상품코드': 'A002', '상품명': '마우스', '가격': 50000, '재고': 100 }
-]
-
-const data3 = [
-  { '날짜': '2024-01-01', '매출': 1000000, '비용': 800000, '순이익': 200000 },
-  { '날짜': '2024-01-02', '매출': 1200000, '비용': 900000, '순이익': 300000 }
-]
-
-// 모든 데이터 구조에 대해 자동으로 컬럼 너비 설정됨
-
-==========================================
-5. 주요 특징
-==========================================
-
-✅ 자동 컬럼 너비 설정
-- 컬럼명과 데이터 길이를 자동 분석
-- 최소 10, 최대 50으로 제한하여 가독성 확보
-
-✅ 범용성
-- 어떤 데이터 구조든 자동 처리
-- 복잡한 설정 불필요
-
-✅ 에러 처리
-- 데이터가 없을 때 안내 메시지
-- 선택된 항목이 없을 때 안내 메시지
-
-✅ 파일명 자동 생성
-- 날짜 포함 옵션 (기본값: true)
-- 예: 회원목록_2024-01-15.xlsx
-
-==========================================
-6. 주의사항
-==========================================
-
-⚠️ 데이터 형식
-- 반드시 객체 배열 형태여야 함
-- 빈 배열이면 "내보낼 데이터가 없습니다" 메시지 표시
-
-⚠️ 선택된 항목 다운로드
-- selectedRows는 Set 형태여야 함
-- 선택된 항목이 없으면 안내 메시지 표시
-
-⚠️ 파일명
-- 확장자는 자동으로 .xlsx 추가됨
-- 날짜 포함 시: 파일명_YYYY-MM-DD.xlsx
-- 날짜 미포함 시: 파일명.xlsx
-
-==========================================
-7. 에러 메시지
-==========================================
-
-- "내보낼 데이터가 없습니다." → 데이터 배열이 비어있을 때
-- "다운로드할 항목을 체크해주세요." → 선택된 항목이 없을 때
-- "엑셀 다운로드 중 오류가 발생했습니다." → 기타 오류 발생 시
-
-==========================================
-8. 콘솔 로그
-==========================================
-
-성공 시: "엑셀 다운로드 완료: X개 항목"
-오류 시: "엑셀 다운로드 오류: [오류 내용]"
-
-==========================================
-끝
-========================================== 
+## 주의사항
+1. 대용량 데이터 다운로드 시 청크 단위 처리 권장
+2. 네트워크 안정성을 위해 5만개씩 처리
+3. 선택된 항목이 있으면 선택된 항목만 다운로드
+4. 선택된 항목이 없으면 전체 데이터 다운로드
+5. 새로운 API는 EntityNotFoundException을 방지하도록 설계됨 

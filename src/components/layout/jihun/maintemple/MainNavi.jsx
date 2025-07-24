@@ -113,7 +113,7 @@ const MainNavi = () => {
         label: "대시 보드",
         icon: Home,
         type: "link", // link: 페이지 이동, expand: 확장 메뉴, action: 액션 실행
-        href: "/dashboard",
+        href: "/main",
       },
       {
         id: "mypage",

@@ -12,7 +12,7 @@ function TaekjunRoute() {
             <Route element={<ProtectedRoute />}>
                 <Route path='/PermissionManagement' element={<PermissionManagement/>} />
                 <Route path='/adminmypage' element={<AdminMyPage/>} />
-                <Route path='/dashboard' element={<Dashboard/>} />
+                <Route path='/main' element={<Dashboard/>} />
                 <Route path='/user-admin-list' element={<UserListPage/>} />
             </Route>
         </>

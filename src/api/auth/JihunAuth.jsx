@@ -1,23 +1,19 @@
 import { api } from "../Http"
+
 // 회원 자산 내역
-export const memberaccount = () => api.get("/memberaccount");
 export const memberaccountSearch = (data) => api.post("/memberaccount/search", data);
 export const memberaccountLookupRoles = () => api.get("/memberaccount/lookup/roles");
-export const memberaccountLookupValueTypes = () => api.get("/memberaccount/lookup/value-types");
-export const memberaccountLookupPaymentTypes = () => api.get("/memberaccount/lookup/payment-types");
 export const memberaccountLookupTransactionTypes = () => api.get("/memberaccount/lookup/transaction-types");
 
 // 회원 자산 현황
-export const memberassetdetails = () => api.get("/memberassetdetails");
-export const memberassetdetailsSearch = (data) => api.post("/memberassetdetails/search", data);
-export const memberassetdetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
 export const ajgMemberAssetDetails = (page = 0, size = 25) => api.get(`/memberassetdetails?page=${page}&size=${size}`);
 export const ajgMemberAssetDetailsSearch = (data) => api.post("/memberassetdetails/search", data);
 export const ajgMemberAssetDetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
 export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdetails/payment", data);
-export const ajgMemberAssetDetailsCollection = (data) => api.post("/memberassetdetails/collection", data);
 
-
+// 엑셀 다운로드 API
+export const excelDownloadMemberAccount = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberaccount?page=${page}&size=${size}`);
+export const excelDownloadMemberAssetDetails = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberassetdetails?page=${page}&size=${size}`);
 
 // ============================================================================
 // Interceptor 등록 함수로 분리
