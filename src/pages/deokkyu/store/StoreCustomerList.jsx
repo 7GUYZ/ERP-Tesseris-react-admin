@@ -1,17 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { TextField, Button, Grid, Box } from '@mui/material';
+import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import DownloadIcon from '@mui/icons-material/Download';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
-import SearchIcon from '@mui/icons-material/Search';
 
-import { getCustomerAllStoreList, getStoreCustomerList } from '../../../api/auth/DeokkyuAuth';
-import '../../../styles/deokkyu/StoreList.css'; 
+import { getCustomerAllStoreList, getStoreCustomerList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import '../../../styles/deokkyu/common.css';
+import '../../../styles/deokkyu/StoreCustomerList.css'; 
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel } from '../../../components/feature/jihun/common/ExcelCommon';
-
 
 // 가맹점 리스트 컬럼
 const storeColumns = [
@@ -34,6 +31,7 @@ function StoreCustomerList() {
   const [storeRows, setStoreRows] = useState([]);
   const [customerRows, setCustomerRows] = useState([]);
   const [selectedStoreRows, setSelectedStoreRows] = useState(new Set());
+  const [isFilterOpen, setIsFilterOpen] = useState(true);
   
   // 검색 필터 상태
   const [filter, setFilter] = useState({
@@ -242,97 +240,100 @@ function StoreCustomerList() {
 
   // 페이지 진입 시 전체 가맹점 데이터 자동 조회
   useEffect(() => {
+    // 인터셉터 설정 (인증 토큰 자동 추가)
+    setupInterceptors();
+    
+    // 데이터 로딩
     fetchStores();
   }, []);
 
-
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Box className="store-list-container">
+      <Box className="deokkyu-container">
         {/* 페이지 제목 */}
-        <div className="store-list-title">가맹점 고객관리</div>
+        <div className="deokkyu-page-title">가맹점 고객관리</div>
         
         {/* 버튼 영역 */}
-        <Box display="flex" justifyContent="flex-end" mb={2} gap={1}>
-          <Button
-            variant="contained"
-            color="success"
-            startIcon={<FileDownloadOutlinedIcon />}
-            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+        <div className="deokkyu-actions">
+          <button 
+            className="deokkyu-btn excel" 
             onClick={handleSelectedExcelDownload}
+            disabled={selectedStoreRows.size === 0}
           >
             선택 엑셀
-          </Button>
-          <Button
-            variant="contained"
-            color="info"
-            startIcon={<DownloadIcon />}
-            sx={{ borderRadius: 2, px: 2.5, height: 44, boxShadow: 2 }}
+          </button>
+          <button 
+            className="deokkyu-btn all-excel" 
             onClick={handleExcelDownload}
+            disabled={storeRows.length === 0}
           >
             전체 엑셀
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<SearchIcon />}
-            sx={{
-              borderRadius: 2,
-              px: 2.5,
-              height: 44,
-              boxShadow: 2,
-              textTransform: 'none',
-            }}
+          </button>
+          <button
+            className="deokkyu-btn search"
             onClick={handleSearch}
+            disabled={loading}
           >
-            조회
-          </Button>
-        </Box>
+            {loading ? "조회 중..." : "조회"}
+          </button>
+        </div>
 
         {/* 검색 필터 영역 */}
-        <div className="filter-card">
-          <Grid container spacing={2} mb={2}>
-            <Grid item xs={2}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 ID"
-                value={filter.userId}
-                onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="이름"
-                value={filter.userName}
-                onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="상호명"
-                value={filter.storeCorporateName}
-                onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
-              />
-            </Grid>
-            <Grid item xs={3}>
-              <TextField
-                fullWidth
-                size="small"
-                margin="dense"
-                label="가맹점 명"
-                value={filter.storeName}
-                onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
-              />
-            </Grid>
-          </Grid>
+        <div className="store-customer-filter-card">
+          {/* 필터 토글 헤더 */}
+          <div className="deokkyu-filter-toggle-header">
+            <button 
+              className="deokkyu-filter-toggle-btn"
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+            >
+              <span className="deokkyu-filter-toggle-text">검색 조건</span>
+              <span className={`deokkyu-filter-toggle-icon ${isFilterOpen ? 'open' : 'closed'}`}>
+                ▼
+              </span>
+            </button>
+          </div>
+          
+          {/* 필터 폼 */}
+          <div className={`deokkyu-filter-form ${isFilterOpen ? 'open' : 'closed'}`}>
+            <div className="deokkyu-filter-row">
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">가맹점 ID</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.userId}
+                  onChange={(e) => setFilter({ ...filter, userId: e.target.value })}
+                  placeholder="가맹점 ID를 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">이름</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.userName}
+                  onChange={(e) => setFilter({ ...filter, userName: e.target.value })}
+                  placeholder="이름을 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">상호명</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.storeCorporateName}
+                  onChange={(e) => setFilter({ ...filter, storeCorporateName: e.target.value })}
+                  placeholder="상호명을 입력하세요"
+                />
+              </div>
+              <div className="deokkyu-filter-field">
+                <label className="deokkyu-filter-label">가맹점 명</label>
+                <input
+                  className="deokkyu-filter-input"
+                  value={filter.storeName}
+                  onChange={(e) => setFilter({ ...filter, storeName: e.target.value })}
+                  placeholder="가맹점 명을 입력하세요"
+                />
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* 데이터 그리드 영역 */}
@@ -348,11 +349,9 @@ function StoreCustomerList() {
               loading={loading}
               checkboxSelection
               onRowSelectionModelChange={(newSelection) => {
-                // newSelection이 객체이고 ids 속성이 있는 경우
                 if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
                   setSelectedStoreRows(newSelection.ids);
                 } else if (Array.isArray(newSelection)) {
-                  // 배열인 경우 (이전 버전 호환성)
                   setSelectedStoreRows(new Set(newSelection));
                 } else {
                   setSelectedStoreRows(new Set());
