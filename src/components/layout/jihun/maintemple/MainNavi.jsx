@@ -176,8 +176,8 @@ const MainNavi = () => {
             id: "member-list",
             programIndex: 14,
             label: "회원 리스트",
-            type: "list", // list: 리스트 박스 (링크 없음)
-            action: () => console.log("본인 리스트 클릭"), // 클릭 시 실행할 함수
+            type: "link", 
+            href: "/user-admin-list",
           },
           {
             id: "member-assets",

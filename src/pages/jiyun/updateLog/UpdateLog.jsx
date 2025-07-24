@@ -209,11 +209,11 @@ const UpdateLog = () => {
       headerAlign: 'center',
       renderCell: (params) => params.row.id + 1
     },
-    { field: "updateUserId", headerName: "수정자 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateUserRoleNm1", headerName: "수정자 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "inflictUserId", headerName: "대상 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateUserRoleNm2", headerName: "대상 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "updateDataValue", headerName: "프로그램명", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "updateUserId", headerName: "수정자 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateUserRoleNm1", headerName: "수정자 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "inflictUserId", headerName: "대상 ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateUserRoleNm2", headerName: "대상 역할", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
+    { field: "updateDataValue", headerName: "프로그램명", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) },
     { 
       field: "updateBeforeData", 
       headerName: "수정 전 데이터", 
@@ -221,7 +221,8 @@ const UpdateLog = () => {
       minWidth: 200, 
       flex: 1, 
       align: 'center', 
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' || params.value === 0 ? '-' : params.value)
     },
     { 
       field: "updateAfterData", 
@@ -230,25 +231,26 @@ const UpdateLog = () => {
       minWidth: 200, 
       flex: 1, 
       align: 'center', 
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' || params.value === 0 ? '-' : params.value)
     },
-    { field: "updateUserLogUpdateTime", headerName: "수정 시간", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
+    { field: "updateUserLogUpdateTime", headerName: "수정 시간", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center', renderCell: (params) => (params.value === null || params.value === undefined || params.value === '' ? '-' : params.value) }
   ];
 
   return (
-    <div className="member-asset-search-container">
-      <div className="member-asset-search-page-header">
-        <h1 className="member-asset-search-page-title">사용자 업데이트 로그</h1>
-        <div className="member-asset-search-actions">
+    <div className="update-log-container">
+      <div className="update-log-page-header">
+        <h1 className="update-log-page-title">사용자 업데이트 로그</h1>
+        <div className="update-log-actions">
           <button 
-            className="member-asset-search-btn excel" 
+            className="update-log-btn excel" 
             onClick={handleExcelDownload}
             disabled={searchResults.length === 0}
           >
             엑셀
           </button>
           <button
-            className="member-asset-search-btn search"
+            className="update-log-btn search"
             onClick={handleSearch}
             disabled={loading}
           >
@@ -257,45 +259,45 @@ const UpdateLog = () => {
         </div>
       </div>
 
-      <div className="member-asset-search-section">
-        <div className="member-asset-search-toggle-header">
+      <div className="update-log-section">
+        <div className="update-log-toggle-header">
           <button 
-            className="member-asset-search-toggle-btn"
+            className="update-log-toggle-btn"
             onClick={() => setIsSearchFormOpen(!isSearchFormOpen)}
           >
-            <span className="member-asset-search-toggle-text">검색 조건</span>
-            <span className={`member-asset-search-toggle-icon ${isSearchFormOpen ? 'open' : 'closed'}`}>
+            <span className="update-log-toggle-text">검색 조건</span>
+            <span className={`update-log-toggle-icon ${isSearchFormOpen ? 'open' : 'closed'}`}>
               ▼
             </span>
           </button>
         </div>
         
-        <div className={`member-asset-search-form ${isSearchFormOpen ? 'open' : 'closed'}`}>
-          <div className="member-asset-search-row">
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">아이디(수정자)</label>
+        <div className={`update-log-form ${isSearchFormOpen ? 'open' : 'closed'}`}>
+          <div className="update-log-row">
+            <div className="update-log-field">
+              <label className="update-log-label">아이디(수정자)</label>
               <input
-                className="member-asset-search-input"
+                className="update-log-input"
                 name="updateUserId"
                 value={searchParams.updateUserId}
                 onChange={handleInputChange}
                 placeholder="검색명을 입력하세요."
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">아이디</label>
+            <div className="update-log-field">
+              <label className="update-log-label">아이디</label>
               <input
-                className="member-asset-search-input"
+                className="update-log-input"
                 name="inflictUserId"
                 value={searchParams.inflictUserId}
                 onChange={handleInputChange}
                 placeholder="검색명을 입력하세요."
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">프로그램명</label>
+            <div className="update-log-field">
+              <label className="update-log-label">프로그램명</label>
               <input
-                className="member-asset-search-input"
+                className="update-log-input"
                 name="updateDataValue"
                 value={searchParams.updateDataValue}
                 onChange={handleInputChange}
@@ -304,11 +306,11 @@ const UpdateLog = () => {
             </div>
           </div>
 
-          <div className="member-asset-search-row">
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">발생일(시작)</label>
+          <div className="update-log-row">
+            <div className="update-log-field">
+              <label className="update-log-label">발생일(시작)</label>
               <input
-                className="member-asset-search-input"
+                className="update-log-input"
                 type="date"
                 name="updateUserLogUpdateTimeStart"
                 value={searchParams.updateUserLogUpdateTimeStart}
@@ -317,10 +319,10 @@ const UpdateLog = () => {
                 placeholder="연도-월-일"
               />
             </div>
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">발생일(종료)</label>
+            <div className="update-log-field">
+              <label className="update-log-label">발생일(종료)</label>
               <input
-                className="member-asset-search-input"
+                className="update-log-input"
                 type="date"
                 name="updateUserLogUpdateTimeEnd"
                 value={searchParams.updateUserLogUpdateTimeEnd}
@@ -334,14 +336,14 @@ const UpdateLog = () => {
       </div>
 
       {error && (
-        <div className="member-asset-search-error">
+        <div className="update-log-error">
           {error}
         </div>
       )}
 
-      <div className="member-asset-search-table-container">
+      <div className="update-log-table-container">
         {processedData.length === 0 && !loading ? (
-          <div className="member-asset-search-no-results">
+          <div className="update-log-no-results">
             검색 결과가 없습니다.
           </div>
         ) : (

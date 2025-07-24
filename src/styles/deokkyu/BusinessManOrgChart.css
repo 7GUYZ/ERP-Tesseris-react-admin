@@ -1,0 +1,171 @@
+/* BusinessManOrgChart.css */
+
+/* 조직도 컨테이너 */
+.org-chart-container {
+  width: 100%;
+  height: 600px;
+  position: relative;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* 로딩 오버레이 */
+.org-chart-loading {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(4px);
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 18px;
+  z-index: 1000;
+}
+
+/* 컨트롤 패널 */
+.org-chart-controls {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 검색 입력 */
+.org-chart-search-input {
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  background: white;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.org-chart-search-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.org-chart-search-input::placeholder {
+  color: #95a5a6;
+}
+
+/* 버튼 공통 스타일 */
+.org-chart-button {
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 검색 버튼 */
+.org-chart-search-button {
+  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+  color: white;
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+.org-chart-search-button:hover {
+  background: linear-gradient(135deg, #2980b9 0%, #21618c 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(52, 152, 219, 0.4);
+}
+
+.org-chart-search-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+/* 다이어그램 컨테이너 */
+.org-chart-diagram {
+  border-radius: 8px;
+  background: white;
+}
+
+/* 노드 스타일 (GoJS에서 적용) */
+.org-chart-node {
+  transition: all 0.3s ease;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .org-chart-controls {
+    flex-direction: column;
+    padding: 8px 12px;
+    gap: 8px;
+  }
+  
+  .org-chart-search-input {
+    width: 200px;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .org-chart-search-button {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .org-chart-search-input {
+    width: 150px;
+  }
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.org-chart-controls {
+  animation: fadeIn 0.5s ease-out;
+}
+
+/* 호버 효과 강화 */
+.org-chart-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* 포커스 스타일 */
+.org-chart-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.org-chart-search-input:focus {
+  outline: none;
+}
+
+/* 스크롤바 스타일 */
+.org-chart-diagram::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.org-chart-diagram::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.org-chart-diagram::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.org-chart-diagram::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+} 
