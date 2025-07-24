@@ -16,7 +16,7 @@ const PaymentCollectionModal = ({
   selectedMember, 
   onPaymentSubmit 
 }) => {
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState('cm-payment')
   const [formData, setFormData] = useState({
     paymentAmount: "",
@@ -45,12 +45,12 @@ const PaymentCollectionModal = ({
     
     // 필수 필드 검증
     if (!formData.paymentAmount || formData.paymentAmount.trim() === '') {
-      toast.error("금액을 입력해주세요.");
+      showToast("error", "금액을 입력해주세요.");
       return
     }
     
     if (!formData.reason || formData.reason.trim() === '') {
-      toast.error("사유를 입력해주세요.");
+      showToast("error", "사유를 입력해주세요.");
       return
     }
 
@@ -76,7 +76,7 @@ const PaymentCollectionModal = ({
       onClose()
     } catch (error) {
       console.error('Payment/Collection 처리 오류:', error);
-      toast.error("처리 중 오류가 발생했습니다.");
+      showToast("error", "처리 중 오류가 발생했습니다.");
     }
   }
 

@@ -23,7 +23,7 @@ import { useToast } from '../../../../context/jungeun/ToastContext';
  * 5. 지급 및 회수 기능
  */
 const MemberAssetDetailsForm = () => {
-  const { toast } = useToast();
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     id: "",
     name: "",
@@ -88,6 +88,7 @@ const MemberAssetDetailsForm = () => {
       }
       
       if (response.data && response.data.content) {
+        console.log("API 응답 데이터:", response.data.content[0]); // 첫 번째 데이터 로그
         const transformedData = response.data.content.map((item, index) => {
           // CM 값 변환 로직 개선
           let cmHeld = 0;
@@ -98,27 +99,46 @@ const MemberAssetDetailsForm = () => {
               cmHeld = item.userCmCurrent;
             }
           }
-          
+          const emailValue = item.userEmail || item.userId || item.email || "";
+          const emailDisplay = emailValue ? emailValue.split('@')[0] : "";
           return {
-            id: item.userEmail ? item.userEmail.split('@')[0] : (item.userId ? item.userId.split('@')[0] : ""),
-            email: item.userEmail || item.userId || "",
-          name: item.userName || "",
-          phone: item.userPhone || "",
-          grade: item.userRoleKorNm || "",
-          franchiseName: item.storeName || "",
+            id: item.userIndex ? `user-${item.userIndex}` : `row-${page}-${index}`,
+            email: emailDisplay,
+            name: item.userName || "",
+            phone: item.userPhone || "",
+            grade: item.userRoleKorNm || "",
+            franchiseName: item.storeName || "",
             cmHeld: cmHeld,
             cmpHeld: item.userCmpCurrent ? (typeof item.userCmpCurrent === 'string' ? parseInt(item.userCmpCurrent) : item.userCmpCurrent) || 0 : 0,
             cashHeld: item.userCashCurrent ? (typeof item.userCashCurrent === 'string' ? parseInt(item.userCashCurrent) : item.userCashCurrent) || 0 : 0,
-          registrationDate: item.userCreateTime ? 
-              new Date(item.userCreateTime).toISOString().split('T')[0] : "",
+            registrationDate: item.userCreateTime ? 
+                new Date(item.userCreateTime).toISOString().split('T')[0] : "",
             uniqueKey: item.userIndex || `row-${index}`,
             rowNumber: (page * size) + index + 1, // 전체 순번 (페이지별로 연속)
-            userIndex: item.userIndex || "",
-            usersId: item.userId || ""
+            userIndex: item.userIndex || "", // 지급/회수 시 사용할 실제 ID
+            usersId: item.userId || "",
+            userEmail: item.userEmail || "",
+            userId: item.userId || "",
+            userRoleKorNm: item.userRoleKorNm || "",
+            userName: item.userName || "",
+            userPhone: item.userPhone || "",
+            storeName: item.storeName || "",
+            userCmCurrent: item.userCmCurrent || 0,
+            userCmpCurrent: item.userCmpCurrent || 0,
+            userCashCurrent: item.userCashCurrent || 0
           };
         });
         
-        setSearchResults(transformedData)
+        // userIndex 기준으로 중복 제거
+        const uniqueMap = new Map();
+        transformedData.forEach(row => {
+          const key = row.userIndex || row.id;
+          if (!uniqueMap.has(key)) {
+            uniqueMap.set(key, row);
+          }
+        });
+        const uniqueRows = Array.from(uniqueMap.values());
+        setSearchResults(uniqueRows)
         let totalElements = response.data.totalElements || response.data.total || 0
         
         // 백엔드에서 totalElements를 제공하지 않는 경우, 현재 페이지가 마지막 페이지인지 확인
@@ -215,7 +235,7 @@ const MemberAssetDetailsForm = () => {
     
     if (safeSelection.size > 0) {
       // 현재 페이지에서 선택된 행들의 데이터 저장
-      const selectedData = searchResults.filter((row) => safeSelection.has(row.id));
+      const selectedData = searchResults.filter((row, index) => safeSelection.has(index));
       newAllSelectedRows.set(pageKey, selectedData);
     } else {
       // 선택이 해제되면 해당 페이지 데이터 삭제
@@ -240,17 +260,13 @@ const MemberAssetDetailsForm = () => {
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = useCallback(async () => {
     try {
-      const hasSelection = selectedRows.size > 0 || allSelectedRows.size > 0;
-      
-      if (hasSelection) {
-        let allSelectedData = [];
-        for (const [pageKey, pageData] of allSelectedRows) {
-          allSelectedData = allSelectedData.concat(pageData);
-        }
-        const excelData = allSelectedData.map((row, index) => ({
+      if (selectedRows.size > 0) {
+        const selectedIds = Array.from(selectedRows);
+        const selectedData = selectedIds.map(id => searchResults.find(row => row.id === id)).filter(Boolean);
+        const excelData = selectedData.map((row, index) => ({
           'No.': index + 1,
           '사용자번호': row.userIndex || '',
-          '사용자ID': row.usersId || '',
+          '사용자ID': row.userEmail || row.userId || row.usersId || '',
           '사용자역할': row.userRoleKorNm || '',
           '사용자이름': row.userName || '',
           '사용자전화번호': row.userPhone || '',
@@ -259,7 +275,7 @@ const MemberAssetDetailsForm = () => {
           'CMP현재잔액': row.userCmpCurrent || 0,
           '현금현재잔액': row.userCashCurrent || 0
         }));
-        downloadExcel(excelData, '회원자산현황_선택항목', '회원자산현황', true, toast);
+        downloadExcel(excelData, '회원자산현황_선택항목', '회원자산현황', true, showToast);
       } else {
         setLoading(true);
         
@@ -283,7 +299,7 @@ const MemberAssetDetailsForm = () => {
               'CMP현재잔액': item.userCmpCurrent || 0,
               '현금현재잔액': item.userCashCurrent || 0
             }));
-            downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, toast);
+            downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, showToast);
           }
         } else {
           const chunkSize = 50000;
@@ -310,46 +326,48 @@ const MemberAssetDetailsForm = () => {
             }
             console.log(`엑셀 다운로드 진행률: ${i + 1}/${totalChunks}`);
           }
-          downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, toast);
+          downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, showToast);
         }
         setLoading(false);
       }
-    } catch (error) {
-      console.error('엑셀 다운로드 오류:', error);
-      toast.error('엑셀 다운로드 중 오류가 발생했습니다.');
-      setLoading(false);
-    }
-  }, [selectedRows, allSelectedRows, toast]);
+          } catch (error) {
+        console.error('엑셀 다운로드 오류:', error);
+        showToast("error", '엑셀 다운로드 중 오류가 발생했습니다.');
+        setLoading(false);
+      }
+  }, [selectedRows, searchResults, showToast]);
 
   // 지급 및 회수 핸들러
   const handlePaymentAndCollection = () => {
     if (selectedRows.size === 0) {
-      toast.error("지급 및 회수할 항목을 선택해주세요.");
+      showToast("error", "지급 및 회수할 항목을 선택해주세요.");
       return;
     }
     
     // 다중선택 지원 - 첫 번째 선택된 항목으로 모달 열기 (대표 정보 표시용)
     const selectedId = Array.from(selectedRows)[0];
-    
-    // ID로 해당 회원 찾기
-    let member = searchResults.find(row => row.id === selectedId);
+    // id가 'user-130' 형태이므로, 실제 row는 id === selectedId 인 것을 찾음
+    const member = searchResults.find(row => row.id === selectedId);
+    // 디버깅용 콘솔 로그
+    console.log('지급/회수 버튼 클릭!');
+    console.log('selectedRows:', Array.from(selectedRows));
+    console.log('selectedId:', selectedId);
+    console.log('searchResults.length:', searchResults.length);
+    console.log('searchResults:', searchResults);
+    console.log('선택된 member:', member);
     
     if (!member) {
-      // ID를 찾을 수 없는 경우, 첫 번째 데이터 사용
-      member = searchResults[0];
-    }
-    
-    if (!member) {
-      toast.error("선택된 회원 정보를 찾을 수 없습니다.");
+      showToast("error", "선택된 회원 정보를 찾을 수 없습니다.");
       return;
     }
     
     // 선택된 회원 수 표시
     if (selectedRows.size > 1) {
-      toast.info(`${selectedRows.size}명의 회원이 선택되었습니다. 대표 회원 정보로 모달이 열립니다.`);
+      showToast("info", `${selectedRows.size}명의 회원이 선택되었습니다. 대표 회원 정보로 모달이 열립니다.`);
     }
     
-    setSelectedMember(member);
+    // 지급/회수 모달에 넘길 때 usersId(uuid)만 넘기도록
+    setSelectedMember({ ...member, usersId: member.usersId });
     setIsModalOpen(true);
   }
 
@@ -359,29 +377,41 @@ const MemberAssetDetailsForm = () => {
     setSelectedMember(null);
   }
 
-  // 지급/회수 제출 핸들러
+  // 지급/회수 제출 핸들러에서도 usersId(uuid)만 백엔드로 넘기도록 수정
   const handlePaymentSubmit = async (paymentData) => {
     try {
+      // amount 방어코드 추가
+      let amount = paymentData.amount;
+      if (amount === undefined || amount === null || isNaN(amount)) {
+        // paymentAmount가 있으면 숫자로 변환, 없으면 0
+        if (paymentData.paymentAmount !== undefined && paymentData.paymentAmount !== null && paymentData.paymentAmount !== "") {
+          amount = parseInt(paymentData.paymentAmount);
+        } else {
+          showToast("error", "금액을 입력해주세요.");
+          return;
+        }
+      }
+      if (amount === 0) {
+        showToast("error", "금액은 0보다 커야 합니다.");
+        return;
+      }
       setLoading(true);
-      
-      const selectedIndices = Array.from(selectedRows);
-      const selectedMembers = selectedIndices.map(index => searchResults[index]);
-      
+      const selectedIds = Array.from(selectedRows);
+      // id가 'user-130' 형태이므로, 실제 row는 id === selectedId 인 것을 찾음
+      const selectedMembers = selectedIds.map(id => searchResults.find(row => row.id === id)).filter(Boolean);
       const isPayment = paymentData.type === 'cm-payment' || paymentData.type === 'cmp-payment';
-      
       const results = [];
       let successCount = 0;
       let failCount = 0;
-      
       for (const member of selectedMembers) {
         try {
+          // memberId로 반드시 userIndex(숫자)만 넘김
           const response = await ajgMemberAssetDetailsPayment({
-            userIndex: member.userIndex,
-            amount: paymentData.paymentAmount,
+            memberId: member.userIndex,
+            amount: amount,
             reason: paymentData.reason,
             type: paymentData.type
           });
-          
           if (response.data && response.data.success) {
             results.push({ member, success: true, message: '성공' });
             successCount++;
@@ -394,32 +424,26 @@ const MemberAssetDetailsForm = () => {
           failCount++;
         }
       }
-      
       setLoading(false);
-      
       // 결과 표시
       const totalCount = selectedMembers.length;
-      
       if (successCount > 0 && failCount === 0) {
-        toast.success(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
+        showToast("success", `${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
       } else if (successCount > 0 && failCount > 0) {
-        toast.warning(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
+        showToast("warning", `${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
       } else {
-        toast.error(`처리 실패:\n성공: ${successCount}명\n실패: ${failCount}명`);
+        showToast("error", `처리 실패:\n성공: ${successCount}명\n실패: ${failCount}명`);
       }
-      
       // 모달 닫기
       handleModalClose();
-      
       // 데이터 새로고침
       handleSearch();
-      
     } catch (error) {
       console.error('Payment/Collection 처리 오류:', error);
-      toast.error("처리 중 오류가 발생했습니다.");
+      showToast("error", "처리 중 오류가 발생했습니다.");
       setLoading(false);
     }
-  };
+  }
 
   return (
     <div className="member-asset-details-container">
