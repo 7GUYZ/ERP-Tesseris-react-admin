@@ -110,7 +110,7 @@ const LoginForm = () => {
         showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
 
         if(userInfo.user_role_index === "4"){
-          setTimeout(() => window.location.href = "/reactadmin/TestMain", 1500);
+          setTimeout(() => window.location.href = "/main", 1500);
         } else {
           showToast("error", "허용되지 않은 사용자입니다");
         }
