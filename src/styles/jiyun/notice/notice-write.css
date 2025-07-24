@@ -41,8 +41,8 @@
   font-weight: bold;
 }
 
-input[type="text"],
-textarea {
+.notice-form .notice-input,
+.notice-form .notice-textarea {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
@@ -52,12 +52,12 @@ textarea {
   font-family: "Noto Sans KR", sans-serif;
   background-color: #f9fafb;
 }
-textarea {
+.notice-form .notice-textarea {
   height: 300px;
 }
 
-input:focus,
-textarea:focus {
+.notice-form .notice-input:focus,
+.notice-form .notice-textarea:focus {
   outline: none;
   border-color: #387ddd;
   background-color: #fff;

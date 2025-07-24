@@ -42,4 +42,46 @@ export const dashboardApi = {
   getCmStatistics: () => api.get('dashboard/cm-statistics'),
   getCommissionStatistics: () => api.get('dashboard/commission-statistics'),
   getStoreStatistics: () => api.get('dashboard/store-statistics'),
+};
+
+// 회원 리스트 API
+export const userListApi = {
+  getUserList: () => api.get('user-admin-list'),
+  searchUserList: (searchData) => api.post('user-admin-list/search', searchData),
+  updateUser: (userIndex, updateData, adminUserIndex) => api.put(`user-admin-list/update/${userIndex}?adminUserIndex=${adminUserIndex}`, updateData)
+}; 
+
+// 권한 체크 API
+export const permissionCheckApi = {
+  // 특정 권한 체크 (로컬스토리지의 user-info에서 admin_type_index 사용)
+  checkPermission: async (programIndex, permissionType) => {
+    const userInfo = localStorage.getItem('user-info');
+    const userData = userInfo ? JSON.parse(userInfo) : null;
+    const adminTypeIndex = userData?.admin_type_index;
+    
+    console.log('API 호출 - user-info:', userInfo);
+    console.log('API 호출 - admin_type_index:', adminTypeIndex);
+    console.log('API 호출 - programIndex:', programIndex);
+    console.log('API 호출 - permissionType:', permissionType);
+    
+    return await api.post(`checkpermission`, {
+      adminTypeIndex: parseInt(adminTypeIndex),
+      programIndex: parseInt(programIndex)
+    });
+  },
+
+  // 현재 사용자의 모든 권한 조회 (로컬스토리지의 user-info에서 admin_type_index 사용)
+  getUserPermissions: async () => {
+    const userInfo = localStorage.getItem('user-info');
+    const userData = userInfo ? JSON.parse(userInfo) : null;
+    const adminTypeIndex = userData?.admin_type_index;
+    
+    console.log('getUserPermissions API 호출 - user-info:', userInfo);
+    console.log('getUserPermissions API 호출 - admin_type_index:', adminTypeIndex);
+    
+    return await api.post(`checkpermission`, {
+      adminTypeIndex: parseInt(adminTypeIndex),
+      programIndex: 1 // 기본값, 필요시 수정
+    });
+  }
 }; 

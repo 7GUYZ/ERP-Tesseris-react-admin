@@ -45,6 +45,7 @@ export default function NoticeWrite() {
             onChange={handleChange}
             required
             placeholder="제목을 입력해주세요"
+            className="notice-input"
           />
         </div>
 
@@ -60,6 +61,7 @@ export default function NoticeWrite() {
             onChange={handleChange}
             required
             placeholder="내용을 입력해주세요"
+            className="notice-textarea"
           />
         </div>
 
