@@ -6,6 +6,7 @@ import NoticeList from "../pages/jiyun/notice/NoticeList";
 import NoticeUpdate from "../pages/jiyun/notice/NoticeUpdate";
 import NoticeWrite from "../pages/jiyun/notice/NoticeWrite";
 import UpdateLog from "../pages/jiyun/updateLog/UpdateLog";
+import AlertPage from "../pages/jiyun/alert/AlertPage";
 
 function JiyoonRoute() {
   return (
@@ -18,6 +19,7 @@ function JiyoonRoute() {
         <Route path="/notice/update/:noticeIndex" element={<NoticeUpdate />} />
         <Route path="/notice/write" element={<NoticeWrite />} />
         <Route path="/updateLog" element={<UpdateLog />} />
+        <Route path="/alert" element={<AlertPage />} />
       </Route>
     </>
   );

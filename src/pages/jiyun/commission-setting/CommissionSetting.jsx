@@ -90,7 +90,7 @@ export default function CommissionSetting() {
 
   return (
     <form className="commission-form" onSubmit={handleSave}>
-      <div className="header">
+      <div className="commission-header">
         <h1>중개 수수료율 설정</h1>
         <button
           className="save-button"
