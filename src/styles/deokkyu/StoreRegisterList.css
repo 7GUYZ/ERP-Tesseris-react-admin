@@ -1,14 +1,12 @@
-/* ============================================================================
-   StoreRegisterList 전용 스타일
-   ============================================================================ */
+/* StoreRegisterList.css */
 
-/* 필터 카드 */
+/* 가맹점 신청 현황 페이지 스타일 */
 .store-register-filter-card {
   background: white;
   border-radius: 12px;
-  overflow: visible;
-  border: 1px solid lightgray;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 24px;
+  border: 1px solid #e9ecef;
 }
 
 /* 데이터 그리드 컨테이너 */

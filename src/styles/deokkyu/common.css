@@ -99,6 +99,23 @@
   transform: none;
 }
 
+/* 수정 버튼 */
+.deokkyu-btn.edit {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.deokkyu-btn.edit:hover {
+  background-color: #d97706;
+  transform: translateY(-1px);
+}
+
+.deokkyu-btn.edit:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* 데이터 그리드 컨테이너 */
 .deokkyu-data-grid {
   background: white;

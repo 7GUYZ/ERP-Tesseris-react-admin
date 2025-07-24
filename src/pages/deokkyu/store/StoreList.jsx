@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { TextField,  Grid, Box,MenuItem, Select, InputLabel, FormControl } from '@mui/material';
-import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { Box } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 
@@ -9,6 +9,7 @@ import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
+import StoreDetailModal from '../../../components/feature/deokkyu/dmodal/StoreDetailModal';
 import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
@@ -38,6 +39,11 @@ function StoreList() {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [isFilterOpen, setIsFilterOpen] = useState(true);
+  
+  // 모달 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
+  const [selectedStoreData, setSelectedStoreData] = useState(null);
   const [filter, setFilter] = useState({
     userId: '',
     userName: '', // 
@@ -136,6 +142,40 @@ function StoreList() {
     downloadSelectedExcel(excelData, selectedIndices, '가맹점회원리스트_선택항목', '가맹점회원정보');
   }
 
+  // 수정 버튼 클릭 핸들러
+  const handleEditClick = () => {
+    console.log('🖱️ 수정 버튼 클릭, 선택된 행 수:', selectedRows.size);
+    console.log('📋 선택된 행 IDs:', Array.from(selectedRows));
+
+    if (selectedRows.size === 0) {
+      alert('수정할 가맹점을 선택해주세요.');
+      return;
+    }
+
+    if (selectedRows.size > 1) {
+      alert('한 번에 하나의 가맹점만 수정할 수 있습니다.\n여러 개가 선택되었습니다.');
+      return;
+    }
+
+    // 선택된 행이 정확히 1개인 경우
+    const selectedId = Array.from(selectedRows)[0];
+    console.log('📝 선택된 ID:', selectedId);
+    
+    // rows에서 해당 id를 가진 행 찾기
+    const selectedRow = rows.find(row => row.id === selectedId);
+    
+    if (selectedRow) {
+      console.log('✅ 선택된 가맹점 데이터:', selectedRow);
+      setSelectedStoreId(selectedRow.userId);
+      setSelectedStoreData(selectedRow);
+      setModalOpen(true);
+      console.log('🔥 모달 열기 완료');
+    } else {
+      console.error('🚨 선택된 행을 찾을 수 없습니다:', selectedId);
+      alert('선택된 가맹점 정보를 찾을 수 없습니다.');
+    }
+  }
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box className="deokkyu-container">
@@ -154,6 +194,13 @@ function StoreList() {
             disabled={rows.length === 0}
           >
             전체 엑셀
+          </button>
+          <button
+            className="deokkyu-btn edit"
+            onClick={handleEditClick}
+            disabled={selectedRows.size === 0}
+          >
+            ✏️ 수정
           </button>
           <button
             className="deokkyu-btn search"
@@ -329,6 +376,19 @@ function StoreList() {
           />
         </div>
       </Box>
+      
+      {/* 가맹점 상세정보 모달 */}
+      <StoreDetailModal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedStoreId(null);
+          setSelectedStoreData(null);
+        }}
+        storeId={selectedStoreId}
+        initialData={selectedStoreData}
+      />
+      
       <RealTimeChat />
     </LocalizationProvider>
   );

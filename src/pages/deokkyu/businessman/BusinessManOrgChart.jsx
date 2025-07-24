@@ -2,6 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 import * as go from 'gojs';
 import { ReactDiagram } from 'gojs-react';
 import { getBusinessManList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import BusinessManDetailModal from '../../../components/feature/deokkyu/dmodal/BusinessManDetailModal';
 import '../../../styles/deokkyu/BusinessManOrgChart.css';
 
 const BusinessManOrgChart = () => {
@@ -9,6 +10,11 @@ const BusinessManOrgChart = () => {
   const [businessManData, setBusinessManData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // 모달 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedBusinessManId, setSelectedBusinessManId] = useState(null);
+  const [selectedBusinessManData, setSelectedBusinessManData] = useState(null);
 
   // 백엔드에서 사업자 데이터 가져오기
   const fetchBusinessManData = async () => {
@@ -342,26 +348,15 @@ const BusinessManOrgChart = () => {
     // 실제 사업자 데이터로 모델 설정 (처음에는 빈 배열)
     diagram.model = new go.TreeModel([]);
 
-    // Node click 이벤트 - 사업자 상세정보 표시
+    // Node click 이벤트 - 모달로 사업자 상세정보 표시
     diagram.addDiagramListener('ObjectSingleClicked', (e) => {
       const part = e.subject.part;
       if (!(part instanceof go.Node)) return;
       const data = part.data;
       
-      const detailInfo = `
-📋 사업자 상세 정보
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👤 이름: ${data.name}
-🆔 사업자 ID: ${data.userId}
-🏅 등급: ${data.grade}
-📍 담당구역: ${data.area}
-🏪 개인 담당 가맹점: ${data.currentTotalStore}개
-📊 하위 직원들 총 가맹점: ${data.totalStore}개
-💰 총 수당: ${data.allowance?.toLocaleString() || 0}원
-${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
-      `.trim();
-      
-      alert(detailInfo);
+      setSelectedBusinessManId(data.key || data.userId);
+      setSelectedBusinessManData(data);
+      setModalOpen(true);
     });
 
 
@@ -420,12 +415,14 @@ ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
     
     // 데이터 로딩
     fetchBusinessManData();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // 초기 마운트 시에만 실행
 
   // 데이터 변경 시 다이어그램 업데이트
   useEffect(() => {
     updateDiagram();
-  }, [businessManData]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [businessManData]); // businessManData 변경 시에만 실행
 
   return (
     <div style={{ width: '100%', height: '600px', position: 'relative' }}>
@@ -486,13 +483,23 @@ ${data.parent ? `👔 상급자 ID: ${data.parent}` : '🔝 최고 책임자'}
         </button>
       </div>
 
-
-
       <ReactDiagram
         initDiagram={initDiagram}
         divClassName="org-chart-diagram"
         style={{ width: '100%', height: '100%' }}
         ref={diagramRef}
+      />
+      
+      {/* 사업자 상세정보 모달 */}
+      <BusinessManDetailModal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedBusinessManId(null);
+          setSelectedBusinessManData(null);
+        }}
+        businessManId={selectedBusinessManId}
+        initialData={selectedBusinessManData}
       />
     </div>
   );

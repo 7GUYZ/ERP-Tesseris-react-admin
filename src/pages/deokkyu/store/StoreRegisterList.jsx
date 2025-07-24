@@ -9,6 +9,7 @@ import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreRegisterList.css'; 
 import { getStoreRegisterList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
+import StoreRegisterDetailModal from '../../../components/feature/deokkyu/dmodal/StoreRegisterDetailModal';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
@@ -36,6 +37,11 @@ function StoreRegisterList() {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [isFilterOpen, setIsFilterOpen] = useState(true);
+  
+  // 모달 상태
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState(null);
+  const [selectedStoreData, setSelectedStoreData] = useState(null);
   const [filter, setFilter] = useState({
     userId: '',
     userName: '',
@@ -306,6 +312,11 @@ function StoreRegisterList() {
             loading={loading}
             checkboxSelection
             disableRowSelectionOnClick
+            onRowClick={(params) => {
+              setSelectedStoreId(params.row.userId);
+              setSelectedStoreData(params.row);
+              setModalOpen(true);
+            }}
             onRowSelectionModelChange={(newSelection) => {
               if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
                 setSelectedRows(newSelection.ids);
@@ -321,6 +332,18 @@ function StoreRegisterList() {
           />
         </div>
       </Box>
+      
+      {/* 가맹점 신청 상세정보 모달 */}
+      <StoreRegisterDetailModal
+        isOpen={modalOpen}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedStoreId(null);
+          setSelectedStoreData(null);
+        }}
+        storeId={selectedStoreId}
+        initialData={selectedStoreData}
+      />
     </LocalizationProvider>
   );
 }
