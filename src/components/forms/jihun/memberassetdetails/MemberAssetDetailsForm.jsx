@@ -1,14 +1,16 @@
-import { useState, useEffect, useCallback } from "react"
+import React, { useState, useCallback, useEffect } from 'react';
 import MemberAssetDetailsTable from "../../../ui/jihun/memberassetdetails/MemberAssetDetailsTable.jsx"
 import PaymentCollectionModal from "./PaymentCollectionModal.jsx"
 import {
   ajgMemberAssetDetails,
   ajgMemberAssetDetailsSearch,
   ajgMemberAssetDetailsLookupGrades,
-  ajgMemberAssetDetailsPayment
+  ajgMemberAssetDetailsPayment,
+  excelDownloadMemberAssetDetails
 } from "../../../../api/auth/JihunAuth.jsx"
-import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
+import { downloadExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
+import { useToast } from '../../../../context/jungeun/ToastContext';
 
 /**
  * 회원 자산 현황 폼 컴포넌트
@@ -21,6 +23,7 @@ import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
  * 5. 지급 및 회수 기능
  */
 const MemberAssetDetailsForm = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     id: "",
     name: "",
@@ -32,6 +35,7 @@ const MemberAssetDetailsForm = () => {
   const [loading, setLoading] = useState(false)
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [allSelectedRows, setAllSelectedRows] = useState(new Map()) // 페이지별 선택 항목 저장
   const [options, setOptions] = useState({
     grades: []
   })
@@ -189,6 +193,7 @@ const MemberAssetDetailsForm = () => {
       // 검색 시 첫 페이지로 리셋
       setCurrentPage(0)
       setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
+      setAllSelectedRows(new Map()) // 전체 선택 맵도 초기화
       
       await loadDataWithPagination(0, pageSize, formData)
     } catch (error) {
@@ -203,6 +208,21 @@ const MemberAssetDetailsForm = () => {
     // Set으로 안전한 선택 처리
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
+    
+    // 현재 페이지의 선택 항목을 전체 선택 맵에 저장
+    const pageKey = `page_${currentPage}`;
+    const newAllSelectedRows = new Map(allSelectedRows);
+    
+    if (safeSelection.size > 0) {
+      // 현재 페이지에서 선택된 행들의 데이터 저장
+      const selectedData = searchResults.filter((row) => safeSelection.has(row.id));
+      newAllSelectedRows.set(pageKey, selectedData);
+    } else {
+      // 선택이 해제되면 해당 페이지 데이터 삭제
+      newAllSelectedRows.delete(pageKey);
+    }
+    
+    setAllSelectedRows(newAllSelectedRows);
   }
 
   // 서버 사이드 페이징 핸들러
@@ -218,36 +238,93 @@ const MemberAssetDetailsForm = () => {
   }, [loadDataWithPagination, formData])
 
   // 엑셀 다운로드 핸들러
-  const handleExcelDownload = () => {
-    // 데이터 변환 (순번 추가) - 회원자산내역과 동일한 방식
-    const excelData = searchResults.map((row, index) => ({
-      '순번': index + 1,
-      '아이디': row.email ? row.email.split('@')[0] : '',
-      '이름': row.name || '',
-      '전화번호': row.phone || '',
-      '등급': row.grade || '',
-      '가맹점명': row.franchiseName || '',
-      '보유 CM': row.cmHeld || 0,
-      '보유 CMP': row.cmpHeld || 0,
-      '보유 Cash': row.cashHeld || 0,
-      '등록일': row.registrationDate || ''
-    }));
-
-    // selectedRows는 ID를 담고 있으므로 인덱스로 변환
-    const selectedIndexes = new Set();
-    searchResults.forEach((row, index) => {
-      if (selectedRows.has(row.id)) {
-        selectedIndexes.add(index);
+  const handleExcelDownload = useCallback(async () => {
+    try {
+      const hasSelection = selectedRows.size > 0 || allSelectedRows.size > 0;
+      
+      if (hasSelection) {
+        let allSelectedData = [];
+        for (const [pageKey, pageData] of allSelectedRows) {
+          allSelectedData = allSelectedData.concat(pageData);
+        }
+        const excelData = allSelectedData.map((row, index) => ({
+          'No.': index + 1,
+          '사용자번호': row.userIndex || '',
+          '사용자ID': row.usersId || '',
+          '사용자역할': row.userRoleKorNm || '',
+          '사용자이름': row.userName || '',
+          '사용자전화번호': row.userPhone || '',
+          '가맹점명': row.storeName || '',
+          'CM현재잔액': row.userCmCurrent || 0,
+          'CMP현재잔액': row.userCmpCurrent || 0,
+          '현금현재잔액': row.userCashCurrent || 0
+        }));
+        downloadExcel(excelData, '회원자산현황_선택항목', '회원자산현황', true, toast);
+      } else {
+        setLoading(true);
+        
+        // 🆕 새로운 엑셀 다운로드 API 사용
+        const countResponse = await excelDownloadMemberAssetDetails(0, 1);
+        const totalCount = countResponse.data.totalElements || 0;
+        
+        if (totalCount <= 50000) {
+          const response = await excelDownloadMemberAssetDetails(0, totalCount);
+          const data = response.data;
+          if (data.content) {
+            const allData = data.content.map((item, index) => ({
+              'No.': index + 1,
+              '사용자번호': item.userIndex || '',
+              '사용자ID': item.usersId || '',
+              '사용자역할': item.userRoleKorNm || '',
+              '사용자이름': item.userName || '',
+              '사용자전화번호': item.userPhone || '',
+              '가맹점명': item.storeName || '',
+              'CM현재잔액': item.userCmCurrent || 0,
+              'CMP현재잔액': item.userCmpCurrent || 0,
+              '현금현재잔액': item.userCashCurrent || 0
+            }));
+            downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, toast);
+          }
+        } else {
+          const chunkSize = 50000;
+          const totalChunks = Math.ceil(totalCount / chunkSize);
+          let allData = [];
+          
+          for (let i = 0; i < totalChunks; i++) {
+            const chunkResponse = await excelDownloadMemberAssetDetails(i, chunkSize);
+            const chunkData = chunkResponse.data;
+            if (chunkData.content) {
+              const chunkExcelData = chunkData.content.map((item, index) => ({
+                'No.': allData.length + index + 1,
+                '사용자번호': item.userIndex || '',
+                '사용자ID': item.usersId || '',
+                '사용자역할': item.userRoleKorNm || '',
+                '사용자이름': item.userName || '',
+                '사용자전화번호': item.userPhone || '',
+                '가맹점명': item.storeName || '',
+                'CM현재잔액': item.userCmCurrent || 0,
+                'CMP현재잔액': item.userCmpCurrent || 0,
+                '현금현재잔액': item.userCashCurrent || 0
+              }));
+              allData = allData.concat(chunkExcelData);
+            }
+            console.log(`엑셀 다운로드 진행률: ${i + 1}/${totalChunks}`);
+          }
+          downloadExcel(allData, '회원자산현황_전체', '회원자산현황', true, toast);
+        }
+        setLoading(false);
       }
-    });
-
-    downloadSelectedExcel(excelData, selectedIndexes, '회원자산현황', '회원자산현황');
-  }
+    } catch (error) {
+      console.error('엑셀 다운로드 오류:', error);
+      toast.error('엑셀 다운로드 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  }, [selectedRows, allSelectedRows, toast]);
 
   // 지급 및 회수 핸들러
   const handlePaymentAndCollection = () => {
     if (selectedRows.size === 0) {
-      alert("지급 및 회수할 항목을 선택해주세요.");
+      toast.error("지급 및 회수할 항목을 선택해주세요.");
       return;
     }
     
@@ -263,13 +340,13 @@ const MemberAssetDetailsForm = () => {
     }
     
     if (!member) {
-      alert("선택된 회원 정보를 찾을 수 없습니다.");
+      toast.error("선택된 회원 정보를 찾을 수 없습니다.");
       return;
     }
     
     // 선택된 회원 수 표시
     if (selectedRows.size > 1) {
-      alert(`${selectedRows.size}명의 회원이 선택되었습니다. 대표 회원 정보로 모달이 열립니다.`);
+      toast.info(`${selectedRows.size}명의 회원이 선택되었습니다. 대표 회원 정보로 모달이 열립니다.`);
     }
     
     setSelectedMember(member);
@@ -285,69 +362,64 @@ const MemberAssetDetailsForm = () => {
   // 지급/회수 제출 핸들러
   const handlePaymentSubmit = async (paymentData) => {
     try {
-      // 선택된 모든 회원들의 정보를 배열로 수집
-      const selectedMembers = Array.from(selectedRows).map(selectedId => 
-        searchResults.find(row => row.id === selectedId)
-      ).filter(Boolean);
+      setLoading(true);
       
-      // 백엔드 API 요청 데이터 구성
-              const requestData = {
-          members: selectedMembers.map(member => ({
-            memberId: member.userIndex.toString(), // user_index를 문자열로 변환
-            currentCmHeld: member.cmHeld
-          })),
-          amount: paymentData.amount, // 이미 양수/음수로 구분되어 있음
-          reason: paymentData.reason
-        };
+      const selectedIndices = Array.from(selectedRows);
+      const selectedMembers = selectedIndices.map(index => searchResults[index]);
       
+      const isPayment = paymentData.type === 'cm-payment' || paymentData.type === 'cmp-payment';
       
+      const results = [];
+      let successCount = 0;
+      let failCount = 0;
       
-      // 백엔드 API 호출 (지급/회수 구분 없이 동일한 엔드포인트 사용)
-      const response = await ajgMemberAssetDetailsPayment(requestData);
-      
-      const result = response.data;
-      
-      if (result.success) {
-        // 처리 결과 알림
-        const totalCount = result.totalCount || selectedMembers.length;
-        const successCount = result.successCount || totalCount;
-        const failureCount = result.failureCount || 0;
-        const isPayment = paymentData.amount > 0;
-        
-        if (totalCount > 1) {
-          if (failureCount > 0) {
-            // 부분 실패 시 상세 정보 제공
-            const failedMembers = result.results?.filter(r => !r.success).map(r => r.memberId) || [];
-            alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리 결과:\n` +
-                  `전체: ${totalCount}명\n` +
-                  `성공: ${successCount}명\n` +
-                  `실패: ${failureCount}명\n` +
-                  `실패 회원: ${failedMembers.join(', ')}`);
+      for (const member of selectedMembers) {
+        try {
+          const response = await ajgMemberAssetDetailsPayment({
+            userIndex: member.userIndex,
+            amount: paymentData.paymentAmount,
+            reason: paymentData.reason,
+            type: paymentData.type
+          });
+          
+          if (response.data && response.data.success) {
+            results.push({ member, success: true, message: '성공' });
+            successCount++;
           } else {
-            alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
+            results.push({ member, success: false, message: response.data?.message || '실패' });
+            failCount++;
           }
-    } else {
-          alert(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
-    }
-    
-    // 처리 완료 후 데이터 새로고침
-      await loadInitialData();
-      } else {
-        // 전체 실패 시 상세 정보 제공
-        const totalCount = result.totalCount || selectedMembers.length;
-        const failureCount = result.failureCount || totalCount;
-        const failedMembers = result.results?.filter(r => !r.success).map(r => r.memberId) || [];
-        
-        alert(`처리 실패:\n` +
-              `전체: ${totalCount}명\n` +
-              `실패: ${failureCount}명\n` +
-              `실패 회원: ${failedMembers.join(', ')}\n` +
-              `실패 원인: ${result.message}`);
+        } catch (error) {
+          results.push({ member, success: false, message: error.message || '오류' });
+          failCount++;
+        }
       }
+      
+      setLoading(false);
+      
+      // 결과 표시
+      const totalCount = selectedMembers.length;
+      
+      if (successCount > 0 && failCount === 0) {
+        toast.success(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
+      } else if (successCount > 0 && failCount > 0) {
+        toast.warning(`${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
+      } else {
+        toast.error(`처리 실패:\n성공: ${successCount}명\n실패: ${failCount}명`);
+      }
+      
+      // 모달 닫기
+      handleModalClose();
+      
+      // 데이터 새로고침
+      handleSearch();
+      
     } catch (error) {
-      alert("처리 중 오류가 발생했습니다.");
+      console.error('Payment/Collection 처리 오류:', error);
+      toast.error("처리 중 오류가 발생했습니다.");
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="member-asset-details-container">

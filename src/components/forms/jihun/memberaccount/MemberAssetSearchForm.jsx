@@ -3,9 +3,11 @@ import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetS
 import {
   memberaccountSearch,
   memberaccountLookupRoles,
-  memberaccountLookupTransactionTypes
+  memberaccountLookupTransactionTypes,
+  excelDownloadMemberAccount
 } from "../../../../api/auth/JihunAuth.jsx"
-import { downloadSelectedExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
+import { downloadExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
+import { useToast } from "../../../../context/jungeun/ToastContext"
 import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
 
 /**
@@ -15,13 +17,9 @@ import "../../../../styles/jihun/memberaccount/MemberAssetSearchForm.css"
  * 1. 회원 자산 내역 검색
  * 2. 동적 검색 조건 지원
  * 3. 페이징 처리된 결과 표시
- * 
- * 단위 관련:
- * - 현재는 단위 선택 UI를 제공하지만 검색 시 null로 보내 범용성 확보
- * - 향후 확장성을 고려하여 다양한 단위 지원 가능
- * - 필요시 백엔드에서 단위별 필터링 로직 추가 가능
  */
 const MemberAssetSearchForm = () => {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     fromId: "",
     toId: "",
@@ -29,17 +27,16 @@ const MemberAssetSearchForm = () => {
     toDate: "",
     fromGrade: "",
     toGrade: "",
-    transactionType: "",
-    unit: ""
+    transactionType: ""
   })
 
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [allSelectedRows, setAllSelectedRows] = useState(new Map())
   const [options, setOptions] = useState({
     roles: [],
-    paymentTypes: [],
     transactionTypes: []
   })
   
@@ -48,19 +45,13 @@ const MemberAssetSearchForm = () => {
   const [pageSize, setPageSize] = useState(25)
   const [totalCount, setTotalCount] = useState(0)
 
-  // 이메일에서 ID 추출 함수 (성능 최적화)
+  // 이메일에서 ID 추출 함수
   const extractEmailId = useCallback((email) => {
     if (!email) return ""
     return email.split('@')[0] || ""
   }, [])
 
-
-  
-
-
-
-
-  // 폼 입력 변경 핸들러 (성능 최적화)
+  // 폼 입력 변경 핸들러
   const handleInputChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData((prev) => ({ ...prev, [name]: value }))
@@ -175,6 +166,7 @@ const MemberAssetSearchForm = () => {
   const handleSearch = useCallback(() => {
     setCurrentPage(0)
     setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
+    setAllSelectedRows(new Map()) // 전체 선택 맵도 초기화
     performSearch(0, pageSize, formData)
   }, [performSearch, pageSize, formData])
 
@@ -185,7 +177,22 @@ const MemberAssetSearchForm = () => {
     // Set으로 안전한 선택 처리
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
-  }, [])
+    
+    // 현재 페이지의 선택 항목을 전체 선택 맵에 저장
+    const pageKey = `page_${currentPage}`;
+    const newAllSelectedRows = new Map(allSelectedRows);
+    
+    if (safeSelection.size > 0) {
+      // 현재 페이지에서 선택된 행들의 데이터 저장
+      const selectedData = searchResults.filter((_, index) => safeSelection.has(index));
+      newAllSelectedRows.set(pageKey, selectedData);
+    } else {
+      // 선택이 해제되면 해당 페이지 데이터 삭제
+      newAllSelectedRows.delete(pageKey);
+    }
+    
+    setAllSelectedRows(newAllSelectedRows);
+  }, [currentPage, searchResults, allSelectedRows])
 
   // 페이지 변경 핸들러
   const handlePageChange = useCallback((newPage) => {
@@ -203,26 +210,95 @@ const MemberAssetSearchForm = () => {
   }, [performSearch, formData])
 
   // 엑셀 다운로드 핸들러
-  const handleExcelDownload = useCallback(() => {
-    // 데이터 변환 (순번 추가)
-    const excelData = searchResults.map((row, index) => ({
-      '순번': index + 1,
-      'FROM 등급': row.fromGrade || '',
-      'FROM ID': row.fromId || '',
-      'TO 등급': row.toGrade || '',
-      'TO ID': row.toId || '',
-      'TO 이름': row.toName || '',
-      '거래 유형': row.transactionType || '',
-      '금액': row.amount || 0,
-      '단위': row.unit || '',
-      '사용 금액': row.usedValue || 0,
-      '쿠폰 사용 금액': row.couponUsedValue || 0,
-      '사유': row.reason || '',
-      '발생일': row.occurredDate || ''
-    }));
-
-    downloadSelectedExcel(excelData, selectedRows, '회원자산내역', '회원자산내역');
-  }, [searchResults, selectedRows])
+  const handleExcelDownload = useCallback(async () => {
+    try {
+      const hasSelection = selectedRows.size > 0 || allSelectedRows.size > 0;
+      
+      if (hasSelection) {
+        let allSelectedData = [];
+        for (const [pageKey, pageData] of allSelectedRows) {
+          allSelectedData = allSelectedData.concat(pageData);
+        }
+        const excelData = allSelectedData.map((row, index) => ({
+          'No.': index + 1,
+          'FROM 등급': row.fromGrade || '',
+          'FROM ID': row.fromId || '',
+          'TO 등급': row.toGrade || '',
+          'TO ID': row.toId || '',
+          'TO 이름': row.toName || '',
+          '거래유형': row.transactionType || '',
+          '거래금액': row.amount || '0',
+          '단위': row.unit || '원',
+          '사용금액': row.usedValue || '0',
+          '쿠폰사용금액': row.couponUsedValue || '0',
+          '거래사유': row.reason || '',
+          '발생일': row.occurredDate || ''
+        }));
+        downloadExcel(excelData, '회원자산내역_선택항목', '회원자산내역', true, toast);
+      } else {
+        setLoading(true);
+        
+        // 🆕 새로운 엑셀 다운로드 API 사용
+        const countResponse = await excelDownloadMemberAccount(0, 1);
+        const totalCount = countResponse.data.totalElements || 0;
+        
+        if (totalCount <= 50000) {
+          const response = await excelDownloadMemberAccount(0, totalCount);
+          const data = response.data;
+          if (data.content) {
+            const allData = data.content.map((item, index) => ({
+              'No.': index + 1,
+              '거래번호': item.userCmLogIndex || '',
+              '거래금액': item.userCmLogValue || 0,
+              '거래사유': item.userCmLogReason || '',
+              '거래시간': item.userCmLogCreateTime || '',
+              '쿠폰금액': item.userCouponValue || 0,
+              '요청자이메일': item.eventTriggerUserEmail || '',
+              '요청자역할': item.eventTriggerUserRole || '',
+              '상대방이메일': item.eventPartyUserEmail || '',
+              '상대방이름': item.eventPartyUserName || '',
+              '상대방역할': item.eventPartyUserRole || '',
+              '거래유형': item.transactionTypeName || ''
+            }));
+            downloadExcel(allData, '회원자산내역_전체', '회원자산내역', true, toast);
+          }
+        } else {
+          const chunkSize = 50000;
+          const totalChunks = Math.ceil(totalCount / chunkSize);
+          let allData = [];
+          
+          for (let i = 0; i < totalChunks; i++) {
+            const chunkResponse = await excelDownloadMemberAccount(i, chunkSize);
+            const chunkData = chunkResponse.data;
+            if (chunkData.content) {
+              const chunkExcelData = chunkData.content.map((item, index) => ({
+                'No.': allData.length + index + 1,
+                '거래번호': item.userCmLogIndex || '',
+                '거래금액': item.userCmLogValue || 0,
+                '거래사유': item.userCmLogReason || '',
+                '거래시간': item.userCmLogCreateTime || '',
+                '쿠폰금액': item.userCouponValue || 0,
+                '요청자이메일': item.eventTriggerUserEmail || '',
+                '요청자역할': item.eventTriggerUserRole || '',
+                '상대방이메일': item.eventPartyUserEmail || '',
+                '상대방이름': item.eventPartyUserName || '',
+                '상대방역할': item.eventPartyUserRole || '',
+                '거래유형': item.transactionTypeName || ''
+              }));
+              allData = allData.concat(chunkExcelData);
+            }
+            console.log(`엑셀 다운로드 진행률: ${i + 1}/${totalChunks}`);
+          }
+          downloadExcel(allData, '회원자산내역_전체', '회원자산내역', true, toast);
+        }
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('엑셀 다운로드 오류:', error);
+      toast.error('엑셀 다운로드 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  }, [selectedRows, allSelectedRows, formData, extractEmailId, toast]);
 
   // 오늘 날짜 구하기 (yyyy-mm-dd) - 성능 최적화
   const today = useMemo(() => new Date().toISOString().split('T')[0], [])
@@ -238,7 +314,6 @@ const MemberAssetSearchForm = () => {
         ])
         setOptions({
           roles: rolesRes.data || [],
-          paymentTypes: [],
           transactionTypes: transactionTypesRes.data || []
         })
         
@@ -393,21 +468,6 @@ const MemberAssetSearchForm = () => {
                 ))}
               </select>
             </div>
-            {/*
-            <div className="member-asset-search-field">
-              <label className="member-asset-search-label">단위</label>
-              <select
-                className="member-asset-search-select"
-                name="unit"
-                value={formData.unit}
-                onChange={handleInputChange}
-              >
-                {unitOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
-            </div>
-            */}
           </div>
         </div>
       </div>
