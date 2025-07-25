@@ -35,6 +35,7 @@ yarn-error.log*
 /package-lock_BASE_205.json
 /package-lock_LOCAL_205.json
 /package-lock_REMOTE_205.json
+/package.json
 
 .env
 

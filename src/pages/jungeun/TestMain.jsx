@@ -1,4 +1,4 @@
-import { test } from "../../api/auth/JungeunAuth";
+import { alarmTest, test } from "../../api/auth/JungeunAuth";
 
 export default function TestMain(){
     const handleTestBackend = async (e) => {
@@ -12,11 +12,24 @@ export default function TestMain(){
           // 예: 토스트 띄우거나 화면에 오류 표시 가능
         }
       };
+
+    const handleMSAAlarm = async (e) => {
+        e.preventDefault();
+    
+        try {
+          const response = await alarmTest();
+          console.log("✅ 응답:", response);
+        } catch (error) {
+          console.error("API 요청 실패:", error.message || error);
+          // 예: 토스트 띄우거나 화면에 오류 표시 가능
+        }
+      };
     
       return (
         <div>
           <h1>관리자 로그인 후 이동하는 메인 페이지</h1>
           <button onClick={handleTestBackend}>테스트 백엔드 호출</button>
+          <button onClick={handleMSAAlarm}>테스트 ALARM 백엔드 호출</button>
         </div>
       );
     }
