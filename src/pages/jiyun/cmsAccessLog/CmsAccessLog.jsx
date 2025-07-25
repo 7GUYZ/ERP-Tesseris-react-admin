@@ -269,7 +269,7 @@ const CmsAccessLog = () => {
       headerAlign: 'center',
       renderCell: (params) => params.row.id + 1
     },
-    { field: "userId", headerName: "아이디", width: 120, minWidth: 120, flex: 0, align: 'center', headerAlign: 'center' },
+    { field: "userId", headerName: "아이디", width: 300, minWidth: 300, flex: 0, align: 'center', headerAlign: 'center' },
     { field: "userName", headerName: "이름", width: 100, minWidth: 100, flex: 0, align: 'center', headerAlign: 'center' },
     { 
       field: "cmsAccessUserValue", 
