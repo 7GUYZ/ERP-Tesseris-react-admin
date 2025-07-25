@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Grid, TextField, Select, MenuItem, Button, FormControl, Typography, Paper, Box } from "@mui/material"
+import { Grid, TextField, Select, MenuItem, FormControl, Typography, Paper, Box } from "@mui/material"
+import '../../../../styles/dabin/CouponSearchForm.css';
 
 const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsChange }) => {
   const [form, setForm] = useState({
@@ -27,29 +28,23 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
     }
   }
 
-  const toDateTime = (dateStr) => (dateStr ? `${dateStr}T00:00:00` : undefined)
+
 
   // handleSubmit과 Button 제거
 
   return (
     <Paper
       elevation={0}
-      style={{
-        backgroundColor: "#f8fafc",
-        padding: "12px",
-        borderRadius: "8px",
-        marginBottom: "24px",
-        border: "1px solid #e2e8f0",
-      }}
+      className="coupon-searchform-paper"
     >
       {/* form 태그와 onSubmit 제거 */}
       <Grid container direction="column" spacing={1}>
           {/* 1줄: 발행/지급 날짜 */}
           <Grid item>
-            <Grid container spacing={1} alignItems="center" wrap="nowrap">
+            <div className="coupon-searchform-row">
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2" sx={{ fontSize: 13 }}>발행 시작일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">발행 시작일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -58,7 +53,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -66,7 +61,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">발행 종료일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">발행 종료일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -75,7 +70,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -83,7 +78,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">지급 시작일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">지급 시작일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -92,7 +87,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -100,7 +95,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">지급 종료일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">지급 종료일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -109,13 +104,13 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
                 </Grid>
               </Grid>
-            </Grid>
+            </div>
           </Grid>
 
           {/* 2줄: 만기 날짜, 발행상태, 지급상태 */}
@@ -123,7 +118,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
             <Grid container spacing={1} alignItems="center" wrap="nowrap">
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">만기 시작일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">만기 시작일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -132,7 +127,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -140,7 +135,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">만기 종료일</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">만기 종료일</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       type="date"
@@ -149,7 +144,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       onChange={handleChange}
                       size="small"
                       margin="dense"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -157,7 +152,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">발행상태</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">발행상태</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <FormControl size="small" fullWidth sx={{ height: 32 }}>
                       <Select
@@ -182,7 +177,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">지급상태</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">지급상태</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <FormControl size="small" fullWidth sx={{ height: 32 }}>
                       <Select
@@ -213,7 +208,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
             <Grid container spacing={1} alignItems="center" wrap="nowrap">
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">발행자ID</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">발행자ID</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       name="issuanceUserId"
@@ -222,7 +217,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       size="small"
                       margin="dense"
                       placeholder="발행자ID"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -230,7 +225,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">지급자ID</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">지급자ID</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       name="providedUserId"
@@ -239,7 +234,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       size="small"
                       margin="dense"
                       placeholder="지급자ID"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -247,7 +242,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">쿠폰명</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">쿠폰명</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       name="couponName"
@@ -256,7 +251,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       size="small"
                       margin="dense"
                       placeholder="쿠폰명"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
@@ -264,7 +259,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               </Grid>
               <Grid item sx={{ flex: 1, minWidth: 0 }}>
                 <Grid container alignItems="center" spacing={1}>
-                  <Grid item><Typography variant="body2">쿠폰가격</Typography></Grid>
+                  <Grid item><Typography variant="body2" className="coupon-searchform-label">쿠폰가격</Typography></Grid>
                   <Grid item sx={{ flex: 1 }}>
                     <TextField
                       name="couponPrice"
@@ -274,7 +269,7 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
                       size="small"
                       margin="dense"
                       placeholder="쿠폰가격"
-                      InputProps={{ sx: { height: 32, padding: '0 8px' } }}
+                      InputProps={{ className: "coupon-searchform-input" }}
                       fullWidth
                     />
                   </Grid>
