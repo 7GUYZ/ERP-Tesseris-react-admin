@@ -85,3 +85,11 @@ export const permissionCheckApi = {
     });
   }
 }; 
+
+// 사업자 목록 API
+export const businessmanListApi = {
+  searchBusinessmanList: (searchData) => api.post('businessmanlist/search', searchData),
+  createBusinessman: (createData) => api.post('businessmanlist/create', createData),
+  updateBusinessman: (updateData) => api.put('businessmanlist/update', updateData),
+  deleteBusinessman: (deleteData) => api.delete('businessmanlist/delete', { data: deleteData })
+}; 
