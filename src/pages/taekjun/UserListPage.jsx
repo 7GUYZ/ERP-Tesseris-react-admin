@@ -59,8 +59,8 @@ const UserListPage = () => {
     { value: '', label: '등급을 선택하세요' },
     { value: '일반', label: '일반' },
     { value: '가맹점', label: '가맹점' },
-    { value: '사업자', label: '사업자' },
-    { value: '정회원', label: '정회원' }
+    { value: '사업자', label: '사업자' }
+   
   ];
 
   // 데이터 조회
