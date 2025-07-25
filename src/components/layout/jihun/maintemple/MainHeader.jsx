@@ -1,4 +1,3 @@
-import React from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../../../../api/auth/JungeunAuth";
 import useAuthStore from "../../../../store/jungeun/AuthStore";
