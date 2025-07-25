@@ -1,10 +1,12 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { logout } from "../../../../api/auth/JungeunAuth";
 import useAuthStore from "../../../../store/jungeun/AuthStore";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 
 const MainHeader = () => {
+    const navigate = useNavigate();
     const handleLogout = async (e) => {
         e.preventDefault()
 
@@ -15,7 +17,7 @@ const MainHeader = () => {
                 localStorage.removeItem("access-token");
                 localStorage.removeItem("user-info");
                 // 홈으로 이동
-                window.location.href = "/";
+                navigate("/");
             }
         } catch (error) {
             console.error("로그아웃 중 오류 발생:", error);

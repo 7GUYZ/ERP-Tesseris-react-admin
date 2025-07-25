@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { cmLimit, cmLimitSave } from "../../../api/auth/JungeunAuth"
 import "../../../styles/jungeun/monthlyCmLimit.css";
 import LoadingSpinner from "../../ui/jungeun/LoadingSpinner"
@@ -23,6 +24,7 @@ const MonthlyCmLimitForm = () => {
   const [modalType, setModalType] = useState("fetch");
   const [pwModalOpen, setPwModalOpen] = useState(false);
   const { showToast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getCmLimit = async () => {
@@ -84,7 +86,7 @@ const MonthlyCmLimitForm = () => {
           message={modalMessage}
           onConfirm={() => {
             if (modalType === "fetch") {
-              window.location.href = "/TestMain";
+              navigate("/TestMain");
             } else {
               setModalOpen(false);
               setTempValue(monthlyLimit);
