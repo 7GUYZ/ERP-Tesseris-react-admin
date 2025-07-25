@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
-import { useNavigate } from "react-router-dom";
 import ErrorMessage from "../../ui/jungeun/ErrorMessage.jsx"
 import { login } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
@@ -133,9 +133,9 @@ const LoginForm = () => {
   }
 
   return (
-    <form className="login-form" onSubmit={handleLogin}>
-      <h1 className="login-title">TESSERIS<br/><span style={{fontSize:18}}>소상공인 물물교환 결제시스템</span></h1>
-      <p className="login-subtitle">ADMIN LOGIN</p>
+    <form className="login-login-form" onSubmit={handleLogin}>
+      <h1 className="login-login-title">TESSERIS<br/><span style={{fontSize:18}}>소상공인 물물교환 결제시스템</span></h1>
+      <p className="login-login-subtitle">ADMIN LOGIN</p>
       <InputField
         type="text"
         placeholder="이메일을 입력하세요"
