@@ -406,7 +406,7 @@ const MainNavi = () => {
           {
             id: "alert",
             programIndex: 40,
-            label: "알림 내역 및 권한 관리",
+            label: "알림 내역 및 설정 관리",
             type: "link",
             href: "/alert",
           },

@@ -17,6 +17,15 @@ const notifications = [
   { id: 12, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
   { id: 13, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
   { id: 14, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
+  { id: 15, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 16, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 17, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 18, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 19, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 20, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 21, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 22, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
+  { id: 23, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
 ];
 
 // 알림 설정 목데이터 (배열, key/label/active)
@@ -113,27 +122,13 @@ export default function AlertPage() {
   };
 
   // Notification List Component
-  const NotificationList = ({ notifications, type }) => {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-    const displayNotifications =
-      type === "past"
-        ? notifications
-        : notifications.slice(
-            (currentPage - 1) * itemsPerPage,
-            currentPage * itemsPerPage
-          );
-    const totalPages =
-      type === "past" ? 1 : Math.ceil(notifications.length / itemsPerPage);
-    const handlePageChange = (page) => {
-      setCurrentPage(page);
-    };
+  const NotificationList = ({ notifications }) => {
     return (
       <div className="alert-list-container">
         <div className="alert-table-container">
           <table className="alert-notification-table">
             <tbody>
-              {displayNotifications.map((notification) => (
+              {notifications.map((notification) => (
                 <NotificationRow
                   key={notification.id}
                   notification={notification}
@@ -143,46 +138,6 @@ export default function AlertPage() {
             </tbody>
           </table>
         </div>
-        {type === "new" && totalPages > 1 && (
-          <div className="pagination">
-            <button
-              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-              disabled={currentPage === 1}
-              className="page-btn"
-            >
-              이전
-            </button>
-            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const page = i + 1;
-              return (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`page-btn ${
-                    currentPage === page ? "active-page" : ""
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-            <button
-              onClick={() =>
-                handlePageChange(Math.min(totalPages, currentPage + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="page-btn"
-            >
-              다음
-            </button>
-            <span className="page-info">
-              총 {notifications.length}개 중{" "}
-              {(currentPage - 1) * itemsPerPage + 1}-
-              {Math.min(currentPage * itemsPerPage, notifications.length)}개
-              표시
-            </span>
-          </div>
-        )}
       </div>
     );
   };
@@ -204,7 +159,7 @@ export default function AlertPage() {
             <h2 className="alert-section-title">새로운 알림</h2>
             <span className="count">{newCount}</span>
           </div>
-          <NotificationList notifications={newNotifications} type="new" />
+          <NotificationList notifications={newNotifications} />
         </div>
         {/* 지난 알림 섹션 */}
         <div className="notification-section">
@@ -212,7 +167,7 @@ export default function AlertPage() {
             <h2 className="alert-section-title">지난 알림</h2>
             <span className="count">{pastCount}</span>
           </div>
-          <NotificationList notifications={pastNotifications} type="past" />
+          <NotificationList notifications={pastNotifications} />
         </div>
       </div>
     </div>
