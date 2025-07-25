@@ -83,7 +83,6 @@ const CmsAccessLog = () => {
       console.error("초기 데이터 로딩 중 오류:", error);
       setSearchResults([]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 관리자 타입 목록 로드 및 초기 데이터 로딩
@@ -108,7 +107,6 @@ const CmsAccessLog = () => {
       }
     };
     loadOptions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // 폼 입력 변경 핸들러 (성능 최적화)
@@ -158,7 +156,6 @@ const CmsAccessLog = () => {
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams, keys]);
 
   // 선택된 행들 처리 핸들러

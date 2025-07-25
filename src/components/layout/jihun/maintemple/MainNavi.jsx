@@ -148,8 +148,8 @@ const MainNavi = () => {
             id: "admin-list",
             programIndex: 10,
             label: "CMS 관리자 명단",
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭"),
+            type: "link",
+            href: "/adminlist",
           },
           { 
             id: "authority-management", 
