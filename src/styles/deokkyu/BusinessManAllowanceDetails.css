@@ -1,0 +1,23 @@
+/* ============================================================================
+   BusinessManAllowanceDetails 전용 스타일
+   ============================================================================ */
+
+/* 필터 카드 */
+.businessman-filter-card {
+  background: white;
+  border-radius: 12px;
+  overflow: visible;
+  border: 1px solid lightgray;
+  margin-bottom: 24px;
+}
+
+/* 데이터 그리드 컨테이너 */
+.businessman-data-grid {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid lightgray;
+  min-height: 500px;
+  height: 70vh;
+  padding: 12px;
+} 

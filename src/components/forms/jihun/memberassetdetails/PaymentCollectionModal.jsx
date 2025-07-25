@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import "../../../../styles/jihun/memberassetdetails/PaymentCollectionModal.css"
+import { useToast } from '../../../../context/jungeun/ToastContext';
 
 /**
  * 지급 및 회수 모달 컴포넌트
@@ -15,7 +16,8 @@ const PaymentCollectionModal = ({
   selectedMember, 
   onPaymentSubmit 
 }) => {
-  const [activeTab, setActiveTab] = useState('cm-payment') // cm-payment, cm-collection, cmp-payment, cmp-collection
+  const { showToast } = useToast();
+  const [activeTab, setActiveTab] = useState('cm-payment')
   const [formData, setFormData] = useState({
     paymentAmount: "",
     reason: ""
@@ -43,12 +45,12 @@ const PaymentCollectionModal = ({
     
     // 필수 필드 검증
     if (!formData.paymentAmount || formData.paymentAmount.trim() === '') {
-      alert("금액을 입력해주세요.")
+      showToast("error", "금액을 입력해주세요.");
       return
     }
     
     if (!formData.reason || formData.reason.trim() === '') {
-      alert("사유를 입력해주세요.")
+      showToast("error", "사유를 입력해주세요.");
       return
     }
 
@@ -59,23 +61,22 @@ const PaymentCollectionModal = ({
         parseInt(formData.paymentAmount);
 
       const paymentData = {
-        memberId: selectedMember.usersId, // users.id (UUID) 사용
+        memberId: selectedMember.usersId,
         amount: amount,
         reason: formData.reason,
         currentCmHeld: parseInt(selectedMember.cmHeld.toString().replace(/,/g, '')) || 0
       }
-
-
       
-      // 부모 컴포넌트로 데이터 전달 (다중 처리)
-        if (onPaymentSubmit) {
-          onPaymentSubmit(paymentData)
-        }
-        
-        // 모달 닫기
-        onClose()
+      // 부모 컴포넌트로 데이터 전달
+      if (onPaymentSubmit) {
+        onPaymentSubmit(paymentData)
+      }
+      
+      // 모달 닫기
+      onClose()
     } catch (error) {
-      alert("처리 중 오류가 발생했습니다.")
+      console.error('Payment/Collection 처리 오류:', error);
+      showToast("error", "처리 중 오류가 발생했습니다.");
     }
   }
 

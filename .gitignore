@@ -30,13 +30,17 @@ yarn-error.log*
 # /src/api/Auth.jsx
 # /src/api/Http.jsx
 
-/package-lock.json
-/package-lock_BACKUP_205.json
-/package-lock_BASE_205.json
-/package-lock_LOCAL_205.json
-/package-lock_REMOTE_205.json
-
+# /package-lock.json
+# /package-lock_BACKUP_205.json
+# /package-lock_BASE_205.json
+# /package-lock_LOCAL_205.json
+# /package-lock_REMOTE_205.json
+# /package.json
 .env
+
+# package-lock.json
+# package.json
+
 
 
 

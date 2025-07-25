@@ -98,6 +98,7 @@ export default function NoticeUpdate() {
             value={form.noticeTitle}
             onChange={handleChange}
             required
+            className="notice-input"
           />
         </div>
 
@@ -112,6 +113,7 @@ export default function NoticeUpdate() {
             value={form.noticeDesc}
             onChange={handleChange}
             required
+            className="notice-textarea"
           />
         </div>
 

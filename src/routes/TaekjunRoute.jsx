@@ -3,6 +3,7 @@ import ProtectedRoute from "./ProtectedRoute";
 import PermissionManagement from '../pages/taekjun/PermissionManagement.jsx';
 import AdminMyPage from '../pages/taekjun/AdminMyPage.jsx';
 import Dashboard from '../pages/taekjun/Dashboard.jsx';
+import UserListPage from '../pages/taekjun/UserListPage.jsx';
 
 function TaekjunRoute() {
     return (
@@ -11,7 +12,8 @@ function TaekjunRoute() {
             <Route element={<ProtectedRoute />}>
                 <Route path='/PermissionManagement' element={<PermissionManagement/>} />
                 <Route path='/adminmypage' element={<AdminMyPage/>} />
-                <Route path='/dashboard' element={<Dashboard/>} />
+                <Route path='/main' element={<Dashboard/>} />
+                <Route path='/user-admin-list' element={<UserListPage/>} />
             </Route>
         </>
     );
