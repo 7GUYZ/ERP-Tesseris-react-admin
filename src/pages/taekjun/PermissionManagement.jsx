@@ -16,8 +16,6 @@ const PermissionManagement = () => {
   const [authorities, setAuthorities] = useState([]);
   const [loading, setLoading] = useState(false);
 
-
-
   // 데이터 조회
   useEffect(() => {
     fetchAdminTypes();
@@ -221,14 +219,14 @@ const PermissionManagement = () => {
 
   return (
     <div className="permission-management">
-      <h1 className="page-title">권한 관리</h1>
-      <div className="divider"></div>
+      <h1 className="permission-page-title">권한 관리</h1>
+      <div className="permission-divider"></div>
 
       {/* 필터 섹션 */}
-      <div className="filter-section">
-        <div className="filter-grid">
+      <div className="permission-filter-section">
+        <div className="permission-filter-grid">
           {/* 관리자 타입 */}
-          <div className="filter-item">
+          <div className="permission-filter-item">
             <label htmlFor="adminType">관리자 타입</label>
             <select
               id="adminType"
@@ -253,16 +251,19 @@ const PermissionManagement = () => {
 
       {/* 권한 목록 */}
       {selectedAdminType && (
-        <div className="authority-section">
-          <div className="section-header">
+        <div className="permission-authority-section">
+          <div className="permission-section-header">
             <h2>권한 목록</h2>
-            <button className="btn btn-primary" onClick={handleAddAuthority}>
+            <button 
+              className="permission-btn permission-btn-primary" 
+              onClick={handleAddAuthority}
+            >
               권한 추가
             </button>
           </div>
 
-          <div className="table-container">
-            <table className="authority-table">
+          <div className="permission-table-container">
+            <table className="permission-authority-table">
               <thead>
                 <tr>
                   <th>프로그램명</th>
@@ -287,13 +288,13 @@ const PermissionManagement = () => {
                     </td>
                     <td className="text-center">
                       <button 
-                        className="btn btn-small btn-secondary"
+                        className="permission-btn permission-btn-small permission-btn-secondary"
                         onClick={() => handleEditAuthority(authority)}
                       >
                         수정
                       </button>
                       <button 
-                        className="btn btn-small btn-danger"                
+                        className="permission-btn permission-btn-small permission-btn-danger"                
                         onClick={() => handleDeleteAuthority(authority.authorityTypeIndex)}
                       >
                         삭제
@@ -309,11 +310,11 @@ const PermissionManagement = () => {
 
       {/* 권한 추가/수정 다이얼로그 */}
       {openDialog && (
-        <div className="modal-overlay">
-          <div className="modal">
-            <div className="modal-header">
+        <div className="permission-modal-overlay">
+          <div className="permission-modal">
+            <div className="permission-modal-header">
               <h3>{editingAuthority ? '권한 수정' : '권한 추가'}</h3>
-              <button className="modal-close" onClick={() => setOpenDialog(false)}>×</button>
+              <button className="permission-modal-close" onClick={() => setOpenDialog(false)}>×</button>
             </div>
             <div className="permission-admin-contents">
               <AuthorityForm
@@ -339,9 +340,9 @@ const PermissionManagement = () => {
 
       {/* 알림 */}
       {snackbar.open && (
-        <div className={`snackbar snackbar-${snackbar.severity}`}>
+        <div className={`permission-snackbar permission-snackbar-${snackbar.severity}`}>
           <span>{snackbar.message}</span>
-          <button className="snackbar-close" onClick={closeSnackbar}>×</button>
+          <button className="permission-snackbar-close" onClick={closeSnackbar}>×</button>
         </div>
       )}
     </div>

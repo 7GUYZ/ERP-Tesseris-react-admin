@@ -1,4 +1,4 @@
-.member-asset-search-container {
+.update-log-container {
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
@@ -6,8 +6,7 @@
   min-height: 100vh;
 }
 
-/* 페이지 헤더 */
-.member-asset-search-page-header {
+.update-log-page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -15,7 +14,7 @@
   padding: 0;
 }
 
-.member-asset-search-page-title {
+.update-log-page-title {
   margin: 0;
   font-size: 28px;
   font-weight: 700;
@@ -23,13 +22,13 @@
   line-height: 1.2;
 }
 
-.member-asset-search-actions {
+.update-log-actions {
   display: flex;
   gap: 12px;
   align-items: center;
 }
 
-.member-asset-search-btn {
+.update-log-btn {
   padding: 10px 20px;
   border: none;
   border-radius: 8px;
@@ -43,29 +42,29 @@
   justify-content: center;
 }
 
-.member-asset-search-btn.excel {
+.update-log-btn.excel {
   background-color: #10b981;
   color: white;
 }
 
-.member-asset-search-btn.excel:hover:not(:disabled) {
+.update-log-btn.excel:hover:not(:disabled) {
   background-color: #059669;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.member-asset-search-btn.search {
+.update-log-btn.search {
   background-color: #3b82f6;
   color: white;
 }
 
-.member-asset-search-btn.search:hover:not(:disabled) {
+.update-log-btn.search:hover:not(:disabled) {
   background-color: #2563eb;
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
-.member-asset-search-btn:disabled {
+.update-log-btn:disabled {
   background-color: #9ca3af;
   cursor: not-allowed;
   transform: none;
@@ -73,7 +72,7 @@
 }
 
 /* 검색 조건 섹션 */
-.member-asset-search-section {
+.update-log-section {
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -81,12 +80,12 @@
   overflow: hidden;
 }
 
-.member-asset-search-toggle-header {
+.update-log-toggle-header {
   padding: 0;
   border-bottom: 1px solid #e2e8f0;
 }
 
-.member-asset-search-toggle-btn {
+.update-log-toggle-btn {
   width: 100%;
   padding: 16px 20px;
   background: none;
@@ -101,64 +100,64 @@
   transition: background-color 0.2s ease;
 }
 
-.member-asset-search-toggle-btn:hover {
+.update-log-toggle-btn:hover {
   background-color: #f8fafc;
 }
 
-.member-asset-search-toggle-text {
+.update-log-toggle-text {
   color: #1e293b;
   font-weight: 600;
 }
 
-.member-asset-search-toggle-icon {
+.update-log-toggle-icon {
   font-size: 12px;
   transition: transform 0.3s ease;
   color: #64748b;
 }
 
-.member-asset-search-toggle-icon.open {
+.update-log-toggle-icon.open {
   transform: rotate(180deg);
 }
 
-.member-asset-search-toggle-icon.closed {
+.update-log-toggle-icon.closed {
   transform: rotate(0deg);
 }
 
 /* 검색 폼 */
-.member-asset-search-form {
+.update-log-form {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease, padding 0.3s ease;
   padding: 0 20px;
 }
 
-.member-asset-search-form.open {
+.update-log-form.open {
   max-height: 500px;
   padding: 20px;
 }
 
-.member-asset-search-form.closed {
+.update-log-form.closed {
   max-height: 0;
   padding: 0 20px;
 }
 
-.member-asset-search-row {
+.update-log-row {
   display: flex;
   gap: 20px;
   margin-bottom: 20px;
 }
 
-.member-asset-search-row:last-child {
+.update-log-row:last-child {
   margin-bottom: 0;
 }
 
-.member-asset-search-field {
+.update-log-field {
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
-.member-asset-search-label {
+.update-log-label {
   margin-bottom: 8px;
   font-size: 14px;
   font-weight: 600;
@@ -166,8 +165,8 @@
   line-height: 1.4;
 }
 
-.member-asset-search-input,
-.member-asset-search-select {
+.update-log-input,
+.update-log-select {
   padding: 10px 12px;
   border: 1px solid #d1d5db;
   border-radius: 8px;
@@ -178,19 +177,19 @@
   min-height: 40px;
 }
 
-.member-asset-search-input:focus,
-.member-asset-search-select:focus {
+.update-log-input:focus,
+.update-log-select:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.member-asset-search-input::placeholder {
+.update-log-input::placeholder {
   color: #9ca3af;
 }
 
 /* 에러 메시지 */
-.member-asset-search-error {
+.update-log-error {
   background-color: #fef2f2;
   border: 1px solid #fecaca;
   color: #dc2626;
@@ -202,7 +201,7 @@
 }
 
 /* 테이블 컨테이너 */
-.member-asset-search-table-container {
+.update-log-table-container {
   background-color: white;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -211,7 +210,7 @@
 }
 
 /* 결과 없음 메시지 */
-.member-asset-search-no-results {
+.update-log-no-results {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -225,61 +224,61 @@
 
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
-  .member-asset-search-container {
+  .update-log-container {
     padding: 16px;
   }
   
-  .member-asset-search-page-title {
+  .update-log-page-title {
     font-size: 24px;
   }
   
-  .member-asset-search-row {
+  .update-log-row {
     flex-direction: column;
     gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
-  .member-asset-search-page-header {
+  .update-log-page-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
   }
   
-  .member-asset-search-actions {
+  .update-log-actions {
     width: 100%;
     justify-content: flex-end;
   }
   
-  .member-asset-search-btn {
+  .update-log-btn {
     flex: 1;
     max-width: 120px;
   }
   
-  .member-asset-search-form {
+  .update-log-form {
     padding: 16px;
   }
   
-  .member-asset-search-form.open {
+  .update-log-form.open {
     padding: 16px;
   }
 }
 
 @media (max-width: 480px) {
-  .member-asset-search-container {
+  .update-log-container {
     padding: 12px;
   }
   
-  .member-asset-search-page-title {
+  .update-log-page-title {
     font-size: 20px;
   }
   
-  .member-asset-search-actions {
+  .update-log-actions {
     flex-direction: column;
     gap: 8px;
   }
   
-  .member-asset-search-btn {
+  .update-log-btn {
     width: 100%;
     max-width: none;
   }

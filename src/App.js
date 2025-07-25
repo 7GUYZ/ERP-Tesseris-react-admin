@@ -20,11 +20,13 @@ function App() {
 
   return (
     <ToastProvider>
-      <Routes>
-        <Route path='/' element={<LoginPage />} />
-        {/* 공통 레이아웃과 Route들이 들어있는 AppRoutes(헤더, 내비 포함) */}
-        <Route path='/*' element={<AppRoutes />} />
-      </Routes>
+      <BrowserRouter basename={process.env.REACT_APP_BASENAME || "/"}> 
+          <Routes>
+            <Route path='/' element={<LoginPage />} />
+            {/* 공통 레이아웃과 Route들이 들어있는 AppRoutes(헤더, 내비 포함) */}
+            <Route path='/*' element={<AppRoutes />} />
+          </Routes>
+      </BrowserRouter>
     </ToastProvider>
   );
 }

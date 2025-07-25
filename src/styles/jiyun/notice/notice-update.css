@@ -40,8 +40,8 @@
   font-weight: bold;
 }
 
-input[type="text"],
-textarea {
+.notice-form .notice-input,
+.notice-form .notice-textarea {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
@@ -55,9 +55,12 @@ textarea {
   padding: 6px 25px 6px 0px;
   background-color: #f0f0f0;
 }
+.notice-form .notice-textarea {
+  height: 300px;
+}
 
-input:focus,
-textarea:focus {
+.notice-form .notice-input:focus,
+.notice-form .notice-textarea:focus {
   outline: none;
   border-color: #387ddd;
   background-color: #fff;
