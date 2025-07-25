@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -13,6 +13,7 @@ import {
   Flag,
   Info,
   FileChartColumn,
+  Bell,
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
@@ -73,8 +74,6 @@ const MainNavi = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-
-
   }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -118,8 +117,7 @@ const MainNavi = () => {
         label: "마이페이지",
         icon: UserCircleIcon,
         type: "link",
-        href: "/adminmypage"
-
+        href: "/adminmypage",
       },
       {
         id: "company-management",
@@ -132,8 +130,8 @@ const MainNavi = () => {
             id: "coupon-management",
             programIndex: 13,
             label: "쿠폰 관리",
-            type: "list", // list: 리스트 박스 (링크 없음)
-            action: () => console.log("본인 리스트 클릭"), // 클릭 시 실행할 함수
+            type: "link", // list: 리스트 박스 (링크 없음)
+            href: "/coupon",
           },
           {
             id: "brokerage-fee-setting",
@@ -149,12 +147,12 @@ const MainNavi = () => {
             type: "list",
             action: () => console.log("본인 승인 현황 클릭"),
           },
-          { 
-            id: "authority-management", 
-            programIndex: 8, 
-            label: "권한 관리", 
+          {
+            id: "authority-management",
+            programIndex: 8,
+            label: "권한 관리",
             type: "link",
-            href: "/PermissionManagement"
+            href: "/PermissionManagement",
           },
           {
             id: "monthly-cm-limit",
@@ -176,7 +174,7 @@ const MainNavi = () => {
             id: "member-list",
             programIndex: 14,
             label: "회원 리스트",
-            type: "link", 
+            type: "link",
             href: "/user-admin-list",
           },
           {
@@ -189,16 +187,16 @@ const MainNavi = () => {
           {
             id: "member-assets-status",
             programIndex: 11,
-            label: "회원 자산 현황", 
+            label: "회원 자산 현황",
             type: "link",
-            href: "/memberassetdetails"
+            href: "/memberassetdetails",
           },
           {
             id: "member-referral-status",
             programIndex: 31,
             label: "회원 추천 현황",
-            type: "list",
-            action: () => console.log("본인 출금 현황 클릭"),
+            type: "link",
+            href: "/member-recommendation"
           },
           {
             id: "member-payment-history",
@@ -212,7 +210,7 @@ const MainNavi = () => {
             programIndex: 35,
             label: "수당 지급 내역",
             type: "link",
-            href: "/",
+            href: "/commission-payment",
           },
         ],
       },
@@ -227,8 +225,8 @@ const MainNavi = () => {
             id: "business-performance-overview",
             programIndex: 18,
             label: "영업 실적 현황",
-            type: "list",
-            action: () => console.log("영업 실적 현황"),
+            type: "link",
+            href: "/sales-performance",
           },
           {
             id: "business-organization-chart",
@@ -247,9 +245,9 @@ const MainNavi = () => {
           {
             id: "business-commission-history",
             programIndex: 37,
-            label: "사업자 수당 내역", 
+            label: "사업자 수당 내역",
             type: "link",
-            href: "/businessallowance"
+            href: "/businessallowance",
           },
           {
             id: "commission-setting",
@@ -301,8 +299,8 @@ const MainNavi = () => {
             id: "advertisement-management",
             programIndex: 24,
             label: "광고 관리",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/advertisement/list",
           },
           {
             id: "banner-management",
@@ -395,6 +393,22 @@ const MainNavi = () => {
             label: "채팅방 관리",
             type: "list",
             action: () => console.log("채팅방 관리 클릭"),
+          },
+        ],
+      },
+      {
+        id: "alert",
+        menuIndex: 11,
+        label: "알림 관리",
+        icon: Bell,
+        type: "expand",
+        submenu: [
+          {
+            id: "alert",
+            programIndex: 41,
+            label: "알림 내역 및 설정 관리",
+            type: "link",
+            href: "/alert",
           },
         ],
       },

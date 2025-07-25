@@ -1,0 +1,247 @@
+.ad-create-page {
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* Breadcrumb */
+.ad-create-breadcrumb {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.ad-create-breadcrumb li {
+    margin-right: 10px;
+}
+
+.ad-create-breadcrumb li:not(:last-child)::after {
+    content: '>';
+    margin-left: 10px;
+    color: #999;
+}
+
+/* Header */
+.ad-create-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ad-create-mb10 {
+    margin-bottom: 10px;
+}
+
+.ad-create-font-20 {
+    font-size: 20px;
+}
+
+.ad-create-bold {
+    font-weight: bold;
+}
+
+/* Button */
+.ad-create-cancel-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.ad-create-cancel-button:hover {
+    background-color: #545b62;
+}
+
+.ad-create-register-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.ad-create-register-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.ad-create-register-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Card */
+.ad-create-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.ad-create-card-inner {
+    padding: 30px;
+}
+
+/* Form Grid */
+.ad-create-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.ad-create-form-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label */
+.ad-create-label {
+    margin-bottom: 15px;
+}
+
+.ad-create-label span {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ad-create-label-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.ad-create-label-horizontal .ad-create-text {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Input */
+.ad-create-input-box {
+    margin-bottom: 15px;
+}
+
+.ad-create-link-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.ad-create-link-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* File Upload */
+.ad-create-banner-btn label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.ad-create-banner-btn label:hover {
+    background-color: #0056b3;
+}
+
+.ad-create-file-input {
+    display: none;
+}
+
+/* Image Guide */
+.ad-create-img-guide {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-top: 10px;
+}
+
+.ad-create-color-red {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Image Preview */
+.ad-create-image-preview {
+    width: 100%;
+    min-height: 200px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ad-create-image-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.ad-create-upload-area {
+    text-align: center;
+    color: #666;
+}
+
+.ad-create-upload-area p {
+    margin: 5px 0;
+}
+
+.ad-create-upload-guide {
+    font-size: 12px;
+    color: #999;
+}
+
+/* Button Container */
+.ad-create-button-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 30px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ad-create-page {
+        padding: 10px;
+    }
+    
+    .ad-create-card-inner {
+        padding: 20px;
+    }
+    
+    .ad-create-form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .ad-create-label-horizontal {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ad-create-banner-btn {
+        margin-top: 10px;
+    }
+} 
