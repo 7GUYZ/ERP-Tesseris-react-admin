@@ -1,47 +1,47 @@
-.notice-page {
+.notice-update-page {
   padding: 40px;
   background-color: #f4f6fa;
   min-height: 100vh;
   font-family: "Noto Sans KR", sans-serif;
 }
 
-.breadcrumb {
+.notice-update-breadcrumb {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 8px;
 }
 
-.notice-page h1 {
+.notice-update-page h1 {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 24px;
 }
 
-.notice-form {
+.notice-update-form {
   background-color: #ffffff;
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.form-group {
+.notice-update-form-group {
   margin-bottom: 20px;
 }
 
-.form-group label {
+.notice-update-form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: 6px;
   color: #111827;
 }
 
-.required {
+.notice-update-required {
   color: red;
   font-weight: bold;
 }
 
-.notice-form .notice-input,
-.notice-form .notice-textarea {
+.notice-update-form .notice-update-input,
+.notice-update-form .notice-update-textarea {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
@@ -51,29 +51,31 @@
   font-family: "Noto Sans KR", sans-serif;
   background-color: #f9fafb;
 }
+
 .commission-input[readonly] {
   padding: 6px 25px 6px 0px;
   background-color: #f0f0f0;
 }
-.notice-form .notice-textarea {
+
+.notice-update-form .notice-update-textarea {
   height: 300px;
 }
 
-.notice-form .notice-input:focus,
-.notice-form .notice-textarea:focus {
+.notice-update-form .notice-update-input:focus,
+.notice-update-form .notice-update-textarea:focus {
   outline: none;
   border-color: #387ddd;
   background-color: #fff;
 }
 
-.form-actions {
+.notice-update-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
 }
 
-.btn {
+.notice-update-btn {
   padding: 10px 18px;
   font-size: 14px;
   border-radius: 6px;
@@ -83,30 +85,30 @@
   width: 75px;
 }
 
-.btn-primary {
+.notice-update-btn-primary {
   background-color: #387ddd;
   color: white;
 }
 
-.btn-primary:hover {
+.notice-update-btn-primary:hover {
   background-color: #2f6dbf;
 }
 
-.btn-danger {
+.notice-update-btn-danger {
   background-color: #ef4444;
   color: white;
 }
 
-.btn-danger:hover {
+.notice-update-btn-danger:hover {
   background-color: #dc2626;
 }
 
-.btn-secondary {
+.notice-update-btn-secondary {
   background-color: #f9fafb;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
-.btn-secondary:hover {
+.notice-update-btn-secondary:hover {
   background-color: #f3f4f6;
 }
