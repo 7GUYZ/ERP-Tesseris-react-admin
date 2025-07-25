@@ -3,6 +3,7 @@
 import { useState } from "react"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
+import { useNavigate } from "react-router-dom";
 import ErrorMessage from "../../ui/jungeun/ErrorMessage.jsx"
 import { login } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
@@ -16,6 +17,7 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({})
   const { showToast } = useToast()
   const zu_login = useAuthStore((state) => state.zu_login)
+  const navigate = useNavigate();
 
   // 이메일 유효성 검사
   const validateEmail = (email) => {
@@ -110,7 +112,7 @@ const LoginForm = () => {
         showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
 
         if(userInfo.user_role_index === "4"){
-          setTimeout(() => window.location.href = "/main", 1500);
+          setTimeout(() => navigate("/main"), 1500);
         } else {
           showToast("error", "허용되지 않은 사용자입니다");
         }
