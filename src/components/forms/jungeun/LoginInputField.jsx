@@ -15,7 +15,7 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
 
   const handleFocus = (e) => {
     Object.assign(e.target.style, focusStyles)
-    const icon = e.target.parentElement.querySelector(".input-icon")
+    const icon = e.target.parentElement.querySelector(".login-input-icon")
     if (icon) {
       icon.style.color = error ? "#ff6b6b" : "#3b7ddd"
     }
@@ -26,7 +26,7 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
     e.target.style.backgroundColor = error ? "rgba(255, 107, 107, 0.05)" : "#ffffff"
     e.target.style.boxShadow = "none"
     e.target.style.transform = "none"
-    const icon = e.target.parentElement.querySelector(".input-icon")
+    const icon = e.target.parentElement.querySelector(".login-input-icon")
     if (icon) {
       icon.style.color = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)"
     }
@@ -71,12 +71,12 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
   }
 
   return (
-    <div className={`input-field-container${error ? ' error' : ''}`}>
-      <div className={`input-icon${error ? ' error' : ''}`}>
+    <div className={`login-input-field-container${error ? ' error' : ''}`}>
+      <div className={`login-input-icon${error ? ' error' : ''}`}>
         {getIcon()}
       </div>
       <input
-        className={`input-field${error ? ' error' : ''}`}
+        className={`login-input-field${error ? ' error' : ''}`}
         type={inputType}
         placeholder={placeholder}
         value={value}

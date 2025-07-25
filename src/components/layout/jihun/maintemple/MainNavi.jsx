@@ -582,8 +582,8 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {/* 개발/테스트용: 권한 체크 임시 우회 */}
-        {menuConfig.items.map(renderMenuItem)}
+      {/* 권한에 따라 메뉴 필터링 */}
+      {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
       </nav>
     </div>
   );
