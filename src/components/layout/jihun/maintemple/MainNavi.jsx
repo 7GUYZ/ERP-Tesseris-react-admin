@@ -130,8 +130,8 @@ const MainNavi = () => {
             id: "coupon-management",
             programIndex: 13,
             label: "쿠폰 관리",
-            type: "list", // list: 리스트 박스 (링크 없음)
-            action: () => console.log("본인 리스트 클릭"), // 클릭 시 실행할 함수
+            type: "link", // list: 리스트 박스 (링크 없음)
+            href: "/coupon",
           },
           {
             id: "brokerage-fee-setting",
@@ -195,8 +195,8 @@ const MainNavi = () => {
             id: "member-referral-status",
             programIndex: 31,
             label: "회원 추천 현황",
-            type: "list",
-            action: () => console.log("본인 출금 현황 클릭"),
+            type: "link",
+            href: "/member-recommendation"
           },
           {
             id: "member-payment-history",
@@ -210,7 +210,7 @@ const MainNavi = () => {
             programIndex: 35,
             label: "수당 지급 내역",
             type: "link",
-            href: "/",
+            href: "/commission-payment",
           },
         ],
       },
@@ -225,8 +225,8 @@ const MainNavi = () => {
             id: "business-performance-overview",
             programIndex: 18,
             label: "영업 실적 현황",
-            type: "list",
-            action: () => console.log("영업 실적 현황"),
+            type: "link",
+            href: "/sales-performance",
           },
           {
             id: "business-organization-chart",
@@ -299,8 +299,8 @@ const MainNavi = () => {
             id: "advertisement-management",
             programIndex: 24,
             label: "광고 관리",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/advertisement/list",
           },
           {
             id: "banner-management",

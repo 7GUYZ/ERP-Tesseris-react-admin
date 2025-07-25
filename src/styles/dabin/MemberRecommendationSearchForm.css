@@ -1,0 +1,25 @@
+.member-recommendation-searchform-paper {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.member-recommendation-searchform-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.member-recommendation-searchform-label {
+  font-size: 13px;
+  color: #222;
+  min-width: 60px;
+}
+
+.member-recommendation-searchform-input {
+  height: 32px;
+  padding: 0 8px;
+} 
