@@ -405,7 +405,7 @@ const MainNavi = () => {
         submenu: [
           {
             id: "alert",
-            programIndex: 40,
+            programIndex: 41,
             label: "알림 내역 및 설정 관리",
             type: "link",
             href: "/alert",
