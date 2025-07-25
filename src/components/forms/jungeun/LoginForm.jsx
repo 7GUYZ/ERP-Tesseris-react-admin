@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
 import ErrorMessage from "../../ui/jungeun/ErrorMessage.jsx"
@@ -16,6 +17,7 @@ const LoginForm = () => {
   const [errors, setErrors] = useState({})
   const { showToast } = useToast()
   const zu_login = useAuthStore((state) => state.zu_login)
+  const navigate = useNavigate();
 
   // 이메일 유효성 검사
   const validateEmail = (email) => {
@@ -110,7 +112,7 @@ const LoginForm = () => {
         showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
 
         if(userInfo.user_role_index === "4"){
-          setTimeout(() => window.location.href = "/main", 1500);
+          setTimeout(() => navigate("/main"), 1500);
         } else {
           showToast("error", "허용되지 않은 사용자입니다");
         }
@@ -131,9 +133,9 @@ const LoginForm = () => {
   }
 
   return (
-    <form className="login-form" onSubmit={handleLogin}>
-      <h1 className="login-title">TESSERIS<br/><span style={{fontSize:18}}>소상공인 물물교환 결제시스템</span></h1>
-      <p className="login-subtitle">ADMIN LOGIN</p>
+    <form className="login-login-form" onSubmit={handleLogin}>
+      <h1 className="login-login-title">TESSERIS<br/><span style={{fontSize:18}}>소상공인 물물교환 결제시스템</span></h1>
+      <p className="login-login-subtitle">ADMIN LOGIN</p>
       <InputField
         type="text"
         placeholder="이메일을 입력하세요"

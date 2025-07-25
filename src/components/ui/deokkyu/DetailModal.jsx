@@ -10,6 +10,25 @@ function DetailModal({
   customContent = null,
   customFooter = null,
 }) {
+  // ESC 키로 모달 닫기
+  React.useEffect(() => {
+    if (!isOpen) return; // isOpen이 false면 아무것도 하지 않음
+
+    const handleEscKey = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    document.body.style.overflow = "hidden"; // 배경 스크롤 방지
+
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   // 오버레이 클릭 시 모달 닫기
@@ -18,25 +37,6 @@ function DetailModal({
       onClose();
     }
   };
-
-  // ESC 키로 모달 닫기
-  React.useEffect(() => {
-    const handleEscKey = (e) => {
-      if (e.key === "Escape") {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener("keydown", handleEscKey);
-      document.body.style.overflow = "hidden"; // 배경 스크롤 방지
-    }
-
-    return () => {
-      document.removeEventListener("keydown", handleEscKey);
-      document.body.style.overflow = "unset";
-    };
-  }, [isOpen, onClose]);
 
   // 필드 값 포맷팅
   const formatValue = (value, type = "text") => {
