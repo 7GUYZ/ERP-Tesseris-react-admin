@@ -1,7 +1,7 @@
 import React from "react";
-import { Bell } from "lucide-react";
 import { logout } from "../../../../api/auth/JungeunAuth";
 import useAuthStore from "../../../../store/jungeun/AuthStore";
+import Popover from "../../../../components/feature/jiyun/popover/Popover";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 
 const MainHeader = () => {
@@ -28,10 +28,7 @@ const MainHeader = () => {
                 {/* <h1 className="dashboard-title"></h1> */}
             </div>
             <div className="header-right">
-                <button className="notification-button">
-                    <Bell size={20} />
-                    <span className="notification-dot"></span>
-                </button>
+                <Popover />
                 <span className="logout-text" onClick={handleLogout}>
                     Logout
                 </span>

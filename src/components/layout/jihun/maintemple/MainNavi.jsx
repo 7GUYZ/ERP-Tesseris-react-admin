@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -13,6 +13,7 @@ import {
   Flag,
   Info,
   FileChartColumn,
+  Bell,
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
@@ -73,8 +74,6 @@ const MainNavi = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-
-
   }, [showToast]);
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -118,8 +117,7 @@ const MainNavi = () => {
         label: "마이페이지",
         icon: UserCircleIcon,
         type: "link",
-        href: "/adminmypage"
-
+        href: "/adminmypage",
       },
       {
         id: "company-management",
@@ -149,12 +147,12 @@ const MainNavi = () => {
             type: "list",
             action: () => console.log("본인 승인 현황 클릭"),
           },
-          { 
-            id: "authority-management", 
-            programIndex: 8, 
-            label: "권한 관리", 
+          {
+            id: "authority-management",
+            programIndex: 8,
+            label: "권한 관리",
             type: "link",
-            href: "/PermissionManagement"
+            href: "/PermissionManagement",
           },
           {
             id: "monthly-cm-limit",
@@ -176,7 +174,7 @@ const MainNavi = () => {
             id: "member-list",
             programIndex: 14,
             label: "회원 리스트",
-            type: "link", 
+            type: "link",
             href: "/user-admin-list",
           },
           {
@@ -189,9 +187,9 @@ const MainNavi = () => {
           {
             id: "member-assets-status",
             programIndex: 11,
-            label: "회원 자산 현황", 
+            label: "회원 자산 현황",
             type: "link",
-            href: "/memberassetdetails"
+            href: "/memberassetdetails",
           },
           {
             id: "member-referral-status",
@@ -247,9 +245,9 @@ const MainNavi = () => {
           {
             id: "business-commission-history",
             programIndex: 37,
-            label: "사업자 수당 내역", 
+            label: "사업자 수당 내역",
             type: "link",
-            href: "/businessallowance"
+            href: "/businessallowance",
           },
           {
             id: "commission-setting",
@@ -395,6 +393,22 @@ const MainNavi = () => {
             label: "채팅방 관리",
             type: "list",
             action: () => console.log("채팅방 관리 클릭"),
+          },
+        ],
+      },
+      {
+        id: "alert",
+        menuIndex: 11,
+        label: "알림 관리",
+        icon: Bell,
+        type: "expand",
+        submenu: [
+          {
+            id: "alert",
+            programIndex: 40,
+            label: "알림 내역 및 권한 관리",
+            type: "link",
+            href: "/alert",
           },
         ],
       },
