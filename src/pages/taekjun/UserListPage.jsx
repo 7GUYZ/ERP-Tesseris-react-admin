@@ -182,14 +182,50 @@ const UserListPage = () => {
     }
   };
 
-  // 엑셀 다운로드
-  const handleExcelDownload = () => {
-    // 엑셀 다운로드 로직 구현
-    alert('엑셀 다운로드 기능은 추후 구현 예정입니다.');
+  // CSV 다운로드
+  const handleExcelDownload = async () => {
+    try {
+      setLoading(true);
+      console.log('CSV 다운로드 시작...');
+      
+      // 현재 검색 필터를 사용하여 CSV 다운로드 요청
+      const response = await userListApi.downloadUserList(searchFilters);
+      
+      // Blob 생성 및 다운로드
+      const blob = new Blob([response.data], { 
+        type: 'text/csv; charset=utf-8' 
+      });
+      
+      // 파일명 생성 (현재 날짜 포함)
+      const now = new Date();
+      const dateStr = now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0');
+      const fileName = `회원목록_${dateStr}.csv`;
+      
+      // 다운로드 링크 생성 및 클릭
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('CSV 다운로드 완료');
+      alert('CSV 파일이 성공적으로 다운로드되었습니다.');
+    } catch (err) {
+      console.error('CSV 다운로드 실패:', err);
+      alert('CSV 다운로드에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 회원 수정
   const handleEditUser = (user) => {
+    console.log('수정할 회원 데이터:', user);
     setEditingUser(user);
     setEditForm({
       name: user.name || '',
@@ -201,6 +237,11 @@ const UserListPage = () => {
       bankName: user.bankName || '',
       bankNumber: user.bankNumber || '',
       bankHolder: user.bankHolder || ''
+    });
+    console.log('설정된 editForm:', {
+      gender: user.gender,
+      address: user.address,
+      detailAddress: user.detailAddress
     });
     setShowEditModal(true);
   };
@@ -340,7 +381,7 @@ const UserListPage = () => {
       <div className="user-list-page-header">
         <h1 className="user-list-page-title">회원 리스트</h1>
         <div className="user-list-header-actions">
-          <button className="user-list-action-btn" onClick={handleExcelDownload}>
+          <button className="user-list-action-btn user-list-excel-btn" onClick={handleExcelDownload}>
             엑셀
           </button>
           <button className="user-list-action-btn" onClick={handleSearch}>
@@ -460,7 +501,7 @@ const UserListPage = () => {
           <table className="user-list-table">
             <tbody>
               {filteredList.map((user, index) => (
-                <tr key={user.userIndex}>
+                <tr key={`${user.userIndex}-${index}`}>
                   <td className="user-list-checkbox-col">
                     <input
                       type="checkbox"
@@ -562,9 +603,9 @@ const UserListPage = () => {
                     <label>휴대폰 번호</label>
                     <input
                       type="text"
+                      placeholder="휴대폰 번호를 입력하세요"
                       value={editForm.phone}
-                      disabled
-                      className="user-list-readonly-input"
+                      onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
                     />
                   </div>
                   <div className="user-list-form-item">
@@ -586,7 +627,7 @@ const UserListPage = () => {
                 <h4 className="user-list-section-title">주소</h4>
                 <div className="user-list-form-grid">
                   <div className="user-list-form-item user-list-address-search">
-                    <label>주소</label>
+                    <label>전체주소</label>
                     <div className="user-list-address-input-group">
                       <input
                         type="text"

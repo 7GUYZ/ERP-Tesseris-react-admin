@@ -43,6 +43,15 @@
   position: relative;
 }
 
+.businessman-list-action-btn-excel {
+  background: #10B981;
+}
+
+.businessman-list-action-btn-excel:hover {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
 .businessman-list-action-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 125, 221, 0.3);
@@ -196,8 +205,12 @@
 .businessman-list-table th:nth-child(3), .businessman-list-table td:nth-child(3) { 
   width: 150px; 
   max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 } /* 이메일 */
-.businessman-list-table th:nth-child(4), .businessman-list-table td:nth-child(4) { width: 100px; max-width: 100px; } /* 이름 */
+.businessman-list-table th:nth-child(4), .businessman-list-table td:nth-child(4) { 
+  width: 120px; max-width: 120px; 
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 이름 */
 .businessman-list-table th:nth-child(5), .businessman-list-table td:nth-child(5) { width: 120px; max-width: 120px; } /* 휴대폰 */
 .businessman-list-table th:nth-child(6), .businessman-list-table td:nth-child(6) { width: 100px; max-width: 100px; }  /* 사업자 등급 */
 .businessman-list-table th:nth-child(7), .businessman-list-table td:nth-child(7) { width: 80px; max-width: 80px; } /* 배포 상태 */
@@ -208,7 +221,12 @@
 .businessman-list-table th:nth-child(12), .businessman-list-table td:nth-child(12) { 
   width: 150px; 
   max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 } /* 상사 이메일 */
+.businessman-list-table th:nth-child(13), .businessman-list-table td:nth-child(13) { 
+  width: 120px; max-width: 120px; 
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 상사 이름 */
 
 .businessman-list-table th {
   background: #F8F9FA;
@@ -327,6 +345,20 @@
   padding: 24px;
   position: relative;
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+.businessman-list-boss-modal {
+  background: #fff;
+  border-radius: 16px;
+  min-width: 500px;
+  max-width: 600px;
+  width: 90vw;
+  box-shadow: 0 8px 32px rgba(34,46,60,0.16);
+  padding: 24px;
+  position: relative;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 @media (max-width: 1200px) {
@@ -480,6 +512,108 @@
 
 .businessman-list-address-search {
   grid-column: 1 / -1;
+}
+
+/* 상사 선택 관련 스타일 */
+.businessman-list-boss-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.businessman-list-boss-input-group input {
+  flex: 1;
+}
+
+.businessman-list-boss-input-group .businessman-list-btn {
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.businessman-list-boss-search {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.businessman-list-boss-search input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  background: white;
+}
+
+.businessman-list-boss-search input:focus {
+  outline: none;
+  border-color: #3B7DDD;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.businessman-list-boss-search input::placeholder {
+  color: #9CA3AF;
+}
+
+.businessman-list-boss-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #FAFBFC;
+}
+
+.businessman-list-boss-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background: white;
+}
+
+.businessman-list-boss-item:hover {
+  background-color: #F0F9FF;
+  border-left: 3px solid #3B7DDD;
+}
+
+.businessman-list-boss-item:last-child {
+  border-bottom: none;
+}
+
+.businessman-list-boss-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.businessman-list-boss-email {
+  font-weight: 600;
+  color: #222E3C;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.businessman-list-boss-name {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.businessman-list-boss-grade {
+  color: #6B7280;
+  font-size: 12px;
+  background: #F3F4F6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.businessman-list-no-data {
+  padding: 24px;
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 14px;
 }
 
 .businessman-list-btn {

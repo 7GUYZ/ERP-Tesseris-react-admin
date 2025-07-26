@@ -241,8 +241,8 @@ const MainNavi = () => {
             id: "business-member-list",
             programIndex: 17,
             label: "사업자 회원 리스트",
-            type: "list",
-            action: () => console.log("사업자 리스트 클릭"),
+            type: "link",
+            href: "/businessman-admin-list"
           },
           {
             id: "business-commission-history",
