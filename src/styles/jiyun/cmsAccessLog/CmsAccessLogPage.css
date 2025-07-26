@@ -277,4 +277,12 @@
     height: 40px;
     font-size: 14px;
   }
-} 
+} s-accesslog-form.open {
+    padding: 16px;
+  }
+  
+  .cms-accesslog-input,
+  .cms-accesslog-select {
+    height: 40px;
+    font-size: 14px;
+  }

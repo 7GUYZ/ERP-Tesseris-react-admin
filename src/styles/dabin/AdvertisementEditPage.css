@@ -1,0 +1,282 @@
+.ad-edit-page {
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* Breadcrumb */
+.ad-edit-breadcrumb {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.ad-edit-breadcrumb li {
+    margin-right: 10px;
+}
+
+.ad-edit-breadcrumb li:not(:last-child)::after {
+    content: '>';
+    margin-left: 10px;
+    color: #999;
+}
+
+/* Header */
+.ad-edit-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ad-edit-mb10 {
+    margin-bottom: 10px;
+}
+
+.ad-edit-font-20 {
+    font-size: 20px;
+}
+
+.ad-edit-bold {
+    font-weight: bold;
+}
+
+/* Button */
+.ad-edit-cancel-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.ad-edit-cancel-button:hover {
+    background-color: #545b62;
+}
+
+.ad-edit-delete-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.ad-edit-delete-button:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.ad-edit-delete-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.ad-edit-edit-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.ad-edit-edit-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.ad-edit-edit-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Card */
+.ad-edit-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.ad-edit-card-inner {
+    padding: 30px;
+}
+
+/* Form Grid */
+.ad-edit-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.ad-edit-form-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label */
+.ad-edit-label {
+    margin-bottom: 15px;
+}
+
+.ad-edit-label span {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.ad-edit-label-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.ad-edit-label-horizontal .ad-edit-text {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Input */
+.ad-edit-input-box {
+    margin-bottom: 15px;
+}
+
+.ad-edit-link-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.ad-edit-link-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* File Upload */
+.ad-edit-banner-btn label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.ad-edit-banner-btn label:hover {
+    background-color: #0056b3;
+}
+
+.ad-edit-file-input {
+    display: none;
+}
+
+/* Image Guide */
+.ad-edit-img-guide {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-top: 10px;
+}
+
+.ad-edit-color-red {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Image Preview */
+.ad-edit-image-preview {
+    width: 100%;
+    min-height: 200px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.ad-edit-image-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.ad-edit-upload-area {
+    text-align: center;
+    color: #666;
+}
+
+.ad-edit-upload-area p {
+    margin: 5px 0;
+}
+
+.ad-edit-upload-guide {
+    font-size: 12px;
+    color: #999;
+}
+
+/* Loading */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Button Group */
+.ad-edit-button-group {
+    margin-top: 32px;
+    text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ad-edit-page {
+        padding: 10px;
+    }
+    
+    .ad-edit-card-inner {
+        padding: 20px;
+    }
+    
+    .ad-edit-form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .ad-edit-label-horizontal {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .ad-edit-banner-btn {
+        margin-top: 10px;
+    }
+    
+    .ad-edit-cancel-button,
+    .ad-edit-delete-button,
+    .ad-edit-edit-button {
+        margin-bottom: 5px;
+        width: 100%;
+    }
+} 

@@ -37,7 +37,7 @@ export default function NoticeList() {
 
   if (loading)
     return (
-      <div className="notice-page">
+      <div className="notice-list-page">
         <h1>공지사항 목록</h1>
         <p>로딩 중...</p>
       </div>
@@ -51,19 +51,19 @@ export default function NoticeList() {
   );
 
   return (
-    <div className="notice-page">
-      <div className="breadcrumb">고객센터 관리 &gt; 공지사항 관리</div>
+    <div className="notice-list-page">
+      <div className="notice-list-breadcrumb">고객센터 관리 &gt; 공지사항 관리</div>
       <h1>공지사항 목록</h1>
-      <div className="top-bar">
+      <div className="notice-list-top-bar">
         <button
-          className="btn-n btn-primary"
+          className="notice-list-btn-n notice-list-btn-primary"
           onClick={() => navigate("/notice/write")}
         >
           공지사항 등록
         </button>
       </div>
-      <div className="notice-table-wrapper">
-        <table className="notice-table">
+      <div className="notice-list-table-wrapper">
+        <table className="notice-list-table">
           <thead>
             <tr>
               <th>#</th>
@@ -78,7 +78,7 @@ export default function NoticeList() {
                 <td>{idx + 1}</td>
                 <td>
                   <span
-                    className="notice-link"
+                    className="notice-list-link"
                     onClick={() =>
                       navigate(`/notice/update/${notice.noticeIndex}`)
                     }
@@ -86,7 +86,7 @@ export default function NoticeList() {
                     {notice.noticeTitle}
                   </span>
                 </td>
-                <td>{notice.userId}</td>
+                <td>{notice.userEmail}</td>
                 <td>{formatDate(notice.noticeCreateTime)}</td>
               </tr>
             ))}
