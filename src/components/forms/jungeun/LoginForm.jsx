@@ -9,8 +9,13 @@ import { login, menuAuthority } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
 import useAuthStore from "../../../store/jungeun/AuthStore"
 import "../../../styles/jungeun/login.css"
+import SockJS from 'sockjs-client';
+import { Client as StompClient } from '@stomp/stompjs';
+import { useWebSocket } from "../../../context/jungeun/WebSocketContext.jsx"
 
 const LoginForm = () => {
+  
+  const { connectWebSocket } = useWebSocket();
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -92,41 +97,47 @@ const LoginForm = () => {
 
       // 백엔드 응답에 맞춰서 처리
       if (response.data && response.data.resultCode === 200) {
-        // 토큰 저장
-        const accessToken = response.headers['authorization'];
-
         // response.data.data = user-info 변수에 저장
         const userInfo = response.data.data
 
-        if (accessToken) {
-          // localStorage에 토큰 저장
-          localStorage.setItem("access-token", accessToken)
-          // localStorage에 user-info 저장 - 백엔드에서 응답 본문에 포함된 데이터 저장
-          localStorage.setItem("user-info", JSON.stringify(response.data.data))
-        }
+        if (userInfo.user_role_index === "4") {
+          // 토큰 저장
+          const accessToken = response.headers['authorization'];
 
-        // 권한 조회 및 캐싱
-        try {
-          const adminTypeIndex = userInfo.admin_type_index;
-          if (adminTypeIndex) {
-            const authorityResponse = await menuAuthority(adminTypeIndex);
-            if (authorityResponse.data.resultCode === 200) {
-              localStorage.setItem("user-authority", JSON.stringify(authorityResponse.data.data));
-              console.log("권한 조회 성공:", authorityResponse.data.data);
-            }
+          if (accessToken) {
+            // localStorage에 토큰 저장
+            localStorage.setItem("access-token", accessToken)
+            // localStorage에 user-info 저장 - 백엔드에서 응답 본문에 포함된 데이터 저장
+            localStorage.setItem("user-info", JSON.stringify(response.data.data))
           }
-        } catch (authorityError) {
-          console.error("권한 조회 실패:", authorityError);
-          // 권한 조회 실패해도 로그인은 진행
-        }
 
-        // Zustand 상태 업데이트
-        zu_login()
+          // 권한 조회 및 캐싱
+          try {
+            const adminTypeIndex = userInfo.admin_type_index;
+            if (adminTypeIndex) {
+              const authorityResponse = await menuAuthority(adminTypeIndex);
+              if (authorityResponse.data.resultCode === 200) {
+                localStorage.setItem("user-authority", JSON.stringify(authorityResponse.data.data));
+                console.log("권한 조회 성공:", authorityResponse.data.data);
+              }
+            }
+          } catch (authorityError) {
+            console.error("권한 조회 실패:", authorityError);
+            // 권한 조회 실패해도 로그인은 진행
+          }
 
-        // 성공 토스트 메시지
-        showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
+          // WebSocket 연결 (Context 사용)
+          connectWebSocket(accessToken, userInfo.user_index, (notification) => {
+            console.log('알림 수신:', notification);
+            showToast("info", notification.message);
+          });
 
-        if(userInfo.user_role_index === "4"){
+          // Zustand 상태 업데이트
+          zu_login()
+
+          // 성공 토스트 메시지
+          showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
+
           setTimeout(() => navigate("/main"), 1500);
         } else {
           showToast("error", "허용되지 않은 사용자입니다");
@@ -149,7 +160,7 @@ const LoginForm = () => {
 
   return (
     <form className="login-login-form" onSubmit={handleLogin}>
-      <h1 className="login-login-title">TESSERIS<br/><span style={{fontSize:18}}>소상공인 물물교환 결제시스템</span></h1>
+      <h1 className="login-login-title">TESSERIS<br /><span style={{ fontSize: 18 }}>소상공인 물물교환 결제시스템</span></h1>
       <p className="login-login-subtitle">ADMIN LOGIN</p>
       <InputField
         type="text"
