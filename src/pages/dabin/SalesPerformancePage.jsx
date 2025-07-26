@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
-import AdminLayout from "../../components/layout/dabin/AdminLayout";
-import SalesPerformanceSearchForm from "../../components/feature/dabin/sales/SalesPerformanceSearchForm";
-import SalesPerformanceDataGrid from "../../components/feature/dabin/sales/SalesPerformanceDataGrid";
-import SalesPerformanceExcelDownloadButton from "../../components/feature/dabin/sales/SalesPerformanceExcelDownloadButton";
-import { getBusinessGradeList, getStoreRequestStatusList, searchSalesPerformance } from "../../api/Auth";
+import SalesPerformanceSearchForm from "../../components/forms/dabin/sales/SalesPerformanceSearchForm";
+import SalesPerformanceDataGrid from "../../components/forms/dabin/sales/SalesPerformanceDataGrid";
+import SalesPerformanceExcelDownloadButton from "../../components/forms/dabin/sales/SalesPerformanceExcelDownloadButton";
+import { getBusinessGradeList, getStoreRequestStatusList, searchSalesPerformance } from "../../api/auth/DabinAuth";
+import '../../styles/dabin/dabinPageLayout.css';
 
 const SalesPerformancePage = () => {
   const [searchParams, setSearchParams] = useState({})
@@ -69,52 +69,41 @@ const SalesPerformancePage = () => {
   }
 
   return (
-    <AdminLayout>
-      <Box
-        sx={{
-          maxWidth: 1200,
-          margin: '18px auto',
-          padding: 4,
-          background: '#fff',
-          borderRadius: 3,
-          boxShadow: 2,
-        }}
-      >
-        {/* 제목과 버튼들을 같은 줄에 배치 */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-          <Typography variant="h4" fontWeight={500} color="text.primary">
-            영업실적 조회
-          </Typography>
-          <Box display="flex" gap={2}>
-            <SalesPerformanceExcelDownloadButton data={salesData} />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                handleSearch(currentForm)
-              }}
-              sx={{ height: 40 }}
-            >
-              조회
-            </Button>
-          </Box>
+    <Box className="dabin-page-layout-container">
+      {/* 제목과 버튼들을 같은 줄에 배치 */}
+      <Box className="dabin-page-layout-titleRow">
+        <Typography variant="h4" className="dabin-page-layout-title">
+          영업실적 조회
+        </Typography>
+        <Box className="dabin-page-layout-buttonGroup">
+          <SalesPerformanceExcelDownloadButton data={salesData} />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              handleSearch(currentForm)
+            }}
+            sx={{ height: 40 }}
+          >
+            조회
+          </Button>
         </Box>
-        <SalesPerformanceSearchForm
-          onSearch={handleSearch}
-          businessGrades={businessGrades}
-          storeRequestStatuses={storeRequestStatuses}
-          onParamsChange={setCurrentForm}
-        />
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
-            <CircularProgress />
-            <Typography sx={{ ml: 2 }}>로딩중...</Typography>
-          </Box>
-        ) : (
-          <SalesPerformanceDataGrid data={salesData} />
-        )}
       </Box>
-    </AdminLayout>
+      <SalesPerformanceSearchForm
+        onSearch={handleSearch}
+        businessGrades={businessGrades}
+        storeRequestStatuses={storeRequestStatuses}
+        onParamsChange={setCurrentForm}
+      />
+      {loading ? (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>로딩중...</Typography>
+        </Box>
+      ) : (
+        <SalesPerformanceDataGrid data={salesData} />
+      )}
+    </Box>
   )
 }
 
