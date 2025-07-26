@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AuthorityForm from '../../components/forms/taekjun/AuthorityForm.jsx';
 import { permissionApi } from '../../api/auth/TaekjunAuth';
+import { refreshAuthority } from '../../utils/authorityUtils';
 import '../../styles/taekjun/PermissionManagement.css';
 
 const PermissionManagement = () => {
@@ -119,6 +120,13 @@ const PermissionManagement = () => {
         setSnackbar({ open: true, message: '권한이 성공적으로 추가되었습니다.', severity: 'success' });
         setOpenDialog(false);
         fetchAuthorities(selectedAdminType);
+        
+        // 권한 갱신 (현재 사용자와 관련된 경우)
+        try {
+          await refreshAuthority();
+        } catch (error) {
+          console.error("권한 갱신 실패:", error);
+        }
       } else {
         setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
       }
@@ -140,6 +148,13 @@ const PermissionManagement = () => {
         setSnackbar({ open: true, message: '권한이 성공적으로 업데이트되었습니다.', severity: 'success' });
         setOpenDialog(false);
         fetchAuthorities(selectedAdminType);
+        
+        // 권한 갱신 (현재 사용자와 관련된 경우)
+        try {
+          await refreshAuthority();
+        } catch (error) {
+          console.error("권한 갱신 실패:", error);
+        }
       } else {
         setSnackbar({ open: true, message: '권한 업데이트에 실패했습니다.', severity: 'error' });
       }
@@ -160,6 +175,13 @@ const PermissionManagement = () => {
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 삭제되었습니다.', severity: 'success' });
         fetchAuthorities(selectedAdminType);
+        
+        // 권한 갱신 (현재 사용자와 관련된 경우)
+        try {
+          await refreshAuthority();
+        } catch (error) {
+          console.error("권한 갱신 실패:", error);
+        }
       } else {
         setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
       }

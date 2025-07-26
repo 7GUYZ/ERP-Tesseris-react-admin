@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
 import ErrorMessage from "../../ui/jungeun/ErrorMessage.jsx"
-import { login } from "../../../api/auth/JungeunAuth.jsx"
+import { login, menuAuthority } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
 import useAuthStore from "../../../store/jungeun/AuthStore"
 import "../../../styles/jungeun/login.css"
@@ -103,6 +103,21 @@ const LoginForm = () => {
           localStorage.setItem("access-token", accessToken)
           // localStorage에 user-info 저장 - 백엔드에서 응답 본문에 포함된 데이터 저장
           localStorage.setItem("user-info", JSON.stringify(response.data.data))
+        }
+
+        // 권한 조회 및 캐싱
+        try {
+          const adminTypeIndex = userInfo.admin_type_index;
+          if (adminTypeIndex) {
+            const authorityResponse = await menuAuthority(adminTypeIndex);
+            if (authorityResponse.data.resultCode === 200) {
+              localStorage.setItem("user-authority", JSON.stringify(authorityResponse.data.data));
+              console.log("권한 조회 성공:", authorityResponse.data.data);
+            }
+          }
+        } catch (authorityError) {
+          console.error("권한 조회 실패:", authorityError);
+          // 권한 조회 실패해도 로그인은 진행
         }
 
         // Zustand 상태 업데이트

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Bell } from "lucide-react";
 import { logout } from "../../../../api/auth/JungeunAuth";
 import useAuthStore from "../../../../store/jungeun/AuthStore";
+import { clearAuthorityCache } from "../../../../utils/authorityUtils";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 
 const MainHeader = () => {
@@ -12,15 +13,25 @@ const MainHeader = () => {
 
         try {
             const response = await logout();
-            if (response.data.status === "success") {
-                useAuthStore.getState().zu_logout();
-                localStorage.removeItem("access-token");
-                localStorage.removeItem("user-info");
-                // 홈으로 이동
-                navigate("/");
-            }
+            console.log("로그아웃 응답:", response);
+            
+            // 응답 상태와 관계없이 로컬 정리 수행
+            useAuthStore.getState().zu_logout();
+            localStorage.removeItem("access-token");
+            localStorage.removeItem("user-info");
+            // 권한 캐시 클리어
+            clearAuthorityCache();
+            // 홈으로 이동
+            navigate("/");
+            
         } catch (error) {
             console.error("로그아웃 중 오류 발생:", error);
+            // 에러가 발생해도 로컬 정리 수행
+            useAuthStore.getState().zu_logout();
+            localStorage.removeItem("access-token");
+            localStorage.removeItem("user-info");
+            clearAuthorityCache();
+            navigate("/");
         }
     }
 
