@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
@@ -14,6 +14,7 @@ const MemberRecommendationPage = () => {
   const [recommendations, setRecommendations] = useState([])
   const [userRoles, setUserRoles] = useState([])
   const [loading, setLoading] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -50,13 +51,19 @@ const MemberRecommendationPage = () => {
           id: `${row.suggestionUserId}-${row.recommendationUserId}-${idx}`,
         }))
         setRecommendations(dataWithId)
+        setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
         console.log("회원 추천현황 개수:", dataWithId.length)
       })
       .catch((error) => {
         console.error("Search Error:", error)
         setRecommendations([])
+        setSelectedRows(new Set())
       })
       .finally(() => setLoading(false))
+  }
+
+  const handleSelectionChange = (newSelection) => {
+    setSelectedRows(newSelection);
   }
 
   return (
@@ -67,7 +74,7 @@ const MemberRecommendationPage = () => {
           회원 추천현황
         </Typography>
         <Box className="dabin-page-layout-buttonGroup">
-          <MemberRecommendationExcelDownloadButton data={recommendations} />
+          <MemberRecommendationExcelDownloadButton data={recommendations} selectedRows={selectedRows} />
           <Button
             variant="contained"
             color="primary"
@@ -94,12 +101,15 @@ const MemberRecommendationPage = () => {
         onParamsChange={setCurrentForm}
       />
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+        <Box className="dabin-page-layout-loading">
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>로딩중...</Typography>
         </Box>
       ) : (
-        <MemberRecommendationDataGrid data={recommendations} />
+        <MemberRecommendationDataGrid 
+          data={recommendations} 
+          onSelectionChange={handleSelectionChange}
+        />
       )}
     </Box>
   )

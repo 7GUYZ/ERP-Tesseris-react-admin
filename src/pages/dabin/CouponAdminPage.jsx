@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
@@ -15,6 +15,7 @@ const CouponAdminPage = () => {
   const [issuanceStatus, setIssuanceStatus] = useState([])
   const [providedStatus, setProvidedStatus] = useState([])
   const [loading, setLoading] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -53,13 +54,19 @@ const CouponAdminPage = () => {
           id: row.couponIndex || `${row.couponName}-${row.couponIssuanceTime}-${idx}`,
         }))
         setCoupons(dataWithId)
+        setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
         console.log("쿠폰 개수:", dataWithId.length)
       })
       .catch((error) => {
         console.error("Search Error:", error)
         setCoupons([])
+        setSelectedRows(new Set())
       })
       .finally(() => setLoading(false))
+  }
+
+  const handleSelectionChange = (newSelection) => {
+    setSelectedRows(newSelection);
   }
 
   return (
@@ -70,7 +77,7 @@ const CouponAdminPage = () => {
           쿠폰 관리
         </Typography>
         <Box className="dabin-page-layout-buttonGroup">
-          <CouponExcelDownloadButton data={coupons} />
+          <CouponExcelDownloadButton data={coupons} selectedRows={selectedRows} />
           <Button
             variant="contained"
             color="primary"
@@ -94,21 +101,24 @@ const CouponAdminPage = () => {
           </Button>
         </Box>
       </Box>
-                <CouponSearchForm
-                  onSearch={handleSearch}
-                  issuanceStatus={issuanceStatus}
-                  providedStatus={providedStatus}
-                  onParamsChange={setCurrentForm}
-                />
-                {loading ? (
-                  <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
-                    <CircularProgress />
-                    <Typography sx={{ ml: 2 }}>로딩중...</Typography>
-                  </Box>
-                ) : (
-                  <CouponDataGrid data={coupons} />
-                )}
-              </Box>
+      <CouponSearchForm
+        onSearch={handleSearch}
+        issuanceStatus={issuanceStatus}
+        providedStatus={providedStatus}
+        onParamsChange={setCurrentForm}
+      />
+      {loading ? (
+        <Box className="dabin-page-layout-loading">
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>로딩중...</Typography>
+        </Box>
+      ) : (
+        <CouponDataGrid 
+          data={coupons} 
+          onSelectionChange={handleSelectionChange}
+        />
+      )}
+    </Box>
   )
 }
 

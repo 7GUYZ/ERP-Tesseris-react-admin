@@ -1,0 +1,282 @@
+.banner-edit-page {
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* Breadcrumb */
+.banner-edit-breadcrumb {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.banner-edit-breadcrumb li {
+    margin-right: 10px;
+}
+
+.banner-edit-breadcrumb li:not(:last-child)::after {
+    content: '>';
+    margin-left: 10px;
+    color: #999;
+}
+
+/* Header */
+.banner-edit-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.banner-edit-mb10 {
+    margin-bottom: 10px;
+}
+
+.banner-edit-font-20 {
+    font-size: 20px;
+}
+
+.banner-edit-bold {
+    font-weight: bold;
+}
+
+/* Button */
+.banner-edit-cancel-button {
+    background-color: #6c757d;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.banner-edit-cancel-button:hover {
+    background-color: #545b62;
+}
+
+.banner-edit-delete-button {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 10px;
+}
+
+.banner-edit-delete-button:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+.banner-edit-delete-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+.banner-edit-edit-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.banner-edit-edit-button:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.banner-edit-edit-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Card */
+.banner-edit-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.banner-edit-card-inner {
+    padding: 30px;
+}
+
+/* Form Grid */
+.banner-edit-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.banner-edit-form-item {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Label */
+.banner-edit-label {
+    margin-bottom: 15px;
+}
+
+.banner-edit-label span {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+
+.banner-edit-label-horizontal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.banner-edit-label-horizontal .banner-edit-text {
+    font-weight: 600;
+    color: #333;
+}
+
+/* Input */
+.banner-edit-input-box {
+    margin-bottom: 15px;
+}
+
+.banner-edit-link-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.banner-edit-link-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* File Upload */
+.banner-edit-banner-btn label {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-block;
+}
+
+.banner-edit-banner-btn label:hover {
+    background-color: #0056b3;
+}
+
+.banner-edit-file-input {
+    display: none;
+}
+
+/* Image Guide */
+.banner-edit-img-guide {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.4;
+    margin-top: 10px;
+}
+
+.banner-edit-color-red {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+/* Image Preview */
+.banner-edit-image-preview {
+    width: 100%;
+    min-height: 200px;
+    border: 2px dashed #ddd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.banner-edit-image-preview img {
+    width: 100%;
+    height: auto;
+    max-height: 300px;
+    object-fit: contain;
+}
+
+.banner-edit-upload-area {
+    text-align: center;
+    color: #666;
+}
+
+.banner-edit-upload-area p {
+    margin: 5px 0;
+}
+
+.banner-edit-upload-guide {
+    font-size: 12px;
+    color: #999;
+}
+
+/* Loading */
+.loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Button Group */
+.banner-edit-button-group {
+    margin-top: 32px;
+    text-align: right;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .banner-edit-page {
+        padding: 10px;
+    }
+    
+    .banner-edit-card-inner {
+        padding: 20px;
+    }
+    
+    .banner-edit-form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .banner-edit-label-horizontal {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .banner-edit-banner-btn {
+        margin-top: 10px;
+    }
+    
+    .banner-edit-cancel-button,
+    .banner-edit-delete-button,
+    .banner-edit-edit-button {
+        margin-bottom: 5px;
+        width: 100%;
+    }
+} 

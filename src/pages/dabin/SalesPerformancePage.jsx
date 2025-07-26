@@ -1,4 +1,4 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
@@ -15,6 +15,7 @@ const SalesPerformancePage = () => {
   const [businessGrades, setBusinessGrades] = useState([])
   const [storeRequestStatuses, setStoreRequestStatuses] = useState([])
   const [loading, setLoading] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -35,6 +36,7 @@ const SalesPerformancePage = () => {
           id: `${row.businessUserId || 'unknown'}-${row.storeUserId || 'unknown'}-${row.businessUserName || 'unknown'}-${idx}`,
         }))
         setSalesData(dataWithId)
+        setSelectedRows(new Set()) // 초기화
         console.log("영업실적 개수:", dataWithId.length)
       })
       .catch((error) => {
@@ -43,6 +45,7 @@ const SalesPerformancePage = () => {
         setBusinessGrades([])
         setStoreRequestStatuses([])
         setSalesData([])
+        setSelectedRows(new Set())
       })
       .finally(() => setLoading(false))
   }, [])
@@ -59,13 +62,19 @@ const SalesPerformancePage = () => {
           id: `${row.businessUserId || 'unknown'}-${row.storeUserId || 'unknown'}-${row.businessUserName || 'unknown'}-${idx}`,
         }))
         setSalesData(dataWithId)
+        setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
         console.log("영업실적 개수:", dataWithId.length)
       })
       .catch((error) => {
         console.error("Search Error:", error)
         setSalesData([])
+        setSelectedRows(new Set())
       })
       .finally(() => setLoading(false))
+  }
+
+  const handleSelectionChange = (newSelection) => {
+    setSelectedRows(newSelection);
   }
 
   return (
@@ -76,7 +85,7 @@ const SalesPerformancePage = () => {
           영업실적 조회
         </Typography>
         <Box className="dabin-page-layout-buttonGroup">
-          <SalesPerformanceExcelDownloadButton data={salesData} />
+          <SalesPerformanceExcelDownloadButton data={salesData} selectedRows={selectedRows} />
           <Button
             variant="contained"
             color="primary"
@@ -96,12 +105,15 @@ const SalesPerformancePage = () => {
         onParamsChange={setCurrentForm}
       />
       {loading ? (
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+        <Box className="dabin-page-layout-loading">
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>로딩중...</Typography>
         </Box>
       ) : (
-        <SalesPerformanceDataGrid data={salesData} />
+        <SalesPerformanceDataGrid 
+          data={salesData} 
+          onSelectionChange={handleSelectionChange}
+        />
       )}
     </Box>
   )

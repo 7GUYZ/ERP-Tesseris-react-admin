@@ -4,10 +4,24 @@ import * as XLSX from "xlsx"
 import { Button } from "@mui/material"
 import { Download } from "@mui/icons-material"
 
-const CommissionPaymentExcelDownloadButton = ({ data }) => {
+const CommissionPaymentExcelDownloadButton = ({ data, selectedRows }) => {
   const handleDownload = () => {
+    if (!data || data.length === 0) {
+      alert("다운로드할 데이터가 없습니다.")
+      return
+    }
+
+    let dataToExport = data;
+    let fileName = `수당지급내역_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+    // 선택된 항목이 있으면 선택된 항목만, 없으면 전체 다운로드
+    if (selectedRows && selectedRows.size > 0) {
+      dataToExport = data.filter(item => selectedRows.has(item.id));
+      fileName = `선택된_수당지급내역_${selectedRows.size}개_${new Date().toISOString().split('T')[0]}.xlsx`;
+    }
+
     // 데이터 가공
-    const processedData = data.map(item => ({
+    const processedData = dataToExport.map(item => ({
       '사용자 ID': item.userId || '',
       '사용자명': item.userName || '',
       '전화번호': item.userPhone || '',
@@ -30,7 +44,7 @@ const CommissionPaymentExcelDownloadButton = ({ data }) => {
     const ws = XLSX.utils.json_to_sheet(processedData)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "CommissionPayment")
-    XLSX.writeFile(wb, `수당지급내역_${new Date().toISOString().split('T')[0]}.xlsx`)
+    XLSX.writeFile(wb, fileName)
   }
 
   return (
@@ -38,6 +52,7 @@ const CommissionPaymentExcelDownloadButton = ({ data }) => {
       onClick={handleDownload}
       variant="contained"
       startIcon={<Download />}
+      data-button-type="excel"
       style={{
         backgroundColor: "#059669",
         color: "white",
@@ -45,7 +60,7 @@ const CommissionPaymentExcelDownloadButton = ({ data }) => {
         padding: "8px 16px",
       }}
     >
-      엑셀 다운로드
+      엑셀
     </Button>
   )
 }

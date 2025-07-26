@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAdvertisement, updateAdvertisement, deleteAdvertisement } from '../../api/auth/DabinAuth';
+import { getAdvertisement, updateAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
+import { api } from '../../api/Http';
 import '../../styles/dabin/AdvertisementEditPage.css';
 
 const AdvertisementEditPage = () => {
@@ -22,9 +23,17 @@ const AdvertisementEditPage = () => {
             const response = await getAdvertisement(advertisementIndex);
             const ad = response.data;
             
+            // presigned URL 가져오기
+            let presignedUrl = null;
+            try {
+                presignedUrl = await getPresignedUrl(ad.advertisementPhoto);
+            } catch {
+                // presigned URL 가져오기 실패 시 원본 URL 사용
+            }
+            
             setAdvertisementUrl(ad.advertisementUrl || 'https://');
             setCurrentImage(ad.advertisementPhoto);
-            setPreviewImage(ad.advertisementPhoto);
+            setPreviewImage(presignedUrl || ad.advertisementPhoto);
         } catch (error) {
             console.error('광고 조회 오류:', error);
             alert('광고 정보를 불러오는데 실패했습니다.');
@@ -69,7 +78,15 @@ const AdvertisementEditPage = () => {
             }
             formData.append('advertisementUrl', advertisementUrl);
 
-            const response = await updateAdvertisement(advertisementIndex, formData);
+            // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
+            const accessToken = localStorage.getItem("access-token");
+            const response = await api.put(`/dabin/advertisement/${advertisementIndex}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+                },
+                timeout: 30000 // 30초 타임아웃
+            });
 
             if (response.data.success) {
                 alert('광고를 수정하였습니다.');
