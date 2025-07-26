@@ -1,0 +1,60 @@
+.cp-searchform-paper {
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.cp-searchform-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cp-searchform-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+}
+
+.cp-searchform-input {
+  background-color: white;
+  border-radius: 4px;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root {
+  border-radius: 4px;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #059669;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #059669;
+}
+
+.cp-searchform-input .MuiInputLabel-root.Mui-focused {
+  color: #059669;
+}
+
+.cp-searchform-input .MuiSelect-select {
+  padding: 8px 12px;
+}
+
+.cp-searchform-input .MuiTextField-root {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .cp-searchform-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .cp-searchform-paper {
+    padding: 16px;
+  }
+} 

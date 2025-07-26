@@ -81,15 +81,15 @@ export default function NoticeUpdate() {
   };
 
   return (
-    <div className="notice-page">
-      <div className="breadcrumb">
+    <div className="notice-update-page">
+      <div className="notice-update-breadcrumb">
         고객센터 관리 &gt; 공지사항 관리 &gt; 공지사항 수정
       </div>
       <h1>공지사항 수정</h1>
-      <form className="notice-form" onSubmit={handleUpdateClick}>
-        <div className="form-group">
+      <form className="notice-update-form" onSubmit={handleUpdateClick}>
+        <div className="notice-update-form-group">
           <label htmlFor="noticeTitle">
-            제목 <span className="required">*</span>
+            제목 <span className="notice-update-required">*</span>
           </label>
           <input
             id="noticeTitle"
@@ -98,13 +98,13 @@ export default function NoticeUpdate() {
             value={form.noticeTitle}
             onChange={handleChange}
             required
-            className="notice-input"
+            className="notice-update-input"
           />
         </div>
 
-        <div className="form-group">
+        <div className="notice-update-form-group">
           <label htmlFor="noticeDesc">
-            상세내용 <span className="required">*</span>
+            상세내용 <span className="notice-update-required">*</span>
           </label>
           <textarea
             id="noticeDesc"
@@ -113,26 +113,26 @@ export default function NoticeUpdate() {
             value={form.noticeDesc}
             onChange={handleChange}
             required
-            className="notice-textarea"
+            className="notice-update-textarea"
           />
         </div>
 
-        <div className="form-actions">
+        <div className="notice-update-form-actions">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="notice-update-btn notice-update-btn-secondary"
             onClick={handleCancel}
           >
             취소
           </button>
           <button
             type="button"
-            className="btn btn-danger"
+            className="notice-update-btn notice-update-btn-danger"
             onClick={handleDeleteClick}
           >
             삭제
           </button>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="notice-update-btn notice-update-btn-primary">
             수정
           </button>
         </div>

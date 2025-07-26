@@ -1,0 +1,173 @@
+.ad-list-page {
+    padding: 20px;
+    background-color: #f5f5f5;
+    min-height: 100vh;
+}
+
+/* Breadcrumb */
+.ad-list-breadcrumb {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.ad-list-breadcrumb li {
+    margin-right: 10px;
+}
+
+.ad-list-breadcrumb li:not(:last-child)::after {
+    content: '>';
+    margin-left: 10px;
+    color: #999;
+}
+
+/* Header */
+.ad-list-flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.ad-list-flex-end {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.ad-list-mb10 {
+    margin-bottom: 10px;
+}
+
+.ad-list-font-20 {
+    font-size: 20px;
+}
+
+.ad-list-bold {
+    font-weight: bold;
+}
+
+/* Button */
+.ad-list-edit-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.ad-list-edit-button:hover {
+    background-color: #0056b3;
+}
+
+/* Card */
+.ad-list-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.ad-list-card-inner {
+    padding: 20px;
+}
+
+/* Table */
+.ad-list-table-box {
+    width: 100%;
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+thead {
+    background-color: #f8f9fa;
+}
+
+th {
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #dee2e6;
+}
+
+td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #dee2e6;
+    vertical-align: middle;
+}
+
+tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+.ad-list-cursor-pointer {
+    cursor: pointer;
+}
+
+.ad-list-cursor-view {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.ad-list-cursor-view:hover {
+    text-decoration: underline;
+}
+
+/* Banner Image */
+.ad-list-banner-img {
+    width: 100px;
+    height: 60px;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.ad-list-banner-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Loading */
+.ad-list-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ad-list-page {
+        padding: 10px;
+    }
+    
+    .ad-list-card-inner {
+        padding: 15px;
+    }
+    
+    .ad-list-banner-img {
+        width: 80px;
+        height: 48px;
+    }
+    
+    table {
+        font-size: 12px;
+    }
+    
+    th, td {
+        padding: 8px 4px;
+    }
+} 

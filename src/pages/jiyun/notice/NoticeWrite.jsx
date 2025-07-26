@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { noticeInsert } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/notice/notice-write.css";
+import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeWrite() {
   const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -15,10 +17,10 @@ export default function NoticeWrite() {
     e.preventDefault();
     try {
       await noticeInsert(form);
-      alert("공지사항이 등록되었습니다.");
+      showToast("success", "공지사항이 등록되었습니다.");
       navigate("/notice/list");
     } catch {
-      alert("등록 실패");
+      showToast("error", "등록 실패");
     }
   };
 
@@ -27,15 +29,15 @@ export default function NoticeWrite() {
   };
 
   return (
-    <div className="notice-page">
-      <div className="breadcrumb">
+    <div className="notice-write-page">
+      <div className="notice-write-breadcrumb">
         고객센터 관리 &gt; 공지사항 관리 &gt; 공지사항 등록
       </div>
       <h1>공지사항 등록</h1>
-      <form className="notice-form" onSubmit={handleSubmit}>
-        <div className="form-group">
+      <form className="notice-write-form" onSubmit={handleSubmit}>
+        <div className="notice-write-form-group">
           <label htmlFor="noticeTitle">
-            제목 <span className="required">*</span>
+            제목 <span className="notice-write-required">*</span>
           </label>
           <input
             type="text"
@@ -45,13 +47,13 @@ export default function NoticeWrite() {
             onChange={handleChange}
             required
             placeholder="제목을 입력해주세요"
-            className="notice-input"
+            className="notice-write-input"
           />
         </div>
 
-        <div className="form-group">
+        <div className="notice-write-form-group">
           <label htmlFor="noticeDesc">
-            상세내용 <span className="required">*</span>
+            상세내용 <span className="notice-write-required">*</span>
           </label>
           <textarea
             name="noticeDesc"
@@ -61,19 +63,19 @@ export default function NoticeWrite() {
             onChange={handleChange}
             required
             placeholder="내용을 입력해주세요"
-            className="notice-textarea"
+            className="notice-write-textarea"
           />
         </div>
 
-        <div className="form-actions">
+        <div className="notice-write-form-actions">
           <button
             type="button"
-            className="btn btn-secondary"
+            className="notice-write-btn notice-write-btn-secondary"
             onClick={handleCancel}
           >
             취소
           </button>
-          <button type="submit" className="btn btn-primary">
+          <button type="submit" className="notice-write-btn notice-write-btn-primary">
             등록
           </button>
         </div>

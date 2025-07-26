@@ -1,23 +1,23 @@
-.notice-page {
+.notice-write-page {
   padding: 40px;
   background-color: white;
   min-height: 100vh;
   font-family: "Noto Sans KR", sans-serif;
 }
 
-.breadcrumb {
+.notice-write-breadcrumb {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 8px;
 }
 
-.notice-page h1 {
+.notice-write-page h1 {
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 24px;
 }
 
-.notice-form {
+.notice-write-form {
   background-color: #ffffff;
   padding: 24px;
   border-radius: 8px;
@@ -25,24 +25,24 @@
   height: 550px;
 }
 
-.form-group {
+.notice-write-form-group {
   margin-bottom: 20px;
 }
 
-.form-group label {
+.notice-write-form-group label {
   display: block;
   font-weight: 600;
   margin-bottom: 6px;
   color: #111827;
 }
 
-.required {
+.notice-write-required {
   color: red;
   font-weight: bold;
 }
 
-.notice-form .notice-input,
-.notice-form .notice-textarea {
+.notice-write-form .notice-write-input,
+.notice-write-form .notice-write-textarea {
   width: 100%;
   padding: 10px 12px;
   font-size: 14px;
@@ -52,25 +52,26 @@
   font-family: "Noto Sans KR", sans-serif;
   background-color: #f9fafb;
 }
-.notice-form .notice-textarea {
+
+.notice-write-form .notice-write-textarea {
   height: 300px;
 }
 
-.notice-form .notice-input:focus,
-.notice-form .notice-textarea:focus {
+.notice-write-form .notice-write-input:focus,
+.notice-write-form .notice-write-textarea:focus {
   outline: none;
   border-color: #387ddd;
   background-color: #fff;
 }
 
-.form-actions {
+.notice-write-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
 }
 
-.btn {
+.notice-write-btn {
   padding: 10px 18px;
   font-size: 14px;
   border-radius: 6px;
@@ -78,21 +79,21 @@
   cursor: pointer;
 }
 
-.btn-primary {
+.notice-write-btn-primary {
   background-color: #387ddd;
   color: white;
 }
 
-.btn-primary:hover {
+.notice-write-btn-primary:hover {
   background-color: #2f6dbf;
 }
 
-.btn-secondary {
+.notice-write-btn-secondary {
   background-color: #f9fafb;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
-.btn-secondary:hover {
+.notice-write-btn-secondary:hover {
   background-color: #f3f4f6;
 }
