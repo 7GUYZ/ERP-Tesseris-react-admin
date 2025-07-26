@@ -48,7 +48,10 @@ export const dashboardApi = {
 export const userListApi = {
   getUserList: () => api.get('user-admin-list'),
   searchUserList: (searchData) => api.post('user-admin-list/search', searchData),
-  updateUser: (userIndex, updateData, adminUserIndex) => api.put(`user-admin-list/update/${userIndex}?adminUserIndex=${adminUserIndex}`, updateData)
+  updateUser: (userIndex, updateData, adminUserIndex) => api.put(`user-admin-list/update/${userIndex}?adminUserIndex=${adminUserIndex}`, updateData),
+  
+  // 회원 목록 엑셀 다운로드
+  downloadUserList: (searchData) => api.post('user-admin-list/download', searchData, { responseType: 'blob' })
 }; 
 
 // 권한 체크 API
@@ -84,4 +87,40 @@ export const permissionCheckApi = {
       programIndex: 1 // 기본값, 필요시 수정
     });
   }
+}; 
+
+// 사업자 목록 API
+export const businessmanListApi = {
+  // 사업자 목록 검색
+  searchBusinessmanList: (searchData) => api.post('businessmanlist/search', searchData),
+  
+  // 전체 활성 사업자 목록 조회
+  getAllActiveBusinessmen: () => api.get('businessmanlist/all'),
+  
+  // 전체 사업자 목록 조회 (모든 조건 제거)
+  getAllBusinessmen: () => api.get('businessmanlist/all-businessmen'),
+  
+  // 사업자 등급 목록 조회
+  getBusinessGrades: () => api.get('businessmanlist/business-grades'),
+  
+  // 사업자 지역 목록 조회
+  getBusinessAreas: () => api.get('businessmanlist/business-areas'),
+  
+  // 사업자 등록
+  createBusinessman: (createData) => api.post('businessmanlist/create', createData),
+  
+  // 사업자 정보 수정
+  updateBusinessman: (updateData) => api.put('businessmanlist/update', updateData),
+  
+  // 사업자 삭제
+  deleteBusinessman: (deleteData) => api.delete('businessmanlist/delete', { data: deleteData }),
+  
+  // 사업자 비활성화
+  deactivateBusinessman: (userIndex) => api.put(`businessmanlist/deactivate/${userIndex}`),
+  
+  // 사업자 상세 정보 조회
+  getBusinessmanDetail: (userIndex) => api.get(`businessmanlist/detail/${userIndex}`),
+  
+  // 사업자 목록 엑셀 다운로드
+  downloadBusinessmanList: (searchData) => api.post('businessmanlist/download', searchData, { responseType: 'blob' })
 }; 
