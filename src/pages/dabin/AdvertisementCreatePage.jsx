@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createAdvertisement } from '../../api/auth/DabinAuth';
+import { api } from '../../api/Http';
 import '../../styles/dabin/AdvertisementCreatePage.css';
 
 const AdvertisementCreatePage = () => {
@@ -45,12 +46,20 @@ const AdvertisementCreatePage = () => {
         setLoading(true);
 
         try {
+            // S3 업로드를 위한 FormData 구성
             const formData = new FormData();
             formData.append('file', selectedFile);
             formData.append('advertisementUrl', advertisementUrl);
-            // userIndex는 백엔드에서 기본값 1을 사용
-
-            const response = await createAdvertisement(formData);
+            
+            // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
+            const accessToken = localStorage.getItem("access-token");
+            const response = await api.post('/dabin/advertisement/create', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+                },
+                timeout: 30000 // 30초 타임아웃
+            });
 
             if (response.data.success) {
                 alert('광고를 등록하였습니다.');
@@ -136,18 +145,7 @@ const AdvertisementCreatePage = () => {
                             </div>
                         </div>
 
-                        {/* 광고 제목 등록 */}
-                        <div className="ad-create-form-item">
-                            <div className="ad-create-label-horizontal">
-                                <span className="ad-create-text">광고제목 등록</span>
-                            </div>
-                            <div className="ad-create-input-box">
-                                <input
-                                    type="text"
-                                    placeholder="광고 제목을 입력하세요."
-                                />
-                            </div>
-                        </div>
+
 
                         {/* 이미지 미리보기 */}
                         <div className="ad-create-form-item">

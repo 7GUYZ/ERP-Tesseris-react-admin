@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAdvertisementList } from '../../api/auth/DabinAuth';
+import { getAdvertisementList, getPresignedUrl } from '../../api/auth/DabinAuth';
 import '../../styles/dabin/AdvertisementListPage.css';
 
 const AdvertisementListPage = () => {
@@ -12,10 +12,31 @@ const AdvertisementListPage = () => {
         fetchAdvertisements();
     }, []);
 
+    // presigned URL 변환 함수
+    const fetchPresignedUrls = async (ads) => {
+        if (!ads || ads.length === 0) {
+            return [];
+        }
+        const adsWithUrls = await Promise.all(
+            ads.map(async (ad) => {
+                try {
+                    const url = await getPresignedUrl(ad.advertisementPhoto);
+                    return { ...ad, presignedUrl: url };
+                } catch {
+                    return { ...ad, presignedUrl: null };
+                }
+            })
+        );
+        return adsWithUrls;
+    };
+
     const fetchAdvertisements = async () => {
         try {
             const response = await getAdvertisementList();
-            setAdvertisements(response.data);
+            if (response.data) {
+                const adsWithUrls = await fetchPresignedUrls(response.data);
+                setAdvertisements(adsWithUrls);
+            }
         } catch (error) {
             console.error('광고 목록 조회 오류:', error);
         } finally {
@@ -86,7 +107,7 @@ const AdvertisementListPage = () => {
                                             <td>
                                                 <div className="ad-list-banner-img">
                                                     <img
-                                                        src={ad.advertisementPhoto}
+                                                        src={ad.presignedUrl || ad.advertisementPhoto}
                                                         alt="광고 이미지"
                                                         onError={(e) => {
                                                             e.target.src = '/placeholder-image.png';

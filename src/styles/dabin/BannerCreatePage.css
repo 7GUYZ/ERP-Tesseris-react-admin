@@ -1,11 +1,11 @@
-.ad-edit-page {
+.banner-create-page {
     padding: 20px;
     background-color: #f5f5f5;
     min-height: 100vh;
 }
 
 /* Breadcrumb */
-.ad-edit-breadcrumb {
+.banner-create-breadcrumb {
     display: flex;
     list-style: none;
     padding: 0;
@@ -14,38 +14,38 @@
     color: #666;
 }
 
-.ad-edit-breadcrumb li {
+.banner-create-breadcrumb li {
     margin-right: 10px;
 }
 
-.ad-edit-breadcrumb li:not(:last-child)::after {
+.banner-create-breadcrumb li:not(:last-child)::after {
     content: '>';
     margin-left: 10px;
     color: #999;
 }
 
 /* Header */
-.ad-edit-flex-between {
+.banner-create-flex-between {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
 }
 
-.ad-edit-mb10 {
+.banner-create-mb10 {
     margin-bottom: 10px;
 }
 
-.ad-edit-font-20 {
+.banner-create-font-20 {
     font-size: 20px;
 }
 
-.ad-edit-bold {
+.banner-create-bold {
     font-weight: bold;
 }
 
 /* Button */
-.ad-edit-cancel-button {
+.banner-create-cancel-button {
     background-color: #6c757d;
     color: white;
     border: none;
@@ -56,104 +56,85 @@
     margin-right: 10px;
 }
 
-.ad-edit-cancel-button:hover {
+.banner-create-cancel-button:hover {
     background-color: #545b62;
 }
 
-.ad-edit-delete-button {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 10px;
-}
-
-.ad-edit-delete-button:hover:not(:disabled) {
-    background-color: #c82333;
-}
-
-.ad-edit-delete-button:disabled {
-    background-color: #ccc;
-    cursor: not-allowed;
-}
-
-.ad-edit-edit-button {
+.banner-create-register-button {
     background-color: #007bff;
     color: white;
     border: none;
-    padding: 10px 20px;
+    padding: 12px 30px;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 16px;
+    font-weight: 500;
 }
 
-.ad-edit-edit-button:hover:not(:disabled) {
+.banner-create-register-button:hover:not(:disabled) {
     background-color: #0056b3;
 }
 
-.ad-edit-edit-button:disabled {
+.banner-create-register-button:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
 
 /* Card */
-.ad-edit-card {
+.banner-create-card {
     background-color: white;
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
-.ad-edit-card-inner {
+.banner-create-card-inner {
     padding: 30px;
 }
 
 /* Form Grid */
-.ad-edit-form-grid {
+.banner-create-form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 30px;
     margin-bottom: 30px;
 }
 
-.ad-edit-form-item {
+.banner-create-form-item {
     display: flex;
     flex-direction: column;
 }
 
 /* Label */
-.ad-edit-label {
+.banner-create-label {
     margin-bottom: 15px;
 }
 
-.ad-edit-label span {
+.banner-create-label span {
     display: block;
     font-weight: 600;
     color: #333;
     margin-bottom: 8px;
 }
 
-.ad-edit-label-horizontal {
+.banner-create-label-horizontal {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 15px;
 }
 
-.ad-edit-label-horizontal .ad-edit-text {
+.banner-create-label-horizontal .banner-create-text {
     font-weight: 600;
     color: #333;
 }
 
 /* Input */
-.ad-edit-input-box {
+.banner-create-input-box {
     margin-bottom: 15px;
 }
 
-.ad-edit-link-input {
+.banner-create-link-input {
     width: 100%;
     padding: 12px;
     border: 1px solid #ddd;
@@ -162,14 +143,14 @@
     box-sizing: border-box;
 }
 
-.ad-edit-link-input:focus {
+.banner-create-link-input:focus {
     outline: none;
     border-color: #007bff;
     box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 /* File Upload */
-.ad-edit-banner-btn label {
+.banner-create-banner-btn label {
     background-color: #007bff;
     color: white;
     padding: 10px 20px;
@@ -179,31 +160,31 @@
     display: inline-block;
 }
 
-.ad-edit-banner-btn label:hover {
+.banner-create-banner-btn label:hover {
     background-color: #0056b3;
 }
 
-.ad-edit-file-input {
+.banner-create-file-input {
     display: none;
 }
 
 /* Image Guide */
-.ad-edit-img-guide {
+.banner-create-img-guide {
     font-size: 12px;
     color: #666;
     line-height: 1.4;
     margin-top: 10px;
 }
 
-.ad-edit-color-red {
+.banner-create-color-red {
     color: #dc3545;
     font-weight: 600;
 }
 
 /* Image Preview */
-.ad-edit-image-preview {
+.banner-create-image-preview {
     width: 100%;
-    min-height: 300px;
+    min-height: 200px;
     border: 2px dashed #ddd;
     border-radius: 8px;
     display: flex;
@@ -212,71 +193,55 @@
     overflow: hidden;
 }
 
-.ad-edit-image-preview img {
+.banner-create-image-preview img {
     width: 100%;
     height: auto;
-    max-height: 450px;
+    max-height: 300px;
     object-fit: contain;
 }
 
-.ad-edit-upload-area {
+.banner-create-upload-area {
     text-align: center;
     color: #666;
 }
 
-.ad-edit-upload-area p {
+.banner-create-upload-area p {
     margin: 5px 0;
 }
 
-.ad-edit-upload-guide {
+.banner-create-upload-guide {
     font-size: 12px;
     color: #999;
 }
 
-/* Loading */
-.loading {
+/* Button Container */
+.banner-create-button-container {
     display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px;
-    font-size: 16px;
-    color: #666;
-}
-
-/* Button Group */
-.ad-edit-button-group {
-    margin-top: 32px;
-    text-align: right;
+    justify-content: flex-end;
+    margin-top: 30px;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
-    .ad-edit-page {
+    .banner-create-page {
         padding: 10px;
     }
     
-    .ad-edit-card-inner {
+    .banner-create-card-inner {
         padding: 20px;
     }
     
-    .ad-edit-form-grid {
+    .banner-create-form-grid {
         grid-template-columns: 1fr;
         gap: 20px;
     }
     
-    .ad-edit-label-horizontal {
+    .banner-create-label-horizontal {
         flex-direction: column;
         align-items: flex-start;
     }
     
-    .ad-edit-banner-btn {
+    .banner-create-banner-btn {
         margin-top: 10px;
-    }
-    
-    .ad-edit-cancel-button,
-    .ad-edit-delete-button,
-    .ad-edit-edit-button {
-        margin-bottom: 5px;
-        width: 100%;
     }
 } 
