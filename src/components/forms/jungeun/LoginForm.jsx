@@ -139,7 +139,7 @@ const LoginForm = () => {
           // 성공 토스트 메시지
           showToast("success", response.data.resultMessage || "로그인에 성공했습니다");
 
-          setTimeout(() => navigate("/main"), 1500);
+          setTimeout(() => navigate("/dashboard"), 1500);
         } else {
           showToast("error", "허용되지 않은 사용자입니다");
         }

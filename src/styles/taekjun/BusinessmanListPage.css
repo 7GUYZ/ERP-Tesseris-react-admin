@@ -1,0 +1,813 @@
+/* 사업자 목록 페이지 스타일 */
+.businessman-list-page {
+  padding: 24px;
+  background: #F4F6FA;
+  min-height: 100vh;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+/* 페이지 헤더 */
+.businessman-list-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(34, 46, 60, 0.08);
+}
+
+.businessman-list-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #222E3C;
+  margin: 0;
+}
+
+.businessman-list-header-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.businessman-list-action-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #3B7DDD;
+  color: white;
+  position: relative;
+}
+
+.businessman-list-action-btn-excel {
+  background: #10B981;
+}
+
+.businessman-list-action-btn-excel:hover {
+  background: #059669;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.businessman-list-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 125, 221, 0.3);
+}
+
+.businessman-list-action-btn:active {
+  transform: translateY(0);
+}
+
+.businessman-list-action-btn-danger {
+  background: #EF4444;
+}
+
+.businessman-list-action-btn-danger:hover {
+  background: #DC2626;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+/* 비활성화된 버튼 스타일 */
+.businessman-list-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.businessman-list-action-btn:disabled:hover {
+  background: #e5e7eb !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
+}
+
+.businessman-list-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.businessman-list-btn:disabled:hover {
+  background: #e5e7eb !important;
+  color: #9ca3af !important;
+  border-color: #d1d5db !important;
+}
+
+/* 권한이 없을 때 툴팁 스타일 */
+.businessman-list-action-btn[title]:hover::after,
+.businessman-list-btn[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #222E3C;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 8px;
+}
+
+/* 검색 섹션 */
+.businessman-list-search-section {
+  background: #F4F6FA;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+  border: 1px solid #E5EAF2;
+}
+
+.businessman-list-search-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.businessman-list-search-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.businessman-list-search-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.businessman-list-search-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #222E3C;
+}
+
+.businessman-list-search-item input,
+.businessman-list-search-item select {
+  padding: 8px 4px;
+  border: 1px solid #E5EAF2;
+  border-radius: 6px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.businessman-list-search-item input:focus,
+.businessman-list-search-item select:focus {
+  outline: none;
+  border-color: #3B7DDD;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+/* 테이블 컨테이너 */
+.businessman-list-table-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(34, 46, 60, 0.08);
+  display: flex;
+  flex-direction: column;
+  height: 600px;
+  overflow: hidden;
+}
+
+.businessman-list-table-header-fixed {
+  background: white;
+  border-bottom: 1px solid #E9ECEF;
+  flex-shrink: 0;
+}
+
+.businessman-list-table-body-scrollable {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.businessman-list-table-footer-fixed {
+  background: white;
+  border-top: 1px solid #E9ECEF;
+  flex-shrink: 0;
+}
+
+.businessman-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+/* 열 너비 설정 */
+.businessman-list-table th:nth-child(1), .businessman-list-table td:nth-child(1) { width: 40px; max-width: 40px; }  /* 체크박스 */
+.businessman-list-table th:nth-child(2), .businessman-list-table td:nth-child(2) { width: 60px; max-width: 60px; }  /* No */
+.businessman-list-table th:nth-child(3), .businessman-list-table td:nth-child(3) { 
+  width: 150px; 
+  max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 이메일 */
+.businessman-list-table th:nth-child(4), .businessman-list-table td:nth-child(4) { 
+  width: 120px; max-width: 120px; 
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 이름 */
+.businessman-list-table th:nth-child(5), .businessman-list-table td:nth-child(5) { width: 120px; max-width: 120px; } /* 휴대폰 */
+.businessman-list-table th:nth-child(6), .businessman-list-table td:nth-child(6) { width: 100px; max-width: 100px; }  /* 사업자 등급 */
+.businessman-list-table th:nth-child(7), .businessman-list-table td:nth-child(7) { width: 80px; max-width: 80px; } /* 배포 상태 */
+.businessman-list-table th:nth-child(8), .businessman-list-table td:nth-child(8) { width: 100px; max-width: 100px; } /* 은행명 */
+.businessman-list-table th:nth-child(9), .businessman-list-table td:nth-child(9) { width: 120px; max-width: 120px; } /* 계좌번호 */
+.businessman-list-table th:nth-child(10), .businessman-list-table td:nth-child(10) { width: 100px; max-width: 100px; } /* 예금주 */
+.businessman-list-table th:nth-child(11), .businessman-list-table td:nth-child(11) { width: 100px; max-width: 100px; } /* 사업 지역 */
+.businessman-list-table th:nth-child(12), .businessman-list-table td:nth-child(12) { 
+  width: 150px; 
+  max-width: 150px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 상사 이메일 */
+.businessman-list-table th:nth-child(13), .businessman-list-table td:nth-child(13) { 
+  width: 120px; max-width: 120px; 
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+} /* 상사 이름 */
+
+.businessman-list-table th {
+  background: #F8F9FA;
+  padding: 14px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #222E3C;
+  border-bottom: 1px solid #E9ECEF;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.businessman-list-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #F1F3F4;
+  color: #374151;
+}
+
+.businessman-list-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.businessman-list-table tbody tr:hover {
+  background: #F8F9FA;
+}
+
+.businessman-list-table tbody tr:nth-child(even) {
+  background: #FAFBFC;
+}
+
+.businessman-list-table tbody tr:nth-child(even):hover {
+  background: #F1F3F4;
+}
+
+.businessman-list-checkbox-col {
+  width: 40px;
+  text-align: center;
+}
+
+.businessman-list-checkbox-col input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.businessman-list-number-cell {
+  text-align: right;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-weight: 600;
+}
+
+/* 로딩 컨테이너 */
+.businessman-list-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(34, 46, 60, 0.08);
+}
+
+.businessman-list-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #F4F6FA;
+  border-top: 4px solid #3B7DDD;
+  border-radius: 50%;
+  animation: businessman-list-spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes businessman-list-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* 모달 스타일 */
+.businessman-list-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.businessman-list-modal {
+  background: #fff;
+  border-radius: 24px;
+  min-width: 800px;
+  max-width: 1100px;
+  width: 80vw;
+  box-shadow: 0 8px 32px rgba(34,46,60,0.16), 0 1.5px 4px rgba(123,92,255,0.08);
+  padding: 24px 48px 20px 48px;
+  position: relative;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.businessman-list-password-modal {
+  background: #fff;
+  border-radius: 16px;
+  min-width: 400px;
+  max-width: 500px;
+  width: 90vw;
+  box-shadow: 0 8px 32px rgba(34,46,60,0.16);
+  padding: 24px;
+  position: relative;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+}
+
+.businessman-list-boss-modal {
+  background: #fff;
+  border-radius: 16px;
+  min-width: 500px;
+  max-width: 600px;
+  width: 90vw;
+  box-shadow: 0 8px 32px rgba(34,46,60,0.16);
+  padding: 24px;
+  position: relative;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1200px) {
+  .businessman-list-modal {
+    min-width: 90vw;
+    max-width: 98vw;
+    width: 98vw;
+    padding: 12px 8px 12px 8px;
+    max-height: 90vh;
+  }
+}
+
+.businessman-list-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E5EAF2;
+}
+
+.businessman-list-modal-header h3 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #222E3C;
+}
+
+.businessman-list-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6B7280;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.businessman-list-modal-close:hover {
+  background: #F3F4F6;
+  color: #374151;
+}
+
+.businessman-list-modal-content {
+  margin-bottom: 24px;
+}
+
+.businessman-list-modal-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 20px;
+  border-top: 1px solid #E5EAF2;
+}
+
+/* 폼 섹션 스타일 */
+.businessman-list-form-section {
+  margin-bottom: 24px;
+}
+
+.businessman-list-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #222E3C;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #E5EAF2;
+}
+
+.businessman-list-form-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px 20px;
+  margin-bottom: 12px;
+}
+
+@media (max-width: 900px) {
+  .businessman-list-form-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .businessman-list-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.businessman-list-form-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.businessman-list-form-item.businessman-list-full-width {
+  grid-column: 1 / -1;
+}
+
+.businessman-list-form-item label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222E3C;
+}
+
+.businessman-list-form-item input,
+.businessman-list-form-item select {
+  padding: 10px 12px;
+  border: 1px solid #E5EAF2;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.businessman-list-form-item input:focus,
+.businessman-list-form-item select:focus {
+  outline: none;
+  border-color: #3B7DDD;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.businessman-list-readonly-input {
+  background-color: #F8F9FA;
+  color: #6B7280;
+  cursor: not-allowed;
+}
+
+.businessman-list-address-input-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.businessman-list-address-input-group input {
+  flex: 1 1 0%;
+  min-width: 220px;
+  max-width: 100%;
+}
+
+.businessman-list-address-input-group .businessman-list-btn,
+.businessman-list-address-input-group button {
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.businessman-list-address-search {
+  grid-column: 1 / -1;
+}
+
+/* 상사 선택 관련 스타일 */
+.businessman-list-boss-input-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.businessman-list-boss-input-group input {
+  flex: 1;
+}
+
+.businessman-list-boss-input-group .businessman-list-btn {
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.businessman-list-boss-search {
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.businessman-list-boss-search input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  background: white;
+}
+
+.businessman-list-boss-search input:focus {
+  outline: none;
+  border-color: #3B7DDD;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.businessman-list-boss-search input::placeholder {
+  color: #9CA3AF;
+}
+
+.businessman-list-boss-list {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #E5E7EB;
+  border-radius: 8px;
+  background: #FAFBFC;
+}
+
+.businessman-list-boss-item {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F3F4F6;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  background: white;
+}
+
+.businessman-list-boss-item:hover {
+  background-color: #F0F9FF;
+  border-left: 3px solid #3B7DDD;
+}
+
+.businessman-list-boss-item:last-child {
+  border-bottom: none;
+}
+
+.businessman-list-boss-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.businessman-list-boss-email {
+  font-weight: 600;
+  color: #222E3C;
+  font-size: 14px;
+  margin-bottom: 4px;
+}
+
+.businessman-list-boss-name {
+  color: #374151;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.businessman-list-boss-grade {
+  color: #6B7280;
+  font-size: 12px;
+  background: #F3F4F6;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.businessman-list-no-data {
+  padding: 24px;
+  text-align: center;
+  color: #9CA3AF;
+  font-size: 14px;
+}
+
+.businessman-list-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.businessman-list-btn-primary {
+  background: #3B7DDD;
+  color: white;
+}
+
+.businessman-list-btn-primary:hover {
+  background: #2563EB;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 125, 221, 0.3);
+}
+
+.businessman-list-btn-primary:disabled {
+  background: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.businessman-list-btn-secondary {
+  background: #6B7280;
+  color: white;
+}
+
+.businessman-list-btn-secondary:hover {
+  background: #4B5563;
+  transform: translateY(-1px);
+}
+
+/* 비밀번호 변경 모달 스타일 */
+.businessman-list-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.businessman-list-password-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.businessman-list-password-input label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #222E3C;
+}
+
+.businessman-list-password-input input {
+  padding: 12px 16px;
+  border: 1px solid #E5EAF2;
+  border-radius: 8px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+}
+
+.businessman-list-password-input input:focus {
+  outline: none;
+  border-color: #3B7DDD;
+  box-shadow: 0 0 0 3px rgba(59, 125, 221, 0.1);
+}
+
+.businessman-list-input-error {
+  border-color: #EF4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1) !important;
+}
+
+/* 에러 메시지 */
+.businessman-list-error-message {
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  color: #DC2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 16px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.businessman-list-error-message button {
+  background: #DC2626;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.businessman-list-error-message button:hover {
+  background: #B91C1C;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .businessman-list-page {
+    padding: 16px;
+  }
+  
+  .businessman-list-page-header {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+  
+  .businessman-list-header-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .businessman-list-action-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .businessman-list-search-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .businessman-list-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .businessman-list-modal {
+    width: 95%;
+    margin: 16px;
+    padding: 16px;
+  }
+}
+
+/* 스크롤바 스타일링 */
+.businessman-list-table-wrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.businessman-list-table-wrapper::-webkit-scrollbar-track {
+  background: #F4F6FA;
+  border-radius: 4px;
+}
+
+.businessman-list-table-wrapper::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+
+.businessman-list-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* 체크박스 커스터마이징 */
+.businessman-list-checkbox input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 2px solid #D1D5DB;
+  border-radius: 4px;
+  background: white;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.businessman-list-checkbox input[type="checkbox"]:checked {
+  background: #3B7DDD;
+  border-color: #3B7DDD;
+}
+
+.businessman-list-checkbox input[type="checkbox"]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+}
+
+.businessman-list-checkbox input[type="checkbox"]:hover {
+  border-color: #3B7DDD;
+} 

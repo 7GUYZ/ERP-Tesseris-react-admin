@@ -125,7 +125,7 @@ const MainNavi = () => {
         label: "대시 보드",
         icon: Home,
         type: "link", // link: 페이지 이동, expand: 확장 메뉴, action: 액션 실행
-        href: "/main",
+        href: "/dashboard",
       },
       {
         id: "mypage",
@@ -254,8 +254,8 @@ const MainNavi = () => {
             id: "business-member-list",
             programIndex: 17,
             label: "사업자 회원 리스트",
-            type: "list",
-            action: () => console.log("사업자 리스트 클릭"),
+            type: "link",
+            href: "/businessman-admin-list"
           },
           {
             id: "business-commission-history",

@@ -59,8 +59,8 @@ const UserListPage = () => {
     { value: '', label: '등급을 선택하세요' },
     { value: '일반', label: '일반' },
     { value: '가맹점', label: '가맹점' },
-    { value: '사업자', label: '사업자' },
-    { value: '정회원', label: '정회원' }
+    { value: '사업자', label: '사업자' }
+   
   ];
 
   // 데이터 조회
@@ -182,14 +182,50 @@ const UserListPage = () => {
     }
   };
 
-  // 엑셀 다운로드
-  const handleExcelDownload = () => {
-    // 엑셀 다운로드 로직 구현
-    alert('엑셀 다운로드 기능은 추후 구현 예정입니다.');
+  // CSV 다운로드
+  const handleExcelDownload = async () => {
+    try {
+      setLoading(true);
+      console.log('CSV 다운로드 시작...');
+      
+      // 현재 검색 필터를 사용하여 CSV 다운로드 요청
+      const response = await userListApi.downloadUserList(searchFilters);
+      
+      // Blob 생성 및 다운로드
+      const blob = new Blob([response.data], { 
+        type: 'text/csv; charset=utf-8' 
+      });
+      
+      // 파일명 생성 (현재 날짜 포함)
+      const now = new Date();
+      const dateStr = now.getFullYear() + 
+        String(now.getMonth() + 1).padStart(2, '0') + 
+        String(now.getDate()).padStart(2, '0');
+      const fileName = `회원목록_${dateStr}.csv`;
+      
+      // 다운로드 링크 생성 및 클릭
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log('CSV 다운로드 완료');
+      alert('CSV 파일이 성공적으로 다운로드되었습니다.');
+    } catch (err) {
+      console.error('CSV 다운로드 실패:', err);
+      alert('CSV 다운로드에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 회원 수정
   const handleEditUser = (user) => {
+    console.log('수정할 회원 데이터:', user);
     setEditingUser(user);
     setEditForm({
       name: user.name || '',
@@ -201,6 +237,11 @@ const UserListPage = () => {
       bankName: user.bankName || '',
       bankNumber: user.bankNumber || '',
       bankHolder: user.bankHolder || ''
+    });
+    console.log('설정된 editForm:', {
+      gender: user.gender,
+      address: user.address,
+      detailAddress: user.detailAddress
     });
     setShowEditModal(true);
   };
@@ -337,17 +378,17 @@ const UserListPage = () => {
   return (
     <div className="user-list-page">
       {/* 페이지 헤더 */}
-      <div className="page-header">
-        <h1 className="page-title">회원 리스트</h1>
-        <div className="header-actions">
-          <button className="action-btn excel-btn" onClick={handleExcelDownload}>
+      <div className="user-list-page-header">
+        <h1 className="user-list-page-title">회원 리스트</h1>
+        <div className="user-list-header-actions">
+          <button className="user-list-action-btn user-list-excel-btn" onClick={handleExcelDownload}>
             엑셀
           </button>
-          <button className="action-btn search-btn" onClick={handleSearch}>
+          <button className="user-list-action-btn" onClick={handleSearch}>
             조회
           </button>
                      <button 
-             className="action-btn edit-btn" 
+             className="user-list-action-btn" 
              onClick={() => selectedUsers.length > 0 && handleEditUser(filteredList.find(u => u.userIndex === selectedUsers[0]))}
            >
              수정
@@ -356,10 +397,10 @@ const UserListPage = () => {
       </div>
 
       {/* 검색 필터 */}
-      <div className="search-section">
-        <div className="search-grid">
-          <div className="search-row">
-            <div className="search-item">
+      <div className="user-list-search-section">
+        <div className="user-list-search-grid">
+          <div className="user-list-search-row">
+            <div className="user-list-search-item">
               <label>아이디</label>
               <input
                 type="text"
@@ -369,7 +410,7 @@ const UserListPage = () => {
                 onKeyPress={handleKeyPress}
               />
             </div>
-            <div className="search-item">
+            <div className="user-list-search-item">
               <label>이름</label>
               <input
                 type="text"
@@ -379,7 +420,7 @@ const UserListPage = () => {
                 onKeyPress={handleKeyPress}
               />
             </div>
-            <div className="search-item">
+            <div className="user-list-search-item">
               <label>핸드폰 번호</label>
               <input
                 type="text"
@@ -390,10 +431,10 @@ const UserListPage = () => {
               />
             </div>
           </div>
-          <div className="search-row">
-            <div className="search-item">
+          <div className="user-list-search-row">
+            <div className="user-list-search-item">
               <label>등록일</label>
-              <div className="date-inputs">
+              <div className="user-list-date-inputs">
                 <input
                   type="date"
                   value={searchFilters.startDate}
@@ -409,7 +450,7 @@ const UserListPage = () => {
                 />
               </div>
             </div>
-            <div className="search-item">
+            <div className="user-list-search-item">
               <label>등급</label>
               <select
                 value={searchFilters.userRole}
@@ -427,12 +468,12 @@ const UserListPage = () => {
       </div>
 
             {/* 회원 목록 테이블 */}
-      <div className="table-container">
-        <div className="table-header-fixed">
-          <table className="user-table">
+      <div className="user-list-table-container">
+        <div className="user-list-table-header-fixed">
+          <table className="user-list-table">
             <thead>
               <tr>
-                <th className="checkbox-col">
+                <th className="user-list-checkbox-col">
                   <input
                     type="checkbox"
                     checked={false}
@@ -456,12 +497,12 @@ const UserListPage = () => {
           </table>
         </div>
         
-        <div className="table-body-scrollable">
-          <table className="user-table">
+        <div className="user-list-table-body-scrollable">
+          <table className="user-list-table">
             <tbody>
               {filteredList.map((user, index) => (
-                <tr key={user.userIndex}>
-                  <td className="checkbox-col">
+                <tr key={`${user.userIndex}-${index}`}>
+                  <td className="user-list-checkbox-col">
                     <input
                       type="checkbox"
                       checked={selectedUsers.includes(user.userIndex)}
@@ -473,8 +514,8 @@ const UserListPage = () => {
                   <td>{user.name || '-'}</td>
                   <td>{user.phone || '-'}</td>
                   <td>{user.userRole || '-'}</td>
-                  <td className="number-cell">{formatNumber(user.cmBalance || 0)}</td>
-                  <td className="number-cell">0</td>
+                  <td className="user-list-number-cell">{formatNumber(user.cmBalance || 0)}</td>
+                  <td className="user-list-number-cell">0</td>
                   <td>{formatDate(user.registrationDate)}</td>
                   <td>{user.recommenderEmail || '-'}</td>
                   <td>{user.recommenderName || '-'}</td>
@@ -485,16 +526,16 @@ const UserListPage = () => {
           </table>
         </div>
         
-        <div className="table-footer-fixed">
-          <table className="user-table">
+        <div className="user-list-table-footer-fixed">
+          <table className="user-list-table">
             <tfoot>
-              <tr className="summary-row">
+              <tr className="user-list-summary-row">
                 <td colSpan="5">합계</td>
                 <td></td>
-                <td className="number-cell">
+                <td className="user-list-number-cell">
                   {formatNumber(filteredList.reduce((sum, user) => sum + (user.cmBalance || 0), 0))}
                 </td>
-                <td className="number-cell">0</td>
+                <td className="user-list-number-cell">0</td>
                 <td colSpan="4"></td>
               </tr>
             </tfoot>
@@ -517,19 +558,19 @@ const UserListPage = () => {
             </div>
             <div className="user-list-modal-content">
               {/* 기본 정보 섹션 */}
-              <div className="form-section">
-                <h4 className="section-title">기본 정보</h4>
-                <div className="form-grid">
-                  <div className="form-item">
+              <div className="user-list-form-section">
+                <h4 className="user-list-section-title">기본 정보</h4>
+                <div className="user-list-form-grid">
+                  <div className="user-list-form-item">
                     <label>아이디</label>
                     <input
                       type="text"
                       value={editingUser?.email || ''}
                       disabled
-                      className="readonly-input"
+                      className="user-list-readonly-input"
                     />
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>이름</label>
                     <input
                       type="text"
@@ -538,7 +579,7 @@ const UserListPage = () => {
                       onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
                     />
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>생년월일</label>
                     <input
                       type="date"
@@ -547,7 +588,7 @@ const UserListPage = () => {
                       onChange={(e) => setEditForm(prev => ({ ...prev, birthday: e.target.value }))}
                     />
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>성별</label>
                     <select
                       value={editForm.gender}
@@ -558,20 +599,20 @@ const UserListPage = () => {
                       <option value="여자">여자</option>
                     </select>
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>휴대폰 번호</label>
                     <input
                       type="text"
+                      placeholder="휴대폰 번호를 입력하세요"
                       value={editForm.phone}
-                      disabled
-                      className="readonly-input"
+                      onChange={(e) => setEditForm(prev => ({ ...prev, phone: e.target.value }))}
                     />
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>비밀번호 변경</label>
                     <button 
                       type="button" 
-                      className="btn btn-secondary"
+                      className="user-list-btn user-list-btn-secondary"
                       onClick={() => setShowPasswordModal(true)}
                     >
                       비밀번호 변경
@@ -582,24 +623,24 @@ const UserListPage = () => {
               </div>
 
               {/* 주소 섹션 */}
-              <div className="form-section">
-                <h4 className="section-title">주소</h4>
-                <div className="form-grid">
-                  <div className="form-item address-search">
-                    <label>주소</label>
-                    <div className="address-input-group">
+              <div className="user-list-form-section">
+                <h4 className="user-list-section-title">주소</h4>
+                <div className="user-list-form-grid">
+                  <div className="user-list-form-item user-list-address-search">
+                    <label>전체주소</label>
+                    <div className="user-list-address-input-group">
                       <input
                         type="text"
                         value={editForm.address}
                         disabled
-                        className="readonly-input"
+                        className="user-list-readonly-input"
                       />
-                      <button type="button" className="btn btn-secondary" onClick={handleAddressSearch}>
+                      <button type="button" className="user-list-btn user-list-btn-secondary" onClick={handleAddressSearch}>
                         검색
                       </button>
                     </div>
                   </div>
-                  <div className="form-item full-width">
+                  <div className="user-list-form-item user-list-full-width">
                     <label>상세주소</label>
                     <input
                       type="text"
@@ -612,10 +653,10 @@ const UserListPage = () => {
               </div>
 
               {/* 출금계좌 섹션 */}
-              <div className="form-section">
-                <h4 className="section-title">출금계좌</h4>
-                <div className="form-grid">
-                  <div className="form-item">
+              <div className="user-list-form-section">
+                <h4 className="user-list-section-title">출금계좌</h4>
+                <div className="user-list-form-grid">
+                  <div className="user-list-form-item">
                     <label>은행명</label>
                     <select
                       value={editForm.bankName}
@@ -632,7 +673,7 @@ const UserListPage = () => {
                       <option value="신협">신협</option>
                     </select>
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>계좌번호</label>
                     <input
                       type="text"
@@ -641,7 +682,7 @@ const UserListPage = () => {
                       onChange={(e) => setEditForm(prev => ({ ...prev, bankNumber: e.target.value }))}
                     />
                   </div>
-                  <div className="form-item">
+                  <div className="user-list-form-item">
                     <label>예금주</label>
                     <input
                       type="text"
@@ -657,14 +698,14 @@ const UserListPage = () => {
             </div>
             <div className="user-list-modal-actions">
               <button 
-                className="btn btn-primary"
+                className="user-list-btn user-list-btn-primary"
                 onClick={handleSaveUser}
                 disabled={loading}
               >
                 {loading ? '저장 중...' : '저장'}
               </button>
               <button 
-                className="btn btn-secondary"
+                className="user-list-btn user-list-btn-secondary"
                 onClick={() => setShowEditModal(false)}
               >
                 취소
@@ -676,7 +717,7 @@ const UserListPage = () => {
 
       {/* 에러 메시지 */}
       {error && (
-        <div className="error-message">
+        <div className="user-list-error-message">
           {error}
           <button onClick={fetchUserList}>다시 시도</button>
         </div>
