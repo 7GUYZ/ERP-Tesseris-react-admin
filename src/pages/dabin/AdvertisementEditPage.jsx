@@ -152,10 +152,10 @@ const AdvertisementEditPage = () => {
             <div className="ad-edit-card">
                 <div className="ad-edit-card-inner">
                     <div className="ad-edit-form-grid">
-                        {/* 광고 이미지 업로드 */}
+                        {/* 광고 이미지 */}
                         <div className="ad-edit-form-item">
                             <div className="ad-edit-label-horizontal">
-                                <span className="ad-edit-text">광고사진 등록</span>
+                                <span className="ad-edit-text">광고 이미지</span>
                                 <div className="ad-edit-banner-btn">
                                     <label>
                                         광고사진 등록하기
@@ -167,6 +167,19 @@ const AdvertisementEditPage = () => {
                                         />
                                     </label>
                                 </div>
+                            </div>
+                            <div className="ad-edit-image-preview">
+                                {previewImage ? (
+                                    <img
+                                        src={previewImage}
+                                        alt="광고 이미지"
+                                    />
+                                ) : (
+                                    <div className="ad-edit-upload-area">
+                                        <p>이미지를 드래그하거나 클릭하여 업로드</p>
+                                        <p className="ad-edit-upload-guide">권장 비율: 675×270 (1.2.5 비율)</p>
+                                    </div>
+                                )}
                             </div>
                             <p className="ad-edit-img-guide">
                                 <span className="ad-edit-color-red">이미지는 1:2.5 비율 (675×270)로 업로드</span>
@@ -189,26 +202,6 @@ const AdvertisementEditPage = () => {
                                         placeholder="등록하실 광고 링크주소를 입력하세요."
                                     />
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* 등록된 광고 이미지 */}
-                        <div className="ad-edit-form-item">
-                            <div className="ad-edit-label-horizontal">
-                                <span className="ad-edit-text">등록된 광고이미지</span>
-                            </div>
-                            <div className="ad-edit-image-preview">
-                                {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="광고 이미지"
-                                    />
-                                ) : (
-                                    <div className="ad-edit-upload-area">
-                                        <p>이미지를 드래그하거나 클릭하여 업로드</p>
-                                        <p className="ad-edit-upload-guide">권장 비율: 675×270 (1.2.5 비율)</p>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>

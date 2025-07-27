@@ -139,10 +139,10 @@ const BannerEditPage = () => {
             <div className="banner-edit-card">
                 <div className="banner-edit-card-inner">
                     <div className="banner-edit-form-grid">
-                        {/* 배너 이미지 업로드 */}
+                        {/* 배너 이미지 */}
                         <div className="banner-edit-form-item">
                             <div className="banner-edit-label-horizontal">
-                                <span className="banner-edit-text">배너사진 등록</span>
+                                <span className="banner-edit-text">배너 이미지</span>
                                 <div className="banner-edit-banner-btn">
                                     <label>
                                         배너사진 등록하기
@@ -154,19 +154,6 @@ const BannerEditPage = () => {
                                         />
                                     </label>
                                 </div>
-                            </div>
-                            <p className="banner-edit-img-guide">
-                                <span className="banner-edit-color-red">이미지는 1:2.5 비율 (675×270)로 업로드</span>
-                                해주시기 바랍니다.
-                                <br />
-                                그렇지 않으실경우, 이미지가 깨져 보이실 수 있습니다.
-                            </p>
-                        </div>
-
-                        {/* 등록된 배너 이미지 */}
-                        <div className="banner-edit-form-item">
-                            <div className="banner-edit-label-horizontal">
-                                <span className="banner-edit-text">등록된 배너이미지</span>
                             </div>
                             <div className="banner-edit-image-preview">
                                 {previewImage ? (
@@ -181,6 +168,12 @@ const BannerEditPage = () => {
                                     </div>
                                 )}
                             </div>
+                            <p className="banner-edit-img-guide">
+                                <span className="banner-edit-color-red">이미지는 1:2.5 비율 (675×270)로 업로드</span>
+                                해주시기 바랍니다.
+                                <br />
+                                그렇지 않으실경우, 이미지가 깨져 보이실 수 있습니다.
+                            </p>
                         </div>
                     </div>
                     {/* 저장/취소 버튼 */}

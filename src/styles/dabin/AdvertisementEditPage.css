@@ -203,7 +203,7 @@
 /* Image Preview */
 .ad-edit-image-preview {
     width: 100%;
-    min-height: 200px;
+    min-height: 300px;
     border: 2px dashed #ddd;
     border-radius: 8px;
     display: flex;
@@ -215,7 +215,7 @@
 .ad-edit-image-preview img {
     width: 100%;
     height: auto;
-    max-height: 300px;
+    max-height: 450px;
     object-fit: contain;
 }
 

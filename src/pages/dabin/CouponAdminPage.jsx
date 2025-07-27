@@ -28,6 +28,17 @@ const CouponAdminPage = () => {
         setIssuanceStatus(Array.isArray(issuanceRes.data) ? issuanceRes.data : [])
         setProvidedStatus(Array.isArray(providedRes.data) ? providedRes.data : [])
         const searchData = Array.isArray(searchRes.data) ? searchRes.data : []
+        
+        // 데이터 구조 로깅
+        console.log("API 응답 전체:", searchRes);
+        console.log("쿠폰 데이터 개수:", searchData.length);
+        if (searchData.length > 0) {
+          console.log("첫 번째 쿠폰 데이터:", searchData[0]);
+          console.log("첫 번째 쿠폰 가격:", searchData[0].couponPrice);
+          console.log("첫 번째 쿠폰 한도:", searchData[0].couponLimit);
+          console.log("첫 번째 쿠폰 발행일:", searchData[0].couponIssuanceTime);
+        }
+        
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
           id: row.couponIndex || `${row.couponName}-${row.couponIssuanceTime}-${idx}`,
@@ -83,14 +94,20 @@ const CouponAdminPage = () => {
             color="primary"
             onClick={() => {
               const toDateTime = (dateStr) => (dateStr ? `${dateStr}T00:00:00` : undefined)
+              const toEndDateTime = (dateStr) => {
+                if (!dateStr) return undefined
+                const date = new Date(dateStr)
+                date.setDate(date.getDate() + 1)
+                return date.toISOString().split('T')[0] + 'T00:00:00'
+              }
               const params = {
                 ...currentForm,
                 issuanceStart: toDateTime(currentForm.issuanceStart),
-                issuanceEnd: toDateTime(currentForm.issuanceEnd),
+                issuanceEnd: toEndDateTime(currentForm.issuanceEnd),
                 providedStart: toDateTime(currentForm.providedStart),
-                providedEnd: toDateTime(currentForm.providedEnd),
+                providedEnd: toEndDateTime(currentForm.providedEnd),
                 limitStart: toDateTime(currentForm.limitStart),
-                limitEnd: toDateTime(currentForm.limitEnd),
+                limitEnd: toEndDateTime(currentForm.limitEnd),
                 couponPrice: currentForm.couponPrice ? Number(currentForm.couponPrice) : undefined,
               }
               handleSearch(params)

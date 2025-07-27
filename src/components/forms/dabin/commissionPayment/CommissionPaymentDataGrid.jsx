@@ -6,11 +6,30 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [selectAll, setSelectAll] = useState(false);
 
+  console.log("DataGrid 컴포넌트에서 받은 데이터:", data);
+  console.log("DataGrid 컴포넌트에서 받은 데이터 개수:", data.length);
+
   const processedData = useMemo(() => {
-    return data.map((row, index) => ({
+    const processed = data.map((row, index) => ({
       ...row,
-      id: row.id || `${row.userId}-${row.detailIndex}-${index}`,
+      id: row.id || `${row.userId || 'unknown'}-${row.detailIndex || 'unknown'}-${index}`,
+      lineNo: data.length - index // No 값을 역순으로 설정
     }));
+    console.log("DataGrid processedData:", processed);
+    
+    // 첫 번째 행의 모든 필드명과 값을 자세히 로깅
+    if (processed.length > 0) {
+      console.log("=== 첫 번째 행 상세 분석 ===");
+      const firstRow = processed[0];
+      console.log("첫 번째 행 전체:", firstRow);
+      console.log("첫 번째 행의 모든 키:", Object.keys(firstRow));
+      console.log("chargeTime 값:", firstRow.chargeTime, "타입:", typeof firstRow.chargeTime);
+      console.log("cmValue 값:", firstRow.cmValue, "타입:", typeof firstRow.cmValue);
+      console.log("cashValue 값:", firstRow.cashValue, "타입:", typeof firstRow.cashValue);
+      console.log("regularCashValue 값:", firstRow.regularCashValue, "타입:", typeof firstRow.regularCashValue);
+    }
+    
+    return processed;
   }, [data]);
 
   useEffect(() => {
@@ -118,48 +137,73 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
         </div>
       ),
     },
-    { field: "detailIndex", headerName: "DetailIndex", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "userId", headerName: "사용자 ID", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "userName", headerName: "사용자명", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "userPhone", headerName: "전화번호", width: 130, align: 'center', headerAlign: 'center' },
-    { field: "transactionName", headerName: "거래명", width: 150, align: 'center', headerAlign: 'center' },
-    { field: "chargeTime", headerName: "충전 시간", width: 180, align: 'center', headerAlign: 'center',
+    { field: "lineNo", headerName: "No", width: 40, align: 'center', headerAlign: 'center' },
+    { field: "userIndex", headerName: "userIndex", width: 100, align: 'left', headerAlign: 'center' },
+    { field: "userId", headerName: "아이디", width: 120, align: 'left', headerAlign: 'center' },
+    { field: "userName", headerName: "이름", width: 120, align: 'left', headerAlign: 'center' },
+    { field: "userPhone", headerName: "핸드폰 번호", width: 130, align: 'center', headerAlign: 'center' },
+    { field: "transactionName", headerName: "거래명", width: 130, align: 'left', headerAlign: 'center' },
+    { field: "advanceMsg", headerName: "승인여부", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "chargeTime", headerName: "충전 시간", width: 200, align: 'center', headerAlign: 'center',
       valueFormatter: (params) => {
-        if (!params.value) return "";
-        if (Array.isArray(params.value)) {
-          const [year, month, day, hour, minute] = params.value;
-          return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+        // params가 직접 값인 경우 처리
+        let value;
+        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+          value = params.value;
+        } else {
+          value = params; // params가 직접 값인 경우
         }
-        return new Date(params.value).toLocaleString('ko-KR');
+        
+        if (!value || value === 'null' || value === '') return "-";
+        try {
+          let date;
+          if (Array.isArray(value)) {
+            // 배열 형태: [년, 월, 일, 시, 분, 초] 또는 [년, 월, 일, 시, 분]
+            let year, month, day, hour, minute, second;
+            
+            if (value.length === 6) {
+              [year, month, day, hour, minute, second] = value;
+            } else if (value.length === 5) {
+              [year, month, day, hour, minute] = value;
+              second = 0; // 초가 없으면 0으로 설정
+            } else {
+              return "-";
+            }
+            
+            date = new Date(year, month - 1, day, hour, minute, second);
+          } else {
+            date = new Date(value);
+          }
+          // 유효한 날짜인지 확인
+          if (isNaN(date.getTime())) {
+            return "-";
+          }
+          const result = date.toLocaleString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+          });
+          return result;
+        } catch (error) {
+          return "-";
+        }
       }
     },
-    { field: "cmValue", headerName: "CM 값", width: 100, align: 'center', headerAlign: 'center',
-      valueFormatter: (params) => params.value ? params.value.toLocaleString() : '0'
-    },
-    { field: "cashValue", headerName: "캐시 값", width: 120, align: 'center', headerAlign: 'center',
-      valueFormatter: (params) => params.value ? params.value.toLocaleString() : '0'
-    },
-    { field: "regularCashValue", headerName: "정기 캐시 값", width: 130, align: 'center', headerAlign: 'center',
-      valueFormatter: (params) => params.value ? params.value.toLocaleString() : '0'
-    },
-    { field: "description", headerName: "설명", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "paymentStatus", headerName: "지급 상태", width: 100, align: 'center', headerAlign: 'center',
-      renderCell: (params) => (
-        <span style={{
-          color: params.value === '지급' ? '#059669' : '#dc2626',
-          fontWeight: 'bold'
-        }}>
-          {params.value}
-        </span>
-      )
-    },
-    { field: "suggestionUserId", headerName: "추천인 ID", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "suggestionUserName", headerName: "추천인명", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "suggestionUserPhone", headerName: "추천인 전화번호", width: 140, align: 'center', headerAlign: 'center' },
-    { field: "userRoleKorNm", headerName: "사용자 권한", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "userBankNumber", headerName: "계좌번호", width: 150, align: 'center', headerAlign: 'center' },
-    { field: "userBankName", headerName: "은행명", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "userBankHolder", headerName: "예금주", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "description", headerName: "충전내역", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "cmValue", headerName: "충전CM", width: 100, align: 'right', headerAlign: 'center' },
+    { field: "cashValue", headerName: "결제금액", width: 120, align: 'right', headerAlign: 'center' },
+    { field: "regularCashValue", headerName: "수당지급", width: 130, align: 'right', headerAlign: 'center' },
+    { field: "suggestionUserId", headerName: "추천인 아이디", width: 320, align: 'left', headerAlign: 'center' },
+    { field: "suggestionUserName", headerName: "추천인 이름", width: 120, align: 'left', headerAlign: 'center' },
+    { field: "suggestionUserPhone", headerName: "추천인 연락처", width: 140, align: 'center', headerAlign: 'center' },
+    { field: "userRoleKorNm", headerName: "등급", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "userBankNumber", headerName: "계좌번호", width: 150, align: 'left', headerAlign: 'center' },
+    { field: "userBankName", headerName: "은행", width: 100, align: 'left', headerAlign: 'center' },
+    { field: "userBankHolder", headerName: "예금주", width: 100, align: 'left', headerAlign: 'center' },
+    { field: "paymentStatus", headerName: "지급여부", width: 100, align: 'center', headerAlign: 'center' },
   ]
 
   return (
@@ -170,9 +214,10 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
       <DataGrid
         rows={processedData}
         columns={columns}
-        pageSize={100}
-        rowsPerPageOptions={[100, 200, 500, 1000]}
+        pageSize={10}
+        rowsPerPageOptions={[10, 25, 50]}
         disableRowSelectionOnClick={true}
+        autoHeight={false}
         sx={{
           "& .MuiDataGrid-root": { border: "none" },
           "& .MuiDataGrid-cell": { borderBottom: "1px solid #f0f0f0" },

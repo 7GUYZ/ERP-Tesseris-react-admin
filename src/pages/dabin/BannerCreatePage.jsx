@@ -91,10 +91,10 @@ const BannerCreatePage = () => {
             <div className="banner-create-card">
                 <div className="banner-create-card-inner">
                     <div className="banner-create-form-grid">
-                        {/* 배너 이미지 업로드 */}
+                        {/* 배너 이미지 */}
                         <div className="banner-create-form-item">
                             <div className="banner-create-label-horizontal">
-                                <span className="banner-create-text">배너사진 등록</span>
+                                <span className="banner-create-text">배너 이미지</span>
                                 <div className="banner-create-banner-btn">
                                     <label>
                                         배너사진 등록하기
@@ -106,19 +106,6 @@ const BannerCreatePage = () => {
                                         />
                                     </label>
                                 </div>
-                            </div>
-                            <p className="banner-create-img-guide">
-                                <span className="banner-create-color-red">이미지는 1:2.5 비율 (675×270)로 업로드</span>
-                                해주시기 바랍니다.
-                                <br />
-                                그렇지 않으실경우, 이미지가 깨져 보이실 수 있습니다.
-                            </p>
-                        </div>
-
-                        {/* 이미지 미리보기 */}
-                        <div className="banner-create-form-item">
-                            <div className="banner-create-label-horizontal">
-                                <span className="banner-create-text">등록된 배너이미지</span>
                             </div>
                             <div className="banner-create-image-preview">
                                 {previewImage ? (
@@ -133,6 +120,12 @@ const BannerCreatePage = () => {
                                     </div>
                                 )}
                             </div>
+                            <p className="banner-create-img-guide">
+                                <span className="banner-create-color-red">이미지는 1:2.5 비율 (675×270)로 업로드</span>
+                                해주시기 바랍니다.
+                                <br />
+                                그렇지 않으실경우, 이미지가 깨져 보이실 수 있습니다.
+                            </p>
                         </div>
                     </div>
 

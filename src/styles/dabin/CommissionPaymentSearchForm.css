@@ -59,11 +59,11 @@
   }
 } 
 
-/* 수당 지급 내역 페이지용 2열 레이아웃 */
+/* 수당 지급 내역 페이지용 3열 레이아웃 */
 .commission-payment-search-row {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
   margin-bottom: 20px;
 }
 
@@ -101,4 +101,17 @@
 .commission-payment-search-input:hover,
 .commission-payment-search-select:hover {
   border-color: #9ca3af;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 1200px) {
+  .commission-payment-search-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .commission-payment-search-row {
+    grid-template-columns: 1fr;
+  }
 } 

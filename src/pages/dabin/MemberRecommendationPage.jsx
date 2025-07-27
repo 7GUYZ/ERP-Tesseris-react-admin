@@ -80,10 +80,16 @@ const MemberRecommendationPage = () => {
             color="primary"
             onClick={() => {
               const toDateTime = (dateStr) => (dateStr ? `${dateStr}T00:00:00` : undefined)
+              const toEndDateTime = (dateStr) => {
+                if (!dateStr) return undefined
+                const date = new Date(dateStr)
+                date.setDate(date.getDate() + 1)
+                return date.toISOString().split('T')[0] + 'T00:00:00'
+              }
               const params = {
                 ...currentForm,
                 joinDateStart: toDateTime(currentForm.joinDateStart),
-                joinDateEnd: toDateTime(currentForm.joinDateEnd),
+                joinDateEnd: toEndDateTime(currentForm.joinDateEnd),
                 suggestionUserRole: currentForm.suggestionUserRole ? Number(currentForm.suggestionUserRole) : undefined,
                 recommendationUserRole: currentForm.recommendationUserRole ? Number(currentForm.recommendationUserRole) : undefined,
               }
