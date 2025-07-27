@@ -1,32 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { getMyAlarmHistory } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/alert/alert.css";
-
-// 알림 목데이터 (명시적 객체 배열)
-const notifications = [
-  { id: 1, title: "권한이 수정되었습니다", content: "사용자 권한 설정이 변경되어 일부 기능에 대한 접근 권한이 업데이트되었습니다.", date: "2024-01-15 14:30", isRead: false },
-  { id: 2, title: "공지사항이 등록되었습니다", content: "새로운 공지가 등록되었습니다. 확인해 주세요.", date: "2024-01-15 13:20", isRead: false },
-  { id: 3, title: "시스템 업데이트가 완료되었습니다", content: "포인트 시스템 업데이트가 성공적으로 완료되었습니다. 새로운 기능을 확인해보세요.", date: "2024-01-15 12:15", isRead: false },
-  { id: 4, title: "데이터베이스 백업이 완료되었습니다", content: "정기 데이터베이스 백업 작업이 성공적으로 완료되었습니다.", date: "2024-01-15 10:30", isRead: false },
-  { id: 5, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 최신 상태로 업데이트되었습니다.", date: "2024-01-14 18:00", isRead: false },
-  { id: 6, title: "사용자 계정이 생성되었습니다", content: "새로운 사용자 계정이 생성되었습니다.", date: "2024-01-14 15:10", isRead: true },
-  { id: 7, title: "포인트 정산이 완료되었습니다", content: "포인트 정산이 정상적으로 완료되었습니다.", date: "2024-01-14 13:45", isRead: true },
-  { id: 8, title: "공지사항이 등록되었습니다", content: "시스템 점검 안내 공지가 등록되었습니다.", date: "2024-01-14 11:30", isRead: true },
-  { id: 9, title: "권한이 수정되었습니다", content: "관리자 권한이 변경되었습니다.", date: "2024-01-13 17:20", isRead: true },
-  { id: 10, title: "시스템 업데이트가 완료되었습니다", content: "시스템이 최신 버전으로 업데이트되었습니다.", date: "2024-01-13 15:00", isRead: true },
-  { id: 11, title: "데이터베이스 백업이 완료되었습니다", content: "DB 백업이 정상적으로 완료되었습니다.", date: "2024-01-13 10:00", isRead: true },
-  { id: 12, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
-  { id: 13, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
-  { id: 14, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: true },
-  { id: 15, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 16, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 17, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 18, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 19, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 20, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 21, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 22, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-  { id: 23, title: "보안 정책이 업데이트되었습니다", content: "보안 정책이 강화되었습니다.", date: "2024-01-12 09:00", isRead: false },
-];
 
 // 알림 설정 목데이터 (배열, key/label/active)
 const initialSettings = [
@@ -41,11 +15,61 @@ const initialSettings = [
 ];
 
 export default function AlertPage() {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [settings, setSettings] = useState(initialSettings);
 
-  // 읽음/안읽음 분리
-  const newNotifications = notifications.filter((n) => !n.isRead);
-  const pastNotifications = notifications.filter((n) => n.isRead);
+  useEffect(() => {
+    const getAlarmList = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // localStorage에서 user_index 가져오기
+        const userInfo = JSON.parse(localStorage.getItem("user-info"));
+        const userIndex = userInfo?.user_index;
+
+        if (!userIndex) {
+          setError("사용자 정보를 찾을 수 없습니다.");
+          return;
+        }
+
+        console.log("알림 데이터 로드 시작 - userIndex:", userIndex);
+        
+                       // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
+               const response = await getMyAlarmHistory(userIndex);
+               
+               console.log("알림 내역 응답:", response);
+               
+               // ResponseDTO 구조에서 data 추출
+               console.log("전체 응답:", response);
+               console.log("response.data:", response?.data);
+               console.log("response.data.data:", response?.data?.data);
+               console.log("response.data.data 타입:", typeof response?.data?.data);
+               console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
+               
+               if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+                 console.log("알림 데이터 설정:", response.data.data);
+                 setNotifications(response.data.data);
+               } else {
+                 console.log("알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
+                 setNotifications([]);
+               }
+        
+      } catch (error) {
+        console.error("알림 데이터 로드 실패:", error);
+        setError("알림 내역을 불러오는데 실패했습니다.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    getAlarmList();
+  }, []);
+
+           // 읽음/안읽음 분리 (isRead 기준) - 배열인지 확인 후 필터링
+         const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
+         const pastNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 1) : [];
 
   // 배열 기반 토글
   const handleSettingChange = (key) => {
@@ -105,21 +129,35 @@ export default function AlertPage() {
     );
   };
 
-  // Notification Row Component
-  const NotificationRow = ({ notification, rowClassName }) => {
-    return (
-      <tr className={rowClassName || "alert-notification-row"}>
-        <td className="notification-title">
-          <div className="title-container">
-            <span className="title-text">{notification.title}</span>
-          </div>
-          <div className="notification-meta">
-            <span className="notification-date">{notification.date}</span>
-          </div>
-        </td>
-      </tr>
-    );
-  };
+           // Notification Row Component
+         const NotificationRow = ({ notification, rowClassName }) => {
+           // createdAt 배열을 Date 객체로 변환
+           const formatCreatedAt = (createdAt) => {
+             if (Array.isArray(createdAt)) {
+               // [2025, 7, 27, 18, 8, 25] 형식을 Date로 변환
+               const [year, month, day, hour, minute, second] = createdAt;
+               return new Date(year, month - 1, day, hour, minute, second).toLocaleString('ko-KR');
+             } else if (createdAt) {
+               return new Date(createdAt).toLocaleString('ko-KR');
+             }
+             return '날짜 없음';
+           };
+
+           return (
+             <tr className={rowClassName || "alert-notification-row"}>
+               <td className="notification-title">
+                 <div className="title-container">
+                   <span className="title-text">{notification.message}</span>
+                 </div>
+                 <div className="notification-meta">
+                   <span className="notification-date">
+                     {formatCreatedAt(notification.createdAt)}
+                   </span>
+                 </div>
+               </td>
+             </tr>
+           );
+         };
 
   // Notification List Component
   const NotificationList = ({ notifications }) => {
@@ -130,7 +168,7 @@ export default function AlertPage() {
             <tbody>
               {notifications.map((notification) => (
                 <NotificationRow
-                  key={notification.id}
+                  key={notification.alarmId}
                   notification={notification}
                   rowClassName="alert-notification-row"
                 />
@@ -146,14 +184,20 @@ export default function AlertPage() {
   const newCount = newNotifications.length > 100 ? "100+" : newNotifications.length;
   const pastCount = pastNotifications.length > 100 ? "100+" : pastNotifications.length;
 
-  return (
-    <div className="alert-root-container">
-      <div className="content">
-        <NotificationSettings
-          settings={settings}
-          onSettingChange={handleSettingChange}
-        />
-        {/* 새로운 알림 섹션 */}
+  if (loading) {
+    return <div className="alert-loading">로딩 중...</div>;
+  }
+
+  if (error) {
+    return <div className="alert-error">{error}</div>;
+  }
+
+           return (
+           <div className="alert-root-container">
+             <div className="content">
+               {/* 알림 설정 섹션 */}
+               <NotificationSettings settings={settings} onSettingChange={handleSettingChange} />
+               {/* 새로운 알림 섹션 */}
         <div className="notification-section">
           <div className="section-header">
             <h2 className="alert-section-title">새로운 알림</h2>
