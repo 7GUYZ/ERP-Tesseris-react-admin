@@ -9,9 +9,9 @@ import { login, menuAuthority } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
 import useAuthStore from "../../../store/jungeun/AuthStore"
 import "../../../styles/jungeun/login.css"
-import SockJS from 'sockjs-client';
-import { Client as StompClient } from '@stomp/stompjs';
+
 import { useWebSocket } from "../../../context/jungeun/WebSocketContext.jsx"
+import { useNotificationToast } from "../../../context/jungeun/NotificationToastContext.jsx"
 
 const LoginForm = () => {
   
@@ -21,6 +21,7 @@ const LoginForm = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [errors, setErrors] = useState({})
   const { showToast } = useToast()
+  const { showNotificationToast } = useNotificationToast();
   const zu_login = useAuthStore((state) => state.zu_login)
   const navigate = useNavigate();
 
@@ -129,7 +130,7 @@ const LoginForm = () => {
           // WebSocket 연결 (Context 사용)
           connectWebSocket(accessToken, userInfo.user_index, (notification) => {
             console.log('알림 수신:', notification);
-            showToast("info", notification.message);
+            showNotificationToast("info", notification.message);
           });
 
           // Zustand 상태 업데이트
