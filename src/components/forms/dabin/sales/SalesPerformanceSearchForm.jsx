@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Grid, TextField, Select, MenuItem, FormControl, Typography, Paper, Box } from "@mui/material"
 import '../../../../styles/dabin/SalesPerformanceSearchForm.css';
 
 const SalesPerformanceSearchForm = ({ onSearch, businessGrades, storeRequestStatuses, onParamsChange }) => {
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
   const [form, setForm] = useState({
     businessUserId: "",
     businessGradeIndex: "",
@@ -25,159 +25,131 @@ const SalesPerformanceSearchForm = ({ onSearch, businessGrades, storeRequestStat
   }
 
   return (
-    <Paper
-      elevation={0}
-      className="sales-performance-searchform-paper"
-    >
-      <Grid container direction="column" spacing={1}>
-        {/* 1줄: 검색 조건 */}
-        <Grid item>
-          <div className="sales-performance-searchform-row">
-            <Grid item sx={{ flex: 1, minWidth: 0 }}>
-              <Grid container alignItems="center" spacing={1}>
-                <Grid item><Typography variant="body2" className="sales-performance-searchform-label">영업자명</Typography></Grid>
-                <Grid item sx={{ flex: 1 }}>
-                  <TextField
-                    name="businessUserName"
-                    value={form.businessUserName}
-                    onChange={handleChange}
-                    size="small"
-                    margin="dense"
-                    InputProps={{ className: "sales-performance-searchform-input" }}
-                    fullWidth
-                  />
-                </Grid>
-              </Grid>
-            </Grid>
-            {/* 첫 번째 행 */}
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">사업자 ID</Typography>
-                <TextField
-                  name="businessUserId"
-                  value={form.businessUserId}
-                  onChange={handleChange}
-                  placeholder="검색명을 입력하세요."
-                  size="small"
-                  className="sales-performance-searchform-input"
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">사업자 등급</Typography>
-                <Select
-                  name="businessGradeIndex"
-                  value={form.businessGradeIndex}
-                  onChange={handleChange}
-                  size="small"
-                  className="sales-performance-searchform-input"
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  {businessGrades.map((grade) => (
-                    <MenuItem key={grade.businessGradeIndex} value={grade.businessGradeIndex}>
-                      {grade.businessGradeName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">사업자 이름</Typography>
-                <TextField
-                  name="userName"
-                  value={form.userName}
-                  onChange={handleChange}
-                  placeholder="검색명을 입력하세요."
-                  size="small"
-                  className="sales-performance-searchform-input"
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">사업자 상태</Typography>
-                <Select
-                  name="businessManDistributionFlag"
-                  value={form.businessManDistributionFlag}
-                  onChange={handleChange}
-                  size="small"
-                  className="sales-performance-searchform-input"
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="1">정상</MenuItem>
-                  <MenuItem value="0">정지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+    <div className="dabin-page-layout-search-section">
+      <div className="dabin-page-layout-search-header">
+        <button
+          className="dabin-page-layout-search-toggle-btn"
+          onClick={() => setIsSearchFormOpen(!isSearchFormOpen)}
+        >
+          <span className="dabin-page-layout-search-toggle-text">검색 조건</span>
+          <span className={`dabin-page-layout-search-toggle-icon ${isSearchFormOpen ? 'open' : 'closed'}`}>
+            ▼
+          </span>
+        </button>
+      </div>
 
-            {/* 두 번째 행 */}
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">가맹점 ID</Typography>
-                <TextField
-                  name="storeUserId"
-                  value={form.storeUserId}
-                  onChange={handleChange}
-                  placeholder="검색명을 입력하세요."
-                  size="small"
-                  className="sales-performance-searchform-input"
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">가맹점 명</Typography>
-                <TextField
-                  name="storeName"
-                  value={form.storeName}
-                  onChange={handleChange}
-                  placeholder="검색명을 입력하세요."
-                  size="small"
-                  className="sales-performance-searchform-input"
-                />
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">승인 여부</Typography>
-                <Select
-                  name="storeRequestStatusIndex"
-                  value={form.storeRequestStatusIndex}
-                  onChange={handleChange}
-                  size="small"
-                  className="sales-performance-searchform-input"
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  {storeRequestStatuses.map((status) => (
-                    <MenuItem key={status.storeRequestStatusIndex} value={status.storeRequestStatusIndex}>
-                      {status.storeRequestStatusName}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
-                <Typography variant="body2" className="sales-performance-searchform-label">가맹점 상태</Typography>
-                <Select
-                  name="storeTransactionStatus"
-                  value={form.storeTransactionStatus}
-                  onChange={handleChange}
-                  size="small"
-                  className="sales-performance-searchform-input"
-                >
-                  <MenuItem value="">전체</MenuItem>
-                  <MenuItem value="1">정상</MenuItem>
-                  <MenuItem value="0">정지</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+      <div className={`dabin-page-layout-search-form ${isSearchFormOpen ? 'open' : 'closed'}`}>
+        {/* 1줄: 사업자 정보 */}
+        <div className="dabin-page-layout-search-row">
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">사업자 ID</label>
+            <input
+              type="text"
+              name="businessUserId"
+              value={form.businessUserId}
+              onChange={handleChange}
+              className="dabin-page-layout-search-input"
+              placeholder="사업자 ID를 입력하세요"
+            />
           </div>
-        </Grid>
-      </Grid>
-    </Paper>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">사업자 등급</label>
+            <select
+              name="businessGradeIndex"
+              value={form.businessGradeIndex}
+              onChange={handleChange}
+              className="dabin-page-layout-search-select"
+            >
+              <option value="">전체</option>
+              {businessGrades.map((grade) => (
+                <option key={grade.businessGradeIndex} value={grade.businessGradeIndex}>
+                  {grade.businessGradeName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">사업자 이름</label>
+            <input
+              type="text"
+              name="userName"
+              value={form.userName}
+              onChange={handleChange}
+              className="dabin-page-layout-search-input"
+              placeholder="사업자 이름을 입력하세요"
+            />
+          </div>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">사업자 상태</label>
+            <select
+              name="businessManDistributionFlag"
+              value={form.businessManDistributionFlag}
+              onChange={handleChange}
+              className="dabin-page-layout-search-select"
+            >
+              <option value="">전체</option>
+              <option value="1">정상</option>
+              <option value="0">정지</option>
+            </select>
+          </div>
+        </div>
+
+        {/* 2줄: 가맹점 정보 */}
+        <div className="dabin-page-layout-search-row">
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">가맹점 ID</label>
+            <input
+              type="text"
+              name="storeUserId"
+              value={form.storeUserId}
+              onChange={handleChange}
+              className="dabin-page-layout-search-input"
+              placeholder="가맹점 ID를 입력하세요"
+            />
+          </div>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">가맹점 명</label>
+            <input
+              type="text"
+              name="storeName"
+              value={form.storeName}
+              onChange={handleChange}
+              className="dabin-page-layout-search-input"
+              placeholder="가맹점명을 입력하세요"
+            />
+          </div>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">승인 여부</label>
+            <select
+              name="storeRequestStatusIndex"
+              value={form.storeRequestStatusIndex}
+              onChange={handleChange}
+              className="dabin-page-layout-search-select"
+            >
+              <option value="">전체</option>
+              {storeRequestStatuses.map((status) => (
+                <option key={status.storeRequestStatusIndex} value={status.storeRequestStatusIndex}>
+                  {status.storeRequestStatusName}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="dabin-page-layout-search-field">
+            <label className="dabin-page-layout-search-label">가맹점 상태</label>
+            <select
+              name="storeTransactionStatus"
+              value={form.storeTransactionStatus}
+              onChange={handleChange}
+              className="dabin-page-layout-search-select"
+            >
+              <option value="">전체</option>
+              <option value="1">정상</option>
+              <option value="0">정지</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
   )
 }
 
