@@ -217,12 +217,12 @@ const MemberRecommendationDataGrid = ({ data, onSelectionChange }) => {
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: "#ffffff",
           },
-          "& .MuiDataGrid-columnHeader:first-child": {
+          "& .MuiDataGrid-columnHeader:first-of-type": {
             minWidth: "60px !important",
             width: "60px !important",
             maxWidth: "60px !important",
           },
-          "& .MuiDataGrid-cell:first-child": {
+          "& .MuiDataGrid-cell:first-of-type": {
             minWidth: "60px !important",
             width: "60px !important",
             maxWidth: "60px !important",

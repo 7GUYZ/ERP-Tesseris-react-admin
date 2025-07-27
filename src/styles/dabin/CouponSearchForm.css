@@ -143,8 +143,8 @@
 }
 
 /* DataGrid 체크박스 스타일 - 완전히 새로운 접근 */
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-child,
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-child {
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type {
   min-width: 60px !important;
   width: 60px !important;
   max-width: 60px !important;
@@ -154,8 +154,8 @@
 }
 
 /* 체크박스 자체 스타일 */
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-child .MuiCheckbox-root,
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-child .MuiCheckbox-root {
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type .MuiCheckbox-root,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type .MuiCheckbox-root {
   padding: 8px !important;
   margin: 0 !important;
   pointer-events: auto !important;
@@ -168,8 +168,8 @@
 }
 
 /* 체크박스 컨테이너 스타일 */
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-child > div,
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-child > div {
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type > div,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type > div {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -181,8 +181,8 @@
 }
 
 /* 체크박스 클릭 영역 확보 */
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-child,
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-child {
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type {
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -192,8 +192,8 @@
 }
 
 /* 모든 방해 요소 제거 */
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-child *,
-.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-child * {
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type *,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type * {
   pointer-events: auto !important;
 }
 

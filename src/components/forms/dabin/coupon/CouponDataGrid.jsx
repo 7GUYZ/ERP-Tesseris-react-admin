@@ -132,6 +132,7 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        if (!params) return "0";
         const value = params.value;
         if (value == null || value === '') return "0";
         const numValue = typeof value === 'string' ? parseInt(value) : value;
@@ -145,20 +146,107 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        if (!params) return "0";
         const value = params.value;
         if (value == null || value === '') return "0";
         const numValue = typeof value === 'string' ? parseInt(value) : value;
         return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
+
     { field: "couponName", headerName: "쿠폰명", width: 150, align: 'center', headerAlign: 'center' },
     { field: "couponIssuanceStatus", headerName: "발행 상태", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "couponIssuanceTime", headerName: "발행일", width: 160, align: 'center', headerAlign: 'center' },
+    { 
+      field: "couponIssuanceTime", 
+      headerName: "발행일", 
+      width: 160, 
+      align: 'center', 
+      headerAlign: 'center',
+      valueFormatter: (params) => {
+        if (!params) return "-";
+        const value = params.value;
+        if (!value) return "-";
+        try {
+          let date;
+          if (Array.isArray(value)) {
+            // 배열 형태: [년, 월, 일, 시, 분, 초]
+            const [year, month, day, hour, minute, second] = value;
+            date = new Date(year, month - 1, day, hour, minute, second);
+          } else {
+            date = new Date(value);
+          }
+          return date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+        } catch (error) {
+          return value;
+        }
+      }
+    },
+
     { field: "providedUserRole", headerName: "지급자 구분", width: 120, align: 'center', headerAlign: 'center' },
     { field: "providedUser", headerName: "지급자 ID", width: 120, align: 'center', headerAlign: 'center' },
     { field: "couponProvidedStatus", headerName: "지급 상태", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "couponProvidedTime", headerName: "지급일", width: 160, align: 'center', headerAlign: 'center' },
-    { field: "couponLimitTime", headerName: "만기일", width: 160, align: 'center', headerAlign: 'center' },
+    { 
+      field: "couponProvidedTime", 
+      headerName: "지급일", 
+      width: 160, 
+      align: 'center', 
+      headerAlign: 'center',
+      valueFormatter: (params) => {
+        if (!params) return "-";
+        const value = params.value;
+        if (!value) return "-";
+        try {
+          let date;
+          if (Array.isArray(value)) {
+            // 배열 형태: [년, 월, 일, 시, 분, 초]
+            const [year, month, day, hour, minute, second] = value;
+            date = new Date(year, month - 1, day, hour, minute, second);
+          } else {
+            date = new Date(value);
+          }
+          return date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+        } catch (error) {
+          return value;
+        }
+      }
+    },
+    { 
+      field: "couponLimitTime", 
+      headerName: "만기일", 
+      width: 160, 
+      align: 'center', 
+      headerAlign: 'center',
+      valueFormatter: (params) => {
+        if (!params) return "-";
+        const value = params.value;
+        if (!value) return "-";
+        try {
+          let date;
+          if (Array.isArray(value)) {
+            // 배열 형태: [년, 월, 일, 시, 분, 초]
+            const [year, month, day, hour, minute, second] = value;
+            date = new Date(year, month - 1, day, hour, minute, second);
+          } else {
+            date = new Date(value);
+          }
+          return date.toLocaleDateString('ko-KR', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          });
+        } catch (error) {
+          return value;
+        }
+      }
+    },
   ]
 
   return (
@@ -186,12 +274,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
           "& .MuiDataGrid-virtualScroller": {
             backgroundColor: "#ffffff",
           },
-          "& .MuiDataGrid-columnHeader:first-child": {
+          "& .MuiDataGrid-columnHeader:first-of-type": {
             minWidth: "60px !important",
             width: "60px !important",
             maxWidth: "60px !important",
           },
-          "& .MuiDataGrid-cell:first-child": {
+          "& .MuiDataGrid-cell:first-of-type": {
             minWidth: "60px !important",
             width: "60px !important",
             maxWidth: "60px !important",

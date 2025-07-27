@@ -178,8 +178,8 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
           "& .MuiDataGrid-cell": { borderBottom: "1px solid #f0f0f0" },
           "& .MuiDataGrid-columnHeaders": { backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" },
           "& .MuiDataGrid-virtualScroller": { backgroundColor: "#ffffff" },
-          "& .MuiDataGrid-columnHeader:first-child": { minWidth: "60px !important", width: "60px !important", maxWidth: "60px !important" },
-          "& .MuiDataGrid-cell:first-child": { minWidth: "60px !important", width: "60px !important", maxWidth: "60px !important" },
+          "& .MuiDataGrid-columnHeader:first-of-type": { minWidth: "60px !important", width: "60px !important", maxWidth: "60px !important" },
+          "& .MuiDataGrid-cell:first-of-type": { minWidth: "60px !important", width: "60px !important", maxWidth: "60px !important" },
         }}
       />
     </div>
