@@ -2,6 +2,7 @@ import React from "react";
 import { logout } from "../../../api/auth/JungeunAuth";
 import useAuthStore from "../../../store/jungeun/AuthStore";
 import { useNavigate } from "react-router-dom";
+import { clearAuthorityCache } from "../../../utils/authorityUtils";
 
 
 const Header = () => {
@@ -15,6 +16,8 @@ const Header = () => {
                 useAuthStore.getState().zu_logout();
                 localStorage.removeItem("access-token");
                 localStorage.removeItem("user-info");
+                // 권한 캐시 클리어
+                clearAuthorityCache();
                 // 홈으로 이동
                 navigate("/");
             }

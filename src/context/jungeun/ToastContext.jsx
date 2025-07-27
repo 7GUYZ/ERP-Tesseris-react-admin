@@ -10,8 +10,26 @@ export const ToastProvider = ({ children }) => {
 
   // 토스트 띄우는 함수
   const showToast = useCallback((type, message) => {
-    setToast({ type, message });
+    // Edge 브라우저에서 토스트 메시지 처리 개선
+    const isEdge = navigator.userAgent.includes('Edge');
+    
+    if (isEdge) {
+      // Edge에서는 약간의 지연을 두고 토스트 표시
+      setTimeout(() => {
+        setToast({ type, message });
+      }, 100);
+    } else {
+      setToast({ type, message });
+    }
   }, []);
+
+  // 전역 함수로 등록 (새로고침 후에도 사용 가능)
+  useEffect(() => {
+    window.showToast = showToast;
+    return () => {
+      delete window.showToast;
+    };
+  }, [showToast]);
 
   // 커스텀 이벤트 리스너 등록
   useEffect(() => {
