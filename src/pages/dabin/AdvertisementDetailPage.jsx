@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAdvertisement, deleteAdvertisement } from '../../api/auth/DabinAuth';
+import { getAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import '../../styles/dabin/AdvertisementDetailPage.css';
 
 const AdvertisementDetailPage = () => {
@@ -17,7 +17,15 @@ const AdvertisementDetailPage = () => {
     const fetchAdvertisement = async () => {
         try {
             const response = await getAdvertisement(advertisementIndex);
-            setAd(response.data);
+            const adData = response.data;
+            
+            // presigned URL 가져오기
+            try {
+                const presignedUrl = await getPresignedUrl(adData.advertisementPhoto);
+                setAd({ ...adData, presignedUrl });
+            } catch {
+                setAd(adData);
+            }
         } catch (error) {
             alert('광고 정보를 불러오는데 실패했습니다.');
         } finally {
@@ -77,7 +85,7 @@ const AdvertisementDetailPage = () => {
                         <div className="ad-detail-form-item">
                             <span className="ad-detail-text">광고 이미지</span>
                             <div className="ad-detail-banner-img">
-                                <img src={ad.advertisementPhoto} alt="광고 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
+                                <img src={ad.presignedUrl || ad.advertisementPhoto} alt="광고 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
                             </div>
                         </div>
                         <div className="ad-detail-form-item">

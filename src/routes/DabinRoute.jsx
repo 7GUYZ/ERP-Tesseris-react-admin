@@ -8,6 +8,10 @@ import AdvertisementListPage from '../pages/dabin/AdvertisementListPage';
 import AdvertisementCreatePage from '../pages/dabin/AdvertisementCreatePage';
 import AdvertisementEditPage from '../pages/dabin/AdvertisementEditPage';
 import AdvertisementDetailPage from '../pages/dabin/AdvertisementDetailPage';
+import BannerListPage from '../pages/dabin/BannerListPage';
+import BannerCreatePage from '../pages/dabin/BannerCreatePage';
+import BannerEditPage from '../pages/dabin/BannerEditPage';
+import BannerDetailPage from '../pages/dabin/BannerDetailPage';
 
 function DabinRoute() {
     return (
@@ -24,6 +28,12 @@ function DabinRoute() {
                 <Route path='/advertisement/create' element={<AdvertisementCreatePage />} />
                 <Route path='/advertisement/edit/:advertisementIndex' element={<AdvertisementEditPage />} />
                 <Route path='/advertisement/detail/:advertisementIndex' element={<AdvertisementDetailPage />} />
+                
+                {/* 배너 관리 페이지들 */}
+                <Route path='/banner/list' element={<BannerListPage />} />
+                <Route path='/banner/create' element={<BannerCreatePage />} />
+                <Route path='/banner/edit/:bannerIndex' element={<BannerEditPage />} />
+                <Route path='/banner/detail/:bannerIndex' element={<BannerDetailPage />} />
             </Route>
         </>
     );
