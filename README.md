@@ -36,4 +36,4 @@ npm install recharts
 
 npm install date-fns
 
-운영환경 배포버전: 202507271453
+운영환경 배포버전: 202507271800
