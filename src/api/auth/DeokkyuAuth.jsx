@@ -79,6 +79,9 @@ export function setupInterceptors() {
 export const getStoreList = (params) => // 가맹점 회원 리스트
   api.get('/store/list',{ params });
 
+export const getAdminList = (params) => // 관리자 리스트
+  api.get('/admin/list',{ params });
+
 export const getCustomerAllStoreList = (params) => // 가맹점 고객현황 - 가맹점리스트
   api.get('/store/customerlist',{ params });
 
@@ -100,26 +103,33 @@ export const getBusinessManList = () => // 사업자 조직도 - 전체 사업�
   
 // 상세정보 모달용 API 함수들
 export const getBusinessManDetail = (businessManId) => // 사업자 상세정보
-  api.get(`/businessman/detail/${businessManId}`);
-
-export const updateBusinessMan = (businessManId, data) => // 사업자 정보 수정
-  api.put(`/businessman/update/${businessManId}`, data);
-
-export const getStoreDetail = (storeId) => // 가맹점 상세정보
-  api.get(`/store/detail/${storeId}`);
-
-export const getStoreTransactionHistory = (userId) => // 가맹점 거래내역 (JOIN 필요: user_cm_log_payment, user_cm_log_transaction_type)
-  api.get(`/store/transaction-history/${userId}`);
-
+  api.get(`/modal/businessman/detail/${businessManId}`);
+  
 export const getBusinessManTransactionHistory = (businessManId) => // 사업자 거래내역 (JOIN 필요: user_cm_log_payment, user_cm_log_transaction_type)
-  api.get(`/businessman/transaction-history/${businessManId}`);
+  api.get(`/modal/businessman/transaction-history/${businessManId}`);
 
-export const updateStore = (storeId, data) => // 가맹점 정보 수정
-  api.put(`/store/update/${storeId}`, data);
-
+  
+  export const getStoreDetail = (storeId) => // 가맹점 상세정보
+  api.get(`/modal/store/detail/${storeId}`);
+  
+  export const getStoreTransactionHistory = (userId) => // 가맹점 거래내역 
+  api.get(`/modal/store/transaction-history/${userId}`);
+  
+  
+  
+  
+  export const updateStore = (storeId, data) => // 가맹점 정보 수정
+  api.put(`/modal/store/update/${storeId}`, data);
+  
+  export const updateBusinessMan = (businessManId, data) => // 사업자 정보 수정
+    api.put(`/modal/businessman/update/${businessManId}`, data);
+  
 export const getStoreRegisterDetail = (storeId) => // 가맹점 신청 상세정보
-  api.get(`/store/register/detail/${storeId}`);
+  api.get(`/modal/store/register/detail/${storeId}`);
 
 export const updateStoreRegister = (storeId, data) => // 가맹점 신청 정보 수정
-  api.put(`/store/register/update/${storeId}`, data);
+  api.put(`/modal/store/register/update/${storeId}`, data);
+
+export const getWithdrawalDetails = (params) => // 출금 상세 내역 조회
+  api.get('/withdrawal/details', { params });
 

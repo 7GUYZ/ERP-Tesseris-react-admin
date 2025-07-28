@@ -14,7 +14,6 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
     if (isOpen && storeId && (!storeData.userId || storeData.userId !== storeId)) {
       fetchStoreRegisterDetail();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, storeId]);
 
   const fetchStoreRegisterDetail = async () => {
