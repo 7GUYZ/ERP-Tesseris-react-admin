@@ -28,7 +28,7 @@ const MainNavi = () => {
   const [expandedMenus, setExpandedMenus] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeSubMenuId, setActiveSubMenuId] = useState(null);
-  const [authorityList, setAuthorityList] = useState([]);
+  const [authorityList, setAuthorityList] = useState([]); // eslint-disable-line no-unused-vars
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
   const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
@@ -91,6 +91,8 @@ const MainNavi = () => {
       window.removeEventListener("authority-updated", handleAuthorityUpdate);
     };
   }, [showToast]);
+  
+  // eslint-disable-next-line no-unused-vars
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map((a) => `${a.menuIndex}-${a.programIndex}`)
@@ -160,8 +162,8 @@ const MainNavi = () => {
             id: "admin-list",
             programIndex: 10,
             label: "CMS 관리자 명단",
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭"),
+            type: "link",
+            href: "/adminlist",
           },
           {
             id: "authority-management",
@@ -384,8 +386,8 @@ const MainNavi = () => {
             id: "withdrawal-history",
             programIndex: 15,
             label: "출금 조회",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/withdrawllist",
           },
           {
             id: "withdrawal-management",
