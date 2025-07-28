@@ -1,31 +1,145 @@
 import { useState, useEffect } from "react";
 import { getMyAlarmHistory } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/alert/alert.css";
+import { menuAuthority, getUserAlarmSetting, updateUserAlarmSetting } from "../../../api/auth/JungeunAuth";
 
-// 알림 설정 목데이터 (배열, key/label/active)
-const initialSettings = [
-  { key: "companyNotice", label: "공지사항 알림", active: 1 },
-  { key: "companyInquiry", label: "공지사항 알림", active: 0 },
-  { key: "qaNotice", label: "Q&A 알림", active: 1 },
-  { key: "qaInquiry", label: "Q&A 알림", active: 0 },
-  { key: "publicNotice", label: "공지사항 알림", active: 1 },
-  { key: "publicInquiry", label: "공지사항 알림", active: 1 },
-  { key: "generalQa", label: "Q&A 알림", active: 0 },
-  { key: "generalInquiry", label: "Q&A 알림", active: 0 },
-];
+// 알림 설정을 동적으로 생성하는 함수 (백엔드에서 설정 조회)
+const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
+  if (!authorityList || !Array.isArray(authorityList)) {
+    return [];
+  }
+
+  const alertSettings = [];
+  
+  // 권한 목록을 순회하며 알림 설정 생성
+  for (const auth of authorityList) {
+    const { programIndex, menuIndex} = auth;
+    
+    // 특정 프로그램 인덱스에 따른 알림 설정 매핑
+    let alarmTypesId = null;
+    let label = "";
+    
+    switch (programIndex) {
+      case 8: // 권한 관리
+        alarmTypesId = 1;
+        label = "권한 변경 알림";
+        break;
+      case 10: // CMS 관리자 명단
+        alarmTypesId = 2;
+        label = "관리자 추가/삭제 알림";
+        break;
+      case 38: // 월 CM 한도
+        alarmTypesId = 3;
+        label = "월 CM 한도 변경 알림";
+        break;
+      case 9: // 중개수수료율 관리
+        alarmTypesId = 4;
+        label = "중개수수료율 변경 알림";
+        break;
+      case 25: // 공지사항 관리
+        alarmTypesId = 5;
+        label = "공지사항 등록 알림";
+        break;
+      case 26: // Q&A 관리
+        alarmTypesId = 6;
+        label = "신규 Q&A 문의 알림";
+        break;
+      case 33: // 가맹점 신청 현황
+        alarmTypesId = 8;
+        label = "신규 가맹점 신청 알림";
+        break;
+      default:
+        continue; // 매핑되지 않은 프로그램은 건너뛰기
+    }
+    
+    try {
+      // 백엔드에서 해당 알림 타입의 설정 조회
+      const response = await getUserAlarmSetting(userIndex, alarmTypesId);
+      const settingData = response.data;
+      
+      console.log(`알림 설정 응답 - ${label}:`, settingData);
+      
+      let active = 0; // 기본값: ON (알림 활성화)
+      
+      if (settingData.hasSetting) {
+        // 설정이 있는 경우: 백엔드 값 사용
+        active = settingData.isActive;
+      }
+      // 설정이 없는 경우: 기본값 0 (ON) 사용
+      
+      alertSettings.push({
+        key: alarmTypesId,
+        label: label,
+        active: active,
+        programIndex: programIndex,
+        menuIndex: menuIndex,
+        alarmTypesId: alarmTypesId
+      });
+      
+      console.log(`알림 설정 조회 완료 - ${label}: ${active === 0 ? 'ON' : 'OFF'}`);
+      
+    } catch (error) {
+      console.error(`알림 설정 조회 실패 - ${label}:`, error);
+      console.error(`에러 상세 정보:`, error.response?.data);
+      
+      // 에러 시 기본값으로 설정
+      alertSettings.push({
+        key: alarmTypesId,
+        label: label,
+        active: 0, // 기본값: ON (알림 활성화)
+        programIndex: programIndex,
+        menuIndex: menuIndex,
+        alarmTypesId: alarmTypesId
+      });
+    }
+  }
+
+  return alertSettings;
+};
 
 export default function AlertPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [settings, setSettings] = useState(initialSettings);
+  const [settings, setSettings] = useState([]);
 
   useEffect(() => {
+    const userInfo = JSON.parse(localStorage.getItem("user-info"));
+    const adminTypeIndex = userInfo?.admin_type_index;
+    
+    // 특정 관리자 타입의 권한 조회
+    const getAuthority = async (adminTypeIndex) => {
+      try {
+        const response = await menuAuthority(adminTypeIndex);
+        console.log("권한 조회 결과:", response.data.data);
+        
+        // 사용자 정보 가져오기
+        const userInfo = JSON.parse(localStorage.getItem("user-info"));
+        const userIndex = userInfo?.user_index;
+        
+        if (!userIndex) {
+          console.error("사용자 정보를 찾을 수 없습니다.");
+          setSettings([]);
+          return;
+        }
+        
+        // 권한 조회 결과로 알림 설정 동적 생성 (백엔드에서 설정 조회)
+        const authorityList = response.data.data;
+        const alertSettings = await createAlertSettingsFromAuthority(authorityList, userIndex);
+        setSettings(alertSettings);
+        
+        console.log("생성된 알림 설정:", alertSettings);
+      } catch (error) {
+        console.error("권한 조회 실패:", error);
+        // 권한 조회 실패 시 빈 배열로 설정
+        setSettings([]);
+      }
+    };
     const getAlarmList = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         // localStorage에서 user_index 가져오기
         const userInfo = JSON.parse(localStorage.getItem("user-info"));
         const userIndex = userInfo?.user_index;
@@ -36,27 +150,27 @@ export default function AlertPage() {
         }
 
         console.log("알림 데이터 로드 시작 - userIndex:", userIndex);
-        
-                       // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
-               const response = await getMyAlarmHistory(userIndex);
-               
-               console.log("알림 내역 응답:", response);
-               
-               // ResponseDTO 구조에서 data 추출
-               console.log("전체 응답:", response);
-               console.log("response.data:", response?.data);
-               console.log("response.data.data:", response?.data?.data);
-               console.log("response.data.data 타입:", typeof response?.data?.data);
-               console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
-               
-               if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-                 console.log("알림 데이터 설정:", response.data.data);
-                 setNotifications(response.data.data);
-               } else {
-                 console.log("알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
-                 setNotifications([]);
-               }
-        
+
+        // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
+        const response = await getMyAlarmHistory(userIndex);
+
+        console.log("알림 내역 응답:", response);
+
+        // ResponseDTO 구조에서 data 추출
+        console.log("전체 응답:", response);
+        console.log("response.data:", response?.data);
+        console.log("response.data.data:", response?.data?.data);
+        console.log("response.data.data 타입:", typeof response?.data?.data);
+        console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
+
+        if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
+          console.log("알림 데이터 설정:", response.data.data);
+          setNotifications(response.data.data);
+        } else {
+          console.log("알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
+          setNotifications([]);
+        }
+
       } catch (error) {
         console.error("알림 데이터 로드 실패:", error);
         setError("알림 내역을 불러오는데 실패했습니다.");
@@ -64,20 +178,50 @@ export default function AlertPage() {
         setLoading(false);
       }
     };
+    getAuthority(adminTypeIndex);
     getAlarmList();
   }, []);
 
-           // 읽음/안읽음 분리 (isRead 기준) - 배열인지 확인 후 필터링
-         const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
-         const pastNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 1) : [];
+  // 읽음/안읽음 분리 (isRead 기준) - 배열인지 확인 후 필터링
+  const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
+  const pastNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 1) : [];
 
-  // 배열 기반 토글
-  const handleSettingChange = (key) => {
-    setSettings((prev) =>
-      prev.map((item) =>
-        item.key === key ? { ...item, active: item.active ? 0 : 1 } : item
-      )
-    );
+  // 배열 기반 토글 (0=ON, 1=OFF) - 백엔드에 저장
+  const handleSettingChange = async (key) => {
+    try {
+      // 사용자 정보 가져오기
+      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const userIndex = userInfo?.user_index;
+      
+      if (!userIndex) {
+        console.error("사용자 정보를 찾을 수 없습니다.");
+        return;
+      }
+      
+      // 현재 설정 찾기
+      const currentSetting = settings.find(item => item.key === key);
+      if (!currentSetting) {
+        console.error("설정을 찾을 수 없습니다.");
+        return;
+      }
+      
+      // 새로운 상태 계산 (0=ON, 1=OFF)
+      const newActive = currentSetting.active === 0 ? 1 : 0;
+      
+            // 백엔드에 업데이트 요청
+      const response = await updateUserAlarmSetting(userIndex, key, newActive);
+      
+      if (response.data.success) {
+        // 성공 시 로컬 상태 업데이트
+        setSettings((prev) =>
+          prev.map((item) =>
+            item.key === key ? { ...item, active: newActive } : item
+          )
+        );
+      }
+    } catch (error) {
+      // 에러 처리 (콘솔 로그 제거)
+    }
   };
 
   // Toggle Switch Component
@@ -99,7 +243,6 @@ export default function AlertPage() {
       <div className="alert-settings-container">
         <div className="alert-settings-header">
           <h2 className="alert-section-title">알림 설정</h2>
-          <button className="alert-save-btn">저장</button>
         </div>
         <div className="alert-settings-grid">
           <div className="alert-settings-column">
@@ -107,7 +250,7 @@ export default function AlertPage() {
               <div key={setting.key} className="alert-setting-item">
                 <span className="alert-setting-label">• {setting.label}</span>
                 <ToggleSwitch
-                  checked={!!setting.active}
+                  checked={setting.active === 0}
                   onChange={() => onSettingChange(setting.key)}
                 />
               </div>
@@ -118,7 +261,7 @@ export default function AlertPage() {
               <div key={setting.key} className="alert-setting-item">
                 <span className="alert-setting-label">• {setting.label}</span>
                 <ToggleSwitch
-                  checked={!!setting.active}
+                  checked={setting.active === 0}
                   onChange={() => onSettingChange(setting.key)}
                 />
               </div>
@@ -129,35 +272,35 @@ export default function AlertPage() {
     );
   };
 
-           // Notification Row Component
-         const NotificationRow = ({ notification, rowClassName }) => {
-           // createdAt 배열을 Date 객체로 변환
-           const formatCreatedAt = (createdAt) => {
-             if (Array.isArray(createdAt)) {
-               // [2025, 7, 27, 18, 8, 25] 형식을 Date로 변환
-               const [year, month, day, hour, minute, second] = createdAt;
-               return new Date(year, month - 1, day, hour, minute, second).toLocaleString('ko-KR');
-             } else if (createdAt) {
-               return new Date(createdAt).toLocaleString('ko-KR');
-             }
-             return '날짜 없음';
-           };
+  // Notification Row Component
+  const NotificationRow = ({ notification, rowClassName }) => {
+    // createdAt 배열을 Date 객체로 변환
+    const formatCreatedAt = (createdAt) => {
+      if (Array.isArray(createdAt)) {
+        // [2025, 7, 27, 18, 8, 25] 형식을 Date로 변환
+        const [year, month, day, hour, minute, second] = createdAt;
+        return new Date(year, month - 1, day, hour, minute, second).toLocaleString('ko-KR');
+      } else if (createdAt) {
+        return new Date(createdAt).toLocaleString('ko-KR');
+      }
+      return '날짜 없음';
+    };
 
-           return (
-             <tr className={rowClassName || "alert-notification-row"}>
-               <td className="notification-title">
-                 <div className="title-container">
-                   <span className="title-text">{notification.message}</span>
-                 </div>
-                 <div className="notification-meta">
-                   <span className="notification-date">
-                     {formatCreatedAt(notification.createdAt)}
-                   </span>
-                 </div>
-               </td>
-             </tr>
-           );
-         };
+    return (
+      <tr className={rowClassName || "alert-notification-row"}>
+        <td className="notification-title">
+          <div className="title-container">
+            <span className="title-text">{notification.message}</span>
+          </div>
+          <div className="notification-meta">
+            <span className="notification-date">
+              {formatCreatedAt(notification.createdAt)}
+            </span>
+          </div>
+        </td>
+      </tr>
+    );
+  };
 
   // Notification List Component
   const NotificationList = ({ notifications }) => {
@@ -192,12 +335,12 @@ export default function AlertPage() {
     return <div className="alert-error">{error}</div>;
   }
 
-           return (
-           <div className="alert-root-container">
-             <div className="content">
-               {/* 알림 설정 섹션 */}
-               <NotificationSettings settings={settings} onSettingChange={handleSettingChange} />
-               {/* 새로운 알림 섹션 */}
+  return (
+    <div className="alert-root-container">
+      <div className="content">
+        {/* 알림 설정 섹션 */}
+        <NotificationSettings settings={settings} onSettingChange={handleSettingChange} />
+        {/* 새로운 알림 섹션 */}
         <div className="notification-section">
           <div className="section-header">
             <h2 className="alert-section-title">새로운 알림</h2>

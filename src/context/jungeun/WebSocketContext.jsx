@@ -8,65 +8,39 @@ export const useWebSocket = () => useContext(WebSocketContext);
 
 export const WebSocketProvider = ({ children }) => {
   const stompClientRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
 
   // WebSocket 연결 함수
   const connectWebSocket = (accessToken, userIndex, onMessage) => {
-    // 이미 연결되어 있다면 해제
     if (stompClientRef.current && stompClientRef.current.connected) {
-      console.log('이미 WebSocket이 연결되어 있습니다.');
+      console.log('🔄 이미 WebSocket이 연결되어 있습니다.');
       return;
     }
-
-    console.log('WebSocket 연결 시도...');
+    console.log('🔌 WebSocket 연결 시도...', { userIndex, accessToken: accessToken ? '있음' : '없음' });
     
-    // 환경에 따른 WebSocket URL 설정
-    const getWebSocketUrl = () => {
-      // 환경 변수로 설정된 WebSocket URL이 있으면 우선 사용
-      if (process.env.REACT_APP_WEBSOCKET_URL) {
-        return process.env.REACT_APP_WEBSOCKET_URL;
-      }
-      
-      const currentHost = window.location.hostname;
-      const currentPort = window.location.port;
-      const currentProtocol = window.location.protocol;
-      
-      // 개발 환경 (localhost)
-      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/ws/notifications`;
-      }
-      
-      // 배포 환경 (kschost.ddns.net)
-      if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
-      }
-      
-      // 기타 환경 (기본값)
-      return `${currentProtocol}//${currentHost}${currentPort ? ':' + currentPort : ''}/ws/notifications`;
-    };
+    // Bearer 접두사 제거
+    const cleanToken = accessToken.startsWith('Bearer ') ? accessToken.substring(7) : accessToken;
     
-    const socket = new SockJS(getWebSocketUrl());
-    console.log('WebSocket URL:', getWebSocketUrl());
-    
-    // 브라우저별 WebSocket 설정
-    const isEdge = navigator.userAgent.includes('Edge');
-    
+    // 상대 경로로 WebSocket URL 설정
+    // 개발환경: http://localhost:19091, 운영환경: 현재 도메인 사용
+    const wsBaseUrl = process.env.NODE_ENV === 'production' 
+      ? '' // 운영환경: 현재 도메인 사용 (https://kschost.ddns.net)
+      : 'http://localhost:19091'; // 개발환경: localhost 사용
+    const socket = new SockJS(`${wsBaseUrl}/springboot/ws/notifications?token=${encodeURIComponent(cleanToken)}`);
     const stompClient = new StompClient({
       webSocketFactory: () => socket,
-      debug: () => {}, // 디버그 로그 비활성화
-      reconnectDelay: 5000, // 5초로 통일
-      heartbeatIncoming: 30000, // 30초로 통일
+      reconnectDelay: 5000,
+      heartbeatIncoming: 30000,
       heartbeatOutgoing: 30000,
       connectHeaders: {
-        'Authorization': 'Bearer ' + accessToken
+        'Authorization': 'Bearer ' + cleanToken
       }
     });
 
-        stompClient.onConnect = (frame) => {
-      console.log('✅ WebSocket 연결됨');
-      
-      // 구독
+    stompClient.onConnect = () => {
+      console.log('✅ WebSocket 연결 성공!');
       const topic = '/topic/notifications/' + userIndex;
+      console.log('📡 구독 토픽:', topic);
+      
       stompClient.subscribe(topic, (message) => {
         const notification = JSON.parse(message.body);
         console.log('📨 알림 수신:', notification);
@@ -85,21 +59,21 @@ export const WebSocketProvider = ({ children }) => {
       
       stompClientRef.current = stompClient;
       window.stompClient = stompClient;
-      
-            // 연결 완료
+      console.log('💾 WebSocket 클라이언트 저장 완료');
     };
 
     stompClient.onStompError = (frame) => {
-      console.error('❌ WebSocket 오류');
+      console.error('❌ WebSocket STOMP 오류:', frame);
     };
-
+    
     stompClient.onWebSocketClose = () => {
-      console.log('🔌 WebSocket 끊어짐');
+      console.log('🔌 WebSocket 연결 종료');
       stompClientRef.current = null;
       window.stompClient = null;
-      
-      // StompClient 내장 재연결 사용 (수동 재연결 제거)
-      // reconnectTimeoutRef 제거
+    };
+    
+    stompClient.onWebSocketError = (error) => {
+      console.error('❌ WebSocket 오류:', error);
     };
 
     stompClient.activate();
@@ -107,58 +81,44 @@ export const WebSocketProvider = ({ children }) => {
 
   // WebSocket 해제 함수
   const disconnectWebSocket = () => {
+    console.log('🔌 WebSocket 연결 해제 시도...');
     if (stompClientRef.current) {
       stompClientRef.current.deactivate();
       stompClientRef.current = null;
       window.stompClient = null;
+      console.log('✅ WebSocket 연결 해제 완료');
+    } else {
+      console.log('ℹ️ 이미 WebSocket이 해제되어 있습니다.');
     }
   };
 
   // 연결 상태 확인 함수
   const isConnected = () => {
-    return stompClientRef.current && stompClientRef.current.connected;
+    const connected = stompClientRef.current && stompClientRef.current.connected;
+    console.log('🔍 WebSocket 연결 상태:', connected);
+    return connected;
   };
 
   // 수동 재연결 함수
   const forceReconnect = () => {
+    console.log('🔄 수동 재연결 시도...');
     disconnectWebSocket();
-    
     const userInfo = JSON.parse(localStorage.getItem('user-info'));
     const token = localStorage.getItem('access-token');
-    
     if (userInfo && token) {
-      setTimeout(() => {
-        connectWebSocket(token, userInfo.user_index, (notification) => {
-          console.log('📨 알림:', notification.message);
-        });
-      }, 1000);
+      console.log('🔄 재연결 정보:', { userIndex: userInfo.user_index, hasToken: !!token });
+              setTimeout(() => {
+          connectWebSocket(token, userInfo.user_index, (notification) => {
+            console.log('📨 재연결 후 알림 수신:', notification);
+            if (window.showNotificationToast) window.showNotificationToast('info', notification.message);
+          });
+        }, 1000);
+    } else {
+      console.log('❌ 재연결 실패: 사용자 정보 또는 토큰 없음');
     }
   };
 
-  // 컴포넌트 언마운트 시 정리
-  useEffect(() => {
-    return () => {
-      disconnectWebSocket();
-    };
-  }, []);
-
-  // 연결 상태 모니터링 제거 (StompClient 내장 재연결 사용)
-  // useEffect(() => {
-  //   const checkConnection = () => {
-  //     if (stompClientRef.current) {
-  //       const isEdge = navigator.userAgent.includes('Edge');
-  //       
-  //       // Edge에서 연결이 끊어졌을 때 즉시 재연결 시도
-  //       if (isEdge && !stompClientRef.current.connected) {
-  //         forceReconnect();
-  //       }
-  //     }
-  //   };
-
-  //   const isEdge = navigator.userAgent.includes('Edge');
-  //   const interval = setInterval(checkConnection, isEdge ? 15000 : 30000);
-  //   return () => clearInterval(interval);
-  // }, []);
+  useEffect(() => () => { disconnectWebSocket(); }, []);
 
   return (
     <WebSocketContext.Provider value={{ 
