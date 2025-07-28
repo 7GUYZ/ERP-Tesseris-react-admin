@@ -1,0 +1,237 @@
+/* Pretendard 폰트 적용 */
+* {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 기존 스타일 유지 (하위 호환성) */
+.coupon-searchform-paper {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.coupon-searchform-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.coupon-searchform-label {
+  font-size: 13px;
+  color: #222;
+  min-width: 60px;
+}
+
+.coupon-searchform-input {
+  height: 32px;
+  padding: 0 8px;
+}
+
+/* 새로운 스타일 (dabin-page-layout-search-* 클래스들) */
+.dabin-page-layout-search-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid lightgray;
+  margin-bottom: 24px;
+}
+
+.dabin-page-layout-search-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dabin-page-layout-search-toggle-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: color 0.2s ease;
+}
+
+.dabin-page-layout-search-toggle-btn:hover {
+  color: #3b82f6;
+}
+
+.dabin-page-layout-search-toggle-text {
+  font-weight: 600;
+}
+
+.dabin-page-layout-search-toggle-icon {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+.dabin-page-layout-search-toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+.dabin-page-layout-search-toggle-icon.closed {
+  transform: rotate(0deg);
+}
+
+.dabin-page-layout-search-form {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 24px;
+}
+
+.dabin-page-layout-search-form.open {
+  max-height: 800px; /* 쿠폰 검색 폼이 더 길어서 높이 증가 */
+  padding: 24px;
+  overflow-y: auto; /* 스크롤 추가 */
+}
+
+.dabin-page-layout-search-form.closed {
+  max-height: 0;
+  padding: 0 24px;
+}
+
+.dabin-page-layout-search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.dabin-page-layout-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dabin-page-layout-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.dabin-page-layout-search-input,
+.dabin-page-layout-search-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #1f2937;
+}
+
+.dabin-page-layout-search-input:focus,
+.dabin-page-layout-search-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dabin-page-layout-search-input:hover,
+.dabin-page-layout-search-select:hover {
+  border-color: #9ca3af;
+}
+
+/* DataGrid 체크박스 스타일 - 완전히 새로운 접근 */
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type {
+  min-width: 60px !important;
+  width: 60px !important;
+  max-width: 60px !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* 체크박스 자체 스타일 */
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type .MuiCheckbox-root,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type .MuiCheckbox-root {
+  padding: 8px !important;
+  margin: 0 !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 99999 !important;
+  position: relative !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* 체크박스 컨테이너 스타일 */
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type > div,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type > div {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 100% !important;
+  width: 100% !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+/* 체크박스 클릭 영역 확보 */
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 99999 !important;
+}
+
+/* 모든 방해 요소 제거 */
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type *,
+.dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type * {
+  pointer-events: auto !important;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .dabin-page-layout-search-form.open {
+    max-height: 900px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dabin-page-layout-search-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dabin-page-layout-search-input,
+  .dabin-page-layout-search-select {
+    padding: 10px 12px;
+  }
+
+  .dabin-page-layout-search-form.open {
+    max-height: 1000px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dabin-page-layout-search-input,
+  .dabin-page-layout-search-select {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .dabin-page-layout-search-label {
+    font-size: 13px;
+  }
+
+  .dabin-page-layout-search-form.open {
+    max-height: 1100px;
+  }
+} 

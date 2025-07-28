@@ -26,3 +26,7 @@ export const searchCmsAccessLogs = (searchData) =>
 
 // 관리자 타입 목록 조회
 export const getAdminTypes = () => api.get("/cms-access-log/admin-types");
+
+// 알림 내역 조회 (메인 서버를 통해 알림 백엔드 호출)
+export const getMyAlarmHistory = (userIndex) => 
+  api.get(`/alarm-history/user/${userIndex}`);

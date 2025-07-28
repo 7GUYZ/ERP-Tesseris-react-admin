@@ -1,0 +1,25 @@
+.sales-performance-searchform-paper {
+  background-color: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  border: 1px solid #e2e8f0;
+}
+
+.sales-performance-searchform-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.sales-performance-searchform-label {
+  font-size: 13px;
+  color: #222;
+  min-width: 60px;
+}
+
+.sales-performance-searchform-input {
+  height: 32px;
+  padding: 0 8px;
+} 

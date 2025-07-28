@@ -1,0 +1,127 @@
+import React, { useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { getBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
+import '../../styles/dabin/BannerDetailPage.css';
+
+const BannerDetailPage = () => {
+    const { bannerIndex } = useParams();
+    const navigate = useNavigate();
+    const [banner, setBanner] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        fetchBanner();
+        // eslint-disable-next-line
+    }, [bannerIndex]);
+
+    const fetchBanner = async () => {
+        try {
+            const response = await getBanner(bannerIndex);
+            if (response.data && response.data.resultCode === 200 && response.data.data) {
+                const bannerData = response.data.data;
+                
+                // presigned URL 가져오기
+                try {
+                    const presignedUrl = await getPresignedUrl(bannerData.bannerPhoto);
+                    setBanner({ ...bannerData, presignedUrl });
+                } catch {
+                    setBanner(bannerData);
+                }
+            }
+        } catch (error) {
+            alert('배너 정보를 불러오는데 실패했습니다.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleListClick = () => {
+        navigate('/banner/list');
+    };
+
+    const handleEditClick = () => {
+        navigate(`/banner/edit/${bannerIndex}`);
+    };
+
+    const handleDeleteClick = async () => {
+        if (!window.confirm('정말로 이 배너를 삭제하시겠습니까?')) return;
+        try {
+            const response = await deleteBanner(bannerIndex);
+            if (response.data.success) {
+                alert('배너를 삭제하였습니다.');
+                navigate('/banner/list');
+            } else {
+                alert(response.data.message || '배너 삭제에 실패했습니다.');
+            }
+        } catch (error) {
+            alert('배너 삭제 중 오류가 발생했습니다.');
+        }
+    };
+
+    if (loading) return <div className="loading">로딩 중...</div>;
+    if (!banner) return <div>배너 정보를 찾을 수 없습니다.</div>;
+
+    return (
+        <div className="banner-detail-page">
+            {/* Breadcrumb */}
+            <ul className="banner-detail-breadcrumb">
+                <li>배너 및 광고 관리</li>
+                <li>배너 관리</li>
+                <li>배너 상세</li>
+            </ul>
+
+            {/* Header */}
+            <div className="banner-detail-flex-between banner-detail-mb10">
+                <p className="banner-detail-font-20 banner-detail-bold">배너 상세</p>
+                <div>
+                    <button type="button" className="banner-detail-cancel-button" onClick={handleListClick}>목록</button>
+                    <button type="button" className="banner-detail-delete-button" onClick={handleDeleteClick}>삭제</button>
+                    <button type="button" className="banner-detail-edit-button" onClick={handleEditClick}>수정</button>
+                </div>
+            </div>
+
+            {/* Card */}
+            <div className="banner-detail-card">
+                <div className="banner-detail-card-inner">
+                    <div className="banner-detail-form-grid">
+                        <div className="banner-detail-form-item">
+                            <span className="banner-detail-text">배너 이미지</span>
+                            <div className="banner-detail-banner-img">
+                                <img src={banner.presignedUrl || banner.bannerPhoto} alt="배너 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
+                            </div>
+                        </div>
+                        <div className="banner-detail-form-item">
+                            <span className="banner-detail-text">등록일</span>
+                            <div>
+                                {(() => {
+                                    if (!banner.bannerCreateTime) return '-';
+                                    
+                                    try {
+                                        // 배열 형태인지 확인 (Spring Boot에서 LocalDateTime이 배열로 직렬화된 경우)
+                                        if (Array.isArray(banner.bannerCreateTime)) {
+                                            const [year, month, day, hour, minute, second] = banner.bannerCreateTime;
+                                            const date = new Date(year, month - 1, day, hour, minute, second);
+                                            return date.toLocaleString('ko-KR');
+                                        }
+                                        
+                                        // 일반적인 날짜 문자열인 경우
+                                        return new Date(banner.bannerCreateTime).toLocaleString('ko-KR');
+                                    } catch (error) {
+                                        console.error('날짜 파싱 오류:', error, 'bannerCreateTime:', banner.bannerCreateTime);
+                                        return '-';
+                                    }
+                                })()}
+                            </div>
+                        </div>
+                        <div className="banner-detail-form-item">
+                            <span className="banner-detail-text">등록한 관리자</span>
+                            <div>{banner.userId}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export default BannerDetailPage; 

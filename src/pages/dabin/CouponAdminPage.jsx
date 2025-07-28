@@ -1,20 +1,21 @@
-"use client"
+
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
-import AdminLayout from "../../components/layout/dabin/AdminLayout";
-import CouponSearchForm from "../../components/feature/dabin/coupon/CouponSearchForm";
-import CouponDataGrid from "../../components/feature/dabin/coupon/CouponDataGrid";
-import CouponExcelDownloadButton from "../../components/feature/dabin/coupon/CouponExcelDownloadButton";
-import { getCouponIssuanceStatus, getCouponProvidedStatus, searchCoupons } from "../../api/Auth";
+
+import CouponSearchForm from "../../components/forms/dabin/coupon/CouponSearchForm";
+import CouponDataGrid from "../../components/forms/dabin/coupon/CouponDataGrid";
+import CouponExcelDownloadButton from "../../components/forms/dabin/coupon/CouponExcelDownloadButton";
+import { getCouponIssuanceStatus, getCouponProvidedStatus, searchCoupons } from "../../api/auth/DabinAuth";
+import '../../styles/dabin/dabinPageLayout.css';
 
 const CouponAdminPage = () => {
-  const [searchParams, setSearchParams] = useState({})
   const [currentForm, setCurrentForm] = useState({})
   const [coupons, setCoupons] = useState([])
   const [issuanceStatus, setIssuanceStatus] = useState([])
   const [providedStatus, setProvidedStatus] = useState([])
   const [loading, setLoading] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
 
   useEffect(() => {
     setLoading(true)
@@ -24,12 +25,20 @@ const CouponAdminPage = () => {
       searchCoupons({}),
     ])
       .then(([issuanceRes, providedRes, searchRes]) => {
-        // Ensure we always set arrays, even if API returns something else
         setIssuanceStatus(Array.isArray(issuanceRes.data) ? issuanceRes.data : [])
         setProvidedStatus(Array.isArray(providedRes.data) ? providedRes.data : [])
-
-        // Ensure search results is an array before mapping
         const searchData = Array.isArray(searchRes.data) ? searchRes.data : []
+        
+        // 데이터 구조 로깅
+        console.log("API 응답 전체:", searchRes);
+        console.log("쿠폰 데이터 개수:", searchData.length);
+        if (searchData.length > 0) {
+          console.log("첫 번째 쿠폰 데이터:", searchData[0]);
+          console.log("첫 번째 쿠폰 가격:", searchData[0].couponPrice);
+          console.log("첫 번째 쿠폰 한도:", searchData[0].couponLimit);
+          console.log("첫 번째 쿠폰 발행일:", searchData[0].couponIssuanceTime);
+        }
+        
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
           id: row.couponIndex || `${row.couponName}-${row.couponIssuanceTime}-${idx}`,
@@ -39,7 +48,6 @@ const CouponAdminPage = () => {
       })
       .catch((error) => {
         console.error("API Error:", error)
-        // Set empty arrays on error
         setIssuanceStatus([])
         setProvidedStatus([])
         setCoupons([])
@@ -48,85 +56,86 @@ const CouponAdminPage = () => {
   }, [])
 
   const handleSearch = (params) => {
-    setSearchParams(params)
     setLoading(true)
     searchCoupons(params)
       .then((res) => {
-        // Ensure search results is an array before mapping
         const searchData = Array.isArray(res.data) ? res.data : []
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
           id: row.couponIndex || `${row.couponName}-${row.couponIssuanceTime}-${idx}`,
         }))
         setCoupons(dataWithId)
+        setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
         console.log("쿠폰 개수:", dataWithId.length)
       })
       .catch((error) => {
         console.error("Search Error:", error)
         setCoupons([])
+        setSelectedRows(new Set())
       })
       .finally(() => setLoading(false))
   }
 
+  const handleSelectionChange = (newSelection) => {
+    setSelectedRows(newSelection);
+  }
+
   return (
-    <AdminLayout>
-      <Box
-        sx={{
-          maxWidth: 1200,
-          margin: '18px auto',
-          padding: 4,
-          background: '#fff',
-          borderRadius: 3,
-          boxShadow: 2,
-        }}
-      >
-        {/* 제목과 버튼들을 같은 줄에 배치 */}
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-          <Typography variant="h4" fontWeight={500} color="text.primary">
-            쿠폰 관리
-          </Typography>
-          <Box display="flex" gap={2}>
-            <CouponExcelDownloadButton data={coupons} />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={() => {
-                // 날짜/가격 변환 로직 적용
-                const toDateTime = (dateStr) => (dateStr ? `${dateStr}T00:00:00` : undefined)
-                const params = {
-                  ...currentForm,
-                  issuanceStart: toDateTime(currentForm.issuanceStart),
-                  issuanceEnd: toDateTime(currentForm.issuanceEnd),
-                  providedStart: toDateTime(currentForm.providedStart),
-                  providedEnd: toDateTime(currentForm.providedEnd),
-                  limitStart: toDateTime(currentForm.limitStart),
-                  limitEnd: toDateTime(currentForm.limitEnd),
-                  couponPrice: currentForm.couponPrice ? Number(currentForm.couponPrice) : undefined,
-                }
-                handleSearch(params)
-              }}
-              sx={{ height: 40 }}
-            >
-              조회
-            </Button>
-          </Box>
+    <Box className="dabin-page-layout-container">
+      {/* 제목과 버튼들을 같은 줄에 배치 */}
+      <Box className="dabin-page-layout-titleRow">
+        <Typography variant="h4" className="dabin-page-layout-title">
+          쿠폰 관리
+        </Typography>
+        <Box className="dabin-page-layout-buttonGroup">
+          <CouponExcelDownloadButton data={coupons} selectedRows={selectedRows} />
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              const toDateTime = (dateStr) => (dateStr ? `${dateStr}T00:00:00` : undefined)
+              const toEndDateTime = (dateStr) => {
+                if (!dateStr) return undefined
+                const date = new Date(dateStr)
+                date.setDate(date.getDate() + 1)
+                return date.toISOString().split('T')[0] + 'T00:00:00'
+              }
+              const params = {
+                ...currentForm,
+                issuanceStart: toDateTime(currentForm.issuanceStart),
+                issuanceEnd: toEndDateTime(currentForm.issuanceEnd),
+                providedStart: toDateTime(currentForm.providedStart),
+                providedEnd: toEndDateTime(currentForm.providedEnd),
+                limitStart: toDateTime(currentForm.limitStart),
+                limitEnd: toEndDateTime(currentForm.limitEnd),
+                couponPrice: currentForm.couponPrice ? Number(currentForm.couponPrice) : undefined,
+              }
+              handleSearch(params)
+            }}
+            sx={{ height: 40 }}
+          >
+            조회
+          </Button>
         </Box>
-        <CouponSearchForm
-          onSearch={handleSearch}
-          issuanceStatus={issuanceStatus}
-          providedStatus={providedStatus}
-          onParamsChange={setCurrentForm}
-        />
-        {loading ? (
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
-            <CircularProgress />
-            <Typography sx={{ ml: 2 }}>로딩중...</Typography>
-          </Box>
-        ) : (
-          <CouponDataGrid data={coupons} />
-        )}
       </Box>
-    </AdminLayout>
+      <CouponSearchForm
+        onSearch={handleSearch}
+        issuanceStatus={issuanceStatus}
+        providedStatus={providedStatus}
+        onParamsChange={setCurrentForm}
+      />
+      {loading ? (
+        <Box className="dabin-page-layout-loading">
+          <CircularProgress />
+          <Typography sx={{ ml: 2 }}>로딩중...</Typography>
+        </Box>
+      ) : (
+        <CouponDataGrid 
+          data={coupons} 
+          onSelectionChange={handleSelectionChange}
+        />
+      )}
+    </Box>
   )
 }
 

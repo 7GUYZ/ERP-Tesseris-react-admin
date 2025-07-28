@@ -1,25 +1,35 @@
-import React from 'react';
-import '../../../styles/deokkyu/DetailModal.css';
+import React from "react";
+import "../../../styles/deokkyu/DetailModal.css";
 
-function DetailModal({ 
-  isOpen, 
-  onClose, 
-  title = "상세 정보", 
-  data = {}, 
+function DetailModal({
+  isOpen,
+  onClose,
+  title = "상세 정보",
+  data = {},
   fields = [],
   customContent = null,
-  customFooter = null 
+  customFooter = null,
 }) {
+<<<<<<< HEAD
   // ESC 키로 모달 닫기 (Hook은 항상 조건부 반환 전에 호출되어야 함)
   React.useEffect(() => {
     if (!isOpen) return; // isOpen이 false면 이벤트 리스너 등록하지 않음
 
     const handleEscKey = (e) => {
       if (e.key === 'Escape') {
+=======
+  // ESC 키로 모달 닫기
+  React.useEffect(() => {
+    if (!isOpen) return; // isOpen이 false면 아무것도 하지 않음
+
+    const handleEscKey = (e) => {
+      if (e.key === "Escape") {
+>>>>>>> dev
         onClose();
       }
     };
 
+<<<<<<< HEAD
     document.addEventListener('keydown', handleEscKey);
     document.body.style.overflow = 'hidden'; // 배경 스크롤 방지
 
@@ -30,6 +40,17 @@ function DetailModal({
   }, [isOpen, onClose]);
 
   // 조건부 반환은 모든 Hook 호출 후에
+=======
+    document.addEventListener("keydown", handleEscKey);
+    document.body.style.overflow = "hidden"; // 배경 스크롤 방지
+
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen, onClose]);
+
+>>>>>>> dev
   if (!isOpen) return null;
 
   // 오버레이 클릭 시 모달 닫기
@@ -40,22 +61,22 @@ function DetailModal({
   };
 
   // 필드 값 포맷팅
-  const formatValue = (value, type = 'text') => {
-    if (value === null || value === undefined || value === '') {
-      return '-';
+  const formatValue = (value, type = "text") => {
+    if (value === null || value === undefined || value === "") {
+      return "-";
     }
 
     switch (type) {
-      case 'currency':
+      case "currency":
         return `${Number(value).toLocaleString()}원`;
-      case 'number':
+      case "number":
         return Number(value).toLocaleString();
-      case 'date':
-        return new Date(value).toLocaleDateString('ko-KR');
-      case 'datetime':
-        return new Date(value).toLocaleString('ko-KR');
-      case 'phone':
-        return value.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3');
+      case "date":
+        return new Date(value).toLocaleDateString("ko-KR");
+      case "datetime":
+        return new Date(value).toLocaleString("ko-KR");
+      case "phone":
+        return value.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
       default:
         return value;
     }
@@ -67,7 +88,7 @@ function DetailModal({
         {/* 모달 헤더 */}
         <div className="detail-modal-header">
           <h2 className="detail-modal-title">{title}</h2>
-          <button 
+          <button
             className="detail-modal-close-btn"
             onClick={onClose}
             aria-label="닫기"
@@ -87,7 +108,11 @@ function DetailModal({
               {fields.map((field, index) => (
                 <div key={index} className="detail-modal-field">
                   <div className="detail-modal-field-label">
-                    {field.icon && <span className="detail-modal-field-icon">{field.icon}</span>}
+                    {field.icon && (
+                      <span className="detail-modal-field-icon">
+                        {field.icon}
+                      </span>
+                    )}
                     {field.label}
                   </div>
                   <div className="detail-modal-field-value">
@@ -102,7 +127,7 @@ function DetailModal({
         {/* 모달 푸터 */}
         {customFooter || (
           <div className="detail-modal-footer">
-            <button 
+            <button
               className="detail-modal-btn detail-modal-btn-secondary"
               onClick={onClose}
             >
@@ -115,4 +140,4 @@ function DetailModal({
   );
 }
 
-export default DetailModal; 
+export default DetailModal;

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import {
   Home,
   Users,
@@ -13,11 +13,14 @@ import {
   Flag,
   Info,
   FileChartColumn,
+  Bell,
 } from "lucide-react";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
+import { refreshAuthority } from "../../../../utils/authorityUtils";
+
 
 const MainNavi = () => {
   const navigate = useNavigate();
@@ -32,20 +35,25 @@ const MainNavi = () => {
   const userName = userInfo.name || "";
   const adminType = userInfo.admin_type_name || "";
   useEffect(() => {
-    // 1. 접속한 관리자의 권한 조회하고 오기
+    // 1. localStorage에서 권한 정보 확인
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("user-info"));
-      const admin_type_index = userInfo?.admin_type_index;
-      if (admin_type_index) {
+      const storedAuthority = localStorage.getItem("user-authority");
+      
+      if (storedAuthority) {
+        // 캐시된 권한 정보 사용
+        setAuthorityList(JSON.parse(storedAuthority));
+        console.log("캐시된 권한 정보 사용:", JSON.parse(storedAuthority));
+      } else if (userInfo?.admin_type_index) {
+        // 캐시가 없으면 API 호출
         try {
-          const response = await menuAuthority(admin_type_index);
-          // eslint-disable-next-line no-console
-          console.log(response);
+          const response = await menuAuthority(userInfo.admin_type_index);
+          console.log("API 권한 조회:", response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
+            localStorage.setItem("user-authority", JSON.stringify(response.data.data));
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.log("권한 조회 실패 : ", error);
           showToast("error", "메뉴를 불러올 수 없습니다.");
         }
@@ -54,7 +62,15 @@ const MainNavi = () => {
 
     getAuthority();
 
-    // 2. 반응형을 위한 화면 크기 감지
+    // 2. 권한 갱신 이벤트 리스너
+    const handleAuthorityUpdate = (event) => {
+      setAuthorityList(event.detail.authorityList);
+      console.log("권한 갱신됨:", event.detail.authorityList);
+    };
+
+    window.addEventListener("authority-updated", handleAuthorityUpdate);
+
+    // 3. 반응형을 위한 화면 크기 감지
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setSidebarOpen(false);
@@ -72,9 +88,8 @@ const MainNavi = () => {
     // 클린업
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("authority-updated", handleAuthorityUpdate);
     };
-
-
   }, [showToast]);
   
   // eslint-disable-next-line no-unused-vars
@@ -113,15 +128,14 @@ const MainNavi = () => {
         label: "대시 보드",
         icon: Home,
         type: "link", // link: 페이지 이동, expand: 확장 메뉴, action: 액션 실행
-        href: "/main",
+        href: "/dashboard",
       },
       {
         id: "mypage",
         label: "마이페이지",
         icon: UserCircleIcon,
         type: "link",
-        href: "/adminmypage"
-
+        href: "/adminmypage",
       },
       {
         id: "company-management",
@@ -134,8 +148,8 @@ const MainNavi = () => {
             id: "coupon-management",
             programIndex: 13,
             label: "쿠폰 관리",
-            type: "list", // list: 리스트 박스 (링크 없음)
-            action: () => console.log("본인 리스트 클릭"), // 클릭 시 실행할 함수
+            type: "link", // list: 리스트 박스 (링크 없음)
+            href: "/coupon",
           },
           {
             id: "brokerage-fee-setting",
@@ -151,12 +165,12 @@ const MainNavi = () => {
             type: "link",
             href: "/adminlist",
           },
-          { 
-            id: "authority-management", 
-            programIndex: 8, 
-            label: "권한 관리", 
+          {
+            id: "authority-management",
+            programIndex: 8,
+            label: "권한 관리",
             type: "link",
-            href: "/PermissionManagement"
+            href: "/PermissionManagement",
           },
           {
             id: "monthly-cm-limit",
@@ -178,7 +192,7 @@ const MainNavi = () => {
             id: "member-list",
             programIndex: 14,
             label: "회원 리스트",
-            type: "link", 
+            type: "link",
             href: "/user-admin-list",
           },
           {
@@ -191,16 +205,16 @@ const MainNavi = () => {
           {
             id: "member-assets-status",
             programIndex: 11,
-            label: "회원 자산 현황", 
+            label: "회원 자산 현황",
             type: "link",
-            href: "/memberassetdetails"
+            href: "/memberassetdetails",
           },
           {
             id: "member-referral-status",
             programIndex: 31,
             label: "회원 추천 현황",
-            type: "list",
-            action: () => console.log("본인 출금 현황 클릭"),
+            type: "link",
+            href: "/member-recommendation"
           },
           {
             id: "member-payment-history",
@@ -214,7 +228,7 @@ const MainNavi = () => {
             programIndex: 35,
             label: "수당 지급 내역",
             type: "link",
-            href: "/",
+            href: "/commission-payment",
           },
         ],
       },
@@ -229,8 +243,8 @@ const MainNavi = () => {
             id: "business-performance-overview",
             programIndex: 18,
             label: "영업 실적 현황",
-            type: "list",
-            action: () => console.log("영업 실적 현황"),
+            type: "link",
+            href: "/sales-performance",
           },
           {
             id: "business-organization-chart",
@@ -243,15 +257,15 @@ const MainNavi = () => {
             id: "business-member-list",
             programIndex: 17,
             label: "사업자 회원 리스트",
-            type: "list",
-            action: () => console.log("사업자 리스트 클릭"),
+            type: "link",
+            href: "/businessman-admin-list"
           },
           {
             id: "business-commission-history",
             programIndex: 37,
-            label: "사업자 수당 내역", 
+            label: "사업자 수당 내역",
             type: "link",
-            href: "/businessallowance"
+            href: "/businessallowance",
           },
           {
             id: "commission-setting",
@@ -303,15 +317,15 @@ const MainNavi = () => {
             id: "advertisement-management",
             programIndex: 24,
             label: "광고 관리",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/advertisement/list",
           },
           {
             id: "banner-management",
             programIndex: 23,
             label: "배너 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
+            type: "link",
+            href: "/banner/list",
           },
         ],
       },
@@ -397,6 +411,22 @@ const MainNavi = () => {
             label: "채팅방 관리",
             type: "list",
             action: () => console.log("채팅방 관리 클릭"),
+          },
+        ],
+      },
+      {
+        id: "alert",
+        menuIndex: 11,
+        label: "알림 관리",
+        icon: Bell,
+        type: "expand",
+        submenu: [
+          {
+            id: "alert",
+            programIndex: 41,
+            label: "알림 내역 및 설정 관리",
+            type: "link",
+            href: "/alert",
           },
         ],
       },
@@ -584,8 +614,8 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-        {/* 개발/테스트용: 권한 체크 임시 우회 */}
-        {menuConfig.items.map(renderMenuItem)}
+      {/* 권한에 따라 메뉴 필터링 */}
+      {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
       </nav>
     </div>
   );

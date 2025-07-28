@@ -1,0 +1,117 @@
+.cp-searchform-paper {
+  padding: 20px;
+  margin-bottom: 20px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.cp-searchform-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.cp-searchform-label {
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  font-size: 0.875rem;
+}
+
+.cp-searchform-input {
+  background-color: white;
+  border-radius: 4px;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root {
+  border-radius: 4px;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: #059669;
+}
+
+.cp-searchform-input .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #059669;
+}
+
+.cp-searchform-input .MuiInputLabel-root.Mui-focused {
+  color: #059669;
+}
+
+.cp-searchform-input .MuiSelect-select {
+  padding: 8px 12px;
+}
+
+.cp-searchform-input .MuiTextField-root {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .cp-searchform-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .cp-searchform-paper {
+    padding: 16px;
+  }
+} 
+
+/* 수당 지급 내역 페이지용 3열 레이아웃 */
+.commission-payment-search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.commission-payment-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.commission-payment-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.commission-payment-search-input,
+.commission-payment-search-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #1f2937;
+}
+
+.commission-payment-search-input:focus,
+.commission-payment-search-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.commission-payment-search-input:hover,
+.commission-payment-search-select:hover {
+  border-color: #9ca3af;
+}
+
+/* 모바일 반응형 */
+@media (max-width: 1200px) {
+  .commission-payment-search-row {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .commission-payment-search-row {
+    grid-template-columns: 1fr;
+  }
+} 

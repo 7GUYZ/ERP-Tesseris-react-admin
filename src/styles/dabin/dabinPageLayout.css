@@ -1,0 +1,278 @@
+/* Pretendard 폰트 적용 */
+* {
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dabin-page-layout-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.dabin-page-layout-titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 0;
+}
+
+.dabin-page-layout-title {
+  font-size: 32px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.dabin-page-layout-buttonGroup {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* 버튼 스타일 */
+.dabin-page-layout-buttonGroup .MuiButton-root {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: white;
+  background-color: #3b82f6;
+  text-transform: none;
+  box-shadow: none;
+}
+
+.dabin-page-layout-buttonGroup .MuiButton-root:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: none;
+}
+
+.dabin-page-layout-buttonGroup .MuiButton-root:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 엑셀 버튼 스타일 */
+.dabin-page-layout-buttonGroup .MuiButton-root[data-button-type="excel"] {
+  background-color: #10b981;
+}
+
+.dabin-page-layout-buttonGroup .MuiButton-root[data-button-type="excel"]:hover {
+  background-color: #059669;
+}
+
+/* 검색 폼 섹션 스타일 */
+.dabin-page-layout-search-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid lightgray;
+  margin-bottom: 24px;
+}
+
+.dabin-page-layout-search-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.dabin-page-layout-search-toggle-btn {
+  width: 100%;
+  background: none;
+  border: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  transition: color 0.2s ease;
+}
+
+.dabin-page-layout-search-toggle-btn:hover {
+  color: #3b82f6;
+}
+
+.dabin-page-layout-search-toggle-text {
+  font-weight: 600;
+}
+
+.dabin-page-layout-search-toggle-icon {
+  font-size: 12px;
+  transition: transform 0.2s ease;
+  color: #64748b;
+}
+
+.dabin-page-layout-search-toggle-icon.open {
+  transform: rotate(180deg);
+}
+
+.dabin-page-layout-search-toggle-icon.closed {
+  transform: rotate(0deg);
+}
+
+.dabin-page-layout-search-form {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease, padding 0.3s ease;
+  padding: 0 24px;
+}
+
+.dabin-page-layout-search-form.open {
+  max-height: 300px;
+  padding: 24px;
+}
+
+.dabin-page-layout-search-form.closed {
+  max-height: 0;
+  padding: 0 24px;
+}
+
+.dabin-page-layout-search-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.dabin-page-layout-search-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dabin-page-layout-search-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+  margin: 0;
+}
+
+.dabin-page-layout-search-input,
+.dabin-page-layout-search-select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #1f2937;
+}
+
+.dabin-page-layout-search-input:focus,
+.dabin-page-layout-search-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dabin-page-layout-search-input:hover,
+.dabin-page-layout-search-select:hover {
+  border-color: #9ca3af;
+}
+
+/* 로딩 스타일 */
+.dabin-page-layout-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid lightgray;
+}
+
+.dabin-page-layout-loading .MuiCircularProgress-root {
+  color: #3b82f6;
+}
+
+.dabin-page-layout-loading .MuiTypography-root {
+  margin-left: 16px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1024px) {
+  .dabin-page-layout-container {
+    padding: 20px;
+  }
+
+  .dabin-page-layout-title {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 900px) {
+  .dabin-page-layout-container {
+    padding: 16px;
+  }
+
+  .dabin-page-layout-titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .dabin-page-layout-title {
+    font-size: 18px;
+  }
+
+  .dabin-page-layout-buttonGroup {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .dabin-page-layout-search-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .dabin-page-layout-search-input,
+  .dabin-page-layout-search-select {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .dabin-page-layout-container {
+    padding: 12px;
+  }
+
+  .dabin-page-layout-title {
+    font-size: 16px;
+  }
+
+  .dabin-page-layout-buttonGroup {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dabin-page-layout-buttonGroup .MuiButton-root {
+    width: 100%;
+    padding: 12px;
+  }
+
+  .dabin-page-layout-search-input,
+  .dabin-page-layout-search-select {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .dabin-page-layout-search-label {
+    font-size: 13px;
+  }
+} 

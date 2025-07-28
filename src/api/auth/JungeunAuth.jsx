@@ -1,5 +1,4 @@
 import { api } from "../Http"
-
 // [로그인]
 export const login = (username, password) =>
   api.post("/auth/login", { username, password })
@@ -7,11 +6,14 @@ export const login = (username, password) =>
 export const test = () =>
   api.get("/user/testBackend")
 
+export const alarmTest = () =>
+  api.get("/alarms/HelloAlarm")
+
 export const logout = () => 
   api.post("/auth/logout")
 
 // Interceptor 등록 함수로 분리
-export function setupInterceptors() {
+export function setupInterceptors(navigate) {
   // 요청 인터셉터
   api.interceptors.request.use(
     (config) => {
@@ -70,10 +72,13 @@ export function setupInterceptors() {
               },
             })
           );
-
           // 홈으로 이동
           setTimeout(() => {
-            window.location.href = "/";
+            if (navigate) {
+              navigate("/");
+            } else {
+              window.location.href = "/";
+            }
           }, 4000);
 
           return Promise.reject(e);
@@ -102,6 +107,28 @@ export const menuAuthority = (adminTypeIndex) => {
   const token = localStorage.getItem("access-token"); // 항상 최신 토큰
   return api.get("/adminAuthority", {
     params: { adminTypeIndex },
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
+
+// 사용자의 알림 설정 조회
+export const getUserAlarmSetting = (userIndex, alarmTypesId) => {
+  const token = localStorage.getItem("access-token");
+  return api.get("/alarms/user-alarm-setting", {
+    params: { userIndex, alarmTypesId },
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
+
+// 사용자의 알림 설정 업데이트
+export const updateUserAlarmSetting = (userIndex, alarmTypesId, isActive) => {
+  const token = localStorage.getItem("access-token");
+  return api.post("/alarms/update-user-alarm-setting", null, {
+    params: { userIndex, alarmTypesId, isActive },
     headers: {
       Authorization: `${token}`,
     },
