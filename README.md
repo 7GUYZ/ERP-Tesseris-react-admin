@@ -38,3 +38,5 @@ npm install eslint-plugin-react-hooks --save-dev
 ^^
 
 npm install date-fns
+
+운영환경 배포버전: 202507272203

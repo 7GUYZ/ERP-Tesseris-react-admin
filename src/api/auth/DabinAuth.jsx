@@ -95,44 +95,6 @@ export const searchCommissionPayments = (params) => {
   });
 };
 
-export const updateCommissionPaymentStatus = (params) => {
-  const accessToken = localStorage.getItem("access-token");
-  console.log("=== 지급 상태 업데이트 API 요청 ===");
-  console.log("요청 파라미터:", params);
-  console.log("토큰:", accessToken);
-  
-  return api.post("/dabin/commission-payment/update-status", params, {
-    headers: {
-      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
-    }
-  }).then(response => {
-    console.log("지급 상태 업데이트 응답:", response);
-    return response;
-  }).catch(error => {
-    console.error("지급 상태 업데이트 실패:", error);
-    throw error;
-  });
-};
-
-export const validateCommissionPaymentEligibility = (detailIndex) => {
-  const accessToken = localStorage.getItem("access-token");
-  console.log("=== 유효성 검사 API 요청 ===");
-  console.log("detailIndex:", detailIndex);
-  console.log("토큰:", accessToken);
-  
-  return api.get(`/dabin/commission-payment/validate/${detailIndex}`, {
-    headers: {
-      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
-    }
-  }).then(response => {
-    console.log("유효성 검사 응답:", response);
-    return response;
-  }).catch(error => {
-    console.error("유효성 검사 실패:", error);
-    throw error;
-  });
-};
-
 // 광고 관리 관련 API
 export const getAdvertisementList = () => {
   const accessToken = localStorage.getItem("access-token");
@@ -175,6 +137,71 @@ export const updateAdvertisement = (advertisementIndex, formData) => {
 export const deleteAdvertisement = (advertisementIndex) => {
   const accessToken = localStorage.getItem("access-token");
   return api.delete(`/dabin/advertisement/${advertisementIndex}`, {
+    headers: {
+      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+    }
+  });
+};
+
+// presigned URL 받아오기
+export const getPresignedUrl = async (fileKey) => {
+  const accessToken = localStorage.getItem("access-token");
+  try {
+    const response = await api.get(`/store/images/presigned`, {
+      params: { fileKey },
+      headers: {
+        Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+      }
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching presigned url:', error);
+    throw error;
+  }
+};
+
+// 배너 관리 관련 API
+export const getBannerList = () => {
+  const accessToken = localStorage.getItem("access-token");
+  return api.get("/dabin/banner/list", {
+    headers: {
+      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+    }
+  });
+};
+
+export const getBanner = (bannerIndex) => {
+  const accessToken = localStorage.getItem("access-token");
+  return api.get(`/dabin/banner/${bannerIndex}`, {
+    headers: {
+      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
+    }
+  });
+};
+
+export const createBanner = (formData) => {
+  const accessToken = localStorage.getItem("access-token");
+  return api.post("/dabin/banner/create", formData, {
+    headers: {
+      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
+      'Content-Type': 'multipart/form-data',
+    }
+  });
+};
+
+export const updateBanner = (bannerIndex, formData) => {
+  const accessToken = localStorage.getItem("access-token");
+  return api.put(`/dabin/banner/${bannerIndex}`, formData, {
+    headers: {
+      Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
+      'Content-Type': 'multipart/form-data',
+    }
+  });
+};
+
+export const deleteBanner = (bannerIndex) => {
+  const accessToken = localStorage.getItem("access-token");
+  return api.delete(`/dabin/banner/${bannerIndex}`, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
     }

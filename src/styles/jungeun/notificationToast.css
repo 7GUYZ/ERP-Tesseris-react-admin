@@ -1,0 +1,137 @@
+.notification-toast {
+  position: fixed;
+  top: 32px;
+  right: 32px;
+  z-index: 9999;
+  min-width: 340px;
+  max-width: 420px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 8px 32px rgba(23, 15, 88, 0.18), 0 1.5px 6px rgba(0,0,0,0.08);
+  border-left: 6px solid #2196F3;
+  animation: notification-slide-in 0.3s cubic-bezier(.4,1.4,.6,1);
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow: hidden;
+}
+
+.notification-toast-info {
+  border-left-color: #2196F3;
+}
+.notification-toast-success {
+  border-left-color: #FDCD00;
+}
+.notification-toast-warning {
+  border-left-color: #FDCD00;
+}
+.notification-toast-error {
+  border-left-color: #F44336;
+}
+
+.notification-toast-content {
+  display: flex;
+  align-items: flex-start;
+  padding: 22px 28px 22px 20px;
+  gap: 18px;
+}
+
+.notification-toast-icon {
+  font-size: 2.1rem;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-toast-message {
+  flex: 1;
+  font-size: 1.18rem;
+  font-weight: 600;
+  line-height: 1.5;
+  color: #2196F3;
+  word-break: keep-all;
+  letter-spacing: -0.01em;
+}
+
+.notification-toast-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #aaa;
+  cursor: pointer;
+  padding: 0 0 0 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background 0.18s, color 0.18s;
+  margin-left: 4px;
+}
+.notification-toast-close:hover {
+  background: #F5F6FA;
+  color: #2196F3;
+}
+
+.notification-toast-progress {
+  height: 4px;
+  background: #F5F6FA;
+  border-radius: 0 0 14px 14px;
+  overflow: hidden;
+}
+.notification-toast-progress::before {
+  content: '';
+  display: block;
+  height: 100%;
+  background: #2196F3;
+  animation: notification-progress 5s linear;
+}
+.notification-toast-success .notification-toast-progress::before {
+  background: #FDCD00;
+}
+.notification-toast-warning .notification-toast-progress::before {
+  background: #FDCD00;
+}
+.notification-toast-error .notification-toast-progress::before {
+  background: #F44336;
+}
+
+@keyframes notification-slide-in {
+  from {
+    transform: translateX(120%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+@keyframes notification-progress {
+  from { width: 100%; }
+  to { width: 0%; }
+}
+
+@media (max-width: 768px) {
+  .notification-toast {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+    max-width: none;
+    border-radius: 10px;
+  }
+  .notification-toast-content {
+    padding: 16px 14px 16px 12px;
+    gap: 10px;
+  }
+  .notification-toast-message {
+    font-size: 1rem;
+  }
+  .notification-toast-close {
+    width: 28px;
+    height: 28px;
+    font-size: 1.2rem;
+  }
+  .notification-toast-progress {
+    height: 3px;
+    border-radius: 0 0 10px 10px;
+  }
+} 
