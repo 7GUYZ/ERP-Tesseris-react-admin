@@ -20,20 +20,14 @@ export const WebSocketProvider = ({ children }) => {
     // Bearer 접두사 제거
     const cleanToken = accessToken.startsWith('Bearer ') ? accessToken.substring(7) : accessToken;
     
-    // 환경에 따른 WebSocket URL 설정
+    // WebSocket URL 설정 - 배포환경 최적화
     const getWebSocketUrl = () => {
-      // 환경 변수로 설정된 WebSocket URL이 있으면 우선 사용
-      if (process.env.REACT_APP_WEBSOCKET_URL) {
-        return process.env.REACT_APP_WEBSOCKET_URL;
-      }
-      
       const currentHost = window.location.hostname;
-      const currentPort = window.location.port;
       const currentProtocol = window.location.protocol;
       
       // 개발 환경 (localhost)
       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/ws/notifications`;
+        return `${currentProtocol}//${currentHost}:19091/springboot/ws/notifications`;
       }
       
       // 배포 환경 (kschost.ddns.net)
@@ -41,11 +35,11 @@ export const WebSocketProvider = ({ children }) => {
         return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
       }
       
-      // 기타 환경 (기본값)
-      return `${currentProtocol}//${currentHost}${currentPort ? ':' + currentPort : ''}/ws/notifications`;
+      // 기타 배포 환경
+      return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
     };
     
-    const socket = new SockJS(getWebSocketUrl() + `?token=${encodeURIComponent(cleanToken)}`);
+    const socket = new SockJS(getWebSocketUrl());
     const stompClient = new StompClient({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
