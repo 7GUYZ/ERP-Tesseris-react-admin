@@ -87,66 +87,44 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       field: 'temporaryStoreMasterDistributionTime', 
       headerName: '수당 발생 시간', 
       width: 180,
-      valueGetter: (params) => {
-        console.log('📅 날짜 valueGetter params:', params);
-        if (!params || !params.row) {
-          console.warn('📅 날짜 valueGetter: params 또는 params.row가 없음');
-          return null;
-        }
-        return params.row.temporaryStoreMasterDistributionTime;
-      },
-      valueFormatter: (params) => {
-        console.log('📅 날짜 포맷 params:', params);
-        // 배열 형태의 날짜 데이터 처리
-        return formatDate(params?.value);
+      renderCell: (params) => {
+        console.log('📅 날짜 렌더 params:', params);
+        const dateValue = params.row?.temporaryStoreMasterDistributionTime;
+        const formattedDate = formatDate(dateValue);
+        console.log('📅 포맷된 날짜:', formattedDate);
+        return <span>{formattedDate}</span>;
       }
     },
     { 
       field: 'temporaryStoreMasterIndexName', 
       headerName: '가맹점 유저 이름', 
       width: 150,
-      valueGetter: (params) => {
-        console.log('👤 이름 valueGetter params:', params);
-        if (!params || !params.row) {
-          console.warn('👤 이름 valueGetter: params 또는 params.row가 없음');
-          return null;
-        }
-        return params.row.temporaryStoreMasterIndexName;
-      },
-      valueFormatter: (params) => {
-        console.log('👤 이름 포맷 params:', params);
-        try {
-          if (!params || !params.value) return '-';
-          return String(params.value);
-        } catch (error) {
-          console.error('유저 이름 포맷 오류:', error);
-          return '-';
-        }
+      renderCell: (params) => {
+        console.log('👤 이름 렌더 params:', params);
+        const nameValue = params.row?.temporaryStoreMasterIndexName;
+        console.log('👤 이름 값:', nameValue);
+        return <span>{nameValue || '-'}</span>;
       }
     },
     { 
       field: 'temporaryStoreCmValue', 
       headerName: '수당 금액', 
       width: 130,
-      valueGetter: (params) => {
-        console.log('💰 금액 valueGetter params:', params);
-        if (!params || !params.row) {
-          console.warn('💰 금액 valueGetter: params 또는 params.row가 없음');
-          return null;
+      renderCell: (params) => {
+        console.log('💰 금액 렌더 params:', params);
+        const amountValue = params.row?.temporaryStoreCmValue;
+        console.log('💰 금액 값:', amountValue);
+        
+        if (amountValue === null || amountValue === undefined) {
+          return <span>-</span>;
         }
-        return params.row.temporaryStoreCmValue;
-      },
-      valueFormatter: (params) => {
-        console.log('💰 금액 포맷 params:', params);
-        try {
-          if (!params || params.value === null || params.value === undefined) return '-';
-          const amount = Number(params.value);
-          if (isNaN(amount)) return '-';
-          return `${amount.toLocaleString()}원`;
-        } catch (error) {
-          console.error('수당 금액 포맷 오류:', error);
-          return '-';
+        
+        const amount = Number(amountValue);
+        if (isNaN(amount)) {
+          return <span>-</span>;
         }
+        
+        return <span>{amount.toLocaleString()}원</span>;
       }
     },
   ];

@@ -30,3 +30,7 @@ export const getAdminTypes = () => api.get("/cms-access-log/admin-types");
 // 알림 내역 조회 (메인 서버를 통해 알림 백엔드 호출)
 export const getMyAlarmHistory = (userIndex) => 
   api.get(`/alarm-history/user/${userIndex}`);
+
+// 알림 읽음 처리 (메인 서버를 통해 알림 백엔드 호출)
+export const markAsRead = (alarmId) => 
+  api.post(`/alarm-history/alarms/${alarmId}/read`);
