@@ -20,12 +20,32 @@ export const WebSocketProvider = ({ children }) => {
     // Bearer 접두사 제거
     const cleanToken = accessToken.startsWith('Bearer ') ? accessToken.substring(7) : accessToken;
     
-    // 상대 경로로 WebSocket URL 설정
-    // 개발환경: http://localhost:19091, 운영환경: 현재 도메인 사용
-    const wsBaseUrl = process.env.NODE_ENV === 'production' 
-      ? '' // 운영환경: 현재 도메인 사용 (https://kschost.ddns.net)
-      : 'http://localhost:19091'; // 개발환경: localhost 사용
-    const socket = new SockJS(`${wsBaseUrl}/springboot/ws/notifications?token=${encodeURIComponent(cleanToken)}`);
+    // 환경에 따른 WebSocket URL 설정
+    const getWebSocketUrl = () => {
+      // 환경 변수로 설정된 WebSocket URL이 있으면 우선 사용
+      if (process.env.REACT_APP_WEBSOCKET_URL) {
+        return process.env.REACT_APP_WEBSOCKET_URL;
+      }
+      
+      const currentHost = window.location.hostname;
+      const currentPort = window.location.port;
+      const currentProtocol = window.location.protocol;
+      
+      // 개발 환경 (localhost)
+      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        return `${currentProtocol}//${currentHost}:19091/ws/notifications`;
+      }
+      
+      // 배포 환경 (kschost.ddns.net)
+      if (currentHost === 'kschost.ddns.net') {
+        return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+      }
+      
+      // 기타 환경 (기본값)
+      return `${currentProtocol}//${currentHost}${currentPort ? ':' + currentPort : ''}/ws/notifications`;
+    };
+    
+    const socket = new SockJS(getWebSocketUrl() + `?token=${encodeURIComponent(cleanToken)}`);
     const stompClient = new StompClient({
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
