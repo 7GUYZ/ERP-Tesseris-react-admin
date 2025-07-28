@@ -92,7 +92,7 @@ const BusinessmanListPage = () => {
       // 필터가 있으면 검색 API, 없으면 전체 조회 API 사용
       let response;
       if (filters && Object.values(filters).some(value => value !== '')) {
-        console.log('검색 필터:', filters);
+      console.log('검색 필터:', filters);
         response = await businessmanListApi.searchBusinessmanList(filters);
       } else {
         console.log('전체 사업자 조회 (모든 조건 제거)');
@@ -164,7 +164,7 @@ const BusinessmanListPage = () => {
 
   // 검색 실행 (클라이언트 사이드 필터링)
   const handleSearch = () => {
-    console.log('검색 실행 - 필터:', searchFilters);
+      console.log('검색 실행 - 필터:', searchFilters);
     // 클라이언트 사이드 필터링만 수행
     // getFilteredList() 함수가 자동으로 필터링된 결과를 반환
   };
@@ -880,7 +880,7 @@ const BusinessmanListPage = () => {
                 <div className="businessman-list-form-grid">
                               {editForm.businessGradeIndex !== '1' && (
                 <div className="businessman-list-form-item businessman-list-boss-search">
-                  <label>상사 이메일</label>
+                    <label>상사 이메일</label>
                   <div className="businessman-list-boss-input-group">
                     <input
                       type="text"
@@ -1121,7 +1121,7 @@ const BusinessmanListPage = () => {
                 <div className="businessman-list-form-grid">
                               {createForm.businessGradeIndex !== '1' && (
                 <div className="businessman-list-form-item businessman-list-boss-search">
-                  <label>상사 이메일</label>
+                    <label>상사 이메일</label>
                   <div className="businessman-list-boss-input-group">
                     <input
                       type="text"
