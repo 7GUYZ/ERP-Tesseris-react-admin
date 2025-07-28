@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { getMyAlarmHistory } from "../../../api/auth/JiyoonAuth";
+import { getMyAlarmHistory, markAsRead } from "../../../api/auth/JiyoonAuth";
 import "../../../styles/jiyun/alert/alert.css";
 import { menuAuthority, getUserAlarmSetting, updateUserAlarmSetting } from "../../../api/auth/JungeunAuth";
+import useNotificationStore from "../../../store/jiyun/NotificationStore";
 
 // 알림 설정을 동적으로 생성하는 함수 (백엔드에서 설정 조회)
 const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
@@ -98,10 +99,10 @@ const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
 };
 
 export default function AlertPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [settings, setSettings] = useState([]);
+  
+  // 전역 상태에서 알림 데이터 가져오기
+  const { notifications, loading, error, setNotifications, setLoading, setError, markAsRead: markAsReadGlobal } = useNotificationStore();
 
   useEffect(() => {
     const userInfo = JSON.parse(localStorage.getItem("user-info"));
@@ -180,7 +181,7 @@ export default function AlertPage() {
     };
     getAuthority(adminTypeIndex);
     getAlarmList();
-  }, []);
+  }, [setNotifications, setLoading, setError]);
 
   // 읽음/안읽음 분리 (isRead 기준) - 배열인지 확인 후 필터링
   const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
@@ -286,8 +287,29 @@ export default function AlertPage() {
       return '날짜 없음';
     };
 
+    // 알림 클릭 핸들러 (읽음 처리)
+    const handleNotificationClick = async (notification) => {
+      try {
+        console.log("알림 클릭 - alarmId:", notification.alarmId);
+
+        // 읽음 처리 API 호출
+        await markAsRead(notification.alarmId);
+
+        // 전역 상태 업데이트 (Popover도 함께 업데이트됨)
+        markAsReadGlobal(notification.alarmId);
+
+        console.log("알림 읽음 처리 완료 - alarmId:", notification.alarmId);
+      } catch (error) {
+        console.error("알림 읽음 처리 실패:", error);
+      }
+    };
+
     return (
-      <tr className={rowClassName || "alert-notification-row"}>
+      <tr 
+        className={rowClassName || "alert-notification-row"} 
+        onClick={() => handleNotificationClick(notification)}
+        style={{ cursor: 'pointer' }}
+      >
         <td className="notification-title">
           <div className="title-container">
             <span className="title-text">{notification.message}</span>

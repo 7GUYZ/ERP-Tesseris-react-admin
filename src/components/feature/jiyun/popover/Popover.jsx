@@ -1,22 +1,32 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
 import { getMyAlarmHistory } from "../../../../api/auth/JiyoonAuth";
+import useNotificationStore from "../../../../store/jiyun/NotificationStore";
 import '../../../../styles/jiyun/popover/popover.css';
 
 const Popover = () => {
   const [showPopover, setShowPopover] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const bellRef = useRef(null);
   const popoverRef = useRef(null);
+  
+  // 전역 상태에서 알림 데이터 가져오기
+  const { notifications, loading, error, setNotifications, setLoading, setError } = useNotificationStore();
 
-  // 알림 데이터 로드
+  // 알림 데이터 로드 (지연 로딩 추가)
   useEffect(() => {
     const getAlarmList = async () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // 토큰 체크 추가
+        const token = localStorage.getItem("access-token");
+        if (!token) {
+          console.log("Popover: 토큰이 없어서 알림 데이터를 불러오지 않습니다.");
+          setNotifications([]);
+          setLoading(false);
+          return;
+        }
         
         // localStorage에서 user_index 가져오기
         const userInfo = JSON.parse(localStorage.getItem("user-info"));
@@ -28,10 +38,16 @@ const Popover = () => {
         }
 
         console.log("Popover 알림 데이터 로드 시작 - userIndex:", userIndex);
+        console.log("Popover 토큰 확인:", token ? "토큰 있음" : "토큰 없음");
         
         const response = await getMyAlarmHistory(userIndex);
         
         console.log("Popover 알림 내역 응답:", response);
+        console.log("전체 응답:", response);
+        console.log("response.data:", response?.data);
+        console.log("response.data.data:", response?.data?.data);
+        console.log("response.data.data 타입:", typeof response?.data?.data);
+        console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
         
         if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
           console.log("Popover 알림 데이터 설정:", response.data.data);
@@ -43,13 +59,20 @@ const Popover = () => {
         
       } catch (error) {
         console.error("Popover 알림 데이터 로드 실패:", error);
+        console.error("에러 상세 정보:", error.response?.data);
         setError("알림 내역을 불러오는데 실패했습니다.");
       } finally {
         setLoading(false);
       }
     };
-    getAlarmList();
-  }, []);
+
+    // 지연 로딩: 인터셉터가 완전히 설정될 때까지 대기
+    const timer = setTimeout(() => {
+      getAlarmList();
+    }, 1000); // 1초 지연
+
+    return () => clearTimeout(timer);
+  }, [setNotifications, setLoading, setError]);
 
   // 신규 알림만 필터링 (isRead === 0)
   const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
