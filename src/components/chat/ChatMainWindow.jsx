@@ -12,6 +12,7 @@ import {
   ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
 import { GetAdminList } from '../../api/auth/ChatAuth';
+import axios from 'axios';
 
 
 function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
@@ -285,6 +286,66 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
     }
   };
 
+  // 채팅방 생성 함수
+  const createChatRoom = async (participants) => {
+    if (!socket || !currentUser) {
+      console.error('소켓 또는 현재 사용자 정보가 없습니다.');
+      return;
+    }
+
+    try {
+      // 채팅방 데이터 생성
+      const roomData = {
+        name: participants.length === 1 ? participants[0].name : `${participants.map(p => p.name).join(', ')}`,
+        participants: [currentUser, ...participants],
+        createdBy: currentUser.id,
+        type: participants.length === 1 ? 'private' : 'group'
+      };
+
+      console.log('🏠 새 채팅방 생성 시도:', roomData);
+
+      // 소켓으로 채팅방 생성 요청
+      socket.emit('createRoom', roomData);
+
+      // 백엔드 API로 채팅방 생성 요청
+      try {
+        const response = await axios.post('http://localhost:19091/api/adminchat/roomcreate', roomData);
+        console.log('🏠 채팅방 생성 응답:', response.data);
+        
+        // 생성된 채팅방으로 이동
+        if (response.data) {
+          onRoomSelect(response.data);
+        }
+      } catch (error) {
+        console.error('채팅방 생성 API 오류:', error);
+        // API 실패해도 소켓으로 생성된 방 사용
+        const tempRoom = {
+          id: `temp_${Date.now()}`,
+          ...roomData
+        };
+        onRoomSelect(tempRoom);
+      }
+    } catch (error) {
+      console.error('채팅방 생성 오류:', error);
+    }
+  };
+
+  // 관리자 사용자 클릭 핸들러
+  const handleAdminUserClick = (user) => {
+    console.log('👤 관리자 클릭:', user);
+    createChatRoom([user]);
+  };
+
+  // 새 채팅방 만들기 버튼 클릭 핸들러
+  const handleCreateNewRoom = () => {
+    // 현재는 첫 번째 관리자를 선택 (실제로는 사용자가 선택할 수 있도록 모달 등을 구현)
+    if (adminUsers.length > 0) {
+      createChatRoom([adminUsers[0]]);
+    } else {
+      console.log('선택할 수 있는 관리자가 없습니다.');
+    }
+  };
+
   // 트리 아이템 렌더링 함수
   const renderTreeItem = (item) => (
     <TreeItem
@@ -296,6 +357,15 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
           <Typography variant="body2">{item.name}</Typography>
         </Box>
       }
+      onClick={() => {
+        // 부서가 아닌 사용자 아이템인 경우에만 채팅방 생성
+        if (!item.children && item.id !== item.name) {
+          const user = adminUsers.find(u => u.userIndex === item.id);
+          if (user) {
+            handleAdminUserClick(user);
+          }
+        }
+      }}
     >
       {item.children && item.children.map(child => renderTreeItem(child))}
     </TreeItem>
@@ -438,6 +508,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
                     sx={{ width: '100%' }}
                     variant="outlined"
                     size="small"
+                    onClick={handleCreateNewRoom}
                   >
                     새 채팅방 만들기
                   </Button>
