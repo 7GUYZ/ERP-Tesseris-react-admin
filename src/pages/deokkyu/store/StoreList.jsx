@@ -388,8 +388,7 @@ function StoreList() {
         storeId={selectedStoreId}
         initialData={selectedStoreData}
       />
-      
-      <RealTimeChat />
+
     </LocalizationProvider>
   );
 }
