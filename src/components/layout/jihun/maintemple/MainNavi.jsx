@@ -19,6 +19,8 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
+import { refreshAuthority } from "../../../../utils/authorityUtils";
+
 
 const MainNavi = () => {
   const navigate = useNavigate();
@@ -26,27 +28,32 @@ const MainNavi = () => {
   const [expandedMenus, setExpandedMenus] = useState([]);
   const [activeMenuId, setActiveMenuId] = useState(null);
   const [activeSubMenuId, setActiveSubMenuId] = useState(null);
-  const [authorityList, setAuthorityList] = useState([]);
+  const [authorityList, setAuthorityList] = useState([]); // eslint-disable-line no-unused-vars
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
   const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
   const userName = userInfo.name || "";
   const adminType = userInfo.admin_type_name || "";
   useEffect(() => {
-    // 1. 접속한 관리자의 권한 조회하고 오기
+    // 1. localStorage에서 권한 정보 확인
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("user-info"));
-      const admin_type_index = userInfo?.admin_type_index;
-      if (admin_type_index) {
+      const storedAuthority = localStorage.getItem("user-authority");
+      
+      if (storedAuthority) {
+        // 캐시된 권한 정보 사용
+        setAuthorityList(JSON.parse(storedAuthority));
+        console.log("캐시된 권한 정보 사용:", JSON.parse(storedAuthority));
+      } else if (userInfo?.admin_type_index) {
+        // 캐시가 없으면 API 호출
         try {
-          const response = await menuAuthority(admin_type_index);
-          // eslint-disable-next-line no-console
-          console.log(response);
+          const response = await menuAuthority(userInfo.admin_type_index);
+          console.log("API 권한 조회:", response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
+            localStorage.setItem("user-authority", JSON.stringify(response.data.data));
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.log("권한 조회 실패 : ", error);
           showToast("error", "메뉴를 불러올 수 없습니다.");
         }
@@ -55,7 +62,15 @@ const MainNavi = () => {
 
     getAuthority();
 
-    // 2. 반응형을 위한 화면 크기 감지
+    // 2. 권한 갱신 이벤트 리스너
+    const handleAuthorityUpdate = (event) => {
+      setAuthorityList(event.detail.authorityList);
+      console.log("권한 갱신됨:", event.detail.authorityList);
+    };
+
+    window.addEventListener("authority-updated", handleAuthorityUpdate);
+
+    // 3. 반응형을 위한 화면 크기 감지
     const handleResize = () => {
       if (window.innerWidth <= 768) {
         setSidebarOpen(false);
@@ -73,8 +88,11 @@ const MainNavi = () => {
     // 클린업
     return () => {
       window.removeEventListener("resize", handleResize);
+      window.removeEventListener("authority-updated", handleAuthorityUpdate);
     };
   }, [showToast]);
+  
+  // eslint-disable-next-line no-unused-vars
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
       authorityList.map((a) => `${a.menuIndex}-${a.programIndex}`)
@@ -144,8 +162,8 @@ const MainNavi = () => {
             id: "admin-list",
             programIndex: 10,
             label: "CMS 관리자 명단",
-            type: "list",
-            action: () => console.log("본인 승인 현황 클릭"),
+            type: "link",
+            href: "/adminlist",
           },
           {
             id: "authority-management",
@@ -306,8 +324,8 @@ const MainNavi = () => {
             id: "banner-management",
             programIndex: 23,
             label: "배너 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
+            type: "link",
+            href: "/banner/list",
           },
         ],
       },
@@ -368,8 +386,8 @@ const MainNavi = () => {
             id: "withdrawal-history",
             programIndex: 15,
             label: "출금 조회",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/withdrawllist",
           },
           {
             id: "withdrawal-management",

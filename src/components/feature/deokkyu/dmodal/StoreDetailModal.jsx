@@ -18,7 +18,7 @@ import NoRowsOverlay from '../../../ui/deokkyu/NoRowsOverlay';
  *    - userCmLogCreateTime: 거래 발생 시간
  *    - userCmLogPaymentName: 거래 종류명 (user_cm_log_payment.user_cm_log_payment_name)
  *    - userCmLogTransactionTypeName: 거래 타입명 (user_cm_log_transaction_type.user_cm_log_transaction_type_name)
- *    - userIndexEventTrigger: 거래 요청인
+ *    - userIndexEventTriggerId: 거래 요청인
  *    - amount: 거래 금액
  *    - userCmLogReason: 거래 메모
  */
@@ -39,96 +39,63 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
     { 
       field: 'userCmLogCreateTime', 
       headerName: '거래 발생 시간', 
-      width: 150,
+      width: 180,
       valueFormatter: (params) => {
-        try {
-          if (!params || !params.value) return '-';
-          const date = new Date(params.value);
-          if (isNaN(date.getTime())) return '-';
-          return date.toLocaleString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-          });
-        } catch (error) {
-          console.error('거래 시간 포맷 오류:', error);
+        // params.value가 없으면 params.row에서 직접 가져오기
+        let dateValue = params.value || params.row?.userCmLogCreateTime;
+        
+        if (!dateValue) {
           return '-';
         }
+        
+        if (dateValue instanceof Date) {
+          return dateValue.toLocaleString('ko-KR');
+        }
+        
+        // 배열 형태 [2025, 7, 21, 3, 55, 38]인 경우
+        if (Array.isArray(dateValue) && dateValue.length >= 6) {
+          const [year, month, day, hour, minute, second] = dateValue;
+          const date = new Date(year, month - 1, day, hour, minute, second);
+          return date.toLocaleString('ko-KR');
+        }
+        
+        return String(dateValue);
       }
     },
     { 
       field: 'userCmLogPaymentName', 
       headerName: '거래 종류', 
-      width: 120,
-      valueFormatter: (params) => {
-        try {
-          if (!params || !params.value) return '-';
-          return String(params.value);
-        } catch (error) {
-          console.error('거래 종류 포맷 오류:', error);
-          return '-';
-        }
-      }
+      width: 120
     },
     { 
       field: 'userCmLogTransactionTypeName', 
       headerName: '거래 타입', 
-      width: 140,
-      valueFormatter: (params) => {
-        try {
-          if (!params || !params.value) return '-';
-          return String(params.value);
-        } catch (error) {
-          console.error('거래 타입 포맷 오류:', error);
-          return '-';
-        }
-      }
+      width: 140
     },
     { 
-      field: 'userIndexEventTrigger', 
+      field: 'userIndexEventTriggerId', 
       headerName: '거래 요청인', 
-      width: 120,
-      valueFormatter: (params) => {
-        try {
-          if (!params || !params.value) return '-';
-          return String(params.value);
-        } catch (error) {
-          console.error('거래 요청인 포맷 오류:', error);
-          return '-';
-        }
-      }
+      width: 120
     },
     { 
-      field: 'amount', 
+      field: 'userCmLogValue', 
       headerName: '거래 금액', 
       width: 130,
       valueFormatter: (params) => {
-        try {
-          if (!params || params.value === null || params.value === undefined) return '-';
-          const amount = Number(params.value);
-          if (isNaN(amount)) return '-';
-          return `${amount.toLocaleString()}원`;
-        } catch (error) {
-          console.error('거래 금액 포맷 오류:', error);
+        if (!params || params.value === null || params.value === undefined) {
           return '-';
         }
+        const amount = Number(params.value);
+        if (isNaN(amount)) {
+          return '-';
+        }
+        return `${amount.toLocaleString()}원`;
       }
     },
     { 
       field: 'userCmLogReason', 
       headerName: '거래 메모', 
-      width: 200,
-      valueFormatter: (params) => {
-        try {
-          if (!params || !params.value) return '-';
-          return String(params.value);
-        } catch (error) {
-          console.error('거래 메모 포맷 오류:', error);
-          return '-';
-        }
-      }
+      width: 200
     }
   ];
 
@@ -138,7 +105,6 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
       fetchStoreDetail();
       fetchTransactionHistory();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, storeId]);
 
   // 거래내역 불러오기
@@ -149,18 +115,34 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
       
       setupInterceptors();
       const response = await getStoreTransactionHistory(storeId);
-      console.log('✅ 거래내역 응답:', response);
+      console.log('✅ 거래내역 응답:', response.data);
+
+      if (!Array.isArray(response.data)) {
+        console.error('🚨 응답이 배열이 아님:', response.data);
+        return;
+      }
       
-      const transactionData = (response.data || []).map((item, index) => ({
-        id: index + 1,
-        userCmLogCreateTime: item.userCmLogCreateTime || null,
-        userCmLogPaymentName: item.userCmLogPaymentName || null,
-        userCmLogTransactionTypeName: item.userCmLogTransactionTypeName || null,
-        userIndexEventTrigger: item.userIndexEventTrigger || null,
-        amount: item.amount || 0,
-        userCmLogReason: item.userCmLogReason || null,
-        ...item
-      }));
+      const transactionData = (response.data || []).map((item, index) => {
+        // 날짜 배열 [2025, 7, 21, 3, 55, 38] -> Date 객체로 변환
+        let createTime = null;
+        if (Array.isArray(item.userCmLogCreateTime) && item.userCmLogCreateTime.length >= 6) {
+          const [year, month, day, hour, minute, second] = item.userCmLogCreateTime;
+          createTime = new Date(year, month - 1, day, hour, minute, second); // month는 0부터 시작
+        } else if (item.userCmLogCreateTime) {
+          createTime = new Date(item.userCmLogCreateTime);
+        }
+
+        return {
+          id: index + 1,
+          userCmLogCreateTime: createTime,
+          userCmLogPaymentName: item.userCmLogPaymentName || null,
+          userCmLogTransactionTypeName: item.userCmLogTransactionTypeName || null,
+          userIndexEventTriggerId: item.userIndexEventTriggerId || null,
+          userCmLogValue: item.userCmLogValue || 0,
+          userCmLogReason: item.userCmLogReason || null,
+          ...item
+        };
+      });
       
       setTransactionHistory(transactionData);
       
@@ -172,6 +154,7 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
     }
   };
 
+  // 추가 정보 둘러오기 
   const fetchStoreDetail = async () => {
     try {
       setLoading(true);
@@ -183,27 +166,15 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
       
       const detailData = {
         ...initialData,
-        ...response.data,
-        // 추가로 받아온 상세 정보들
-        storeDescription: response.data.storeDescription || '',
-        storeOpenTime: response.data.storeOpenTime || '',
-        storeCloseTime: response.data.storeCloseTime || '',
-        storeHoliday: response.data.storeHoliday || '',
-        monthlyTarget: response.data.monthlyTarget || 0,
-        thisMonthSales: response.data.thisMonthSales || 0,
-        lastMonthSales: response.data.lastMonthSales || 0,
-        totalTransactions: response.data.totalTransactions || 0,
-        averageTransactionAmount: response.data.averageTransactionAmount || 0,
-        storeManagerName: response.data.storeManagerName || '',
-        storeManagerPhone: response.data.storeManagerPhone || '',
-        contractStartDate: response.data.contractStartDate || '',
-        contractEndDate: response.data.contractEndDate || '',
-        lastInspectionDate: response.data.lastInspectionDate || '',
-        notes: response.data.notes || '',
-        // 사진 정보들
-        storeExteriorPhoto: response.data.storeExteriorPhoto || '',
-        storeInteriorPhoto: response.data.storeInteriorPhoto || '',
-        businessLicensePhoto: response.data.businessLicensePhoto || ''
+        // 사용자 기본 정보 (users 테이블)
+        userPassword: response.data.userPassword || '',
+        // 사용자 상세 정보 (user_tesseris 테이블)
+        userBirthday: response.data.userBirthday || '',
+        userGenderIndex: response.data.userGenderIndex || 0,
+        // 가맹점 사진 정보들 (store 테이블)
+        storeProntPhoto: response.data.storeProntPhoto || '',
+        storeBusinessLicensePhoto: response.data.storeBusinessLicensePhoto || '',
+        storeSignPhoto: response.data.storeSignPhoto || ''
       };
       
       setStoreData(detailData);
@@ -337,6 +308,64 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
                 </div>
 
                 <div className="store-detail-field">
+                  <label className="store-detail-label">비밀번호</label>
+                  <div className="store-detail-value">
+                    {editMode ? (
+                      <input
+                        type="password"
+                        value={displayData.userPassword || ''}
+                        onChange={(e) => handleFieldChange('userPassword', e.target.value)}
+                        className="store-detail-input"
+                      />
+                    ) : (
+                      displayData.userPassword ? '**********' : '-'
+                    )}
+                  </div>
+                </div>
+
+                <div className="store-detail-field">
+                  <label className="store-detail-label">생년월일</label>
+                  <div className="store-detail-value">
+                    {editMode ? (
+                      <input
+                        type="date"
+                        value={displayData.userBirthday || ''}
+                        onChange={(e) => handleFieldChange('userBirthday', e.target.value)}
+                        className="store-detail-input"
+                      />
+                    ) : (
+                      displayData.userBirthday || '-'
+                    )}
+                  </div>
+                </div>
+
+                <div className="store-detail-field">
+                  <label className="store-detail-label">성별</label>
+                  <div className="store-detail-value">
+                    {editMode ? (
+                      <select
+                        value={displayData.userGenderIndex || ''}
+                        onChange={(e) => handleFieldChange('userGenderIndex', e.target.value)}
+                        className="store-detail-select"
+                      >
+                        <option value="">선택하세요</option>
+                        <option value="1">남자</option>
+                        <option value="2">여자</option>
+                        <option value="3">선택 안함</option>
+                      </select>
+                    ) : (
+                      displayData.userGenderIndex === 1 ? '남자' : displayData.userGenderIndex === 2 ? '여자' : '선택 안함'
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 가맹점 정보 섹션 */}
+            <div className="store-detail-section">
+              <h3 className="store-detail-section-title">가맹점 정보</h3>
+              <div className="store-detail-fields">
+                <div className="store-detail-field">
                   <label className="store-detail-label">가맹점 명</label>
                   <div className="store-detail-value">
                     {editMode ? (
@@ -374,13 +403,7 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
                     {displayData.storeCreateDate ? new Date(displayData.storeCreateDate).toLocaleDateString('ko-KR') : '-'}
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* 가맹점 정보 섹션 */}
-            <div className="store-detail-section">
-              <h3 className="store-detail-section-title">가맹점 정보</h3>
-              <div className="store-detail-fields">
                 <div className="store-detail-field">
                   <label className="store-detail-label">대표자 이름</label>
                   <div className="store-detail-value">
@@ -496,7 +519,7 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
           <div>
             {/* 거래 내역 섹션 */}
             <div className="store-detail-section">
-              <h3 className="store-detail-section-title">거래 내역</h3>
+              <h3 className="store-detail-section-title">거래 내역 ({transactionHistory.length}건)</h3>
               
               {/* 거래 요약 정보 */}
               <div className="store-detail-transaction-summary">
@@ -522,12 +545,19 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
 
               {/* 거래 내역 DataGrid */}
               <div className="store-detail-transaction-grid">
+                <div style={{ marginBottom: '8px', fontSize: '12px', color: '#666' }}>
+                  총 {transactionHistory.length}건의 거래내역
+                </div>
                 <Box sx={{ height: 350, width: '100%' }}>
                   <DataGrid
                     rows={transactionHistory}
                     columns={transactionColumns}
-                    pageSize={10}
-                    rowsPerPageOptions={[10, 25, 50]}
+                    initialState={{
+                      pagination: {
+                        paginationModel: { page: 0, pageSize: 10 }
+                      }
+                    }}
+                    pageSizeOptions={[10, 25, 50]}
                     loading={transactionLoading}
                     disableRowSelectionOnClick
                     density="compact"
@@ -557,23 +587,29 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
               <h3 className="store-detail-section-title">사진</h3>
               <div className="store-detail-photo-section">
                 
-                {/* 가맹점 외관 사진 */}
+                
+                {/* 가맹점 프론트 사진 */}
                 <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">가맹점 외관</h4>
+                  <h4 className="store-detail-photo-title">가맹점 프론트</h4>
                   <div className="store-detail-photo-placeholder">
-                    {displayData.storeExteriorPhoto ? (
-                      <img 
-                        src={displayData.storeExteriorPhoto} 
-                        alt="가맹점 외관" 
-                        className="store-detail-photo-image"
-                      />
+                    {displayData.storeProntPhoto ? (
+                      <>
+                        <img
+                          src={displayData.storeProntPhoto}
+                          alt="가맹점 프론트" 
+                          className="store-detail-photo-image"
+                        />
+                        <div className="store-detail-photo-string">
+                          <small>String 값: {displayData.storeProntPhoto}</small>
+                        </div>
+                      </>
                     ) : (
                       <div className="store-detail-photo-empty">
-                        <p>외관 사진이 등록되지 않았습니다.</p>
+                        <p>가맹점 프론트 사진이 등록되지 않았습니다.</p>
                         {editMode && (
                           <button 
                             className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('exterior')}
+                            onClick={() => handlePhotoUpload('pront')}
                           >
                             사진 업로드
                           </button>
@@ -583,23 +619,28 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
                   </div>
                 </div>
 
-                {/* 가맹점 내부 사진 */}
+                {/* 사업자 등록증 사진 (새로운 필드) */}
                 <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">가맹점 내부</h4>
+                  <h4 className="store-detail-photo-title">사업자 등록증 (새로운)</h4>
                   <div className="store-detail-photo-placeholder">
-                    {displayData.storeInteriorPhoto ? (
-                      <img 
-                        src={displayData.storeInteriorPhoto} 
-                        alt="가맹점 내부" 
-                        className="store-detail-photo-image"
-                      />
+                    {displayData.storeBusinessLicensePhoto ? (
+                      <>
+                        <img 
+                          src={displayData.storeBusinessLicensePhoto} 
+                          alt="사업자 등록증 (새로운)" 
+                          className="store-detail-photo-image"
+                        />
+                        <div className="store-detail-photo-string">
+                          <small>String 값: {displayData.storeBusinessLicensePhoto}</small>
+                        </div>
+                      </>
                     ) : (
                       <div className="store-detail-photo-empty">
-                        <p>내부 사진이 등록되지 않았습니다.</p>
+                        <p>사업자 등록증 (새로운) 사진이 등록되지 않았습니다.</p>
                         {editMode && (
                           <button 
                             className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('interior')}
+                            onClick={() => handlePhotoUpload('businessLicenseNew')}
                           >
                             사진 업로드
                           </button>
@@ -609,23 +650,28 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
                   </div>
                 </div>
 
-                {/* 사업자 등록증 사진 */}
+                {/* 가맹점 서명 사진 */}
                 <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">사업자 등록증</h4>
+                  <h4 className="store-detail-photo-title">가맹점 서명</h4>
                   <div className="store-detail-photo-placeholder">
-                    {displayData.businessLicensePhoto ? (
-                      <img 
-                        src={displayData.businessLicensePhoto} 
-                        alt="사업자 등록증" 
-                        className="store-detail-photo-image"
-                      />
+                    {displayData.storeSignPhoto ? (
+                      <>
+                        <img 
+                          src={displayData.storeSignPhoto} 
+                          alt="가맹점 서명" 
+                          className="store-detail-photo-image"
+                        />
+                        <div className="store-detail-photo-string">
+                          <small>String 값: {displayData.storeSignPhoto}</small>
+                        </div>
+                      </>
                     ) : (
                       <div className="store-detail-photo-empty">
-                        <p>사업자 등록증 사진이 등록되지 않았습니다.</p>
+                        <p>가맹점 서명 사진이 등록되지 않았습니다.</p>
                         {editMode && (
                           <button 
                             className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('license')}
+                            onClick={() => handlePhotoUpload('sign')}
                           >
                             사진 업로드
                           </button>
