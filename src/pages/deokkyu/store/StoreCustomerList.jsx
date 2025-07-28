@@ -86,7 +86,9 @@ function StoreCustomerList() {
    */
   const fetchCustomers = async (storeId) => {
     try {
+      console.log('📡 고객 리스트 API 요청:', storeId);
       const response = await getStoreCustomerList(storeId);
+      console.log('📥 고객 리스트 응답:', response.data); // 이 로그가 안 찍히면 요청 자체가 실패한 것
       const data = response.data.map((item, index) => ({
         id: index + 1,
         ...item,
@@ -107,8 +109,11 @@ function StoreCustomerList() {
    * @param {Object} store - 클릭된 가맹점 데이터
    */
   const handleStoreClick = (store) => {
+    console.log('클릭된 가맹점:', store); // 🔍 추가
     if (store && store.userId) {
       fetchCustomers(store.userId);
+    } else {
+      console.warn('userId 없음:', store); // 🔍 추가
     }
   };
 
@@ -196,7 +201,7 @@ function StoreCustomerList() {
         const store = storeRows.find(row => row.id === storeId);
         if (store) {
           const response = await getStoreCustomerList(store.userId);
-          
+          console.log('고객 리스트 API 응답:', response.data); // 응답 로그
           if (response.data && response.data.length > 0) {
             // 고객이 있는 경우: 각 고객별로 가맹점 정보와 함께 데이터 생성
             response.data.forEach(customer => {
