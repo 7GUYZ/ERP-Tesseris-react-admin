@@ -89,6 +89,10 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       width: 180,
       valueGetter: (params) => {
         console.log('📅 날짜 valueGetter params:', params);
+        if (!params || !params.row) {
+          console.warn('📅 날짜 valueGetter: params 또는 params.row가 없음');
+          return null;
+        }
         return params.row.temporaryStoreMasterDistributionTime;
       },
       valueFormatter: (params) => {
@@ -103,6 +107,10 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       width: 150,
       valueGetter: (params) => {
         console.log('👤 이름 valueGetter params:', params);
+        if (!params || !params.row) {
+          console.warn('👤 이름 valueGetter: params 또는 params.row가 없음');
+          return null;
+        }
         return params.row.temporaryStoreMasterIndexName;
       },
       valueFormatter: (params) => {
@@ -122,6 +130,10 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       width: 130,
       valueGetter: (params) => {
         console.log('💰 금액 valueGetter params:', params);
+        if (!params || !params.row) {
+          console.warn('💰 금액 valueGetter: params 또는 params.row가 없음');
+          return null;
+        }
         return params.row.temporaryStoreCmValue;
       },
       valueFormatter: (params) => {
@@ -193,7 +205,9 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       };
       
       // 2️⃣ 거래내역 데이터 처리 (새로운 API 응답 구조)
-      const transactionData = (transactionResponse.data || []).map((item, index) => {
+      const transactionData = (transactionResponse.data || [])
+        .filter(item => item != null) // null 또는 undefined 아이템 제거
+        .map((item, index) => {
         console.log(`🔄 거래내역 아이템 ${index + 1}:`, item);
         
         return {
@@ -495,7 +509,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
           <div className="store-detail-transaction-grid">
             <Box sx={{ height: 350, width: '100%' }}>
               <DataGrid
-                rows={transactionHistory}
+                rows={Array.isArray(transactionHistory) ? transactionHistory : []}
                 columns={transactionColumns}
                 initialState={{
                   pagination: {

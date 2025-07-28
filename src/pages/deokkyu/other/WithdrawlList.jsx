@@ -80,7 +80,15 @@ function WithdrawlList() {
       setLoading(true);
       
       const response = await getWithdrawalDetails({ startDate, endDate });
-      const data = response.data.map((item, index) => ({
+      console.log('👀 응답 데이터:', response.data);
+      const rawList = response.data?.data;
+
+      if (!Array.isArray(rawList)) {
+        console.error('⚠️ 배열이 아님:', rawList);
+        throw new Error('응답 데이터 형식 오류');
+      }
+
+      const data = rawList.map((item, index) => ({
         id: index + 1,
         ...item,
       }));
