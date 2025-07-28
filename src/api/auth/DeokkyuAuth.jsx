@@ -130,3 +130,6 @@ export const getStoreRegisterDetail = (storeId) => // 가맹점 신청 상세정
 export const updateStoreRegister = (storeId, data) => // 가맹점 신청 정보 수정
   api.put(`/modal/store/register/update/${storeId}`, data);
 
+export const getWithdrawalDetails = (params) => // 출금 상세 내역 조회
+  api.get('/withdrawal/details', { params });
+

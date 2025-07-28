@@ -290,10 +290,22 @@ const BusinessManOrgChart = () => {
     const diagram = diagramRef.current.getDiagram();
     if (!diagram) return;
 
-    // 모든 노드에서 검색
-    const foundNode = diagram.findNodeForKey(searchTerm) || 
-                     diagram.findNodeByDataKey('name', searchTerm) ||
-                     diagram.findNodeByDataKey('userId', searchTerm);
+    // 모든 노드를 순회하며 검색
+    let foundNode = null;
+    diagram.nodes.each((node) => {
+      const data = node.data;
+      if (!data) return;
+      
+      // key, name, userId로 검색
+      if (data.key === searchTerm || 
+          data.name === searchTerm || 
+          data.userId === searchTerm ||
+          data.name?.includes(searchTerm) ||
+          data.userId?.includes(searchTerm)) {
+        foundNode = node;
+        return false; // 순회 중단
+      }
+    });
 
     if (foundNode) {
       // 해당 노드로 줌 및 하이라이트
@@ -306,7 +318,7 @@ const BusinessManOrgChart = () => {
         foundNode.isSelected = false;
       }, 2000);
       
-      // 검색 성공 시 추가 처리 없음
+      console.log('✅ 검색 성공:', foundNode.data.name);
     } else {
       alert('검색 결과가 없습니다.');
     }

@@ -9,24 +9,25 @@ import NoRowsOverlay from '../../../ui/deokkyu/NoRowsOverlay';
  * 사업자 상세정보 모달
  * 
  * 백엔드 API 요구사항:
- * 1. GET /businessman/detail/{businessManId}
- *    BusinessManDetailDto 응답 필드:
- *    - userPassword: 비밀번호 (users 테이블)
- *    - userBirthday: 생년월일 (user_tesseris 테이블)
- *    - userGenderIndex: 성별 인덱스 (user_tesseris 테이블)
- *    - businessUserName: 사업자 이름
- *    - businessUserId: 사업자 ID
- *    - businessGradeName: 사업자 등급
- *    - businessAreaName: 담당 구역
- *    - bossUserId: 상급자 ID
- *    - storeBusinessLicensePhoto, storeProntPhoto, storeSignPhoto: 사진 필드들
- *    - notes: 메모
+ * 1. GET /api/modal/businessman/detail/{businessManId}
+ *    응답 필드:
+ *    - userPassword: 사용자 비밀번호
+ *    - userName: 사용자 이름
+ *    - userBirthday: 사용자 생년월일 (YYYY-MM-DD)
+ *    - userGenderIndex: 사용자 성별 인덱스 (숫자)
  * 
- * 2. GET /businessman/transaction-history/{businessManId}
- *    BusinessManTransactionHistoryDto 리스트 응답 필드:
- *    - temporaryStoreMasterDistributionTime: 수당 발생 시간 (배열 형태)
- *    - temporaryStoreMasterIndexName: 가맹점 유저 이름
- *    - temporaryStoreCmValue: 수당 금액
+ * 2. PUT /api/modal/businessman/update/{businessManId}
+ *    요청 필드 (모두 선택사항):
+ *    - userPassword: 비밀번호 변경 시
+ *    - userName: 이름 변경 시
+ *    - userBirthday: 생년월일 변경 시 (YYYY-MM-DD)
+ *    - userGenderIndex: 성별 변경 시
+ * 
+ * 3. GET /api/modal/businessman/transaction-history/{businessManId}
+ *    응답 필드:
+ *    - temporaryStoreMasterIndexName: 가맹점 이름
+ *    - temporaryStoreMasterDistributionTime: 분배 시간 (ISO 8601)
+ *    - temporaryStoreCmValue: 분배받은 CM 값
  */
 
 const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData }) => {
@@ -40,8 +41,8 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [transactionLoading, setTransactionLoading] = useState(false);
 
-  // 날짜 배열을 Date 객체로 변환하는 공통 함수
-  const parseArrayDate = (dateValue) => {
+  // 날짜를 Date 객체로 변환하는 공통 함수
+  const parseDate = (dateValue) => {
     try {
       if (!dateValue) return null;
       
@@ -51,7 +52,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
         return new Date(year, month - 1, day, hour, minute, second);
       }
       
-      // 문자열인 경우 기존 로직
+      // 문자열인 경우 ISO 8601 형식 (2024-01-01T10:00:00) 또는 YYYY-MM-DD 형식
       const date = new Date(dateValue);
       if (isNaN(date.getTime())) return null;
       return date;
@@ -63,7 +64,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
 
   // 날짜를 한국어 형식으로 포맷하는 함수
   const formatDate = (dateValue, includeTime = true) => {
-    const date = parseArrayDate(dateValue);
+    const date = parseDate(dateValue);
     if (!date) return '-';
     
     const options = {
@@ -86,7 +87,13 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       field: 'temporaryStoreMasterDistributionTime', 
       headerName: '수당 발생 시간', 
       width: 180,
+      valueGetter: (params) => {
+        console.log('📅 날짜 valueGetter params:', params);
+        return params.row.temporaryStoreMasterDistributionTime;
+      },
       valueFormatter: (params) => {
+        console.log('📅 날짜 포맷 params:', params);
+        // 배열 형태의 날짜 데이터 처리
         return formatDate(params?.value);
       }
     },
@@ -94,7 +101,12 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       field: 'temporaryStoreMasterIndexName', 
       headerName: '가맹점 유저 이름', 
       width: 150,
+      valueGetter: (params) => {
+        console.log('👤 이름 valueGetter params:', params);
+        return params.row.temporaryStoreMasterIndexName;
+      },
       valueFormatter: (params) => {
+        console.log('👤 이름 포맷 params:', params);
         try {
           if (!params || !params.value) return '-';
           return String(params.value);
@@ -108,7 +120,12 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       field: 'temporaryStoreCmValue', 
       headerName: '수당 금액', 
       width: 130,
+      valueGetter: (params) => {
+        console.log('💰 금액 valueGetter params:', params);
+        return params.row.temporaryStoreCmValue;
+      },
       valueFormatter: (params) => {
+        console.log('💰 금액 포맷 params:', params);
         try {
           if (!params || params.value === null || params.value === undefined) return '-';
           const amount = Number(params.value);
@@ -147,51 +164,55 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
       console.log('✅ 사업자 상세정보 응답:', detailResponse);
       console.log('✅ 사업자 거래내역 응답:', transactionResponse);
       
-      // 1️⃣ 상세정보 데이터 처리 (BusinessManDetailDto)
+      // 1️⃣ 상세정보 데이터 처리 (새로운 API 응답 구조)
       const detailData = detailResponse.data || {};
       
-      // 각 섹션별 데이터 분리
+      // 기본 정보만 API에서 받아오고, 나머지는 initialData에서 가져옴
       const basicInfo = {
         userPassword: detailData.userPassword || '',
+        userName: detailData.userName || '',
         userBirthday: detailData.userBirthday || '',
         userGenderIndex: detailData.userGenderIndex || null,
       };
       
+      // 조직 정보는 initialData에서 가져옴 (API에서 제공하지 않음)
       const organizationInfo = {
-        name: detailData.businessUserName || initialData?.name || initialData?.businessUserName || initialData?.BusinessUsername || '',
-        userId: detailData.businessUserId || initialData?.BusinessUserId || initialData?.businessUserId || businessManId,
-        grade: detailData.businessGradeName || initialData?.businessGradeName || '',
-        area: detailData.businessAreaName || initialData?.businessAreaName || '',
-        parent: detailData.bossUserId || initialData?.bossUserId || null,
-        totalStore: detailData.totalStore || initialData?.totalStore || 0,
-        totalCm: detailData.totalCm || initialData?.totalCm || 0,
+        name: initialData?.name || initialData?.businessUserName || initialData?.BusinessUsername || '',
+        userId: initialData?.BusinessUserId || initialData?.businessUserId || businessManId,
+        grade: initialData?.businessGradeName || '',
+        area: initialData?.businessAreaName || '',
+        parent: initialData?.bossUserId || null,
+        totalStore: initialData?.totalStore || 0,
+        totalCm: initialData?.totalCm || 0,
       };
       
-      const photoInfo = {
-        storeBusinessLicensePhoto: detailData.storeBusinessLicensePhoto || '',
-        storeProntPhoto: detailData.storeProntPhoto || '',
-        storeSignPhoto: detailData.storeSignPhoto || '',
-      };
       
+      // 메모 정보는 initialData에서 가져옴 (API에서 제공하지 않음)
       const memoInfo = {
-        notes: detailData.notes || '',
+        notes: initialData?.notes || '',
       };
       
-      // 2️⃣ 거래내역 데이터 처리 (BusinessManTransactionHistoryDto)
-      const transactionData = (transactionResponse.data || []).map((item, index) => ({
-        id: index + 1,
-        temporaryStoreMasterDistributionTime: item.temporaryStoreMasterDistributionTime || null,
-        temporaryStoreMasterIndexName: item.temporaryStoreMasterIndexName || null,
-        temporaryStoreCmValue: item.temporaryStoreCmValue || 0,
-        ...item
-      }));
+      // 2️⃣ 거래내역 데이터 처리 (새로운 API 응답 구조)
+      const transactionData = (transactionResponse.data || []).map((item, index) => {
+        console.log(`🔄 거래내역 아이템 ${index + 1}:`, item);
+        
+        return {
+          id: index + 1,
+          temporaryStoreMasterDistributionTime: item.temporaryStoreMasterDistributionTime || null,
+          temporaryStoreMasterIndexName: item.temporaryStoreMasterIndexName || null,
+          temporaryStoreCmValue: item.temporaryStoreCmValue || 0,
+          // 원본 데이터도 유지
+          ...item
+        };
+      });
+      
+      console.log('📊 최종 거래내역 데이터:', transactionData);
       
       // 3️⃣ 통합된 데이터 설정
       const finalData = {
         ...initialData,
         ...basicInfo,
         ...organizationInfo,
-        ...photoInfo,
         ...memoInfo,
       };
       
@@ -225,13 +246,35 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
   const handleSave = async () => {
     try {
       setSaving(true);
-      console.log('💾 사업자 정보 저장:', editData);
+      
+      // 백엔드 API에 맞는 데이터 구조로 변환
+      const updateData = {};
+      
+      // 변경된 필드만 포함
+      if (editData.userPassword !== businessManData.userPassword) {
+        updateData.userPassword = editData.userPassword;
+      }
+      if (editData.userName !== businessManData.userName) {
+        updateData.userName = editData.userName;
+      }
+      if (editData.userBirthday !== businessManData.userBirthday) {
+        updateData.userBirthday = editData.userBirthday;
+      }
+      if (editData.userGenderIndex !== businessManData.userGenderIndex) {
+        updateData.userGenderIndex = editData.userGenderIndex;
+      }
+      
+      console.log('💾 사업자 정보 저장:', updateData);
       
       setupInterceptors();
-      const response = await updateBusinessMan(businessManId, editData);
+      const response = await updateBusinessMan(businessManId, updateData);
       console.log('✅ 사업자 정보 저장 완료:', response);
       
-      setBusinessManData(editData);
+      // 성공 시 로컬 데이터 업데이트
+      setBusinessManData(prev => ({
+        ...prev,
+        ...updateData
+      }));
       setEditMode(false);
       alert('사업자 정보가 성공적으로 저장되었습니다.');
       
@@ -292,12 +335,12 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               {editMode ? (
                 <input
                   type="text"
-                  value={displayData.name || displayData.businessUserName || displayData.BusinessUsername || ''}
-                  onChange={(e) => handleFieldChange('name', e.target.value)}
+                  value={displayData.userName || displayData.name || displayData.businessUserName || displayData.BusinessUsername || ''}
+                  onChange={(e) => handleFieldChange('userName', e.target.value)}
                   style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
                 />
               ) : (
-                displayData.name || displayData.businessUserName || displayData.BusinessUsername || '-'
+                displayData.userName || displayData.name || displayData.businessUserName || displayData.BusinessUsername || '-'
               )}
             </div>
           </div>
@@ -339,7 +382,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
                 <input
                   type="date"
                   value={(() => {
-                    const date = parseArrayDate(displayData.userBirthday);
+                    const date = parseDate(displayData.userBirthday);
                     return date ? date.toISOString().split('T')[0] : '';
                   })()}
                   onChange={(e) => handleFieldChange('userBirthday', e.target.value)}
@@ -359,7 +402,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               {editMode ? (
                 <select
                   value={displayData.userGenderIndex || ''}
-                  onChange={(e) => handleFieldChange('userGenderIndex', e.target.value)}
+                  onChange={(e) => handleFieldChange('userGenderIndex', Number(e.target.value))}
                   style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
                 >
                   <option value="">선택하세요</option>
@@ -385,24 +428,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               등급
             </div>
             <div className="detail-modal-field-value">
-              {editMode ? (
-                <select
-                  value={displayData.grade || displayData.businessGradeName || ''}
-                  onChange={(e) => handleFieldChange('grade', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                >
-                  <option value="">선택하세요</option>
-                  <option value="총재">총재</option>
-                  <option value="부총재">부총재</option>
-                  <option value="단장">단장</option>
-                  <option value="A등급">A등급</option>
-                  <option value="B등급">B등급</option>
-                  <option value="C등급">C등급</option>
-                  <option value="D등급">D등급</option>
-                </select>
-              ) : (
-                displayData.grade || displayData.businessGradeName || '-'
-              )}
+              {displayData.grade || displayData.businessGradeName || '-'}
             </div>
           </div>
 
@@ -411,16 +437,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               담당구역
             </div>
             <div className="detail-modal-field-value">
-              {editMode ? (
-                <input
-                  type="text"
-                  value={displayData.area || displayData.businessAreaName || ''}
-                  onChange={(e) => handleFieldChange('area', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                displayData.area || displayData.businessAreaName || '-'
-              )}
+              {displayData.area || displayData.businessAreaName || '-'}
             </div>
           </div>
 
@@ -510,128 +527,6 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
           </div>
         </div>
 
-        {/* 사진 섹션 */}
-        <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#495057', borderBottom: '2px solid #e9ecef', paddingBottom: '8px' }}>
-            사진
-          </h3>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-            {/* 사업자 등록증 */}
-            <div className="detail-modal-field">
-              <div className="detail-modal-field-label">
-                사업자 등록증
-              </div>
-              <div className="detail-modal-field-value">
-                {displayData.storeBusinessLicensePhoto ? (
-                  <div style={{ textAlign: 'center' }}>
-                    <img 
-                      src={`/uploads/${displayData.storeBusinessLicensePhoto}`} 
-                      alt="사업자 등록증"
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '150px', 
-                        objectFit: 'cover',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px'
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
-                    />
-                    <div style={{ display: 'none', padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px' }}>
-                      이미지를 불러올 수 없습니다
-                    </div>
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                      {displayData.storeBusinessLicensePhoto}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}>
-                    등록된 사업자 등록증이 없습니다
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 가맹점 외관 */}
-            <div className="detail-modal-field">
-              <div className="detail-modal-field-label">
-                가맹점 외관
-              </div>
-              <div className="detail-modal-field-value">
-                {displayData.storeProntPhoto ? (
-                  <div style={{ textAlign: 'center' }}>
-                    <img 
-                      src={`/uploads/${displayData.storeProntPhoto}`} 
-                      alt="가맹점 외관"
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '150px', 
-                        objectFit: 'cover',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px'
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
-                    />
-                    <div style={{ display: 'none', padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px' }}>
-                      이미지를 불러올 수 없습니다
-                    </div>
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                      {displayData.storeProntPhoto}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}>
-                    등록된 가맹점 외관 사진이 없습니다
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* 가맹점 간판 */}
-            <div className="detail-modal-field">
-              <div className="detail-modal-field-label">
-                가맹점 간판
-              </div>
-              <div className="detail-modal-field-value">
-                {displayData.storeSignPhoto ? (
-                  <div style={{ textAlign: 'center' }}>
-                    <img 
-                      src={`/uploads/${displayData.storeSignPhoto}`} 
-                      alt="가맹점 간판"
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '150px', 
-                        objectFit: 'cover',
-                        border: '1px solid #ddd',
-                        borderRadius: '4px'
-                      }}
-                      onError={(e) => {
-                        e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
-                      }}
-                    />
-                    <div style={{ display: 'none', padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px' }}>
-                      이미지를 불러올 수 없습니다
-                    </div>
-                    <div style={{ marginTop: '8px', fontSize: '12px', color: '#666' }}>
-                      {displayData.storeSignPhoto}
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ padding: '20px', backgroundColor: '#f8f9fa', border: '1px solid #ddd', borderRadius: '4px', textAlign: 'center' }}>
-                    등록된 가맹점 간판 사진이 없습니다
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* 메모 섹션 */}
         <div>
@@ -645,17 +540,7 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               사업자 메모
             </div>
             <div className="detail-modal-field-value">
-              {editMode ? (
-                <textarea
-                  value={displayData.notes || ''}
-                  onChange={(e) => handleFieldChange('notes', e.target.value)}
-                  rows={3}
-                  placeholder="사업자 메모를 입력하세요..."
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                displayData.notes || '등록된 메모가 없습니다.'
-              )}
+              {displayData.notes || '등록된 메모가 없습니다.'}
             </div>
           </div>
 

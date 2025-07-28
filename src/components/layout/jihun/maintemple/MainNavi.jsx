@@ -372,8 +372,8 @@ const MainNavi = () => {
             id: "withdrawal-history",
             programIndex: 15,
             label: "출금 조회",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/withdrawllist",
           },
           {
             id: "withdrawal-management",

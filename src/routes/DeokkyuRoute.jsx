@@ -6,6 +6,7 @@ import StoreRegisterList from '../pages/deokkyu/store/StoreRegisterList';
 import BusinessManAllowanceDetails from '../pages/deokkyu/businessman/BusinessManAllowanceDetails';
 import BusinessManOrgChart from '../pages/deokkyu/businessman/BusinessManOrgChart';
 import AdminList from '../pages/deokkyu/other/AdminList';
+import WithdrawlList from '../pages/deokkyu/other/WithdrawlList';
 
 
 function DeokkyuRoute() {
@@ -19,6 +20,7 @@ function DeokkyuRoute() {
                 <Route path='/businessallowance' element={< BusinessManAllowanceDetails/>} />
                 <Route path='/businessorgchart' element={< BusinessManOrgChart/>} />
                 <Route path='/adminlist' element={< AdminList/>} />
+                <Route path='/withdrawllist' element={< WithdrawlList/>} />
             </Route>
         </>
     );
