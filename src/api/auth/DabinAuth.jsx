@@ -120,7 +120,8 @@ export const createAdvertisement = (formData) => {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
       'Content-Type': 'multipart/form-data',
-    }
+    },
+    timeout: 30000 // 30초 타임아웃
   });
 };
 

@@ -51,15 +51,8 @@ const AdvertisementCreatePage = () => {
             formData.append('file', selectedFile);
             formData.append('advertisementUrl', advertisementUrl);
             
-            // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
-            const response = await api.post('/dabin/advertisement/create', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
-                },
-                timeout: 30000 // 30초 타임아웃
-            });
+            // DabinAuth의 createAdvertisement 함수 사용
+            const response = await createAdvertisement(formData);
 
             if (response.data.success) {
                 alert('광고를 등록하였습니다.');
