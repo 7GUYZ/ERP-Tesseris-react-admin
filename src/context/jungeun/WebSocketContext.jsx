@@ -8,7 +8,6 @@ export const useWebSocket = () => useContext(WebSocketContext);
 
 export const WebSocketProvider = ({ children }) => {
   const stompClientRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
 
   // WebSocket 연결 함수
   const connectWebSocket = (accessToken, userIndex, onMessage) => {
@@ -20,9 +19,35 @@ export const WebSocketProvider = ({ children }) => {
 
     console.log('WebSocket 연결 시도...');
     
-    const socket = new SockJS('/ws/notifications');
-    // 브라우저별 WebSocket 설정
-    const isEdge = navigator.userAgent.includes('Edge');
+    // 환경에 따른 WebSocket URL 설정
+    const getWebSocketUrl = () => {
+      // 환경 변수로 설정된 WebSocket URL이 있으면 우선 사용
+      if (process.env.REACT_APP_WEBSOCKET_URL) {
+        return process.env.REACT_APP_WEBSOCKET_URL;
+      }
+      
+      const currentHost = window.location.hostname;
+      const currentPort = window.location.port;
+      const currentProtocol = window.location.protocol;
+      
+      // 개발 환경 (localhost)
+      if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+        return `${currentProtocol}//${currentHost}:19091/ws/notifications`;
+      }
+      
+      // 배포 환경 (kschost.ddns.net)
+      if (currentHost === 'kschost.ddns.net') {
+        return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+      }
+      
+      // 기타 환경 (기본값)
+      return `${currentProtocol}//${currentHost}${currentPort ? ':' + currentPort : ''}/ws/notifications`;
+    };
+    
+    const socket = new SockJS(getWebSocketUrl());
+    console.log('WebSocket URL:', getWebSocketUrl());
+    
+
     
     const stompClient = new StompClient({
       webSocketFactory: () => socket,
