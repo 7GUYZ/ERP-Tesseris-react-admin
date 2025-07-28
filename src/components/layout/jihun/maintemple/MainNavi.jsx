@@ -337,8 +337,8 @@ const MainNavi = () => {
             id: "qna-management",
             programIndex: 26,
             label: "QNA 관리",
-            type: "list",
-            action: () => console.log("출금 요청 클릭"),
+            type: "link",
+            href: "/admin/sichan/qna/list",
           },
           {
             id: "notice-management",
