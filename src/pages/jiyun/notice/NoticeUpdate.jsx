@@ -63,7 +63,7 @@ export default function NoticeUpdate() {
     } else if (modalType === "delete") {
       try {
         await noticeDelete({ noticeIndex, password });
-        showToast("success", "삭제되었습니다.");
+        showToast("success", "공지사항이 삭제되었습니다.");
         setIsPwModalOpen(false);
         navigate("/notice/list");
       } catch {

@@ -1,22 +1,31 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { getMyAlarmHistory } from "../../../../api/auth/JiyoonAuth";
+import { getMyAlarmHistory, markAsRead } from "../../../../api/auth/JiyoonAuth";
+import useNotificationStore from "../../../../store/jiyun/NotificationStore";
 import '../../../../styles/jiyun/popover/popover.css';
 
 const Popover = () => {
   const [showPopover, setShowPopover] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const bellRef = useRef(null);
   const popoverRef = useRef(null);
+  
+  // 전역 상태에서 알림 데이터 가져오기
+  const { notifications, loading, error, setNotifications, setLoading, setError, markAsRead: markAsReadGlobal } = useNotificationStore();
 
-  // 알림 데이터 로드
+  // 알림 데이터 로드 (지연 로딩 추가)
   useEffect(() => {
     const getAlarmList = async () => {
       try {
         setLoading(true);
         setError(null);
+        
+        // 토큰 체크 추가
+        const token = localStorage.getItem("access-token");
+        if (!token) {
+          setNotifications([]);
+          setLoading(false);
+          return;
+        }
         
         // localStorage에서 user_index 가져오기
         const userInfo = JSON.parse(localStorage.getItem("user-info"));
@@ -26,18 +35,12 @@ const Popover = () => {
           setError("사용자 정보를 찾을 수 없습니다.");
           return;
         }
-
-        console.log("Popover 알림 데이터 로드 시작 - userIndex:", userIndex);
         
         const response = await getMyAlarmHistory(userIndex);
         
-        console.log("Popover 알림 내역 응답:", response);
-        
         if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          console.log("Popover 알림 데이터 설정:", response.data.data);
           setNotifications(response.data.data);
         } else {
-          console.log("Popover 알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
           setNotifications([]);
         }
         
@@ -48,13 +51,36 @@ const Popover = () => {
         setLoading(false);
       }
     };
-    getAlarmList();
-  }, []);
+
+    // 지연 로딩: 인터셉터가 완전히 설정될 때까지 대기
+    const timer = setTimeout(() => {
+      getAlarmList();
+    }, 1000); // 1초 지연
+
+    return () => clearTimeout(timer);
+  }, [setNotifications, setLoading, setError]);
 
   // 신규 알림만 필터링 (isRead === 0)
   const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
 
   const handleBellClick = () => setShowPopover((prev) => !prev);
+
+  // 알림 클릭 핸들러 (읽음 처리 + 팝오버 닫힘)
+  const handleNotificationClick = async (notification) => {
+    try {
+      // 읽음 처리 API 호출
+      await markAsRead(notification.alarmId);
+
+      // 전역 상태 업데이트 (AlertPage도 함께 업데이트됨)
+      markAsReadGlobal(notification.alarmId);
+
+      // 팝오버 닫기
+      setShowPopover(false);
+
+    } catch (error) {
+      console.error("알림 읽음 처리 실패:", error);
+    }
+  };
 
   useEffect(() => {
     if (!showPopover) return;
@@ -118,7 +144,12 @@ const Popover = () => {
                 </div>
               ) : (
                 newNotifications.map((notification) => (
-                  <div key={notification.alarmId} className="notification-popover-item">
+                  <div 
+                    key={notification.alarmId} 
+                    className="notification-popover-item"
+                    onClick={() => handleNotificationClick(notification)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="notification-popover-content">{notification.message}</div>
                     <div className="notification-popover-date">
                       {formatCreatedAt(notification.createdAt)}
