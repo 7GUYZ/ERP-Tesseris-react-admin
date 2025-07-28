@@ -33,9 +33,6 @@ const BusinessManOrgChart = () => {
       console.error('🚨 사업자 데이터 로딩 실패:', error);
       console.error('🚨 에러 상세:', error.response?.data || error.message);
       
-      // 에러 시 샘플 데이터 사용
-      const sampleData = getSampleData();
-      setBusinessManData(sampleData);
     } finally {
       setLoading(false);
     }
@@ -45,7 +42,6 @@ const BusinessManOrgChart = () => {
   const transformDataForOrgChart = (apiData) => {
     if (!Array.isArray(apiData)) {
       console.warn('API 데이터가 배열이 아닙니다:', apiData);
-      return getSampleData();
     }
 
     console.log('🔄 원본 백엔드 데이터:', apiData);
