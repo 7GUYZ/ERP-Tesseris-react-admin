@@ -33,9 +33,6 @@ const BusinessManOrgChart = () => {
       console.error('🚨 사업자 데이터 로딩 실패:', error);
       console.error('🚨 에러 상세:', error.response?.data || error.message);
       
-      // 에러 시 샘플 데이터 사용
-      const sampleData = getSampleData();
-      setBusinessManData(sampleData);
     } finally {
       setLoading(false);
     }
@@ -45,7 +42,6 @@ const BusinessManOrgChart = () => {
   const transformDataForOrgChart = (apiData) => {
     if (!Array.isArray(apiData)) {
       console.warn('API 데이터가 배열이 아닙니다:', apiData);
-      return getSampleData();
     }
 
     console.log('🔄 원본 백엔드 데이터:', apiData);
@@ -89,83 +85,6 @@ const BusinessManOrgChart = () => {
     });
   };
 
-  // 샘플 데이터 (API 실패 시 또는 개발용)
-  const getSampleData = () => {
-    return [
-      { 
-        key: 'CEO001', 
-        name: '김대표', 
-        userId: 'CEO001',
-        grade: '총재', 
-        area: '전국', 
-        currentTotalStore: 5,
-        totalStore: 50,
-        allowance: 5000000,
-        color: '#f8f9fa',
-        parent: undefined  // 최상위
-      },
-      { 
-        key: 'MGR001', 
-        name: '이지역장', 
-        userId: 'MGR001',
-        grade: '부총재', 
-        area: '서울', 
-        currentTotalStore: 3,
-        totalStore: 25,
-        allowance: 2500000,
-        color: '#f1f3f4',
-        parent: 'CEO001'
-      },
-      { 
-        key: 'MGR002', 
-        name: '박지역장', 
-        userId: 'MGR002',
-        grade: '부총재', 
-        area: '부산', 
-        currentTotalStore: 2,
-        totalStore: 20,
-        allowance: 2000000,
-        color: '#f1f3f4',
-        parent: 'CEO001'
-      },
-      { 
-        key: 'TL001', 
-        name: '최팀장', 
-        userId: 'TL001',
-        grade: '단장', 
-        area: '강남구', 
-        currentTotalStore: 12,
-        totalStore: 12,
-        allowance: 1200000,
-        color: '#e8eaed',
-        parent: 'MGR001'
-      },
-      { 
-        key: 'TL002', 
-        name: '정팀장', 
-        userId: 'TL002',
-        grade: '단장', 
-        area: '서초구', 
-        currentTotalStore: 13,
-        totalStore: 13,
-        allowance: 1300000,
-        color: '#e8eaed',
-        parent: 'MGR001'
-      },
-      { 
-        key: 'TL003', 
-        name: '김팀장', 
-        userId: 'TL003',
-        grade: '단장', 
-        area: '해운대구', 
-        currentTotalStore: 20,
-        totalStore: 20,
-        allowance: 2000000,
-        color: '#e8eaed',
-        parent: 'MGR002'
-      },
-    ];
-  };
 
   const initDiagram = () => {
     const $ = go.GraphObject.make;
@@ -212,13 +131,17 @@ const BusinessManOrgChart = () => {
           _cssClass: 'org-chart-node',
           // 호버 효과를 위한 마우스 이벤트
           mouseEnter: function(e, node) {
-            node.findObject("SHAPE").stroke = "#2196F3";
-            node.findObject("SHAPE").strokeWidth = 2;
+            const shape = node.findObject("SHAPE");
+            if (shape) {
+              shape.stroke = "#2196F3";
+              shape.strokeWidth = 2;
+            }
           },
           mouseLeave: function(e, node) {
-            if (!node.isSelected) {
-              node.findObject("SHAPE").stroke = "#e0e0e0";
-              node.findObject("SHAPE").strokeWidth = 1;
+            const shape = node.findObject("SHAPE");
+            if (shape && !node.isSelected) {
+              shape.stroke = "#e0e0e0";
+              shape.strokeWidth = 1;
             }
           }
         },
@@ -231,11 +154,7 @@ const BusinessManOrgChart = () => {
             strokeWidth: 1,
             minSize: new go.Size(140, 100)
           },
-          new go.Binding('fill', 'color'),
-          // 선택 시 파란색 테두리
-          new go.Binding('stroke', '', function() { 
-            return this.isSelected ? '#2196F3' : '#e0e0e0'; 
-          }).ofObject()
+          new go.Binding('fill', 'color')
         ),
         
         // 여러 줄 텍스트 정보 표시
@@ -329,19 +248,15 @@ const BusinessManOrgChart = () => {
           { 
             stroke: '#bdc3c7',
             strokeWidth: 2,
-            // 선택 시 색상 변경
             strokeDashArray: [0, 0]
-          },
-          new go.Binding('stroke', '', function() { return '#3498db'; }).ofObject('isSelected')
+          }
         ),
         $(go.Shape, 
           { 
             toArrow: 'Standard',
             fill: '#bdc3c7',
             stroke: '#bdc3c7'
-          },
-          new go.Binding('fill', '', function() { return '#3498db'; }).ofObject('isSelected'),
-          new go.Binding('stroke', '', function() { return '#3498db'; }).ofObject('isSelected')
+          }
         )
       );
 
@@ -371,10 +286,22 @@ const BusinessManOrgChart = () => {
     const diagram = diagramRef.current.getDiagram();
     if (!diagram) return;
 
-    // 모든 노드에서 검색
-    const foundNode = diagram.findNodeForKey(searchTerm) || 
-                     diagram.findNodeByDataKey('name', searchTerm) ||
-                     diagram.findNodeByDataKey('userId', searchTerm);
+    // 모든 노드를 순회하며 검색
+    let foundNode = null;
+    diagram.nodes.each((node) => {
+      const data = node.data;
+      if (!data) return;
+      
+      // key, name, userId로 검색
+      if (data.key === searchTerm || 
+          data.name === searchTerm || 
+          data.userId === searchTerm ||
+          data.name?.includes(searchTerm) ||
+          data.userId?.includes(searchTerm)) {
+        foundNode = node;
+        return false; // 순회 중단
+      }
+    });
 
     if (foundNode) {
       // 해당 노드로 줌 및 하이라이트
@@ -387,7 +314,7 @@ const BusinessManOrgChart = () => {
         foundNode.isSelected = false;
       }, 2000);
       
-      // 검색 성공 시 추가 처리 없음
+      console.log('✅ 검색 성공:', foundNode.data.name);
     } else {
       alert('검색 결과가 없습니다.');
     }
@@ -415,13 +342,11 @@ const BusinessManOrgChart = () => {
     
     // 데이터 로딩
     fetchBusinessManData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // 초기 마운트 시에만 실행
 
   // 데이터 변경 시 다이어그램 업데이트
   useEffect(() => {
     updateDiagram();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [businessManData]); // businessManData 변경 시에만 실행
 
   return (

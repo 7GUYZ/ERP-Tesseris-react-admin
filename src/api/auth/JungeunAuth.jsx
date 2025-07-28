@@ -112,3 +112,25 @@ export const menuAuthority = (adminTypeIndex) => {
     },
   });
 };
+
+// 사용자의 알림 설정 조회
+export const getUserAlarmSetting = (userIndex, alarmTypesId) => {
+  const token = localStorage.getItem("access-token");
+  return api.get("/alarms/user-alarm-setting", {
+    params: { userIndex, alarmTypesId },
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
+
+// 사용자의 알림 설정 업데이트
+export const updateUserAlarmSetting = (userIndex, alarmTypesId, isActive) => {
+  const token = localStorage.getItem("access-token");
+  return api.post("/alarms/update-user-alarm-setting", null, {
+    params: { userIndex, alarmTypesId, isActive },
+    headers: {
+      Authorization: `${token}`,
+    },
+  });
+};
