@@ -76,7 +76,6 @@ const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
         alarmTypesId: alarmTypesId
       });
       
-      console.log(`알림 설정 조회 완료 - ${label}: ${active === 0 ? 'ON' : 'OFF'}`);
       
     } catch (error) {
       console.error(`알림 설정 조회 실패 - ${label}:`, error);
@@ -153,15 +152,6 @@ export default function AlertPage() {
 
         // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
         const response = await getMyAlarmHistory(userIndex);
-
-        console.log("알림 내역 응답:", response);
-
-        // ResponseDTO 구조에서 data 추출
-        console.log("전체 응답:", response);
-        console.log("response.data:", response?.data);
-        console.log("response.data.data:", response?.data?.data);
-        console.log("response.data.data 타입:", typeof response?.data?.data);
-        console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
 
         if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
           console.log("알림 데이터 설정:", response.data.data);
