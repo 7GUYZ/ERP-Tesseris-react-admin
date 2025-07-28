@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Bell } from "lucide-react";
-import { getMyAlarmHistory } from "../../../../api/auth/JiyoonAuth";
+import { getMyAlarmHistory, markAsRead } from "../../../../api/auth/JiyoonAuth";
 import useNotificationStore from "../../../../store/jiyun/NotificationStore";
 import '../../../../styles/jiyun/popover/popover.css';
 
@@ -10,7 +10,7 @@ const Popover = () => {
   const popoverRef = useRef(null);
   
   // 전역 상태에서 알림 데이터 가져오기
-  const { notifications, loading, error, setNotifications, setLoading, setError } = useNotificationStore();
+  const { notifications, loading, error, setNotifications, setLoading, setError, markAsRead: markAsReadGlobal } = useNotificationStore();
 
   // 알림 데이터 로드 (지연 로딩 추가)
   useEffect(() => {
@@ -64,6 +64,23 @@ const Popover = () => {
   const newNotifications = Array.isArray(notifications) ? notifications.filter((n) => n.isRead === 0) : [];
 
   const handleBellClick = () => setShowPopover((prev) => !prev);
+
+  // 알림 클릭 핸들러 (읽음 처리 + 팝오버 닫힘)
+  const handleNotificationClick = async (notification) => {
+    try {
+      // 읽음 처리 API 호출
+      await markAsRead(notification.alarmId);
+
+      // 전역 상태 업데이트 (AlertPage도 함께 업데이트됨)
+      markAsReadGlobal(notification.alarmId);
+
+      // 팝오버 닫기
+      setShowPopover(false);
+
+    } catch (error) {
+      console.error("알림 읽음 처리 실패:", error);
+    }
+  };
 
   useEffect(() => {
     if (!showPopover) return;
@@ -127,7 +144,12 @@ const Popover = () => {
                 </div>
               ) : (
                 newNotifications.map((notification) => (
-                  <div key={notification.alarmId} className="notification-popover-item">
+                  <div 
+                    key={notification.alarmId} 
+                    className="notification-popover-item"
+                    onClick={() => handleNotificationClick(notification)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="notification-popover-content">{notification.message}</div>
                     <div className="notification-popover-date">
                       {formatCreatedAt(notification.createdAt)}
