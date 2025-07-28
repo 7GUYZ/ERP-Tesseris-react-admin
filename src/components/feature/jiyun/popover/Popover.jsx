@@ -22,7 +22,6 @@ const Popover = () => {
         // 토큰 체크 추가
         const token = localStorage.getItem("access-token");
         if (!token) {
-          console.log("Popover: 토큰이 없어서 알림 데이터를 불러오지 않습니다.");
           setNotifications([]);
           setLoading(false);
           return;
@@ -36,30 +35,17 @@ const Popover = () => {
           setError("사용자 정보를 찾을 수 없습니다.");
           return;
         }
-
-        console.log("Popover 알림 데이터 로드 시작 - userIndex:", userIndex);
-        console.log("Popover 토큰 확인:", token ? "토큰 있음" : "토큰 없음");
         
         const response = await getMyAlarmHistory(userIndex);
         
-        console.log("Popover 알림 내역 응답:", response);
-        console.log("전체 응답:", response);
-        console.log("response.data:", response?.data);
-        console.log("response.data.data:", response?.data?.data);
-        console.log("response.data.data 타입:", typeof response?.data?.data);
-        console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
-        
         if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          console.log("Popover 알림 데이터 설정:", response.data.data);
           setNotifications(response.data.data);
         } else {
-          console.log("Popover 알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
           setNotifications([]);
         }
         
       } catch (error) {
         console.error("Popover 알림 데이터 로드 실패:", error);
-        console.error("에러 상세 정보:", error.response?.data);
         setError("알림 내역을 불러오는데 실패했습니다.");
       } finally {
         setLoading(false);

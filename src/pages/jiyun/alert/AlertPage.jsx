@@ -58,8 +58,6 @@ const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
       const response = await getUserAlarmSetting(userIndex, alarmTypesId);
       const settingData = response.data;
       
-      console.log(`알림 설정 응답 - ${label}:`, settingData);
-      
       let active = 0; // 기본값: ON (알림 활성화)
       
       if (settingData.hasSetting) {
@@ -77,11 +75,8 @@ const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
         alarmTypesId: alarmTypesId
       });
       
-      console.log(`알림 설정 조회 완료 - ${label}: ${active === 0 ? 'ON' : 'OFF'}`);
-      
     } catch (error) {
       console.error(`알림 설정 조회 실패 - ${label}:`, error);
-      console.error(`에러 상세 정보:`, error.response?.data);
       
       // 에러 시 기본값으로 설정
       alertSettings.push({
@@ -112,7 +107,6 @@ export default function AlertPage() {
     const getAuthority = async (adminTypeIndex) => {
       try {
         const response = await menuAuthority(adminTypeIndex);
-        console.log("권한 조회 결과:", response.data.data);
         
         // 사용자 정보 가져오기
         const userInfo = JSON.parse(localStorage.getItem("user-info"));
@@ -129,7 +123,6 @@ export default function AlertPage() {
         const alertSettings = await createAlertSettingsFromAuthority(authorityList, userIndex);
         setSettings(alertSettings);
         
-        console.log("생성된 알림 설정:", alertSettings);
       } catch (error) {
         console.error("권한 조회 실패:", error);
         // 권한 조회 실패 시 빈 배열로 설정
@@ -150,25 +143,12 @@ export default function AlertPage() {
           return;
         }
 
-        console.log("알림 데이터 로드 시작 - userIndex:", userIndex);
-
         // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
         const response = await getMyAlarmHistory(userIndex);
 
-        console.log("알림 내역 응답:", response);
-
-        // ResponseDTO 구조에서 data 추출
-        console.log("전체 응답:", response);
-        console.log("response.data:", response?.data);
-        console.log("response.data.data:", response?.data?.data);
-        console.log("response.data.data 타입:", typeof response?.data?.data);
-        console.log("response.data.data가 배열인가?", Array.isArray(response?.data?.data));
-
         if (response && response.data && response.data.data && Array.isArray(response.data.data)) {
-          console.log("알림 데이터 설정:", response.data.data);
           setNotifications(response.data.data);
         } else {
-          console.log("알림 데이터가 없거나 배열이 아님, 빈 배열 설정");
           setNotifications([]);
         }
 
@@ -290,15 +270,12 @@ export default function AlertPage() {
     // 알림 클릭 핸들러 (읽음 처리)
     const handleNotificationClick = async (notification) => {
       try {
-        console.log("알림 클릭 - alarmId:", notification.alarmId);
-
         // 읽음 처리 API 호출
         await markAsRead(notification.alarmId);
 
         // 전역 상태 업데이트 (Popover도 함께 업데이트됨)
         markAsReadGlobal(notification.alarmId);
 
-        console.log("알림 읽음 처리 완료 - alarmId:", notification.alarmId);
       } catch (error) {
         console.error("알림 읽음 처리 실패:", error);
       }
@@ -365,7 +342,10 @@ export default function AlertPage() {
         {/* 새로운 알림 섹션 */}
         <div className="notification-section">
           <div className="section-header">
-            <h2 className="alert-section-title">새로운 알림</h2>
+            <div>
+              <h2 className="alert-section-title">새로운 알림</h2>
+              <p className="alert-section-description">클릭 시 읽음 처리됩니다</p>
+            </div>
             <span className="count">{newCount}</span>
           </div>
           <NotificationList notifications={newNotifications} />
