@@ -8,7 +8,6 @@ export const useWebSocket = () => useContext(WebSocketContext);
 
 export const WebSocketProvider = ({ children }) => {
   const stompClientRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
 
   // WebSocket 연결 함수
   const connectWebSocket = (accessToken, userIndex, onMessage) => {
@@ -48,8 +47,7 @@ export const WebSocketProvider = ({ children }) => {
     const socket = new SockJS(getWebSocketUrl());
     console.log('WebSocket URL:', getWebSocketUrl());
     
-    // 브라우저별 WebSocket 설정
-    const isEdge = navigator.userAgent.includes('Edge');
+
     
     const stompClient = new StompClient({
       webSocketFactory: () => socket,

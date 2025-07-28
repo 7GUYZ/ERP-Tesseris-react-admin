@@ -21,6 +21,7 @@ import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
 import { refreshAuthority } from "../../../../utils/authorityUtils";
 
+
 const MainNavi = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
