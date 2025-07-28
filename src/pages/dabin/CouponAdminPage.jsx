@@ -16,6 +16,7 @@ const CouponAdminPage = () => {
   const [providedStatus, setProvidedStatus] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [dateErrors, setDateErrors] = useState({}) // 날짜 에러 상태 추가
 
   useEffect(() => {
     setLoading(true)
@@ -80,6 +81,14 @@ const CouponAdminPage = () => {
     setSelectedRows(newSelection);
   }
 
+  // 날짜 에러 상태 업데이트 함수
+  const handleDateErrorsChange = (errors) => {
+    setDateErrors(errors);
+  }
+
+  // 날짜 에러가 있는지 확인
+  const hasDateErrors = Object.values(dateErrors).some(error => error !== "");
+
   return (
     <Box className="dabin-page-layout-container">
       {/* 제목과 버튼들을 같은 줄에 배치 */}
@@ -100,6 +109,11 @@ const CouponAdminPage = () => {
                 date.setDate(date.getDate() + 1)
                 return date.toISOString().split('T')[0] + 'T00:00:00'
               }
+              const toLimitEndDateTime = (dateStr) => {
+                if (!dateStr) return undefined
+                // 만기일은 정확히 해당 날짜까지만 포함
+                return `${dateStr}T23:59:59`
+              }
               const params = {
                 ...currentForm,
                 issuanceStart: toDateTime(currentForm.issuanceStart),
@@ -107,11 +121,12 @@ const CouponAdminPage = () => {
                 providedStart: toDateTime(currentForm.providedStart),
                 providedEnd: toEndDateTime(currentForm.providedEnd),
                 limitStart: toDateTime(currentForm.limitStart),
-                limitEnd: toEndDateTime(currentForm.limitEnd),
+                limitEnd: toLimitEndDateTime(currentForm.limitEnd),
                 couponPrice: currentForm.couponPrice ? Number(currentForm.couponPrice) : undefined,
               }
               handleSearch(params)
             }}
+            disabled={hasDateErrors}
             sx={{ height: 40 }}
           >
             조회
@@ -123,6 +138,7 @@ const CouponAdminPage = () => {
         issuanceStatus={issuanceStatus}
         providedStatus={providedStatus}
         onParamsChange={setCurrentForm}
+        onDateErrorsChange={handleDateErrorsChange}
       />
       {loading ? (
         <Box className="dabin-page-layout-loading">

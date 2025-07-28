@@ -15,6 +15,7 @@ const CommissionPaymentPage = () => {
   const [commissionData, setCommissionData] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [dateErrors, setDateErrors] = useState({}) // 날짜 에러 상태 추가
 
   useEffect(() => {
     setLoading(true)
@@ -160,6 +161,14 @@ const CommissionPaymentPage = () => {
     setSelectedRows(newSelection);
   }
 
+  // 날짜 에러 상태 업데이트 함수
+  const handleDateErrorsChange = (errors) => {
+    setDateErrors(errors);
+  }
+
+  // 날짜 에러가 있는지 확인
+  const hasDateErrors = Object.values(dateErrors).some(error => error !== "");
+
   return (
     <Box className="dabin-page-layout-container">
       {/* 제목과 버튼들을 같은 줄에 배치 */}
@@ -175,6 +184,7 @@ const CommissionPaymentPage = () => {
             onClick={() => {
               handleSearch(currentForm)
             }}
+            disabled={hasDateErrors}
             sx={{ height: 40 }}
           >
             조회
@@ -184,6 +194,7 @@ const CommissionPaymentPage = () => {
       <CommissionPaymentSearchForm
         onSearch={handleSearch}
         onParamsChange={setCurrentForm}
+        onDateErrorsChange={handleDateErrorsChange}
       />
       {loading ? (
         <Box className="dabin-page-layout-loading">

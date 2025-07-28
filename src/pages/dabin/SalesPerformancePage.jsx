@@ -9,39 +9,39 @@ import { getBusinessGradeList, getStoreRequestStatusList, searchSalesPerformance
 import '../../styles/dabin/dabinPageLayout.css';
 
 const SalesPerformancePage = () => {
-  const [searchParams, setSearchParams] = useState({})
-  const [currentForm, setCurrentForm] = useState({})
-  const [salesData, setSalesData] = useState([])
-  const [businessGrades, setBusinessGrades] = useState([])
-  const [storeRequestStatuses, setStoreRequestStatuses] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [selectedRows, setSelectedRows] = useState(new Set())
+  // 상태 관리
+  const [currentForm, setCurrentForm] = useState({})           // 현재 검색 폼 데이터
+  const [salesData, setSalesData] = useState([])               // 영업실적 데이터
+  const [businessGrades, setBusinessGrades] = useState([])     // 사업자 등급 목록
+  const [storeRequestStatuses, setStoreRequestStatuses] = useState([]) // 승인 상태 목록
+  const [loading, setLoading] = useState(false)                // 로딩 상태
+  const [selectedRows, setSelectedRows] = useState(new Set())  // 선택된 행들
 
+  // 컴포넌트 마운트 시 초기 데이터 로드
   useEffect(() => {
     setLoading(true)
     Promise.all([
-      getBusinessGradeList(),
-      getStoreRequestStatusList(),
-      searchSalesPerformance({}),
+      getBusinessGradeList(),           // 사업자 등급 목록 조회
+      getStoreRequestStatusList(),      // 승인 상태 목록 조회
+      searchSalesPerformance({}),       // 전체 영업실적 조회
     ])
       .then(([gradeRes, statusRes, searchRes]) => {
-        // Ensure we always set arrays, even if API returns something else
+        // API 응답 데이터 안전하게 처리
         setBusinessGrades(Array.isArray(gradeRes.data) ? gradeRes.data : [])
         setStoreRequestStatuses(Array.isArray(statusRes.data) ? statusRes.data : [])
 
-        // Ensure search results is an array before mapping
+        // 영업실적 데이터에 고유 ID 추가
         const searchData = Array.isArray(searchRes.data) ? searchRes.data : []
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
           id: `${row.businessUserId || 'unknown'}-${row.storeUserId || 'unknown'}-${row.businessUserName || 'unknown'}-${idx}`,
         }))
         setSalesData(dataWithId)
-        setSelectedRows(new Set()) // 초기화
-        console.log("영업실적 개수:", dataWithId.length)
+        setSelectedRows(new Set())
       })
       .catch((error) => {
         console.error("API Error:", error)
-        // Set empty arrays on error
+        // 에러 시 빈 배열로 초기화
         setBusinessGrades([])
         setStoreRequestStatuses([])
         setSalesData([])
@@ -50,12 +50,11 @@ const SalesPerformancePage = () => {
       .finally(() => setLoading(false))
   }, [])
 
+  // 검색 처리 함수
   const handleSearch = (params) => {
-    setSearchParams(params)
     setLoading(true)
     searchSalesPerformance(params)
       .then((res) => {
-        // Ensure search results is an array before mapping
         const searchData = Array.isArray(res.data) ? res.data : []
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
@@ -63,7 +62,6 @@ const SalesPerformancePage = () => {
         }))
         setSalesData(dataWithId)
         setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
-        console.log("영업실적 개수:", dataWithId.length)
       })
       .catch((error) => {
         console.error("Search Error:", error)
@@ -73,13 +71,14 @@ const SalesPerformancePage = () => {
       .finally(() => setLoading(false))
   }
 
+  // 행 선택 변경 처리
   const handleSelectionChange = (newSelection) => {
     setSelectedRows(newSelection);
   }
 
   return (
     <Box className="dabin-page-layout-container">
-      {/* 제목과 버튼들을 같은 줄에 배치 */}
+      {/* 페이지 헤더 */}
       <Box className="dabin-page-layout-titleRow">
         <Typography variant="h4" className="dabin-page-layout-title">
           영업실적 조회
@@ -89,21 +88,23 @@ const SalesPerformancePage = () => {
           <Button
             variant="contained"
             color="primary"
-            onClick={() => {
-              handleSearch(currentForm)
-            }}
+            onClick={() => handleSearch(currentForm)}
             sx={{ height: 40 }}
           >
             조회
           </Button>
         </Box>
       </Box>
+
+      {/* 검색 폼 */}
       <SalesPerformanceSearchForm
         onSearch={handleSearch}
         businessGrades={businessGrades}
         storeRequestStatuses={storeRequestStatuses}
         onParamsChange={setCurrentForm}
       />
+
+      {/* 데이터 그리드 또는 로딩 표시 */}
       {loading ? (
         <Box className="dabin-page-layout-loading">
           <CircularProgress />
