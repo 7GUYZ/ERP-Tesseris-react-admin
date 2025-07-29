@@ -77,7 +77,6 @@ const CmsAccessLog = () => {
             )
           : [];
         setSearchResults(mapped);
-        console.log(`초기 데이터 로딩 완료: ${mapped.length}개의 항목`);
       }
     } catch (error) {
       console.error("초기 데이터 로딩 중 오류:", error);
@@ -128,8 +127,6 @@ const CmsAccessLog = () => {
         }
       });
       
-      console.log("검색 요청:", params);
-      
       const response = await searchCmsAccessLogs(params);
       if (response.data.resultCode === 200) {
         // 2차원 배열을 객체 배열로 매핑
@@ -139,7 +136,6 @@ const CmsAccessLog = () => {
             )
           : [];
         setSearchResults(mapped);
-        console.log(`검색 완료: 총 ${mapped.length}개의 결과를 찾았습니다.`);
       } else {
         setError("검색 실패: " + response.data.resultMessage);
       }
@@ -163,7 +159,6 @@ const CmsAccessLog = () => {
     // Set으로 안전한 선택 처리
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
-    console.log('선택된 행들:', Array.from(safeSelection));
   }, []);
 
   // 엑셀 다운로드 핸들러

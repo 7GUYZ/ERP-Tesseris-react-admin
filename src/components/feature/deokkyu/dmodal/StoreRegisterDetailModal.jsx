@@ -48,6 +48,13 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
         specialRequests: response.data.specialRequests || ''
       };
       
+      console.log('📥 initialData:', initialData);
+      console.log('📥 response.data:', response.data);
+      console.log('📥 최종 detailData:', detailData);
+      console.log('📥 storeRequestStatusName:', detailData.storeRequestStatusName);
+      console.log('📥 storeRequestStatusIndex:', detailData.storeRequestStatusIndex);
+      console.log('📥 store_request_status_index:', detailData.store_request_status_index);
+      
       setStoreData(detailData);
       setEditData(detailData);
       
@@ -116,24 +123,48 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
     if (window.confirm('이 신청을 승인하시겠습니까?')) {
       try {
         setSaving(true);
-        const updatedData = {
-          ...editData,
+        console.log('🔄 승인 처리 시작 - storeId:', storeId);
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const approvedBy = userInfo.username || userInfo.user_name || '관리자';
+        
+        // 승인 데이터 구성 (store_request_status_index = 2)
+        const approvalData = {
+          storeRequestStatusIndex: 2,  // 승인: 2
+          store_request_status_index: 2,  // 두 가지 형태 모두 보냄
           storeRequestStatusName: '승인',
-          approvedBy: '관리자', // 실제로는 현재 로그인한 사용자 정보
-          approvedDate: new Date().toISOString()
+          approvedBy: approvedBy,
+          approvedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+          reviewNotes: `${approvedBy}에 의해 승인됨`
         };
         
+        console.log('📤 승인 데이터 전송:', approvalData);
+        
         setupInterceptors();
-        const response = await updateStoreRegister(storeId, updatedData);
+        const response = await updateStoreRegister(storeId, approvalData);
         console.log('✅ 가맹점 승인 완료:', response);
         
+        // 로컬 상태 업데이트
+        const updatedData = {
+          ...storeData,
+          ...approvalData
+        };
         setStoreData(updatedData);
         setEditData(updatedData);
+        
         alert('가맹점 신청이 승인되었습니다.');
         
       } catch (error) {
         console.error('🚨 가맹점 승인 실패:', error);
-        alert(`승인 실패: ${error.response?.data?.message || error.message}`);
+        console.error('🚨 응답 데이터:', error.response?.data);
+        console.error('🚨 응답 상태:', error.response?.status);
+        
+        const errorMsg = error.response?.data?.message || 
+                        error.response?.data?.error || 
+                        error.message || 
+                        '알 수 없는 오류가 발생했습니다.';
+        alert(`승인 실패: ${errorMsg}`);
       } finally {
         setSaving(false);
       }
@@ -143,31 +174,57 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
   // 거절 처리
   const handleReject = async () => {
     const reason = prompt('거절 사유를 입력해주세요:');
-    if (reason) {
+    if (reason && reason.trim()) {
       try {
         setSaving(true);
-        const updatedData = {
-          ...editData,
+        console.log('🔄 거절 처리 시작 - storeId:', storeId);
+        
+        // 현재 로그인한 사용자 정보 가져오기
+        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const approvedBy = userInfo.username || userInfo.user_name || '관리자';
+        
+        // 거절 데이터 구성 (store_request_status_index = 3)
+        const rejectionData = {
+          storeRequestStatusIndex: 3,  // 거절: 3
+          store_request_status_index: 3,  // 두 가지 형태 모두 보냄
           storeRequestStatusName: '거절',
-          rejectionReason: reason,
-          approvedBy: '관리자',
-          approvedDate: new Date().toISOString()
+          rejectionReason: reason.trim(),
+          approvedBy: approvedBy,
+          approvedDate: new Date().toISOString().split('T')[0], // YYYY-MM-DD 형식
+          reviewNotes: `${approvedBy}에 의해 거절됨: ${reason.trim()}`
         };
         
+        console.log('📤 거절 데이터 전송:', rejectionData);
+        
         setupInterceptors();
-        const response = await updateStoreRegister(storeId, updatedData);
+        const response = await updateStoreRegister(storeId, rejectionData);
         console.log('✅ 가맹점 거절 완료:', response);
         
+        // 로컬 상태 업데이트
+        const updatedData = {
+          ...storeData,
+          ...rejectionData
+        };
         setStoreData(updatedData);
         setEditData(updatedData);
+        
         alert('가맹점 신청이 거절되었습니다.');
         
       } catch (error) {
         console.error('🚨 가맹점 거절 실패:', error);
-        alert(`거절 실패: ${error.response?.data?.message || error.message}`);
+        console.error('🚨 응답 데이터:', error.response?.data);
+        console.error('🚨 응답 상태:', error.response?.status);
+        
+        const errorMsg = error.response?.data?.message || 
+                        error.response?.data?.error || 
+                        error.message || 
+                        '알 수 없는 오류가 발생했습니다.';
+        alert(`거절 실패: ${errorMsg}`);
       } finally {
         setSaving(false);
       }
+    } else if (reason !== null) {
+      alert('거절 사유를 입력해주세요.');
     }
   };
 
@@ -657,7 +714,25 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
   const renderFooterButtons = () => {
     if (loading) return null;
 
-    const isApprovalPending = storeData.storeRequestStatusName === '대기';
+    // 디버깅을 위한 상태 출력
+    console.log('🔍 StoreRegisterDetailModal 전체 데이터:', storeData);
+    console.log('🔍 storeRequestStatusName:', storeData.storeRequestStatusName);
+    console.log('🔍 storeRequestStatusIndex:', storeData.storeRequestStatusIndex);
+    console.log('🔍 store_request_status_index:', storeData.store_request_status_index);
+    
+    // 여러 가지 조건으로 체크
+    const statusName = storeData.storeRequestStatusName;
+    const statusIndex = storeData.storeRequestStatusIndex || storeData.store_request_status_index;
+    
+    const isApprovalPending = 
+      statusName === '대기' || 
+      statusName === '신청' || 
+      statusName === '검토중' ||
+      statusName === '승인대기' ||
+      statusIndex === 1 ||
+      statusIndex === '1';
+      
+    console.log('🔍 승인 대기 여부:', isApprovalPending);
 
     return (
       <>

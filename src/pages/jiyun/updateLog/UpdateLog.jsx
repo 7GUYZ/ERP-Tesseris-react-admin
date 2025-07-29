@@ -44,7 +44,6 @@ const UpdateLog = () => {
     try {
       const response = await getUpdateLog({});
       setSearchResults(response.data || []);
-      console.log(`초기 데이터 로딩 완료: ${response.data?.length || 0}개의 항목`);
     } catch (error) {
       console.error("초기 데이터 로딩 중 오류:", error);
       setSearchResults([]);
@@ -83,11 +82,8 @@ const UpdateLog = () => {
         }
       });
       
-      console.log("검색 요청:", params);
-      
       const response = await getUpdateLog(params);
       setSearchResults(response.data || []);
-      console.log(`검색 완료: 총 ${response.data?.length || 0}개의 결과를 찾았습니다.`);
     } catch (error) {
       console.error("검색 중 오류 발생:", error);
       setError("검색 중 오류가 발생했습니다.");
@@ -106,7 +102,6 @@ const UpdateLog = () => {
   const handleSelectionChange = useCallback((newSelection) => {
     const safeSelection = newSelection instanceof Set ? newSelection : new Set(newSelection || []);
     setSelectedRows(safeSelection);
-    console.log('선택된 행들:', Array.from(safeSelection));
   }, []);
 
   const handleExcelDownload = useCallback(() => {
