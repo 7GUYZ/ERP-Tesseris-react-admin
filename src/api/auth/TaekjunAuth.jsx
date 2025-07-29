@@ -123,4 +123,13 @@ export const businessmanListApi = {
   
   // 사업자 목록 엑셀 다운로드
   downloadBusinessmanList: (searchData) => api.post('businessmanlist/download', searchData, { responseType: 'blob' })
+};
+
+// 주소 검색 API
+export const addressApi = {
+  // 주소 검색
+  searchAddress: (query) => api.get(`address/search?query=${encodeURIComponent(query)}`),
+  
+  // 키워드 검색 (상세 주소 검색용)
+  searchKeyword: (query) => api.get(`address/search/keyword?query=${encodeURIComponent(query)}`)
 }; 
