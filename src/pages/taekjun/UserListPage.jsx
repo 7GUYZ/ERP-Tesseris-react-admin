@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import { Box } from '@mui/material';
 import { userListApi } from '../../api/auth/TaekjunAuth';
 import '../../styles/taekjun/UserListPage.css';
+
+// DataGrid 컬럼 정의
+const columns = [
+  { field: 'email', headerName: '아이디', width: 150, sortable: true },
+  { field: 'name', headerName: '이름', width: 120, sortable: true },
+  { field: 'phone', headerName: '핸드폰 번호', width: 140, sortable: true },
+  { field: 'userRole', headerName: '등급', width: 100, sortable: true },
+  { field: 'cmBalance', headerName: '보유 CM', width: 120, sortable: true, type: 'number' },
+  { field: 'registrationDate', headerName: '등록일', width: 120, sortable: true },
+  { field: 'recommenderEmail', headerName: '추천인 아이디', width: 150, sortable: true },
+  { field: 'recommenderName', headerName: '추천인 이름', width: 120, sortable: true },
+  { field: 'bankName', headerName: '은행', width: 120, sortable: true },
+];
 
 // 카카오 주소 API 스크립트 로드
 const loadKakaoAddressScript = () => {
@@ -30,11 +45,10 @@ const getAdminUserIndex = () => {
 };
 
 const UserListPage = () => {
-  const [userList, setUserList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
   const [searchFilters, setSearchFilters] = useState({
     id: '',
     name: '',
@@ -64,15 +78,30 @@ const UserListPage = () => {
   ];
 
   // 데이터 조회
-  const fetchUserList = useCallback(async () => {
+  const fetchUserList = useCallback(async (filters = searchFilters) => {
     try {
       setLoading(true);
       setError(null);
       console.log('API 호출 시작...');
-      const response = await userListApi.getUserList();
+      
+      // 검색 필터가 있으면 필터링된 데이터 조회
+      let response;
+      if (filters && Object.values(filters).some(value => value !== '')) {
+        console.log('검색 필터:', filters);
+        // 검색 API 사용
+        response = await userListApi.searchUserList(filters);
+      } else {
+        response = await userListApi.getUserList();
+      }
+      
       console.log('API 응답:', response);
-      setUserList(response.data || []);
-      setFilteredList(response.data || []);
+      
+      const data = response.data.map((item, index) => ({
+        id: index + 1,
+        ...item,
+      }));
+      
+      setRows(data);
     } catch (err) {
       console.error('회원 목록 조회 실패:', err);
       console.error('에러 상세:', err.response || err.message);
@@ -80,61 +109,26 @@ const UserListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // 의존성 배열을 빈 배열로 변경
 
+  // 초기 로딩 시에만 데이터 가져오기 (조회 버튼을 눌렀을 때만 검색)
   useEffect(() => {
     fetchUserList();
-  }, [fetchUserList]);
+  }, []); // 빈 의존성 배열로 초기 로딩만 실행
+
+  // 검색 필터 변경 시 자동 검색 (선택사항)
+  // useEffect(() => {
+  //   if (Object.values(searchFilters).some(value => value !== '')) {
+  //     handleSearch();
+  //   }
+  // }, [searchFilters]);
 
   // 초기 로딩 시 모든 데이터 표시
-  useEffect(() => {
-    setFilteredList(userList);
-  }, [userList]);
 
 
 
-  // 검색 필터 적용 (조회 버튼 클릭 시에만 실행)
-  const applyFilters = useCallback(() => {
-    let filtered = [...userList];
 
-    if (searchFilters.id) {
-      filtered = filtered.filter(user => 
-        user.email && user.email.toLowerCase().includes(searchFilters.id.toLowerCase())
-      );
-    }
 
-    if (searchFilters.name) {
-      filtered = filtered.filter(user => 
-        user.name && user.name.toLowerCase().includes(searchFilters.name.toLowerCase())
-      );
-    }
-
-    if (searchFilters.phone) {
-      filtered = filtered.filter(user => 
-        user.phone && user.phone.includes(searchFilters.phone)
-      );
-    }
-
-    if (searchFilters.userRole) {
-      filtered = filtered.filter(user => 
-        user.userRole === searchFilters.userRole
-      );
-    }
-
-    if (searchFilters.startDate) {
-      filtered = filtered.filter(user => 
-        user.registrationDate && user.registrationDate >= searchFilters.startDate
-      );
-    }
-
-    if (searchFilters.endDate) {
-      filtered = filtered.filter(user => 
-        user.registrationDate && user.registrationDate <= searchFilters.endDate
-      );
-    }
-
-    setFilteredList(filtered);
-  }, [userList, searchFilters]);
 
   // 검색 필터 변경 핸들러
   const handleFilterChange = (field, value) => {
@@ -155,8 +149,11 @@ const UserListPage = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      // 서버 검색이 아닌 클라이언트 필터링 사용
-      applyFilters();
+      console.log('=== 검색 실행 ===');
+      console.log('검색 필터:', searchFilters);
+      console.log('================');
+      // 검색 필터를 사용하여 데이터 다시 조회
+      await fetchUserList(searchFilters);
     } catch (err) {
       console.error('검색 실패:', err);
       setError('검색에 실패했습니다.');
@@ -165,22 +162,7 @@ const UserListPage = () => {
     }
   };
 
-  // 전체 선택/해제 (단일 선택 모드에서는 비활성화)
-  // eslint-disable-next-line no-unused-vars
-  const handleSelectAll = (checked) => {
-    // 단일 선택 모드에서는 전체 선택 비활성화
-    setSelectedUsers([]);
-  };
 
-  // 개별 선택/해제 (단일 선택만 가능)
-  const handleSelectUser = (userIndex, checked) => {
-    if (checked) {
-      // 다른 모든 선택 해제하고 현재 항목만 선택
-      setSelectedUsers([userIndex]);
-    } else {
-      setSelectedUsers([]);
-    }
-  };
 
   // CSV 다운로드
   const handleExcelDownload = async () => {
@@ -265,18 +247,7 @@ const UserListPage = () => {
 
 
 
-  // 날짜 포맷팅
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('ko-KR');
-  };
 
-  // 숫자 포맷팅
-  const formatNumber = (number) => {
-    if (number === null || number === undefined) return '0';
-    return number.toLocaleString();
-  };
 
   // 카카오 주소 검색 함수
   const handleAddressSearch = async () => {
@@ -364,7 +335,9 @@ const UserListPage = () => {
 
 
 
-  if (loading && userList.length === 0) {
+
+
+  if (loading && rows.length === 0) {
     return (
       <div className="user-list-page">
         <div className="loading-container">
@@ -389,7 +362,7 @@ const UserListPage = () => {
           </button>
                      <button 
              className="user-list-action-btn" 
-             onClick={() => selectedUsers.length > 0 && handleEditUser(filteredList.find(u => u.userIndex === selectedUsers[0]))}
+             onClick={() => selectedRows.size > 0 && handleEditUser(rows.find(u => u.id === Array.from(selectedRows)[0]))}
            >
              수정
            </button>
@@ -467,80 +440,32 @@ const UserListPage = () => {
         </div>
       </div>
 
-            {/* 회원 목록 테이블 */}
-      <div className="user-list-table-container">
-        <div className="user-list-table-header-fixed">
-          <table className="user-list-table">
-            <thead>
-              <tr>
-                <th className="user-list-checkbox-col">
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    disabled={true}
-                    title="단일 선택 모드"
-                  />
-                </th>
-                <th>No</th>
-                <th>아이디</th>
-                <th>이름</th>
-                <th>핸드폰 번호</th>
-                <th>등급</th>
-                <th>보유 CM</th>
-                <th>결제금액</th>
-                <th>등록일</th>
-                <th>추천인 아이디</th>
-                <th>추천인 이름</th>
-                <th>은행</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-        
-        <div className="user-list-table-body-scrollable">
-          <table className="user-list-table">
-            <tbody>
-              {filteredList.map((user, index) => (
-                <tr key={`${user.userIndex}-${index}`}>
-                  <td className="user-list-checkbox-col">
-                    <input
-                      type="checkbox"
-                      checked={selectedUsers.includes(user.userIndex)}
-                      onChange={(e) => handleSelectUser(user.userIndex, e.target.checked)}
-                    />
-                  </td>
-                  <td>{userList.length - index}</td>
-                  <td>{user.email || '-'}</td>
-                  <td>{user.name || '-'}</td>
-                  <td>{user.phone || '-'}</td>
-                  <td>{user.userRole || '-'}</td>
-                  <td className="user-list-number-cell">{formatNumber(user.cmBalance || 0)}</td>
-                  <td className="user-list-number-cell">0</td>
-                  <td>{formatDate(user.registrationDate)}</td>
-                  <td>{user.recommenderEmail || '-'}</td>
-                  <td>{user.recommenderName || '-'}</td>
-                  <td>{user.bankName || '-'}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        
-        <div className="user-list-table-footer-fixed">
-          <table className="user-list-table">
-            <tfoot>
-              <tr className="user-list-summary-row">
-                <td colSpan="5">합계</td>
-                <td></td>
-                <td className="user-list-number-cell">
-                  {formatNumber(filteredList.reduce((sum, user) => sum + (user.cmBalance || 0), 0))}
-                </td>
-                <td className="user-list-number-cell">0</td>
-                <td colSpan="4"></td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
+            {/* 회원 목록 DataGrid */}
+      <div className="user-list-data-grid">
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 25 }
+            }
+          }}
+          pageSizeOptions={[25, 50, 100]}
+          loading={loading}
+          checkboxSelection
+          disableRowSelectionOnClick
+          onRowSelectionModelChange={(newSelection) => {
+            // newSelection이 객체이고 ids 속성이 있는 경우
+            if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+              setSelectedRows(newSelection.ids);
+            } else if (Array.isArray(newSelection)) {
+              // 배열인 경우 (이전 버전 호환성)
+              setSelectedRows(new Set(newSelection));
+            } else {
+              setSelectedRows(new Set());
+            }
+          }}
+        />
       </div>
 
       {/* 회원 수정 모달 */}
