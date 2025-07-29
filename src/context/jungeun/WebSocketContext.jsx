@@ -27,16 +27,16 @@ export const WebSocketProvider = ({ children }) => {
       
       // 개발 환경 (localhost)
       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}:19091/api/springboot/ws/notifications`;
       }
       
       // 배포 환경 (kschost.ddns.net)
       if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}/api/springboot/ws/notifications`;
       }
       
       // 기타 배포 환경
-      return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+      return `${currentProtocol}//${currentHost}/api/springboot/ws/notifications`;
     };
     
     const socket = new SockJS(getWebSocketUrl());
