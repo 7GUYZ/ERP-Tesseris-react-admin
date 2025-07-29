@@ -27,7 +27,7 @@ export const WebSocketProvider = ({ children }) => {
       
       // 개발 환경 (localhost)
       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/api/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}:19091/api/ws/notifications`;
       }
       
       // 배포 환경 (kschost.ddns.net)
@@ -36,7 +36,7 @@ export const WebSocketProvider = ({ children }) => {
       }
       
       // 기타 배포 환경
-      return `${currentProtocol}//${currentHost}/api/springboot/ws/notifications`;
+      return `${currentProtocol}//${currentHost}/api/ws/notifications`;
     };
     
     const socket = new SockJS(getWebSocketUrl());
