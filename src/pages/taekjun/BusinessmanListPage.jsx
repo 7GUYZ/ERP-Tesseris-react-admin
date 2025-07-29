@@ -1,6 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { DataGrid } from '@mui/x-data-grid';
+import { Box } from '@mui/material';
 import { businessmanListApi } from '../../api/auth/TaekjunAuth';
 import '../../styles/taekjun/BusinessmanListPage.css';
+
+// DataGrid 컬럼 정의
+const columns = [
+  { field: 'userName', headerName: '이름', width: 120, sortable: true },
+  { field: 'email', headerName: '이메일', width: 200, sortable: true },
+  { field: 'userPhone', headerName: '휴대폰 번호', width: 140, sortable: true },
+  { field: 'businessGradeName', headerName: '사업자 등급', width: 120, sortable: true },
+  { field: 'businessManDistributionFlag', headerName: '배포 상태', width: 100, sortable: true },
+  { field: 'userBankName', headerName: '은행명', width: 120, sortable: true },
+  { field: 'userBankNumber', headerName: '계좌번호', width: 150, sortable: true },
+  { field: 'userBankHolder', headerName: '예금주', width: 100, sortable: true },
+  { field: 'businessAreaName', headerName: '사업 지역', width: 120, sortable: true },
+  { field: 'bossName', headerName: '상사 이름', width: 120, sortable: true },
+  { field: 'bossEmail', headerName: '상사 이메일', width: 200, sortable: true },
+];
 
 // 카카오 주소 API 스크립트 로드
 const loadKakaoAddressScript = () => {
@@ -21,11 +38,10 @@ const loadKakaoAddressScript = () => {
 
 
 const BusinessmanListPage = () => {
-  const [businessmanList, setBusinessmanList] = useState([]);
-  const [filteredList, setFilteredList] = useState([]);
+  const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedBusinessmen, setSelectedBusinessmen] = useState([]);
+  const [selectedRows, setSelectedRows] = useState(new Set());
   // 사업자 등급/지역 상태 추가
   const [businessGrades, setBusinessGrades] = useState([]);
   const [businessAreas, setBusinessAreas] = useState([]);
@@ -91,8 +107,12 @@ const BusinessmanListPage = () => {
       
       // 필터가 있으면 검색 API, 없으면 전체 조회 API 사용
       let response;
+      console.log('검색 필터 상세:', filters);
+      console.log('검색 필터 값들:', Object.values(filters));
+      console.log('빈 값이 아닌 필터들:', Object.values(filters).filter(value => value !== ''));
+      
       if (filters && Object.values(filters).some(value => value !== '')) {
-      console.log('검색 필터:', filters);
+        console.log('검색 API 호출');
         response = await businessmanListApi.searchBusinessmanList(filters);
       } else {
         console.log('전체 사업자 조회 (모든 조건 제거)');
@@ -106,7 +126,8 @@ const BusinessmanListPage = () => {
       
       // 응답 데이터가 바로 배열로 오는 경우
       if (Array.isArray(response.data)) {
-        const mappedData = response.data.map(businessman => ({
+        const mappedData = response.data.map((businessman, index) => ({
+          id: index + 1,
           ...businessman,
           businessGradeName: businessman.businessGradeName || '-',
           businessAreaName: businessman.businessAreaName || '-',
@@ -115,19 +136,16 @@ const BusinessmanListPage = () => {
         
         console.log('매핑된 데이터:', mappedData);
         console.log('매핑된 데이터 길이:', mappedData.length);
-        setBusinessmanList(mappedData);
-        setFilteredList(mappedData);
+        setRows(mappedData);
       } else {
         console.error('응답 데이터가 배열이 아닙니다:', response.data);
-        setBusinessmanList([]);
-        setFilteredList([]);
+        setRows([]);
       }
     } catch (err) {
       console.error('사업자 목록 조회 실패:', err);
       console.error('에러 상세:', err.response || err.message);
       setError(`사업자 목록을 불러오는데 실패했습니다. (${err.message})`);
-      setBusinessmanList([]);
-      setFilteredList([]);
+      setRows([]);
     } finally {
       setLoading(false);
     }
@@ -139,11 +157,18 @@ const BusinessmanListPage = () => {
     fetchBusinessAreas();
   }, [fetchBusinessGrades, fetchBusinessAreas]);
 
-  // 등급과 지역 데이터가 로드된 후 사업자 목록 조회
+  // 등급과 지역 데이터가 로드된 후 사업자 목록 조회 (조회 버튼을 눌렀을 때만 검색)
   useEffect(() => {
     // 컴포넌트 마운트 시 사업자 목록 조회
     fetchBusinessmanList();
-  }, [fetchBusinessmanList]); // fetchBusinessmanList 의존성 추가
+  }, []); // 빈 의존성 배열로 초기 로딩만 실행
+
+  // 검색 필터 변경 시 자동 검색 (선택사항)
+  // useEffect(() => {
+  //   if (Object.values(searchFilters).some(value => value !== '')) {
+  //     handleSearch();
+  //   }
+  // }, [searchFilters]);
 
   // 검색 필터 변경 핸들러
   const handleFilterChange = (field, value) => {
@@ -162,22 +187,21 @@ const BusinessmanListPage = () => {
     }
   };
 
-  // 검색 실행 (클라이언트 사이드 필터링)
-  const handleSearch = () => {
-      console.log('검색 실행 - 필터:', searchFilters);
-    // 클라이언트 사이드 필터링만 수행
-    // getFilteredList() 함수가 자동으로 필터링된 결과를 반환
-  };
-
-  // 개별 선택/해제 (단일 선택만 가능)
-  const handleSelectBusinessman = (userIndex, checked) => {
-    if (checked) {
-      // 다른 모든 선택 해제하고 현재 항목만 선택
-      setSelectedBusinessmen([userIndex]);
-    } else {
-      setSelectedBusinessmen([]);
+  // 검색 실행
+  const handleSearch = async () => {
+    try {
+      setLoading(true);
+      // 검색 필터를 사용하여 데이터 다시 조회
+      await fetchBusinessmanList();
+    } catch (err) {
+      console.error('검색 실패:', err);
+      setError('검색에 실패했습니다.');
+    } finally {
+      setLoading(false);
     }
   };
+
+
 
   // CSV 다운로드
   const handleExcelDownload = async () => {
@@ -345,7 +369,7 @@ const BusinessmanListPage = () => {
 
   // 사업자 비활성화
   const handleDeleteBusinessman = async () => {
-    if (selectedBusinessmen.length === 0) {
+    if (selectedRows.size === 0) {
       alert('비활성화할 사업자를 선택해주세요.');
       return;
     }
@@ -356,12 +380,15 @@ const BusinessmanListPage = () => {
 
     try {
       setLoading(true);
-      await businessmanListApi.deleteBusinessman({
-        userIndex: selectedBusinessmen[0]
-      });
-      alert('사업자가 성공적으로 비활성화되었습니다.');
-      setSelectedBusinessmen([]);
-      fetchBusinessmanList();
+      const selectedUserIndex = rows.find(row => row.id === Array.from(selectedRows)[0])?.userIndex;
+      if (selectedUserIndex) {
+        await businessmanListApi.deleteBusinessman({
+          userIndex: selectedUserIndex
+        });
+        alert('사업자가 성공적으로 비활성화되었습니다.');
+        setSelectedRows(new Set());
+        fetchBusinessmanList();
+      }
     } catch (err) {
       console.error('사업자 비활성화 실패:', err);
       alert('사업자 비활성화에 실패했습니다.');
@@ -468,12 +495,12 @@ const BusinessmanListPage = () => {
 
   // 상사 선택 모달 관련 함수들
   const handleBossSearch = useCallback(() => {
-    const filtered = businessmanList.filter(businessman => 
+    const filtered = rows.filter(businessman => 
       businessman.email.toLowerCase().includes(bossSearchTerm.toLowerCase()) ||
       businessman.userName.toLowerCase().includes(bossSearchTerm.toLowerCase())
     );
     setFilteredBossList(filtered);
-  }, [businessmanList, bossSearchTerm]);
+  }, [rows, bossSearchTerm]);
 
   // 실시간 검색을 위한 useEffect
   useEffect(() => {
@@ -491,17 +518,8 @@ const BusinessmanListPage = () => {
       createForm.userName?.trim() !== '' &&
       createForm.userPw?.trim() !== '' &&
       createForm.userPhone?.trim() !== '' &&
-      createForm.userBirthday?.trim() !== '' &&
-      createForm.userGenderIndex?.trim() !== '' &&
-      createForm.userAddress?.trim() !== '' &&
-      createForm.userDetailAddress?.trim() !== '' &&
-      createForm.userBankIndex?.trim() !== '' &&
-      createForm.userBankNumber?.trim() !== '' &&
-      createForm.userBankHolder?.trim() !== '' &&
-      createForm.bossEmail?.trim() !== '' &&
       createForm.businessGradeIndex?.trim() !== '' &&
-      createForm.businessAreaIndex?.trim() !== '' &&
-      createForm.businessManDistributionFlag?.trim() !== ''
+      createForm.businessAreaIndex?.trim() !== ''
     );
   };
 
@@ -522,7 +540,9 @@ const BusinessmanListPage = () => {
     setFilteredBossList([]);
   };
 
-  if (loading && businessmanList.length === 0) {
+
+
+  if (loading && rows.length === 0) {
     return (
       <div className="businessman-list-page">
         <div className="businessman-list-loading-container">
@@ -550,7 +570,7 @@ const BusinessmanListPage = () => {
           </button>
           <button 
             className="businessman-list-action-btn" 
-            onClick={() => selectedBusinessmen.length > 0 && handleEditBusinessman(filteredList.find(b => b.userIndex === selectedBusinessmen[0]))}
+            onClick={() => selectedRows.size > 0 && handleEditBusinessman(rows.find(b => b.id === Array.from(selectedRows)[0]))}
           >
             수정
           </button>
@@ -654,74 +674,32 @@ const BusinessmanListPage = () => {
         </div>
       </div>
 
-      {/* 사업자 목록 테이블 */}
-      <div className="businessman-list-table-container">
-        <div className="businessman-list-table-header-fixed">
-          <table className="businessman-list-table">
-            <thead>
-              <tr>
-                <th className="businessman-list-checkbox-col">
-                  <input
-                    type="checkbox"
-                    checked={false}
-                    disabled={true}
-                    title="단일 선택 모드"
-                  />
-                </th>
-                <th>No</th>
-                <th>이름</th>
-                <th>이메일</th>
-                <th>휴대폰 번호</th>
-                <th>사업자 등급</th>
-                <th>배포 상태</th>
-                <th>은행명</th>
-                <th>계좌번호</th>
-                <th>예금주</th>
-                <th>사업 지역</th>
-                <th>상사 이름</th>
-                <th>상사 이메일</th>
-              </tr>
-            </thead>
-          </table>
-        </div>
-        
-        <div className="businessman-list-table-body-scrollable">
-          <table className="businessman-list-table">
-            <tbody>
-              {businessmanList.length > 0 ? (
-                businessmanList.map((businessman, index) => (
-                  <tr key={businessman.userIndex}>
-                    <td className="businessman-list-checkbox-col">
-                      <input
-                        type="checkbox"
-                        checked={selectedBusinessmen.includes(businessman.userIndex)}
-                        onChange={(e) => handleSelectBusinessman(businessman.userIndex, e.target.checked)}
-                      />
-                    </td>
-                    <td>{businessmanList.length - index}</td>
-                    <td>{businessman.userName || '-'}</td>
-                    <td>{businessman.email || '-'}</td>
-                    <td>{businessman.userPhone || '-'}</td>
-                    <td>{businessman.businessGradeName || '-'}</td>
-                    <td>{businessman.businessManDistributionFlag || '-'}</td>
-                    <td>{businessman.userBankName || '-'}</td>
-                    <td>{businessman.userBankNumber || '-'}</td>
-                    <td>{businessman.userBankHolder || '-'}</td>
-                    <td>{businessman.businessAreaName || '-'}</td>
-                    <td>{businessman.bossName || '-'}</td>
-                    <td>{businessman.bossEmail || '-'}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="13" style={{ textAlign: 'center', padding: '20px' }}>
-                    {loading ? '데이터를 불러오는 중...' : '데이터가 없습니다.'}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+      {/* 사업자 목록 DataGrid */}
+      <div className="businessman-list-data-grid">
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          initialState={{
+            pagination: {
+              paginationModel: { page: 0, pageSize: 25 }
+            }
+          }}
+          pageSizeOptions={[25, 50, 100]}
+          loading={loading}
+          checkboxSelection
+          disableRowSelectionOnClick
+          onRowSelectionModelChange={(newSelection) => {
+            // newSelection이 객체이고 ids 속성이 있는 경우
+            if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+              setSelectedRows(newSelection.ids);
+            } else if (Array.isArray(newSelection)) {
+              // 배열인 경우 (이전 버전 호환성)
+              setSelectedRows(new Set(newSelection));
+            } else {
+              setSelectedRows(new Set());
+            }
+          }}
+        />
       </div>
 
       {/* 사업자 수정 모달 */}
@@ -1306,10 +1284,10 @@ const BusinessmanListPage = () => {
                 />
               </div>
               <div className="businessman-list-boss-list">
-                {(bossSearchTerm ? filteredBossList : businessmanList)
+                {(bossSearchTerm ? filteredBossList : rows)
                   .filter(businessman => businessman.businessGradeIndex !== 1) // 딜러 제외
                   .length > 0 ? (
-                  (bossSearchTerm ? filteredBossList : businessmanList)
+                  (bossSearchTerm ? filteredBossList : rows)
                     .filter(businessman => businessman.businessGradeIndex !== 1) // 딜러 제외
                     .map((businessman) => (
                     <div 
