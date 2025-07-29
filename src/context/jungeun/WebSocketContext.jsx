@@ -32,7 +32,7 @@ export const WebSocketProvider = ({ children }) => {
       
       // 배포 환경 (kschost.ddns.net)
       if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/api/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}/springboot/api/ws/notifications`;
       }
       
       // 기타 배포 환경
