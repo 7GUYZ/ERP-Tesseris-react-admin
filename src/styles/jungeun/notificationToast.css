@@ -1,102 +1,97 @@
+/* 트렌디한 토스트 디자인 */
 .notification-toast {
   position: fixed;
-  top: 32px;
-  right: 32px;
+  top: 20px;
+  right: 20px;
   z-index: 9999;
-  min-width: 340px;
-  max-width: 420px;
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 8px 32px rgba(23, 15, 88, 0.18), 0 1.5px 6px rgba(0,0,0,0.08);
-  border-left: 6px solid #2196F3;
-  animation: notification-slide-in 0.3s cubic-bezier(.4,1.4,.6,1);
+  max-width: 400px;
+  min-width: 300px;
   font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow: hidden;
 }
 
-.notification-toast-info {
-  border-left-color: #2196F3;
-}
-.notification-toast-success {
-  border-left-color: #FDCD00;
-}
-.notification-toast-warning {
-  border-left-color: #FDCD00;
-}
-.notification-toast-error {
-  border-left-color: #F44336;
-}
-
-.notification-toast-content {
+.toast-content {
+  position: relative;
   display: flex;
-  align-items: flex-start;
-  padding: 22px 28px 22px 20px;
-  gap: 18px;
+  align-items: center;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.notification-toast-icon {
-  font-size: 2.1rem;
-  flex-shrink: 0;
-  margin-top: 2px;
-}
-
-.notification-toast-message {
-  flex: 1;
-  font-size: 1.18rem;
-  font-weight: 600;
-  line-height: 1.5;
-  color: #2196F3;
-  word-break: keep-all;
-  letter-spacing: -0.01em;
-}
-
-.notification-toast-close {
-  background: none;
-  border: none;
-  font-size: 1.5rem;
-  color: #aaa;
-  cursor: pointer;
-  padding: 0 0 0 8px;
-  width: 32px;
-  height: 32px;
+.toast-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.18s, color 0.18s;
-  margin-left: 4px;
-}
-.notification-toast-close:hover {
-  background: #F5F6FA;
-  color: #2196F3;
+  margin-right: 12px;
+  flex-shrink: 0;
 }
 
-.notification-toast-progress {
-  height: 4px;
-  background: #F5F6FA;
-  border-radius: 0 0 14px 14px;
-  overflow: hidden;
-}
-.notification-toast-progress::before {
-  content: '';
-  display: block;
-  height: 100%;
-  background: #2196F3;
-  animation: notification-progress 5s linear;
-}
-.notification-toast-success .notification-toast-progress::before {
-  background: #FDCD00;
-}
-.notification-toast-warning .notification-toast-progress::before {
-  background: #FDCD00;
-}
-.notification-toast-error .notification-toast-progress::before {
-  background: #F44336;
+.toast-message {
+  flex: 1;
+  margin-right: 12px;
 }
 
-@keyframes notification-slide-in {
+.message-text {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.toast-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  flex-shrink: 0;
+}
+
+.toast-close-btn:hover {
+  opacity: 1;
+  background-color: rgba(255, 255, 255, 0.1);
+  transform: scale(1.1);
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  animation: progress 5s linear forwards;
+}
+
+@keyframes progress {
   from {
-    transform: translateX(120%);
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}
+
+/* 애니메이션 */
+.toast-enter {
+  animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toast-exit {
+  animation: slideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
     opacity: 0;
   }
   to {
@@ -104,34 +99,39 @@
     opacity: 1;
   }
 }
-@keyframes notification-progress {
-  from { width: 100%; }
-  to { width: 0%; }
+
+@keyframes slideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
+/* 호버 효과 */
+.toast-content:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+/* 반응형 */
 @media (max-width: 768px) {
   .notification-toast {
     top: 10px;
     right: 10px;
     left: 10px;
-    min-width: auto;
     max-width: none;
-    border-radius: 10px;
+    min-width: auto;
   }
-  .notification-toast-content {
-    padding: 16px 14px 16px 12px;
-    gap: 10px;
+  
+  .toast-content {
+    padding: 14px 16px;
   }
-  .notification-toast-message {
-    font-size: 1rem;
-  }
-  .notification-toast-close {
-    width: 28px;
-    height: 28px;
-    font-size: 1.2rem;
-  }
-  .notification-toast-progress {
-    height: 3px;
-    border-radius: 0 0 10px 10px;
+  
+  .message-text {
+    font-size: 13px;
   }
 } 

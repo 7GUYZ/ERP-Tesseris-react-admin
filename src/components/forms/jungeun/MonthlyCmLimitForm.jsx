@@ -104,7 +104,10 @@ const MonthlyCmLimitForm = () => {
             try {
               const response = await cmLimitSave({ settingValue: tempValue });
               if (response.data.resultCode === 200) {
-                window.location.reload();
+                // 화면 새로고침 대신 상태 직접 업데이트
+                setMonthlyLimit(tempValue);
+                setIsEditing(false);
+                showToast("success", "월 CM 한도가 성공적으로 수정되었습니다.");
               } else {
                 setModalMessage('월 CM 한도 수정 실패');
                 setModalType("save");
