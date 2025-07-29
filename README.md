@@ -32,6 +32,9 @@ npm install gojs gojs-react
 (그래프)
 npm install recharts
 
+npm install socket.io-client
+
+npm install eslint-plugin-react-hooks --save-dev
 ^^
 
 npm install date-fns

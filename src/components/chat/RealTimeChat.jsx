@@ -60,8 +60,7 @@ function RealTimeChat() {
       console.log('⚠️ 이미 연결되어 있음, 새 연결 건너뛰기');
       return;
     }
-
-    const socketConnection = io('ws://localhost:4000', {
+    const socketConnection = io(process.env.NODE_ENV === 'development' ? 'ws://localhost:4000' : `ws://${process.env.REACT_APP_CHAT_SERVER_HOST}:4000`, {
       query: { userId: currentUser.id, userName: currentUser.name },
       forceNew: true,
       timeout: 5000,
