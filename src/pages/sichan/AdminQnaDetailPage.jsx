@@ -28,7 +28,11 @@ const AdminQnaDetailPage = () => {
                 return;
             }
 
-            const response = await fetch(`/api/sichan/qna/admin/${qnaIndex}`, {
+            const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://kschost.ddns.net/springboot' 
+  : 'http://localhost:19091';
+
+            const response = await fetch(`${API_BASE_URL}/api/sichan/qna/admin/${qnaIndex}`, {
                 headers: {
                     'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
                 }
@@ -68,7 +72,11 @@ const AdminQnaDetailPage = () => {
                 return;
             }
 
-            const response = await fetch(`/api/sichan/qna/admin/${qnaIndex}/answer`, {
+            const API_BASE_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://kschost.ddns.net/springboot' 
+  : 'http://localhost:19091';
+
+            const response = await fetch(`${API_BASE_URL}/api/sichan/qna/admin/${qnaIndex}/answer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -105,15 +113,53 @@ const AdminQnaDetailPage = () => {
     };
 
     const formatDate = (dateString) => {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ko-KR', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        if (!dateString) return '날짜 없음';
+        
+        try {
+            console.log('날짜 파싱 시도:', dateString, '타입:', typeof dateString);
+            
+            let date;
+            
+            // 문자열인 경우 다양한 형식 시도
+            if (typeof dateString === 'string') {
+                // ISO 형식 (2024-01-15T14:30:00)
+                if (dateString.includes('T')) {
+                    date = new Date(dateString);
+                }
+                // 한국 형식 (2024-01-15 14:30:00)
+                else if (dateString.includes('-') && dateString.includes(':')) {
+                    date = new Date(dateString.replace(' ', 'T'));
+                }
+                // 기타 형식
+                else {
+                    date = new Date(dateString);
+                }
+            } else {
+                date = new Date(dateString);
+            }
+            
+            // Invalid Date 체크
+            if (isNaN(date.getTime())) {
+                console.warn('Invalid date string:', dateString);
+                return '날짜 형식 오류';
+            }
+            
+            const formatted = date.toLocaleDateString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: false
+            });
+            
+            console.log('날짜 파싱 성공:', dateString, '→', formatted);
+            return formatted;
+            
+        } catch (error) {
+            console.error('Date formatting error:', error, 'for dateString:', dateString);
+            return '날짜 형식 오류';
+        }
     };
 
     if (loading) {
