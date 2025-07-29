@@ -240,6 +240,44 @@
   z-index: 10;
 }
 
+/* DataGrid 스타일 */
+.businessman-list-data-grid {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(34, 46, 60, 0.08);
+  overflow: hidden;
+  margin-top: 24px;
+}
+
+.businessman-list-data-grid .MuiDataGrid-root {
+  border: none;
+}
+
+.businessman-list-data-grid .MuiDataGrid-cell {
+  border-bottom: 1px solid #F1F3F4;
+}
+
+.businessman-list-data-grid .MuiDataGrid-columnHeaders {
+  background: #F8F9FA;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+.businessman-list-data-grid .MuiDataGrid-columnHeader {
+  border-right: 1px solid #E5E7EB;
+}
+
+.businessman-list-data-grid .MuiDataGrid-row:hover {
+  background: #F8F9FA;
+}
+
+.businessman-list-data-grid .MuiDataGrid-row:nth-child(even) {
+  background: #FAFBFC;
+}
+
+.businessman-list-data-grid .MuiDataGrid-row:nth-child(even):hover {
+  background: #F1F3F4;
+}
+
 .businessman-list-table td {
   padding: 14px 12px;
   border-bottom: 1px solid #F1F3F4;
