@@ -416,19 +416,10 @@ const MainNavi = () => {
       },
       {
         id: "alert",
-        menuIndex: 11,
         label: "알림 관리",
         icon: Bell,
-        type: "expand",
-        submenu: [
-          {
-            id: "alert",
-            programIndex: 41,
-            label: "알림 내역 및 설정 관리",
-            type: "link",
-            href: "/alert",
-          },
-        ],
+        type: "link",
+        href: "/alert"
       },
     ],
 
