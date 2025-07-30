@@ -120,15 +120,22 @@ const AdminQnaDetailPage = () => {
             
             let date;
             
+            // 배열 형태의 숫자들 (2025,7,29,19,55,49)
+            if (Array.isArray(dateString)) {
+                const [year, month, day, hour, minute, second] = dateString;
+                date = new Date(year, month - 1, day, hour, minute, second);
+            }
             // 문자열인 경우 다양한 형식 시도
-            if (typeof dateString === 'string') {
+            else if (typeof dateString === 'string') {
                 // ISO 형식 (2024-01-15T14:30:00)
                 if (dateString.includes('T')) {
                     date = new Date(dateString);
                 }
-                // 한국 형식 (2024-01-15 14:30:00)
+                // 한국 형식 (2024-01-15 14:30:00) - 백엔드에서 오는 형식
                 else if (dateString.includes('-') && dateString.includes(':')) {
-                    date = new Date(dateString.replace(' ', 'T'));
+                    // 공백을 T로 바꿔서 ISO 형식으로 변환
+                    const isoString = dateString.replace(' ', 'T');
+                    date = new Date(isoString);
                 }
                 // 기타 형식
                 else {
@@ -141,7 +148,8 @@ const AdminQnaDetailPage = () => {
             // Invalid Date 체크
             if (isNaN(date.getTime())) {
                 console.warn('Invalid date string:', dateString);
-                return '날짜 형식 오류';
+                // 추가 디버깅을 위해 원본 문자열 반환
+                return `날짜 형식 오류: ${dateString}`;
             }
             
             const formatted = date.toLocaleDateString('ko-KR', {
@@ -158,7 +166,7 @@ const AdminQnaDetailPage = () => {
             
         } catch (error) {
             console.error('Date formatting error:', error, 'for dateString:', dateString);
-            return '날짜 형식 오류';
+            return `날짜 형식 오류: ${dateString}`;
         }
     };
 
