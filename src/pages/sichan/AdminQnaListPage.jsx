@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '../../api/Http';
 import '../../styles/sichan/AdminQnaListPage.css';
 
 const AdminQnaListPage = () => {
@@ -23,32 +24,24 @@ const AdminQnaListPage = () => {
                 return;
             }
 
-            let url = 'http://localhost:19091/api/sichan/qna/admin/list';
-            const params = new URLSearchParams();
-            
+            const params = {};
             if (searchKeyword.trim()) {
-                params.append('searchType', searchType);
-                params.append('searchKeyword', searchKeyword);
-                url += '?' + params.toString();
+                params.searchType = searchType;
+                params.searchKeyword = searchKeyword;
             }
 
-            const response = await fetch(url, {
-                headers: {
-                    'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`
-                }
-            });
+            const response = await api.get('/sichan/qna/admin/list', { params });
 
-            if (response.ok) {
-                const data = await response.json();
-                setQnaList(data);
-            } else if (response.status === 401) {
-                setError('인증이 만료되었습니다. 다시 로그인해주세요.');
-            } else {
-                setError('QnA 목록을 불러오는데 실패했습니다.');
+            if (response.status === 200) {
+                setQnaList(response.data);
             }
         } catch (error) {
             console.error('QnA 목록 조회 오류:', error);
-            setError('QnA 목록을 불러오는 중 오류가 발생했습니다.');
+            if (error.response?.status === 401) {
+                setError('인증이 만료되었습니다. 다시 로그인해주세요.');
+            } else {
+                setError('QnA 목록을 불러오는 중 오류가 발생했습니다.');
+            }
         } finally {
             setLoading(false);
         }
@@ -68,15 +61,22 @@ const AdminQnaListPage = () => {
             
             let date;
             
+            // 배열 형태의 숫자들 (2025,7,29,19,55,49)
+            if (Array.isArray(dateString)) {
+                const [year, month, day, hour, minute, second] = dateString;
+                date = new Date(year, month - 1, day, hour, minute, second);
+            }
             // 문자열인 경우 다양한 형식 시도
-            if (typeof dateString === 'string') {
+            else if (typeof dateString === 'string') {
                 // ISO 형식 (2024-01-15T14:30:00)
                 if (dateString.includes('T')) {
                     date = new Date(dateString);
                 }
-                // 한국 형식 (2024-01-15 14:30:00)
+                // 한국 형식 (2024-01-15 14:30:00) - 백엔드에서 오는 형식
                 else if (dateString.includes('-') && dateString.includes(':')) {
-                    date = new Date(dateString.replace(' ', 'T'));
+                    // 공백을 T로 바꿔서 ISO 형식으로 변환
+                    const isoString = dateString.replace(' ', 'T');
+                    date = new Date(isoString);
                 }
                 // 기타 형식
                 else {
@@ -89,7 +89,8 @@ const AdminQnaListPage = () => {
             // Invalid Date 체크
             if (isNaN(date.getTime())) {
                 console.warn('Invalid date string:', dateString);
-                return '날짜 형식 오류';
+                // 추가 디버깅을 위해 원본 문자열 반환
+                return `날짜 형식 오류: ${dateString}`;
             }
             
             const formatted = date.toLocaleDateString('ko-KR', {
@@ -106,7 +107,7 @@ const AdminQnaListPage = () => {
             
         } catch (error) {
             console.error('Date formatting error:', error, 'for dateString:', dateString);
-            return '날짜 형식 오류';
+            return `날짜 형식 오류: ${dateString}`;
         }
     };
 
