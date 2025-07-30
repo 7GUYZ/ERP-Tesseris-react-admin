@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
 
 import RealTimeChatButton from './RealTimeChatButton';
 import ChatMainWindow from './ChatMainWindow';
@@ -9,7 +10,7 @@ function RealTimeChat() {
   // 채팅 시스템 상태
   const [currentView, setCurrentView] = useState('closed'); // 'closed', 'main', 'room'
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [socket, setSocket] = useState(null);
+  const [stompClient, setStompClient] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isConnected, setIsConnected] = useState(false);
@@ -49,60 +50,81 @@ function RealTimeChat() {
     }
   }, []);
 
-  // WebSocket 연결 (메인 창이 열릴 때만)
+  // STOMP WebSocket 연결 (메인 창이 열릴 때만)
   useEffect(() => {
     if (!currentUser || currentView === 'closed') return;
 
-    console.log('🔗 WebSocket 연결 시도:', currentUser.name, currentUser.id);
+    console.log('🔗 STOMP WebSocket 연결 시도:', currentUser.name, currentUser.id);
 
     // 이미 연결되어 있다면 중복 연결 방지
-    if (socket?.connected) {
+    if (stompClient?.connected) {
       console.log('⚠️ 이미 연결되어 있음, 새 연결 건너뛰기');
       return;
     }
 
-    const socketConnection = io('ws://localhost:4000', {
-      query: { userId: currentUser.id, userName: currentUser.name },
-      forceNew: true,
-      timeout: 5000,
-      transports: ['websocket']
-    });
+    // SockJS + STOMP 연결 설정
+    const socket = new SockJS('http://localhost:8080/ws'); // Spring Boot WebSocket 엔드포인트
+    const client = Stomp.over(socket);
 
-    socketConnection.on('connect', () => {
-      setIsConnected(true);
-      console.log('✅ 채팅 서버에 연결됨:', socketConnection.id, '사용자:', currentUser.name);
-    });
+    // STOMP 연결 옵션
+    const connectHeaders = {
+      'user-id': currentUser.id,
+      'user-name': currentUser.name
+    };
 
-    socketConnection.on('disconnect', (reason) => {
-      setIsConnected(false);
-      console.log('❌ 채팅 서버 연결 끊김:', reason, '사용자:', currentUser.name);
-    });
+    client.connect(connectHeaders, 
+      // 연결 성공 콜백
+      (frame) => {
+        setIsConnected(true);
+        console.log('✅ STOMP 서버에 연결됨:', frame, '사용자:', currentUser.name);
 
-    socketConnection.on('connect_error', (error) => {
-      console.error('🚨 연결 오류:', error);
-      setIsConnected(false);
-    });
+        // 전역 채팅 토픽 구독
+        client.subscribe('/topic/global', (message) => {
+          const messageData = JSON.parse(message.body);
+          console.log('🌍 전역 메시지 수신:', messageData);
+          
+          // 창이 닫혀있고, 다른 사용자의 메시지인 경우 읽지 않은 메시지 카운트 증가
+          if (currentView === 'closed' && 
+              messageData.sender && 
+              messageData.sender.id && 
+              currentUser && 
+              messageData.sender.id !== currentUser.id) {
+            setUnreadCount(prev => prev + 1);
+          }
+        });
 
-    // 전역 알림 처리
-    socketConnection.on('message', (message) => {
-      console.log('🌍 전역 메시지 수신:', message);
-      
-      if (currentView === 'closed' && 
-          message.sender && 
-          message.sender.id && 
-          currentUser && 
-          message.sender.id !== currentUser.id) {
-        setUnreadCount(prev => prev + 1);
+        // 사용자별 개인 메시지 토픽 구독
+        client.subscribe(`/topic/user/${currentUser.id}`, (message) => {
+          const messageData = JSON.parse(message.body);
+          console.log('📨 개인 메시지 수신:', messageData);
+        });
+
+        // 온라인 사용자 토픽 구독
+        client.subscribe('/topic/users', (message) => {
+          const users = JSON.parse(message.body);
+          console.log('👥 온라인 사용자 업데이트:', users);
+        });
+
+        setStompClient(client);
+      },
+      // 연결 실패 콜백
+      (error) => {
+        console.error('🚨 STOMP 연결 오류:', error);
+        setIsConnected(false);
       }
-    });
+    );
 
-    setSocket(socketConnection);
+    // 연결 해제 이벤트
+    client.onWebSocketClose = (event) => {
+      setIsConnected(false);
+      console.log('❌ STOMP 서버 연결 끊김:', event, '사용자:', currentUser.name);
+    };
 
     // 정리 함수
     return () => {
-      console.log('🔌 WebSocket 연결 정리:', currentUser.name, currentUser.id);
-      if (socketConnection.connected) {
-        socketConnection.disconnect();
+      console.log('🔌 STOMP 연결 정리:', currentUser.name, currentUser.id);
+      if (client.connected) {
+        client.disconnect();
       }
     };
   }, [currentUser?.id, currentView]);
@@ -116,10 +138,10 @@ function RealTimeChat() {
   // 메인 창 닫기
   const handleMainWindowClose = () => {
     setCurrentView('closed');
-    // 소켓 연결 해제
-    if (socket?.connected) {
-      socket.disconnect();
-      setSocket(null);
+    // STOMP 연결 해제
+    if (stompClient?.connected) {
+      stompClient.disconnect();
+      setStompClient(null);
       setIsConnected(false);
     }
   };
@@ -142,17 +164,18 @@ function RealTimeChat() {
     setCurrentView('closed');
     setSelectedRoom(null);
     
-    if (socket && selectedRoom && currentUser) {
-      socket.emit('leaveRoom', { 
-        roomId: selectedRoom.id, 
-        user: currentUser 
-      });
+    // 채팅방 퇴장 메시지 전송
+    if (stompClient && stompClient.connected && selectedRoom && currentUser) {
+      stompClient.send('/app/chat/leave', {}, JSON.stringify({
+        roomId: selectedRoom.id,
+        user: currentUser
+      }));
     }
 
-    // 소켓 연결 해제
-    if (socket?.connected) {
-      socket.disconnect();
-      setSocket(null);
+    // STOMP 연결 해제
+    if (stompClient?.connected) {
+      stompClient.disconnect();
+      setStompClient(null);
       setIsConnected(false);
     }
   };
@@ -168,12 +191,12 @@ function RealTimeChat() {
         isOnline={isConnected}
       />
 
-      {/* 메인 채팅 창 (친구, 채팅방 목록, 설정) */}
+      {/* 메인 채팅 창 (관리자, 채팅방 목록, 설정) */}
       <ChatMainWindow
         open={currentView === 'main'}
         onClose={handleMainWindowClose}
         onRoomSelect={handleRoomSelect}
-        socket={socket}
+        stompClient={stompClient}
         currentUser={currentUser}
       />
 
@@ -183,7 +206,7 @@ function RealTimeChat() {
         onClose={handleRoomClose}
         onBack={handleBackToMain}
         roomData={selectedRoom}
-        socket={socket}
+        stompClient={stompClient}
         currentUser={currentUser}
       />
     </>

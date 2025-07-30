@@ -2,15 +2,17 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Paper, Box, Tabs, Tab, List, ListItem, ListItemAvatar,
   ListItemText, Avatar, IconButton, Typography, Chip,
-  Badge, TextField, Button, Divider, Switch, FormControlLabel
+  Badge, TextField, Button, Divider, Switch, FormControlLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   Close, Minimize, DragIndicator, PersonAdd, Settings,
-  MoreVert, Search, Add, Send
+  MoreVert, Search, Add, Send, Refresh
 } from '@mui/icons-material';
+import { getChatAdminList, getUserChatRooms, setupInterceptors } from '../../api/auth/DeokkyuAuth';
 
 
-function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
+function ChatMainWindow({ open, onClose, onRoomSelect, stompClient, currentUser }) {
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [position, setPosition] = useState({ 
@@ -24,6 +26,14 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
   const [notifications, setNotifications] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   
+  // 👥 관리자 목록 상태
+  const [admins, setAdmins] = useState([]);
+  const [adminsLoading, setAdminsLoading] = useState(false);
+  
+  // 💬 채팅방 목록 상태
+  const [chatRooms, setChatRooms] = useState([]);
+  const [chatRoomsLoading, setChatRoomsLoading] = useState(false);
+  
   // 🌍 전체 채팅방 상태
   const [globalMessages, setGlobalMessages] = useState([]);
   const [newGlobalMessage, setNewGlobalMessage] = useState('');
@@ -35,40 +45,111 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
   
   const chatRef = useRef(null);
 
-  // 모킹 데이터 (실제로는 서버에서 가져와야 함)
-  const mockFriends = [
-    { id: '1', name: '김철수', status: '온라인', lastSeen: null, avatar: null },
-    { id: '2', name: '이영희', status: '자리비움', lastSeen: '5분 전', avatar: null },
-    { id: '3', name: '박민수', status: '오프라인', lastSeen: '1시간 전', avatar: null },
-    { id: '4', name: '정수진', status: '온라인', lastSeen: null, avatar: null },
-  ];
+  // 관리자 목록 가져오기
+  const fetchAdmins = async () => {
+    try {
+      setAdminsLoading(true);
+      setupInterceptors();
+      const response = await getChatAdminList();
+      console.log('👥 관리자 목록 조회 성공:', response.data);
+      
+      // API 응답 구조에 맞게 데이터 처리
+      const adminsData = response.data?.map(admin => ({
+        id: admin.adminUserIndex || admin.id || 'unknown',
+        name: admin.adminName || '이름없음',
+        userIndex: admin.adminUserIndex,
+        typeName: admin.adminTypeName || '미지정',
+        rankName: admin.adminRankName || '미지정',
+        status: '온라인', // 실제로는 온라인 상태 API에서 확인 필요
+        avatar: null,
+        // 원본 데이터도 유지
+        ...admin
+      })) || [];
+      
+      setAdmins(adminsData);
+      
+    } catch (error) {
+      console.error('🚨 관리자 목록 조회 실패:', error);
+      // 실패 시 빈 배열로 설정
+      setAdmins([]);
+    } finally {
+      setAdminsLoading(false);
+    }
+  };
 
-  const mockChatRooms = [
-    { 
-      id: 'room1', 
-      name: '프로젝트 팀', 
-      lastMessage: '내일 회의 준비 완료!', 
-      lastTime: '2분 전',
-      unreadCount: 3,
-      participants: ['김철수', '이영희', '박민수']
-    },
-    { 
-      id: 'room2', 
-      name: '김철수', 
-      lastMessage: '안녕하세요~', 
-      lastTime: '10분 전',
-      unreadCount: 1,
-      participants: ['김철수']
-    },
-    { 
-      id: 'room3', 
-      name: '개발팀 회의', 
-      lastMessage: '코드 리뷰 부탁드립니다', 
-      lastTime: '1시간 전',
-      unreadCount: 0,
-      participants: ['정수진', '박민수', '이영희']
-    },
-  ];
+  // 채팅방 목록 가져오기
+  const fetchChatRooms = async () => {
+    try {
+      setChatRoomsLoading(true);
+      
+      // 로컬스토리지에서 user_index 가져오기
+      const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+      const userId = userInfo.id;
+      
+      console.log('📋 로컬스토리지 user-info:', userInfo);
+      console.log('🔑 추출된 userId:', userId);
+      
+      if (!userId) {
+        console.warn('⚠️ 사용자 정보가 없습니다. 로그인이 필요합니다.');
+        console.warn('📋 현재 user-info:', userInfo);
+        setChatRooms([]);
+        return;
+      }
+
+      setupInterceptors();
+      const response = await getUserChatRooms(userId);
+      console.log('💬 채팅방 목록 조회 성공:', response.data);
+      
+      // API 응답 구조 처리 - {resultCode, resultMessage, data?} 형태
+      const responseData = response.data;
+      console.log('🔍 전체 응답 구조:', responseData);
+      
+      if (responseData.resultCode !== 200) {
+        console.warn('⚠️ API 응답 실패:', responseData.resultMessage);
+        setChatRooms([]);
+        return;
+      }
+      
+      // resultMessage에 에러가 포함되어 있는 경우 처리
+      if (responseData.resultMessage && responseData.resultMessage.includes('Error')) {
+        console.error('🚨 백엔드 파싱 오류:', responseData.resultMessage);
+        setChatRooms([]);
+        return;
+      }
+      
+      // data 필드가 있는지 확인
+      if (!responseData.data) {
+        console.warn('⚠️ 응답에 데이터가 없습니다:', responseData);
+        setChatRooms([]);
+        return;
+      }
+      
+      const roomsData = responseData.data?.map(room => ({
+        id: room.roomId || room.id || Math.random().toString(36),
+        name: room.roomName || room.name || '채팅방',
+        lastMessage: room.lastMessage || '메시지가 없습니다',
+        lastTime: room.lastTime || room.updatedAt || '알 수 없음',
+        unreadCount: room.unreadCount || 0,
+        participants: room.participants || room.memberNames || [],
+        roomType: room.roomType || room.type || 'group',
+        room_index: room.roomIndex || room.room_index || room.id, // room_index 추가
+        createdAt: room.createdAt,
+        updatedAt: room.updatedAt,
+        // 원본 데이터도 유지
+        ...room
+      })) || [];
+      
+      console.log('📋 처리된 채팅방 데이터:', roomsData);
+      setChatRooms(roomsData);
+      
+    } catch (error) {
+      console.error('🚨 채팅방 목록 조회 실패:', error);
+      // 실패 시 빈 배열로 설정
+      setChatRooms([]);
+    } finally {
+      setChatRoomsLoading(false);
+    }
+  };
 
   // 드래그 기능
   const handleMouseMove = useCallback((e) => {
@@ -121,64 +202,49 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
     scrollToBottom();
   }, [globalMessages]);
 
-  // WebSocket 이벤트 리스너
+  // 컴포넌트 마운트 시 관리자 목록 가져오기
   useEffect(() => {
-    if (!socket) return;
+    if (open) {
+      fetchAdmins();
+    }
+  }, [open]);
 
-    // 이벤트 리스너 중복 등록 방지
-    const handleOnlineUsers = (users) => {
+  // STOMP 이벤트 리스너
+  useEffect(() => {
+    if (!stompClient || !stompClient.connected) return;
+
+    // 👥 온라인 사용자 업데이트 구독
+    const usersSubscription = stompClient.subscribe('/topic/users', (message) => {
+      const users = JSON.parse(message.body);
       if (Array.isArray(users)) {
         setOnlineUsers(users);
         console.log('🔗 온라인 사용자 업데이트:', users.length, '명');
       }
-    };
+    });
 
-    // 🌍 전역 메시지 수신 - 중복 방지 로직 추가
-    const handleMessage = (message) => {
-      // 고유 메시지 키 생성 (ID + timestamp + sender)
-      const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
-      
-      // 이미 처리된 메시지인지 확인
-      if (processedMessagesRef.current.has(messageKey)) {
-        console.log('🔄 중복 메시지 무시:', messageKey);
-        return;
-      }
-      
-      // 처리된 메시지로 마킹
-      processedMessagesRef.current.add(messageKey);
-      
-      console.log('🌍 전역 메시지 수신:', message);
-      setGlobalMessages(prev => [...prev, message]);
-    };
-
-    // 🚀 사용자 입장 알림
-    const handleUserJoined = (user) => {
+    // 🚀 사용자 입장/퇴장 알림 구독
+    const joinSubscription = stompClient.subscribe('/topic/user-join', (message) => {
+      const user = JSON.parse(message.body);
       console.log('👋 새 사용자 입장:', user);
-    };
+    });
 
-    // 👋 사용자 퇴장 알림
-    const handleUserLeft = (user) => {
+    const leaveSubscription = stompClient.subscribe('/topic/user-leave', (message) => {
+      const user = JSON.parse(message.body);
       console.log('🚪 사용자 퇴장:', user);
-    };
-
-    // 이벤트 리스너 등록
-    socket.on('onlineUsers', handleOnlineUsers);
-    socket.on('message', handleMessage);
-    socket.on('userJoined', handleUserJoined);
-    socket.on('userLeft', handleUserLeft);
+    });
 
     // 정리 함수
     return () => {
-      socket.off('onlineUsers', handleOnlineUsers);
-      socket.off('message', handleMessage);
-      socket.off('userJoined', handleUserJoined);
-      socket.off('userLeft', handleUserLeft);
+      globalSubscription?.unsubscribe();
+      usersSubscription?.unsubscribe();
+      joinSubscription?.unsubscribe();
+      leaveSubscription?.unsubscribe();
     };
-  }, [socket]);
+  }, [stompClient]);
 
   // 🌍 전역 메시지 전송
   const handleSendGlobalMessage = () => {
-    if (newGlobalMessage.trim() && socket && currentUser) {
+    if (newGlobalMessage.trim() && stompClient && stompClient.connected && currentUser) {
       // 고유 ID 생성 (중복 방지를 위해 더 정확한 ID 생성)
       messageCounterRef.current += 1;
       const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
@@ -192,7 +258,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
       };
 
       console.log('🌍 전역 메시지 전송:', message);
-      socket.emit('sendMessage', message);
+      stompClient.send('/app/chat/global', {}, JSON.stringify(message));
       setNewGlobalMessage('');
     }
   };
@@ -207,11 +273,19 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
     
-    // 🌍 전체 채팅방 탭(0번)에 진입할 때 서버에 연결 알림
-    if (newValue === 0 && socket && currentUser) {
+    // 🌍 전체 채팅방 탭(0번)에 진입할 때 서버에 알림
+    if (newValue === 0 && stompClient && stompClient.connected && currentUser) {
       console.log('🌍 전체 채팅방 입장:', currentUser.name);
-      // 서버에 전체 채팅방 입장 알림 (기존 general 룸 사용)
-      socket.emit('joinRoom', 'general');
+      // STOMP로 전체 채팅방 입장 알림
+      stompClient.send('/app/chat/join-global', {}, JSON.stringify({
+        user: currentUser
+      }));
+    }
+    
+    // 💬 채팅방 탭(2번)에 진입할 때 채팅방 목록 조회
+    if (newValue === 2) {
+      console.log('💬 채팅방 탭 진입 - 채팅방 목록 조회');
+      fetchChatRooms();
     }
   };
 
@@ -226,6 +300,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
       default: return '#757575';
     }
   };
+
 
   if (!open) return null;
 
@@ -305,7 +380,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
               sx={{ '& .MuiTab-root': { fontSize: '0.8rem', minWidth: 'auto' } }}
             >
               <Tab label="전체 채팅방" />
-              <Tab label="친구" />
+              <Tab label="관리자" />
               <Tab label="채팅방" />
               <Tab label="설정" />
             </Tabs>
@@ -466,7 +541,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
               </Box>
             )}
 
-            {/* 친구 탭 */}
+            {/* 관리자 탭 */}
             {activeTab === 1 && (
               <Box sx={{ height: '100%', overflow: 'hidden' }}>
                 {/* 검색 */}
@@ -474,69 +549,136 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
                   <TextField
                     fullWidth
                     size="small"
-                    placeholder="친구 검색..."
+                    placeholder="관리자 검색..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
                       startAdornment: <Search sx={{ mr: 1, color: '#666' }} />
                     }}
                   />
-                  <Button
-                    startIcon={<PersonAdd />}
-                    sx={{ mt: 1, width: '100%' }}
-                    variant="outlined"
-                    size="small"
-                  >
-                    친구 추가
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                    <Button
+                      startIcon={<PersonAdd />}
+                      sx={{ flex: 1 }}
+                      variant="outlined"
+                      size="small"
+                    >
+                      관리자 추가
+                    </Button>
+                    <Button
+                      startIcon={<Refresh />}
+                      onClick={fetchAdmins}
+                      disabled={adminsLoading}
+                      variant="outlined"
+                      size="small"
+                      sx={{ minWidth: 'auto' }}
+                    >
+                      새로고침
+                    </Button>
+                  </Box>
                 </Box>
 
-                {/* 친구 목록 */}
-                <List sx={{ height: 'calc(100% - 120px)', overflowY: 'auto', py: 0 }}>
-                  {mockFriends
-                    .filter(friend => 
-                      friend.name.toLowerCase().includes(searchTerm.toLowerCase())
-                    )
-                    .map((friend) => (
-                    <ListItem
-                      key={friend.id}
-                      button
-                      onClick={() => handleRoomClick({ id: friend.id, name: friend.name, type: 'direct' })}
-                      sx={{
-                        '&:hover': { backgroundColor: '#f5f5f5' },
-                        borderBottom: '1px solid #f0f0f0'
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Badge
-                          overlap="circular"
-                          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                          variant="dot"
-                          sx={{
-                            '& .MuiBadge-badge': {
-                              backgroundColor: getStatusColor(friend.status),
-                              color: getStatusColor(friend.status),
-                            },
-                          }}
-                        >
-                          <Avatar sx={{ bgcolor: '#2196F3' }}>
-                            {friend.name[0]}
-                          </Avatar>
-                        </Badge>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={friend.name}
-                        secondary={friend.status === '오프라인' ? friend.lastSeen : friend.status}
-                        secondaryTypographyProps={{
-                          color: getStatusColor(friend.status),
-                          fontSize: '0.8rem'
+                {/* 관리자 목록 */}
+                <List sx={{ height: 'calc(100% - 140px)', overflowY: 'auto', py: 0 }}>
+                  {adminsLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                      <CircularProgress size={40} />
+                      <Typography variant="body2" sx={{ ml: 2 }}>
+                        관리자 목록을 불러오는 중...
+                      </Typography>
+                    </Box>
+                  ) : admins.length === 0 ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        관리자가 없습니다.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    admins
+                      .filter(admin => 
+                        admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        admin.typeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        admin.rankName.toLowerCase().includes(searchTerm.toLowerCase())
+                      )
+                      .map((admin) => (
+                      <ListItem
+                        key={admin.id}
+                        button
+                        onClick={() => handleRoomClick({ 
+                          id: admin.id, 
+                          name: admin.name, 
+                          type: 'direct',
+                          room_index: null, // 새로운 1:1 채팅방
+                          participants: [currentUser?.id, admin.userIndex] // 나와 상대방
+                        })}
+                        sx={{
+                          '&:hover': { backgroundColor: '#f5f5f5' },
+                          borderBottom: '1px solid #f0f0f0'
                         }}
-                      />
-                      <IconButton size="small">
-                        <MoreVert />
-                      </IconButton>
-                    </ListItem>
-                  ))}
+                      >
+                        <ListItemAvatar>
+                          <Badge
+                            overlap="circular"
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            variant="dot"
+                            sx={{
+                              '& .MuiBadge-badge': {
+                                backgroundColor: getStatusColor(admin.status),
+                                color: getStatusColor(admin.status),
+                              },
+                            }}
+                          >
+                            <Avatar sx={{ 
+                              bgcolor: getAdminTypeColor(admin.typeName),
+                              fontSize: '0.8rem',
+                              fontWeight: 'bold'
+                            }}>
+                              {admin.name[0]}
+                            </Avatar>
+                          </Badge>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                {admin.name}
+                              </Typography>
+                              <Chip
+                                label={admin.rankName}
+                                size="small"
+                                sx={{
+                                  backgroundColor: getAdminRankColor(admin.rankName),
+                                  color: 'white',
+                                  fontSize: '0.6rem',
+                                  height: 16
+                                }}
+                              />
+                            </Box>
+                          }
+                          secondary={
+                            <>
+                              <Typography component="span" variant="caption" sx={{ 
+                                color: getAdminTypeColor(admin.typeName),
+                                fontWeight: 'bold'
+                              }}>
+                                {admin.typeName}
+                              </Typography>
+                              <Typography component="span" variant="caption" sx={{ 
+                                display: 'block', 
+                                color: 'text.secondary',
+                                fontSize: '0.7rem'
+                              }}>
+                                ID: {admin.userIndex}
+                              </Typography>
+                            </>
+                          }
+                        />
+                        <IconButton size="small">
+                          <MoreVert />
+                        </IconButton>
+                      </ListItem>
+                    ))
+                  )}
                 </List>
               </Box>
             )}
@@ -546,59 +688,93 @@ function ChatMainWindow({ open, onClose, onRoomSelect, socket, currentUser }) {
               <Box sx={{ height: '100%', overflow: 'hidden' }}>
                 {/* 새 채팅방 버튼 */}
                 <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
-                  <Button
-                    startIcon={<Add />}
-                    sx={{ width: '100%' }}
-                    variant="outlined"
-                    size="small"
-                  >
-                    새 채팅방 만들기
-                  </Button>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button
+                      startIcon={<Add />}
+                      sx={{ flex: 1 }}
+                      variant="outlined"
+                      size="small"
+                    >
+                      새 채팅방 만들기
+                    </Button>
+                    <Button
+                      startIcon={<Refresh />}
+                      onClick={fetchChatRooms}
+                      disabled={chatRoomsLoading}
+                      variant="outlined"
+                      size="small"
+                      sx={{ minWidth: 'auto' }}
+                    >
+                      새로고침
+                    </Button>
+                  </Box>
                 </Box>
 
                 {/* 채팅방 목록 */}
-                <List sx={{ height: 'calc(100% - 80px)', overflowY: 'auto', py: 0 }}>
-                  {mockChatRooms.map((room) => (
-                    <ListItem
-                      key={room.id}
-                      button
-                      onClick={() => handleRoomClick(room)}
-                      sx={{
-                        '&:hover': { backgroundColor: '#f5f5f5' },
-                        borderBottom: '1px solid #f0f0f0'
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Badge badgeContent={room.unreadCount} color="error">
-                          <Avatar sx={{ bgcolor: '#FF9800' }}>
-                            {room.name[0]}
-                          </Avatar>
-                        </Badge>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="subtitle2" noWrap>
-                              {room.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {room.lastTime}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary" noWrap>
-                              {room.lastMessage}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              참여자: {room.participants.join(', ')}
-                            </Typography>
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                  ))}
+                <List sx={{ height: 'calc(100% - 100px)', overflowY: 'auto', py: 0 }}>
+                  {chatRoomsLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                      <CircularProgress size={40} />
+                      <Typography variant="body2" sx={{ ml: 2 }}>
+                        채팅방 목록을 불러오는 중...
+                      </Typography>
+                    </Box>
+                  ) : chatRooms.length === 0 ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        참여 중인 채팅방이 없습니다.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    chatRooms.map((room) => (
+                      <ListItem
+                        key={room.id}
+                        button
+                        onClick={() => handleRoomClick(room)}
+                        sx={{
+                          '&:hover': { backgroundColor: '#f5f5f5' },
+                          borderBottom: '1px solid #f0f0f0'
+                        }}
+                      >
+                        <ListItemAvatar>
+                          <Badge 
+                            badgeContent={room.unreadCount > 0 ? room.unreadCount : null} 
+                            color="error"
+                          >
+                            <Avatar sx={{ 
+                              bgcolor: room.roomType === 'direct' ? '#4CAF50' : '#FF9800' 
+                            }}>
+                              {room.name[0]}
+                            </Avatar>
+                          </Badge>
+                        </ListItemAvatar>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <Typography variant="subtitle2" noWrap>
+                                {room.name}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {room.lastTime}
+                              </Typography>
+                            </Box>
+                          }
+                          secondary={
+                            <Box>
+                              <Typography variant="body2" color="text.secondary" noWrap>
+                                {room.lastMessage}
+                              </Typography>
+                              {room.participants && room.participants.length > 0 && (
+                                <Typography variant="caption" color="text.secondary">
+                                  참여자: {room.participants.join(', ')}
+                                </Typography>
+                              )}
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))
+                  )}
                 </List>
               </Box>
             )}

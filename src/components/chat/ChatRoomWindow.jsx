@@ -7,6 +7,7 @@ import {
   Close, Send, Minimize, DragIndicator, 
   ArrowBack, Call, VideoCall, Info
 } from '@mui/icons-material';
+import { saveChatMessage, setupInterceptors } from '../../api/auth/DeokkyuAuth';
 
 
 function ChatRoomWindow({ 
@@ -14,7 +15,7 @@ function ChatRoomWindow({
   onClose, 
   onBack, 
   roomData, 
-  socket, 
+  stompClient, 
   currentUser 
 }) {
   const [messages, setMessages] = useState([]);
@@ -90,29 +91,33 @@ function ChatRoomWindow({
 
   // 채팅방 입장 시 초기화
   useEffect(() => {
-    if (open && roomData && socket) {
+    if (open && roomData && stompClient && stompClient.connected) {
       // 메시지 중복 처리 초기화
       processedMessagesRef.current.clear();
       
-      // 채팅방 입장
-      socket.emit('joinRoom', { 
-        roomId: roomData.id, 
-        user: currentUser 
-      });
+      // 채팅방 입장 알림
+      stompClient.send('/app/chat/join-room', {}, JSON.stringify({
+        roomId: roomData.id,
+        user: currentUser
+      }));
 
       // 기존 메시지 불러오기 요청
-      socket.emit('getRoomMessages', roomData.id);
+      stompClient.send('/app/chat/get-messages', {}, JSON.stringify({
+        roomId: roomData.id
+      }));
     }
-  }, [open, roomData, socket, currentUser]);
+  }, [open, roomData, stompClient, currentUser]);
 
-  // WebSocket 이벤트 리스너
+  // STOMP 이벤트 리스너
   useEffect(() => {
-    if (!socket) return;
+    if (!stompClient || !stompClient.connected || !roomData) return;
 
-    // 룸 메시지 수신 - 중복 방지 로직 추가
-    const handleRoomMessage = (message) => {
+    // 채팅방별 메시지 수신 구독
+    const roomMessageSubscription = stompClient.subscribe(`/topic/room/${roomData.id}`, (message) => {
+      const messageData = JSON.parse(message.body);
+      
       // 고유 메시지 키 생성
-      const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
+      const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
       
       // 이미 처리된 메시지인지 확인
       if (processedMessagesRef.current.has(messageKey)) {
@@ -123,31 +128,36 @@ function ChatRoomWindow({
       // 처리된 메시지로 마킹
       processedMessagesRef.current.add(messageKey);
       
-      console.log('룸 메시지 수신:', message);
-      setMessages(prev => [...prev, message]);
-    };
+      console.log('룸 메시지 수신:', messageData);
+      setMessages(prev => [...prev, messageData]);
+    });
 
-    // 기존 메시지 목록 수신
-    const handleRoomMessages = (messageList) => {
+    // 기존 메시지 목록 수신 구독
+    const roomMessagesSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/messages`, (message) => {
+      const messageList = JSON.parse(message.body);
       if (Array.isArray(messageList)) {
         // 기존 메시지들도 중복 처리 마킹
-        messageList.forEach(message => {
-          const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
+        messageList.forEach(messageData => {
+          const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
           processedMessagesRef.current.add(messageKey);
         });
         setMessages(messageList);
       }
-    };
+    });
 
-    // 참여자 목록 수신
-    const handleRoomParticipants = (participants) => {
+    // 참여자 목록 수신 구독
+    const participantsSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/participants`, (message) => {
+      const participants = JSON.parse(message.body);
       if (Array.isArray(participants)) {
         setRoomParticipants(participants);
       }
-    };
+    });
 
-    // 타이핑 상태 수신
-    const handleUserTyping = ({ userId, userName, isTyping: typing }) => {
+    // 타이핑 상태 수신 구독
+    const typingSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/typing`, (message) => {
+      const typingData = JSON.parse(message.body);
+      const { userId, userName, isTyping: typing } = typingData;
+      
       if (userId !== currentUser?.id) {
         setTypingUsers(prev => {
           if (typing) {
@@ -157,65 +167,107 @@ function ChatRoomWindow({
           }
         });
       }
-    };
-
-    // 이벤트 리스너 등록
-    socket.on('roomMessage', handleRoomMessage);
-    socket.on('roomMessages', handleRoomMessages);
-    socket.on('roomParticipants', handleRoomParticipants);
-    socket.on('userTyping', handleUserTyping);
+    });
 
     // 정리 함수
     return () => {
-      socket.off('roomMessage', handleRoomMessage);
-      socket.off('roomMessages', handleRoomMessages);
-      socket.off('roomParticipants', handleRoomParticipants);
-      socket.off('userTyping', handleUserTyping);
+      roomMessageSubscription?.unsubscribe();
+      roomMessagesSubscription?.unsubscribe();
+      participantsSubscription?.unsubscribe();
+      typingSubscription?.unsubscribe();
     };
-  }, [socket, currentUser]);
+  }, [stompClient, roomData, currentUser]);
 
   // 타이핑 인디케이터
   useEffect(() => {
-    if (isTyping) {
-      socket?.emit('typing', { 
-        roomId: roomData?.id, 
-        userId: currentUser?.id, 
-        userName: currentUser?.name, 
-        isTyping: true 
-      });
+    if (isTyping && stompClient && stompClient.connected) {
+      stompClient.send(`/app/chat/typing`, {}, JSON.stringify({
+        roomId: roomData?.id,
+        userId: currentUser?.id,
+        userName: currentUser?.name,
+        isTyping: true
+      }));
       
       const timer = setTimeout(() => {
-        socket?.emit('typing', { 
-          roomId: roomData?.id, 
-          userId: currentUser?.id, 
-          userName: currentUser?.name, 
-          isTyping: false 
-        });
+        stompClient.send(`/app/chat/typing`, {}, JSON.stringify({
+          roomId: roomData?.id,
+          userId: currentUser?.id,
+          userName: currentUser?.name,
+          isTyping: false
+        }));
         setIsTyping(false);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [isTyping, socket, roomData, currentUser]);
+  }, [isTyping, stompClient, roomData, currentUser]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && socket && currentUser && roomData) {
-      // 고유 ID 생성 (중복 방지를 위해 더 정확한 ID 생성)
-      messageCounterRef.current += 1;
-      const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
-      
-      const message = {
-        id: uniqueId,
-        text: newMessage,
-        sender: currentUser,
-        roomId: roomData.id,
-        timestamp: new Date().toISOString(),
-        type: 'user'
-      };
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && currentUser && roomData) {
+      try {
+        // 1. DB에 메시지 저장
+        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userId = userInfo.id;
+        
+        if (userId) {
+          const messageData = {
+            user_id: userId,
+            sent_at: new Date().toISOString(),
+            message: newMessage.trim(),
+            room_index: roomData.room_index || roomData.roomIndex || null,
+            room_name: roomData.name || roomData.roomName || '채팅방',
+            participants: roomData.participants || []
+          };
 
-      socket.emit('sendRoomMessage', message);
-      setNewMessage('');
-      setIsTyping(false);
+          console.log('💾 채팅 메시지 DB 저장:', messageData);
+          setupInterceptors();
+          await saveChatMessage(messageData);
+          console.log('✅ 메시지 DB 저장 성공');
+        }
+
+        // 2. STOMP로 실시간 전송
+        if (stompClient && stompClient.connected) {
+          messageCounterRef.current += 1;
+          const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
+          
+          const message = {
+            id: uniqueId,
+            text: newMessage,
+            sender: currentUser,
+            roomId: roomData.id,
+            timestamp: new Date().toISOString(),
+            type: 'user'
+          };
+
+          stompClient.send('/app/chat/send-room-message', {}, JSON.stringify(message));
+        }
+
+        setNewMessage('');
+        setIsTyping(false);
+
+      } catch (error) {
+        console.error('🚨 메시지 저장 실패:', error);
+        
+        // DB 저장 실패해도 STOMP 전송은 계속
+        if (stompClient && stompClient.connected) {
+          messageCounterRef.current += 1;
+          const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
+          
+          const message = {
+            id: uniqueId,
+            text: newMessage,
+            sender: currentUser,
+            roomId: roomData.id,
+            timestamp: new Date().toISOString(),
+            type: 'user'
+          };
+
+          stompClient.send('/app/chat/send-room-message', {}, JSON.stringify(message));
+        }
+        
+        setNewMessage('');
+        setIsTyping(false);
+      }
     }
   };
 
