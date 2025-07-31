@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
-import { userListApi } from '../../api/auth/TaekjunAuth';
+import { useLocation } from 'react-router-dom';
+import { userListApi, permissionCheckApi } from '../../api/auth/TaekjunAuth';
+
+
+
 import '../../styles/taekjun/UserListPage.css';
 
 // DataGrid 컬럼 정의
@@ -45,12 +49,14 @@ const getAdminUserIndex = () => {
 };
 
 const UserListPage = () => {
+  const location = useLocation();
+
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [searchFilters, setSearchFilters] = useState({
-    id: '',
+    email: '',
     name: '',
     phone: '',
     userRole: '',
@@ -67,6 +73,69 @@ const UserListPage = () => {
   });
   const [passwordErrors, setPasswordErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [buttonPermissions, setButtonPermissions] = useState({
+    canEdit: false,
+    canDelete: false,
+    canAdd: false
+  });
+
+  // 권한 체크 함수
+  const checkButtonPermission = async (action) => {
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userIndex = userInfo?.user_index;
+      
+      const response = await permissionCheckApi.checkPermission(14, action); // programIndex: 14 (회원 리스트)
+      
+      if (response.data) {
+        switch (action) {
+          case 'add':
+            return response.data.hasInsertAuthority === 1;
+          case 'edit':
+            return response.data.hasUpdateAuthority === 1;
+          case 'delete':
+            return response.data.hasDeleteAuthority === 1;
+          default:
+            return false;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('권한 체크 실패:', error);
+      return false;
+    }
+  };
+
+
+
+
+  // 페이지 로드 시 권한 체크 - 한 번의 API 호출로 모든 권한 체크
+  useEffect(() => {
+    const initializePermissions = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(14); // programIndex: 14 (회원 리스트)
+        
+        if (response.data) {
+          setButtonPermissions({
+            canEdit: response.data.hasUpdateAuthority === 1,
+            canDelete: response.data.hasDeleteAuthority === 1,
+            canAdd: response.data.hasInsertAuthority === 1
+          });
+          
+          console.log('회원 리스트 버튼 권한 체크 결과:', response.data);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setButtonPermissions({
+          canEdit: false,
+          canDelete: false,
+          canAdd: false
+        });
+      }
+    };
+    
+    initializePermissions();
+  }, []);
 
   // 사용자 등급 옵션
   const userRoleOptions = [
@@ -76,6 +145,8 @@ const UserListPage = () => {
     { value: '사업자', label: '사업자' }
    
   ];
+
+
 
   // 데이터 조회
   const fetchUserList = useCallback(async (filters = searchFilters) => {
@@ -109,21 +180,12 @@ const UserListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // 의존성 배열을 빈 배열로 변경
-
-  // 초기 로딩 시에만 데이터 가져오기 (조회 버튼을 눌렀을 때만 검색)
-  useEffect(() => {
-    fetchUserList();
-  }, []); // 빈 의존성 배열로 초기 로딩만 실행
-
-  // 검색 필터 변경 시 자동 검색 (선택사항)
-  // useEffect(() => {
-  //   if (Object.values(searchFilters).some(value => value !== '')) {
-  //     handleSearch();
-  //   }
-  // }, [searchFilters]);
+  }, [searchFilters]);
 
   // 초기 로딩 시 모든 데이터 표시
+  useEffect(() => {
+    fetchUserList();
+  }, [fetchUserList]);
 
 
 
@@ -149,11 +211,8 @@ const UserListPage = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      console.log('=== 검색 실행 ===');
-      console.log('검색 필터:', searchFilters);
-      console.log('================');
       // 검색 필터를 사용하여 데이터 다시 조회
-      await fetchUserList(searchFilters);
+      await fetchUserList();
     } catch (err) {
       console.error('검색 실패:', err);
       setError('검색에 실패했습니다.');
@@ -169,9 +228,11 @@ const UserListPage = () => {
     try {
       setLoading(true);
       console.log('CSV 다운로드 시작...');
+      console.log('검색 필터:', searchFilters);
       
       // 현재 검색 필터를 사용하여 CSV 다운로드 요청
       const response = await userListApi.downloadUserList(searchFilters);
+      console.log('CSV 다운로드 응답:', response);
       
       // Blob 생성 및 다운로드
       const blob = new Blob([response.data], { 
@@ -199,7 +260,8 @@ const UserListPage = () => {
       alert('CSV 파일이 성공적으로 다운로드되었습니다.');
     } catch (err) {
       console.error('CSV 다운로드 실패:', err);
-      alert('CSV 다운로드에 실패했습니다.');
+      console.error('에러 상세:', err.response || err.message);
+      alert(`CSV 다운로드에 실패했습니다. (${err.message})`);
     } finally {
       setLoading(false);
     }
@@ -207,6 +269,7 @@ const UserListPage = () => {
 
   // 회원 수정
   const handleEditUser = (user) => {
+
     console.log('수정할 회원 데이터:', user);
     setEditingUser(user);
     setEditForm({
@@ -360,12 +423,20 @@ const UserListPage = () => {
           <button className="user-list-action-btn" onClick={handleSearch}>
             조회
           </button>
-                     <button 
-             className="user-list-action-btn" 
-             onClick={() => selectedRows.size > 0 && handleEditUser(rows.find(u => u.id === Array.from(selectedRows)[0]))}
-           >
-             수정
-           </button>
+          <button 
+            className="user-list-action-btn" 
+            onClick={() => {
+              if (!buttonPermissions.canEdit) {
+                alert('수정 권한이 없습니다.');
+                return;
+              }
+              if (selectedRows.size > 0) {
+                handleEditUser(rows.find(u => u.id === Array.from(selectedRows)[0]));
+              }
+            }}
+          >
+            수정
+          </button>
         </div>
       </div>
 
@@ -378,8 +449,8 @@ const UserListPage = () => {
               <input
                 type="text"
                 placeholder="검색명을 입력하세요."
-                value={searchFilters.id}
-                onChange={(e) => handleFilterChange('id', e.target.value)}
+                value={searchFilters.email}
+                onChange={(e) => handleFilterChange('email', e.target.value)}
                 onKeyPress={handleKeyPress}
               />
             </div>

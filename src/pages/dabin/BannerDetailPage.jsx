@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
+import Toast from '../../components/ui/jungeun/Toast';
+import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
+import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/BannerDetailPage.css';
 
 const BannerDetailPage = () => {
@@ -8,6 +11,47 @@ const BannerDetailPage = () => {
     const navigate = useNavigate();
     const [banner, setBanner] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [canUpdate, setCanUpdate] = useState(false);
+    const [canDelete, setCanDelete] = useState(false);
+    const { showToast } = useToast();
+
+    // 권한 체크
+    useEffect(() => {
+        const checkPermission = async () => {
+            try {
+                const response = await permissionCheckApi.checkPermission(23); // programIndex: 23 (배너 관리)
+                if (response.data) {
+                    setCanUpdate(response.data.hasUpdateAuthority === 1);
+                    setCanDelete(response.data.hasDeleteAuthority === 1);
+                    console.log('배너 관리 권한 체크 결과:', {
+                        update: response.data.hasUpdateAuthority,
+                        delete: response.data.hasDeleteAuthority
+                    });
+                }
+            } catch (error) {
+                console.error('권한 체크 실패:', error);
+                setCanUpdate(false);
+                setCanDelete(false);
+            }
+        };
+        
+        checkPermission();
+    }, []);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast1, setShowToast1] = useState(false);
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast1(true);
+    };
+
+    const closeToast = () => {
+        setShowToast1(false);
+    };
 
     useEffect(() => {
         fetchBanner();
@@ -29,7 +73,7 @@ const BannerDetailPage = () => {
                 }
             }
         } catch (error) {
-            alert('배너 정보를 불러오는데 실패했습니다.');
+            showToastMessage('배너 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -40,21 +84,31 @@ const BannerDetailPage = () => {
     };
 
     const handleEditClick = () => {
+        if (!canUpdate) {
+            showToast1("error", "수정 권한이 없습니다.");
+            return;
+        }
         navigate(`/banner/edit/${bannerIndex}`);
     };
 
     const handleDeleteClick = async () => {
+        if (!canDelete) {
+            showToast1("error", "삭제 권한이 없습니다.");
+            return;
+        }
         if (!window.confirm('정말로 이 배너를 삭제하시겠습니까?')) return;
         try {
             const response = await deleteBanner(bannerIndex);
             if (response.data.success) {
-                alert('배너를 삭제하였습니다.');
-                navigate('/banner/list');
+                showToastMessage('배너를 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/banner/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '배너 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '배너 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
-            alert('배너 삭제 중 오류가 발생했습니다.');
+            showToastMessage('배너 삭제 중 오류가 발생했습니다.', 'error');
         }
     };
 
@@ -75,8 +129,22 @@ const BannerDetailPage = () => {
                 <p className="banner-detail-font-20 banner-detail-bold">배너 상세</p>
                 <div>
                     <button type="button" className="banner-detail-cancel-button" onClick={handleListClick}>목록</button>
-                    <button type="button" className="banner-detail-delete-button" onClick={handleDeleteClick}>삭제</button>
-                    <button type="button" className="banner-detail-edit-button" onClick={handleEditClick}>수정</button>
+                    <button 
+                        type="button" 
+                        className="banner-detail-delete-button" 
+                        onClick={handleDeleteClick}
+                        disabled={!canDelete}
+                        style={!canDelete ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
+                        삭제
+                    </button>
+                    <button 
+                        type="button" 
+                        className="banner-detail-edit-button" 
+                        onClick={handleEditClick}
+                        disabled={!canUpdate}
+                        style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
+                        수정
+                    </button>
                 </div>
             </div>
 
@@ -120,6 +188,14 @@ const BannerDetailPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast1 && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

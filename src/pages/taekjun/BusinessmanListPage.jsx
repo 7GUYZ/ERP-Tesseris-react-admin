@@ -1,7 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
-import { businessmanListApi } from '../../api/auth/TaekjunAuth';
+import { useLocation } from 'react-router-dom';
+import { businessmanListApi, permissionCheckApi } from '../../api/auth/TaekjunAuth';
+
+
 import '../../styles/taekjun/BusinessmanListPage.css';
 
 // DataGrid 컬럼 정의
@@ -38,6 +41,10 @@ const loadKakaoAddressScript = () => {
 
 
 const BusinessmanListPage = () => {
+  const location = useLocation();
+  
+
+  
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -52,6 +59,7 @@ const BusinessmanListPage = () => {
     userPhone: '',
     businessGradeName: '',
     bossEmail: '',
+    bossName: '',
     businessAreaName: '',
     businessManDistributionFlag: ''
   });
@@ -70,6 +78,41 @@ const BusinessmanListPage = () => {
   const [showBossSelectModal, setShowBossSelectModal] = useState(false);
   const [bossSearchTerm, setBossSearchTerm] = useState('');
   const [filteredBossList, setFilteredBossList] = useState([]);
+  const [buttonPermissions, setButtonPermissions] = useState({
+    canInsert: false,
+    canUpdate: false,
+    canDelete: false
+  });
+
+
+
+  // 페이지 로드 시 권한 체크 - 한 번의 API 호출로 모든 권한 체크
+  useEffect(() => {
+    const initializePermissions = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(17); // programIndex: 17 (사업자 회원 리스트)
+        
+        if (response.data) {
+          setButtonPermissions({
+            canInsert: response.data.hasInsertAuthority === 1,
+            canUpdate: response.data.hasUpdateAuthority === 1,
+            canDelete: response.data.hasDeleteAuthority === 1
+          });
+          
+          console.log('사업자 리스트 버튼 권한 체크 결과:', response.data);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setButtonPermissions({
+          canInsert: false,
+          canUpdate: false,
+          canDelete: false
+        });
+      }
+    };
+    
+    initializePermissions();
+  }, []);
 
   // 사업자 등급 데이터 로드
   const fetchBusinessGrades = useCallback(async () => {
@@ -191,40 +234,52 @@ const BusinessmanListPage = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      // 검색 필터를 사용하여 데이터 다시 조회
-      await fetchBusinessmanList();
+      setError(null);
+      console.log('사업자 검색 시작...');
+      
+      // 검색 필터가 있으면 필터링된 데이터 조회
+      let response;
+      if (searchFilters && Object.values(searchFilters).some(value => value !== '')) {
+        console.log('검색 필터:', searchFilters);
+        response = await businessmanListApi.searchBusinessmanList(searchFilters);
+      } else {
+        response = await businessmanListApi.getAllActiveBusinessmen();
+      }
+      
+      console.log('API 응답:', response);
+      
+      const data = response.data.map((item, index) => ({
+        id: index + 1,
+        ...item,
+      }));
+      
+      setRows(data);
     } catch (err) {
-      console.error('검색 실패:', err);
-      setError('검색에 실패했습니다.');
+      console.error('사업자 목록 조회 실패:', err);
+      setError(`사업자 목록을 불러오는데 실패했습니다. (${err.message})`);
     } finally {
       setLoading(false);
     }
   };
 
-
-
-  // CSV 다운로드
+  // 엑셀 다운로드
   const handleExcelDownload = async () => {
     try {
       setLoading(true);
-      console.log('CSV 다운로드 시작...');
+      console.log('사업자 목록 엑셀 다운로드 시작...');
       
-      // 현재 검색 필터를 사용하여 CSV 다운로드 요청
       const response = await businessmanListApi.downloadBusinessmanList(searchFilters);
       
-      // Blob 생성 및 다운로드
       const blob = new Blob([response.data], { 
         type: 'text/csv; charset=utf-8' 
       });
       
-      // 파일명 생성 (현재 날짜 포함)
       const now = new Date();
       const dateStr = now.getFullYear() + 
         String(now.getMonth() + 1).padStart(2, '0') + 
         String(now.getDate()).padStart(2, '0');
       const fileName = `사업자목록_${dateStr}.csv`;
       
-      // 다운로드 링크 생성 및 클릭
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -234,99 +289,56 @@ const BusinessmanListPage = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      console.log('CSV 다운로드 완료');
+      console.log('사업자 목록 엑셀 다운로드 완료');
       alert('CSV 파일이 성공적으로 다운로드되었습니다.');
     } catch (err) {
-      console.error('CSV 다운로드 실패:', err);
+      console.error('사업자 목록 엑셀 다운로드 실패:', err);
       alert('CSV 다운로드에 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 사업자 수정
-  const handleEditBusinessman = (businessman) => {
-    setEditingBusinessman(businessman);
-    setEditForm({
-      email: businessman.email || '',
-      userName: businessman.userName || '',
-      userPhone: businessman.userPhone || '',
-      userBirthday: businessman.userBirthday || '',
-      userGenderIndex: businessman.userGenderIndex || '',
-      userZoneCode: businessman.userZoneCode || '',
-      userAddress: businessman.userAddress || '',
-      userDetailAddress: businessman.userDetailAddress || '',
-      userBankIndex: businessman.userBankIndex || '',
-      userBankNumber: businessman.userBankNumber || '',
-      userBankHolder: businessman.userBankHolder || '',
-      bossEmail: businessman.bossEmail || '',
-      businessGradeIndex: businessman.businessGradeIndex || '',
-      businessAreaIndex: businessman.businessAreaIndex || '',
-      businessManDistributionFlag: businessman.businessManDistributionFlag || ''
-    });
-    setShowEditModal(true);
-  };
-
   // 사업자 생성
   const handleCreateBusinessman = () => {
+
     setCreateForm({
       email: '',
-      userName: '',
-      userPw: '',
-      userPhone: '',
-      userBirthday: '',
-      userGenderIndex: '',
-      userZoneCode: '',
-      userAddress: '',
-      userDetailAddress: '',
-      userBankIndex: '',
-      userBankNumber: '',
-      userBankHolder: '',
+      password: '',
+      name: '',
+      phone: '',
+      businessGrade: '',
+      businessArea: '',
+      address: '',
+      detailAddress: '',
+      bankName: '',
+      bankNumber: '',
+      bankHolder: '',
       bossEmail: '',
-      businessManRegistrationDate: '',
-      businessGradeIndex: '',
-      businessAreaIndex: '',
-      businessManDistributionFlag: ''
+      bossName: ''
     });
     setShowCreateModal(true);
   };
 
-  // 사업자 정보 저장 (수정) - BusinessmanUpdateRequestDTO 구조에 맞게
-  const handleSaveBusinessman = async () => {
-    try {
-      setLoading(true);
-      
-      // BusinessmanUpdateRequestDTO 구조에 맞게 데이터 변환
-      const updateData = {
-        userIndex: editingBusinessman.userIndex,
-        email: editForm.email,
-        userName: editForm.userName,
-        userPw: editForm.userPw, // 비밀번호 변경 시에만 사용
-        userPhone: editForm.userPhone,
-        userBirthday: editForm.userBirthday,
-        userGenderIndex: editForm.userGenderIndex ? parseInt(editForm.userGenderIndex) : null,
-        userZoneCode: editForm.userZoneCode,
-        userAddress: editForm.userAddress,
-        userDetailAddress: editForm.userDetailAddress,
-        userBankIndex: editForm.userBankIndex ? parseInt(editForm.userBankIndex) : null,
-        userBankNumber: editForm.userBankNumber,
-        userBankHolder: editForm.userBankHolder,
-        bossEmail: editForm.bossEmail,
-        businessGradeIndex: editForm.businessGradeIndex ? parseInt(editForm.businessGradeIndex) : null,
-        businessAreaIndex: editForm.businessAreaIndex ? parseInt(editForm.businessAreaIndex) : null,
-        businessManDistributionFlag: editForm.businessManDistributionFlag
-      };
-      
-      await businessmanListApi.updateBusinessman(updateData);
-      alert('사업자 정보가 성공적으로 수정되었습니다.');
-      setShowEditModal(false);
-      fetchBusinessmanList();
-    } catch (err) {
-      console.error('사업자 수정 실패:', err);
-      alert('사업자 정보 수정에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+  // 사업자 수정
+  const handleEditBusinessman = (businessman) => {
+
+    console.log('수정할 사업자 데이터:', businessman);
+    setEditingBusinessman(businessman);
+    setEditForm({
+      name: businessman.name || '',
+      phone: businessman.phone || '',
+      businessGrade: businessman.businessGrade || '',
+      businessArea: businessman.businessArea || '',
+      address: businessman.address || '',
+      detailAddress: businessman.detailAddress || '',
+      bankName: businessman.bankName || '',
+      bankNumber: businessman.bankNumber || '',
+      bankHolder: businessman.bankHolder || '',
+      bossEmail: businessman.bossEmail || '',
+      bossName: businessman.bossName || ''
+    });
+    setShowEditModal(true);
   };
 
   // 사업자 생성 저장 - BusinessmanCreateRequestDTO 구조에 맞게
@@ -362,6 +374,44 @@ const BusinessmanListPage = () => {
     } catch (err) {
       console.error('사업자 생성 실패:', err);
       alert('사업자 등록에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 사업자 정보 저장 (수정) - BusinessmanUpdateRequestDTO 구조에 맞게
+  const handleSaveBusinessman = async () => {
+    try {
+      setLoading(true);
+      
+      // BusinessmanUpdateRequestDTO 구조에 맞게 데이터 변환
+      const updateData = {
+        userIndex: editingBusinessman.userIndex,
+        email: editForm.email,
+        userName: editForm.userName,
+        userPw: editForm.userPw, // 비밀번호 변경 시에만 사용
+        userPhone: editForm.userPhone,
+        userBirthday: editForm.userBirthday,
+        userGenderIndex: editForm.userGenderIndex ? parseInt(editForm.userGenderIndex) : null,
+        userZoneCode: editForm.userZoneCode,
+        userAddress: editForm.userAddress,
+        userDetailAddress: editForm.userDetailAddress,
+        userBankIndex: editForm.userBankIndex ? parseInt(editForm.userBankIndex) : null,
+        userBankNumber: editForm.userBankNumber,
+        userBankHolder: editForm.userBankHolder,
+        bossEmail: editForm.bossEmail,
+        businessGradeIndex: editForm.businessGradeIndex ? parseInt(editForm.businessGradeIndex) : null,
+        businessAreaIndex: editForm.businessAreaIndex ? parseInt(editForm.businessAreaIndex) : null,
+        businessManDistributionFlag: editForm.businessManDistributionFlag
+      };
+      
+      await businessmanListApi.updateBusinessman(updateData);
+      alert('사업자 정보가 성공적으로 수정되었습니다.');
+      setShowEditModal(false);
+      fetchBusinessmanList();
+    } catch (err) {
+      console.error('사업자 수정 실패:', err);
+      alert('사업자 정보 수정에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -559,24 +609,44 @@ const BusinessmanListPage = () => {
       <div className="businessman-list-page-header">
         <h1 className="businessman-list-page-title">사업자 리스트</h1>
         <div className="businessman-list-header-actions">
-          <button className="businessman-list-action-btn" onClick={handleExcelDownload}>
+          <button className="businessman-list-action-btn businessman-list-excel-btn" onClick={handleExcelDownload}>
             엑셀
           </button>
           <button className="businessman-list-action-btn" onClick={handleSearch}>
             조회
           </button>
-          <button className="businessman-list-action-btn" onClick={handleCreateBusinessman}>
-            등록
+          <button className="businessman-list-action-btn" onClick={() => {
+            if (!buttonPermissions.canInsert) {
+              alert('생성 권한이 없습니다.');
+              return;
+            }
+            handleCreateBusinessman();
+          }}>
+            생성
           </button>
           <button 
             className="businessman-list-action-btn" 
-            onClick={() => selectedRows.size > 0 && handleEditBusinessman(rows.find(b => b.id === Array.from(selectedRows)[0]))}
+            onClick={() => {
+              if (!buttonPermissions.canUpdate) {
+                alert('수정 권한이 없습니다.');
+                return;
+              }
+              if (selectedRows.size > 0) {
+                handleEditBusinessman(rows.find(b => b.id === Array.from(selectedRows)[0]));
+              }
+            }}
           >
             수정
           </button>
           <button 
             className="businessman-list-action-btn businessman-list-action-btn-danger" 
-            onClick={handleDeleteBusinessman}
+            onClick={() => {
+              if (!buttonPermissions.canDelete) {
+                alert('삭제 권한이 없습니다.');
+                return;
+              }
+              handleDeleteBusinessman();
+            }}
           >
             비활성화
           </button>
@@ -632,6 +702,16 @@ const BusinessmanListPage = () => {
                   </option>
                 ))}
               </select>
+            </div>
+            <div className="businessman-list-search-item">
+              <label>상사 이름</label>
+              <input
+                type="text"
+                placeholder="상사 이름을 입력하세요."
+                value={searchFilters.bossName}
+                onChange={(e) => handleFilterChange('bossName', e.target.value)}
+                onKeyPress={handleKeyPress}
+              />
             </div>
             <div className="businessman-list-search-item">
               <label>상사 이메일</label>

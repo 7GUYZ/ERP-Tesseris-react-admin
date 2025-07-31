@@ -103,6 +103,26 @@
   border-color: #9ca3af;
 }
 
+/* 에러 상태 스타일 */
+.commission-payment-search-input.error {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 1px #d32f2f !important;
+}
+
+.commission-payment-search-input.error:focus {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 4px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
 /* 모바일 반응형 */
 @media (max-width: 1200px) {
   .commission-payment-search-row {

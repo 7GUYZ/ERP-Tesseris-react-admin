@@ -19,7 +19,8 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
-import { refreshAuthority } from "../../../../utils/authorityUtils";
+import { refreshAuthority, setCurrentPermissionContext } from "../../../../utils/authorityUtils";
+import { getPermissionByPath } from "../../../../constants/permissionMapping";
 
 
 const MainNavi = () => {
@@ -416,19 +417,10 @@ const MainNavi = () => {
       },
       {
         id: "alert",
-        menuIndex: 11,
         label: "알림 관리",
         icon: Bell,
-        type: "expand",
-        submenu: [
-          {
-            id: "alert",
-            programIndex: 41,
-            label: "알림 내역 및 설정 관리",
-            type: "link",
-            href: "/alert",
-          },
-        ],
+        type: "link",
+        href: "/alert"
       },
     ],
 
@@ -455,6 +447,14 @@ const MainNavi = () => {
         // 페이지 이동
         setActiveMenuId(item.id);
         setActiveSubMenuId(null);
+        
+        // 권한 컨텍스트 설정
+        const permission = getPermissionByPath(item.href);
+        if (permission) {
+          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, item.href);
+          console.log(`권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+        }
+        
         navigate(item.href);
         break;
       case "expand":
@@ -505,6 +505,14 @@ const MainNavi = () => {
     switch (subItem.type) {
       case "link":
         setActiveSubMenuId(subItem.id);
+        
+        // 권한 컨텍스트 설정
+        const permission = getPermissionByPath(subItem.href);
+        if (permission) {
+          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, subItem.href);
+          console.log(`서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+        }
+        
         navigate(subItem.href);
         break;
       case "list":

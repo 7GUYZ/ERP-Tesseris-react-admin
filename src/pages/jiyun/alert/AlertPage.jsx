@@ -7,6 +7,7 @@ import {
   updateUserAlarmSetting,
 } from "../../../api/auth/JungeunAuth";
 import useNotificationStore from "../../../store/jiyun/NotificationStore";
+import LoadingSpinner from "../../../components/ui/jungeun/LoadingSpinner";
 
 // 알림 설정을 동적으로 생성하는 함수 (백엔드에서 설정 조회)
 const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
@@ -98,15 +99,13 @@ const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
 
 export default function AlertPage() {
   const [settings, setSettings] = useState([]);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [pageError, setPageError] = useState(null);
 
   // 전역 상태에서 알림 데이터 가져오기
   const {
     notifications,
-    loading,
-    error,
     setNotifications,
-    setLoading,
-    setError,
     markAsRead: markAsReadGlobal,
   } = useNotificationStore();
 
@@ -114,71 +113,52 @@ export default function AlertPage() {
     const userInfo = JSON.parse(localStorage.getItem("user-info"));
     const adminTypeIndex = userInfo?.admin_type_index;
 
-    // 특정 관리자 타입의 권한 조회
-    const getAuthority = async (adminTypeIndex) => {
+    // 전체 페이지 로딩 처리
+    const loadPageData = async () => {
       try {
-        const response = await menuAuthority(adminTypeIndex);
-
-        // 사용자 정보 가져오기
+        setPageLoading(true);
+        setPageError(null);
+        
+        // 1. 권한 조회 및 알림 설정 로드
+        const authorityResponse = await menuAuthority(adminTypeIndex);
         const userInfo = JSON.parse(localStorage.getItem("user-info"));
         const userIndex = userInfo?.user_index;
 
         if (!userIndex) {
-          console.error("사용자 정보를 찾을 수 없습니다.");
-          setSettings([]);
-          return;
+          throw new Error("사용자 정보를 찾을 수 없습니다.");
         }
 
-        // 권한 조회 결과로 알림 설정 동적 생성 (백엔드에서 설정 조회)
-        const authorityList = response.data.data;
+        const authorityList = authorityResponse.data.data;
         const alertSettings = await createAlertSettingsFromAuthority(
           authorityList,
           userIndex
         );
         setSettings(alertSettings);
-      } catch (error) {
-        console.error("권한 조회 실패:", error);
-        // 권한 조회 실패 시 빈 배열로 설정
-        setSettings([]);
-      }
-    };
-    const getAlarmList = async () => {
-      try {
-        setLoading(true);
-        setError(null);
 
-        // localStorage에서 user_index 가져오기
-        const userInfo = JSON.parse(localStorage.getItem("user-info"));
-        const userIndex = userInfo?.user_index;
-
-        if (!userIndex) {
-          setError("사용자 정보를 찾을 수 없습니다.");
-          return;
-        }
-
-        // 알림 내역만 로드 (통계는 프론트엔드에서 계산)
-        const response = await getMyAlarmHistory(userIndex);
-
+        // 2. 알림 내역 로드
+        const alarmResponse = await getMyAlarmHistory(userIndex);
+        
         if (
-          response &&
-          response.data &&
-          response.data.data &&
-          Array.isArray(response.data.data)
+          alarmResponse &&
+          alarmResponse.data &&
+          alarmResponse.data.data &&
+          Array.isArray(alarmResponse.data.data)
         ) {
-          setNotifications(response.data.data);
+          setNotifications(alarmResponse.data.data);
         } else {
           setNotifications([]);
         }
+
       } catch (error) {
-        console.error("알림 데이터 로드 실패:", error);
-        setError("알림 내역을 불러오는데 실패했습니다.");
+        console.error("페이지 데이터 로드 실패:", error);
+        setPageError("데이터를 불러오는데 실패했습니다.");
       } finally {
-        setLoading(false);
+        setPageLoading(false);
       }
     };
-    getAuthority(adminTypeIndex);
-    getAlarmList();
-  }, [setNotifications, setLoading, setError]);
+    
+    loadPageData();
+  }, [setNotifications]);
 
   // 읽음/안읽음 분리 (isRead 기준) - 배열인지 확인 후 필터링
   const newNotifications = Array.isArray(notifications)
@@ -355,12 +335,31 @@ export default function AlertPage() {
   const pastCount =
     pastNotifications.length > 100 ? "100+" : pastNotifications.length;
 
-  if (loading) {
-    return <div className="alert-loading">로딩 중...</div>;
+  // 전체 페이지 로딩 상태
+  if (pageLoading) {
+    return (
+      <div className="alert-root-container">
+        <LoadingSpinner 
+          size="large"
+          text="알림 내역 불러오는 중..."
+          fullScreen={false}
+          className="alert-loading-spinner"
+        />
+      </div>
+    );
   }
 
-  if (error) {
-    return <div className="alert-error">{error}</div>;
+  // 전체 페이지 에러 상태
+  if (pageError) {
+    return (
+      <div className="alert-root-container">
+        <div className="content">
+          <div className="alert-error">
+            <p>{pageError}</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
