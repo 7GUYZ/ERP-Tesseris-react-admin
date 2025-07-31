@@ -104,33 +104,21 @@ export const pwCheck = ({username, password}) =>
   api.post("/passwordCheck", {username, password})
 
 export const menuAuthority = (adminTypeIndex) => {
-  const token = localStorage.getItem("access-token"); // 항상 최신 토큰
   return api.get("/adminAuthority", {
-    params: { adminTypeIndex },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { adminTypeIndex }
   });
 };
 
 // 사용자의 알림 설정 조회
 export const getUserAlarmSetting = (userIndex, alarmTypesId) => {
-  const token = localStorage.getItem("access-token");
   return api.get("/alarms/user-alarm-setting", {
-    params: { userIndex, alarmTypesId },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { userIndex, alarmTypesId }
   });
 };
 
 // 사용자의 알림 설정 업데이트
 export const updateUserAlarmSetting = (userIndex, alarmTypesId, isActive) => {
-  const token = localStorage.getItem("access-token");
   return api.post("/alarms/update-user-alarm-setting", null, {
-    params: { userIndex, alarmTypesId, isActive },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { userIndex, alarmTypesId, isActive }
   });
 };
