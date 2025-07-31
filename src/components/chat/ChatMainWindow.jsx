@@ -10,9 +10,15 @@ import {
   MoreVert, Search, Add, Send, Refresh
 } from '@mui/icons-material';
 import { getChatAdminList, getUserChatRooms, setupInterceptors } from '../../api/auth/DeokkyuAuth';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 
 
-function ChatMainWindow({ open, onClose, onRoomSelect, stompClient, currentUser }) {
+function ChatMainWindow({ open, onClose, onRoomSelect }) {
+  const { 
+    stompClient, 
+    currentUser, 
+    sendGlobalMessage 
+  } = useChatWebSocket();
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [position, setPosition] = useState({ 
@@ -222,6 +228,13 @@ function ChatMainWindow({ open, onClose, onRoomSelect, stompClient, currentUser 
       }
     });
 
+    // 🌍 전역 메시지 구독
+    const globalSubscription = stompClient.subscribe('/topic/global', (message) => {
+      const chatMessage = JSON.parse(message.body);
+      console.log('🌍 전역 메시지 수신:', chatMessage);
+      setGlobalMessages(prev => [...prev, chatMessage]);
+    });
+
     // 🚀 사용자 입장/퇴장 알림 구독
     const joinSubscription = stompClient.subscribe('/topic/user-join', (message) => {
       const user = JSON.parse(message.body);
@@ -244,22 +257,14 @@ function ChatMainWindow({ open, onClose, onRoomSelect, stompClient, currentUser 
 
   // 🌍 전역 메시지 전송
   const handleSendGlobalMessage = () => {
-    if (newGlobalMessage.trim() && stompClient && stompClient.connected && currentUser) {
-      // 고유 ID 생성 (중복 방지를 위해 더 정확한 ID 생성)
-      messageCounterRef.current += 1;
-      const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
-      
-      const message = {
-        id: uniqueId,
-        text: newGlobalMessage,
-        sender: currentUser,
-        timestamp: new Date().toISOString(),
-        type: 'user'
-      };
-
-      console.log('🌍 전역 메시지 전송:', message);
-      stompClient.send('/app/chat/global', {}, JSON.stringify(message));
-      setNewGlobalMessage('');
+    if (newGlobalMessage.trim() && currentUser) {
+      const success = sendGlobalMessage(newGlobalMessage.trim());
+      if (success) {
+        console.log('✅ 전역 메시지 전송 성공');
+        setNewGlobalMessage('');
+      } else {
+        console.error('❌ 전역 메시지 전송 실패');
+      }
     }
   };
 
@@ -297,6 +302,25 @@ function ChatMainWindow({ open, onClose, onRoomSelect, stompClient, currentUser 
     switch (status) {
       case '온라인': return '#4CAF50';
       case '자리비움': return '#FF9800';
+      default: return '#757575';
+    }
+  };
+
+  const getAdminTypeColor = (typeName) => {
+    switch (typeName) {
+      case '슈퍼관리자': return '#f44336';
+      case '일반관리자': return '#2196f3';
+      case '운영자': return '#4caf50';
+      default: return '#9e9e9e';
+    }
+  };
+
+  const getAdminRankColor = (rankName) => {
+    switch (rankName) {
+      case '최고관리자': return '#d32f2f';
+      case '부관리자': return '#1976d2';
+      case '일반관리자': return '#388e3c';
+      case '운영자': return '#f57c00';
       default: return '#757575';
     }
   };

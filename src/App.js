@@ -7,6 +7,7 @@ import useAuthStore from './store/jungeun/AuthStore';
 import { setupInterceptors } from './api/auth/JungeunAuth';
 import AppRoutes from './routes/AppRoutes';
 import { WebSocketProvider, useWebSocket } from './context/jungeun/WebSocketContext';
+import { ChatWebSocketProvider } from './context/ChatWebSocketContext';
 
 function App() {
   const navigate = useNavigate();
@@ -22,7 +23,9 @@ function App() {
 
   return (
     <WebSocketProvider>
-      <AppContent />
+      <ChatWebSocketProvider>
+        <AppContent />
+      </ChatWebSocketProvider>
     </WebSocketProvider>
   );
 }

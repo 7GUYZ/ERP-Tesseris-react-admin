@@ -63,7 +63,7 @@ function RealTimeChat() {
     }
 
     // SockJS + STOMP 연결 설정
-    const socket = new SockJS('http://localhost:8080/ws'); // Spring Boot WebSocket 엔드포인트
+    const socket = new SockJS('http://localhost:8080/ws/chat'); // Spring Boot WebSocket 엔드포인트
     const client = Stomp.over(socket);
 
     // STOMP 연결 옵션

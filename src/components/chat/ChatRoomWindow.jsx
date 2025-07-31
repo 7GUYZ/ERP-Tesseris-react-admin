@@ -8,16 +8,22 @@ import {
   ArrowBack, Call, VideoCall, Info
 } from '@mui/icons-material';
 import { saveChatMessage, setupInterceptors } from '../../api/auth/DeokkyuAuth';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 
 
 function ChatRoomWindow({ 
   open, 
   onClose, 
   onBack, 
-  roomData, 
-  stompClient, 
-  currentUser 
+  roomData
 }) {
+  const { 
+    stompClient, 
+    currentUser, 
+    subscribeToRoom, 
+    unsubscribeFromRoom, 
+    sendMessageToRoom 
+  } = useChatWebSocket();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [position, setPosition] = useState({ 
@@ -95,6 +101,24 @@ function ChatRoomWindow({
       // 메시지 중복 처리 초기화
       processedMessagesRef.current.clear();
       
+      // 채팅방 구독
+      subscribeToRoom(roomData.id, (messageData) => {
+        // 고유 메시지 키 생성
+        const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
+        
+        // 이미 처리된 메시지인지 확인
+        if (processedMessagesRef.current.has(messageKey)) {
+          console.log('🔄 중복 룸 메시지 무시:', messageKey);
+          return;
+        }
+        
+        // 처리된 메시지로 마킹
+        processedMessagesRef.current.add(messageKey);
+        
+        console.log('룸 메시지 수신:', messageData);
+        setMessages(prev => [...prev, messageData]);
+      });
+      
       // 채팅방 입장 알림
       stompClient.send('/app/chat/join-room', {}, JSON.stringify({
         roomId: roomData.id,
@@ -106,33 +130,19 @@ function ChatRoomWindow({
         roomId: roomData.id
       }));
     }
-  }, [open, roomData, stompClient, currentUser]);
+    
+    // 채팅방 나갈 때 구독 해제
+    return () => {
+      if (roomData) {
+        unsubscribeFromRoom(roomData.id);
+      }
+    };
+  }, [open, roomData, stompClient, currentUser, subscribeToRoom, unsubscribeFromRoom]);
 
-  // STOMP 이벤트 리스너
+  // 기존 메시지 목록 수신 구독
   useEffect(() => {
     if (!stompClient || !stompClient.connected || !roomData) return;
 
-    // 채팅방별 메시지 수신 구독
-    const roomMessageSubscription = stompClient.subscribe(`/topic/room/${roomData.id}`, (message) => {
-      const messageData = JSON.parse(message.body);
-      
-      // 고유 메시지 키 생성
-      const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
-      
-      // 이미 처리된 메시지인지 확인
-      if (processedMessagesRef.current.has(messageKey)) {
-        console.log('🔄 중복 룸 메시지 무시:', messageKey);
-        return;
-      }
-      
-      // 처리된 메시지로 마킹
-      processedMessagesRef.current.add(messageKey);
-      
-      console.log('룸 메시지 수신:', messageData);
-      setMessages(prev => [...prev, messageData]);
-    });
-
-    // 기존 메시지 목록 수신 구독
     const roomMessagesSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/messages`, (message) => {
       const messageList = JSON.parse(message.body);
       if (Array.isArray(messageList)) {
@@ -171,7 +181,6 @@ function ChatRoomWindow({
 
     // 정리 함수
     return () => {
-      roomMessageSubscription?.unsubscribe();
       roomMessagesSubscription?.unsubscribe();
       participantsSubscription?.unsubscribe();
       typingSubscription?.unsubscribe();
@@ -225,21 +234,12 @@ function ChatRoomWindow({
           console.log('✅ 메시지 DB 저장 성공');
         }
 
-        // 2. STOMP로 실시간 전송
-        if (stompClient && stompClient.connected) {
-          messageCounterRef.current += 1;
-          const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
-          
-          const message = {
-            id: uniqueId,
-            text: newMessage,
-            sender: currentUser,
-            roomId: roomData.id,
-            timestamp: new Date().toISOString(),
-            type: 'user'
-          };
-
-          stompClient.send('/app/chat/send-room-message', {}, JSON.stringify(message));
+        // 2. WebSocket으로 실시간 전송
+        const success = sendMessageToRoom(roomData.id, newMessage.trim());
+        if (success) {
+          console.log('✅ 메시지 전송 성공');
+        } else {
+          console.error('❌ 메시지 전송 실패');
         }
 
         setNewMessage('');
@@ -248,21 +248,12 @@ function ChatRoomWindow({
       } catch (error) {
         console.error('🚨 메시지 저장 실패:', error);
         
-        // DB 저장 실패해도 STOMP 전송은 계속
-        if (stompClient && stompClient.connected) {
-          messageCounterRef.current += 1;
-          const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
-          
-          const message = {
-            id: uniqueId,
-            text: newMessage,
-            sender: currentUser,
-            roomId: roomData.id,
-            timestamp: new Date().toISOString(),
-            type: 'user'
-          };
-
-          stompClient.send('/app/chat/send-room-message', {}, JSON.stringify(message));
+        // DB 저장 실패해도 WebSocket 전송은 계속
+        const success = sendMessageToRoom(roomData.id, newMessage.trim());
+        if (success) {
+          console.log('✅ 메시지 전송 성공 (DB 저장 실패 후)');
+        } else {
+          console.error('❌ 메시지 전송 실패 (DB 저장 실패 후)');
         }
         
         setNewMessage('');
