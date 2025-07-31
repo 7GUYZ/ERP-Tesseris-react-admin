@@ -54,8 +54,8 @@ const AdvertisementEditPage = () => {
             setCurrentImage(ad.advertisementPhoto);
             setPreviewImage(presignedUrl || ad.advertisementPhoto);
         } catch (error) {
-            console.error('광고 조회 오류:', error);
-            showToastMessage('광고 정보를 불러오는데 실패했습니다.', 'error');
+            console.error('팝업 조회 오류:', error);
+            alert('팝업 정보를 불러오는데 실패했습니다.');
         } finally {
             setInitialLoading(false);
         }
@@ -76,16 +76,13 @@ const AdvertisementEditPage = () => {
     };
 
     const handleUpdate = async () => {
-        if (!advertisementUrl || advertisementUrl === 'https://') {
-            showToastMessage('광고 링크 주소를 입력해주세요.', 'error');
-            return;
-        }
-
-        // URL 유효성 검사
-        const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
-        if (!urlRegex.test(advertisementUrl)) {
-            showToastMessage('광고주소를 다시한번 확인하세요.', 'error');
-            return;
+        // 링크가 입력된 경우에만 URL 유효성 검사
+        if (advertisementUrl && advertisementUrl !== 'https://') {
+            const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+            if (!urlRegex.test(advertisementUrl)) {
+                alert('팝업주소를 다시한번 확인하세요.');
+                return;
+            }
         }
 
         setLoading(true);
@@ -108,16 +105,14 @@ const AdvertisementEditPage = () => {
             });
 
             if (response.data.success) {
-                showToastMessage('광고를 수정하였습니다.', 'success');
-                setTimeout(() => {
-                    navigate('/advertisement/list');
-                }, 1500);
+                alert('팝업을 수정하였습니다.');
+                navigate('/advertisement/list');
             } else {
-                showToastMessage(response.data.message || '광고 수정에 실패했습니다.', 'error');
+                alert(response.data.message || '팝업 수정에 실패했습니다.');
             }
         } catch (error) {
-            console.error('광고 수정 오류:', error);
-            showToastMessage('광고 수정 중 오류가 발생했습니다.', 'error');
+            console.error('팝업 수정 오류:', error);
+            alert('팝업 수정 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -135,16 +130,14 @@ const AdvertisementEditPage = () => {
             const response = await deleteAdvertisement(advertisementIndex);
 
             if (response.data.success) {
-                showToastMessage('광고를 삭제하였습니다.', 'success');
-                setTimeout(() => {
-                    navigate('/advertisement/list');
-                }, 1500);
+                alert('팝업을 삭제하였습니다.');
+                navigate('/advertisement/list');
             } else {
-                showToastMessage(response.data.message || '광고 삭제에 실패했습니다.', 'error');
+                alert(response.data.message || '팝업 삭제에 실패했습니다.');
             }
         } catch (error) {
-            console.error('광고 삭제 오류:', error);
-            showToastMessage('광고 삭제 중 오류가 발생했습니다.', 'error');
+            console.error('팝업 삭제 오류:', error);
+            alert('팝업 삭제 중 오류가 발생했습니다.');
         } finally {
             setLoading(false);
         }
@@ -162,27 +155,27 @@ const AdvertisementEditPage = () => {
         <div className="ad-edit-page">
             {/* Breadcrumb */}
             <ul className="ad-edit-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>광고 관리</li>
-                <li>광고 수정</li>
+                <li>배너 및 팝업 관리</li>
+                <li>팝업 관리</li>
+                <li>팝업 수정</li>
             </ul>
 
             {/* Header */}
             <div className="ad-edit-flex-between ad-edit-mb10">
-                <p className="ad-edit-font-20 ad-edit-bold">광고 수정</p>
+                <p className="ad-edit-font-20 ad-edit-bold">팝업 수정</p>
             </div>
 
             {/* Card */}
             <div className="ad-edit-card">
                 <div className="ad-edit-card-inner">
                     <div className="ad-edit-form-grid">
-                        {/* 광고 이미지 */}
+                        {/* 팝업 이미지 */}
                         <div className="ad-edit-form-item">
                             <div className="ad-edit-label-horizontal">
-                                <span className="ad-edit-text">광고 이미지</span>
+                                <span className="ad-edit-text">팝업 이미지</span>
                                 <div className="ad-edit-banner-btn">
                                     <label>
-                                        광고사진 등록하기
+                                        팝업사진 등록하기
                                         <input
                                             type="file"
                                             className="ad-edit-file-input"
@@ -196,7 +189,7 @@ const AdvertisementEditPage = () => {
                                 {previewImage ? (
                                     <img
                                         src={previewImage}
-                                        alt="광고 이미지"
+                                        alt="팝업 이미지"
                                     />
                                 ) : (
                                     <div className="ad-edit-upload-area">
@@ -213,17 +206,17 @@ const AdvertisementEditPage = () => {
                             </p>
                         </div>
 
-                        {/* 광고 링크 주소 */}
+                        {/* 팝업 링크 주소 */}
                         <div className="ad-edit-form-item">
                             <div className="ad-edit-label">
-                                <span>광고 링크주소</span>
+                                <span>팝업 링크주소 <span style={{ color: '#666', fontSize: '14px' }}>(선택사항)</span></span>
                                 <div className="ad-edit-input-box">
                                     <input
                                         type="text"
                                         className="ad-edit-link-input"
                                         value={advertisementUrl}
                                         onChange={(e) => setAdvertisementUrl(e.target.value)}
-                                        placeholder="등록하실 광고 링크주소를 입력하세요."
+                                        placeholder="등록하실 팝업 링크주소를 입력하세요. (선택사항)"
                                     />
                                 </div>
                             </div>

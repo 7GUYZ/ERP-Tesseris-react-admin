@@ -20,11 +20,11 @@ const AdvertisementDetailPage = () => {
     useEffect(() => {
         const checkPermission = async () => {
             try {
-                const response = await permissionCheckApi.checkPermission(24); // programIndex: 24 (광고 관리)
+                const response = await permissionCheckApi.checkPermission(24); // programIndex: 24 (팝업 관리)
                 if (response.data) {
                     setCanUpdate(response.data.hasUpdateAuthority === 1);
                     setCanDelete(response.data.hasDeleteAuthority === 1);
-                    console.log('광고 관리 권한 체크 결과:', {
+                    console.log('팝업 관리 권한 체크 결과:', {
                         update: response.data.hasUpdateAuthority,
                         delete: response.data.hasDeleteAuthority
                     });
@@ -73,7 +73,7 @@ const AdvertisementDetailPage = () => {
                 setAd(adData);
             }
         } catch (error) {
-            showToastMessage('광고 정보를 불러오는데 실패했습니다.', 'error');
+            alert('팝업 정보를 불러오는데 실패했습니다.');
         } finally {
             setLoading(false);
         }
@@ -104,33 +104,31 @@ const AdvertisementDetailPage = () => {
         try {
             const response = await deleteAdvertisement(advertisementIndex);
             if (response.data.success) {
-                showToastMessage('광고를 삭제하였습니다.', 'success');
-                setTimeout(() => {
-                    navigate('/advertisement/list');
-                }, 1500);
+                alert('팝업을 삭제하였습니다.');
+                navigate('/advertisement/list');
             } else {
-                showToastMessage(response.data.message || '광고 삭제에 실패했습니다.', 'error');
+                alert(response.data.message || '팝업 삭제에 실패했습니다.');
             }
         } catch (error) {
-            showToastMessage('광고 삭제 중 오류가 발생했습니다.', 'error');
+            alert('팝업 삭제 중 오류가 발생했습니다.');
         }
     };
 
     if (loading) return <div className="loading">로딩 중...</div>;
-    if (!ad) return <div>광고 정보를 찾을 수 없습니다.</div>;
+    if (!ad) return <div>팝업 정보를 찾을 수 없습니다.</div>;
 
     return (
         <div className="ad-detail-page">
             {/* Breadcrumb */}
             <ul className="ad-detail-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>광고 관리</li>
-                <li>광고 상세</li>
+                <li>배너 및 팝업 관리</li>
+                <li>팝업 관리</li>
+                <li>팝업 상세</li>
             </ul>
 
             {/* Header */}
             <div className="ad-detail-flex-between ad-detail-mb10">
-                <p className="ad-detail-font-20 ad-detail-bold">광고 상세</p>
+                <p className="ad-detail-font-20 ad-detail-bold">팝업 상세</p>
                 <div>
                     <button type="button" className="ad-detail-cancel-button" onClick={handleListClick}>목록</button>
                     <button 
@@ -157,13 +155,13 @@ const AdvertisementDetailPage = () => {
                 <div className="ad-detail-card-inner">
                     <div className="ad-detail-form-grid">
                         <div className="ad-detail-form-item">
-                            <span className="ad-detail-text">광고 이미지</span>
+                            <span className="ad-detail-text">팝업 이미지</span>
                             <div className="ad-detail-banner-img">
-                                <img src={ad.presignedUrl || ad.advertisementPhoto} alt="광고 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
+                                <img src={ad.presignedUrl || ad.advertisementPhoto} alt="팝업 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
                             </div>
                         </div>
                         <div className="ad-detail-form-item">
-                            <span className="ad-detail-text">광고 링크주소</span>
+                            <span className="ad-detail-text">팝업 링크주소</span>
                             <div className="ad-detail-input-box">
                                 <a href={ad.advertisementUrl} target="_blank" rel="noopener noreferrer">{ad.advertisementUrl}</a>
                             </div>
