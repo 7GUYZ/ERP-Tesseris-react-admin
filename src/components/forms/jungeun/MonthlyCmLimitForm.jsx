@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { cmLimit, cmLimitSave } from "../../../api/auth/JungeunAuth"
+import { permissionCheckApi } from "../../../api/auth/TaekjunAuth"
 import "../../../styles/jungeun/monthlyCmLimit.css";
 import LoadingSpinner from "../../ui/jungeun/LoadingSpinner"
 import ConfirmModal from "../../ui/jungeun/ConfirmModal"
@@ -23,8 +24,23 @@ const MonthlyCmLimitForm = () => {
   const [modalMessage, setModalMessage] = useState('');
   const [modalType, setModalType] = useState("fetch");
   const [pwModalOpen, setPwModalOpen] = useState(false);
+  const [canEdit, setCanEdit] = useState(false);
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  // 권한 체크 함수
+  const checkEditPermission = async () => {
+    try {
+      const response = await permissionCheckApi.checkPermission(38); // programIndex: 38 (월 CM사용한도)
+      if (response.data) {
+        setCanEdit(response.data.hasUpdateAuthority === 1);
+        console.log('월 CM사용한도 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+      }
+    } catch (error) {
+      console.error('권한 체크 실패:', error);
+      setCanEdit(false);
+    }
+  };
 
   useEffect(() => {
     const getCmLimit = async () => {
@@ -40,10 +56,17 @@ const MonthlyCmLimitForm = () => {
         setLoading(false);
       }
     };
+    
+    // 권한 체크와 데이터 로드 동시에 실행
     getCmLimit();
+    checkEditPermission();
   }, []);
 
   const handleEdit = () => {
+    if (!canEdit) {
+      showToast("error", "수정 권한이 없습니다.");
+      return;
+    }
     setTempValue(monthlyLimit);
     setIsEditing(true);
   };
@@ -135,7 +158,11 @@ const MonthlyCmLimitForm = () => {
           </div>
           <div className="header-actions">
             {!isEditing ? (
-              <button className="edit-btn" onClick={handleEdit}>수정</button>
+              canEdit ? (
+                <button className="edit-btn" onClick={handleEdit}>수정</button>
+              ) : (
+                <button className="edit-btn" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>수정</button>
+              )
             ) : (
               <div className="edit-actions">
                 <button className="save-btn" onClick={handleSave}>저장</button>

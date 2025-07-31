@@ -1,26 +1,68 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import AuthorityForm from '../../components/forms/taekjun/AuthorityForm.jsx';
-import { permissionApi } from '../../api/auth/TaekjunAuth';
+import { permissionApi, permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { refreshAuthority } from '../../utils/authorityUtils';
+
+
 import '../../styles/taekjun/PermissionManagement.css';
 
 const PermissionManagement = () => {
-  const [selectedAdminType, setSelectedAdminType] = useState('');
-  const [selectedMenu, setSelectedMenu] = useState('');
-  const [openDialog, setOpenDialog] = useState(false);
-  const [editingAuthority, setEditingAuthority] = useState(null);
-  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const location = useLocation();
+  
+
   
   const [adminTypes, setAdminTypes] = useState([]);
   const [menus, setMenus] = useState([]);
   const [programs, setPrograms] = useState([]);
   const [authorities, setAuthorities] = useState([]);
+  const [selectedAdminType, setSelectedAdminType] = useState('');
+  const [selectedMenu, setSelectedMenu] = useState('');
+  const [openDialog, setOpenDialog] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingAuthority, setEditingAuthority] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
+  const [buttonPermissions, setButtonPermissions] = useState({
+    canInsert: false,
+    canUpdate: false,
+    canDelete: false
+  });
+
+
 
   // 데이터 조회
   useEffect(() => {
     fetchAdminTypes();
     fetchMenus();
+  }, []);
+
+  // 페이지 로드 시 권한 체크 - 한 번의 API 호출로 모든 권한 체크
+  useEffect(() => {
+    const initializePermissions = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(8); // programIndex: 8 (권한 관리)
+        
+        if (response.data) {
+          setButtonPermissions({
+            canInsert: response.data.hasInsertAuthority === 1,
+            canUpdate: response.data.hasUpdateAuthority === 1,
+            canDelete: response.data.hasDeleteAuthority === 1
+          });
+          
+          console.log('권한 관리 버튼 권한 체크 결과:', response.data);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setButtonPermissions({
+          canInsert: false,
+          canUpdate: false,
+          canDelete: false
+        });
+      }
+    };
+    
+    initializePermissions();
   }, []);
 
   useEffect(() => {
@@ -84,22 +126,13 @@ const PermissionManagement = () => {
   const fetchAuthorities = useCallback(async (adminTypeIndex) => {
     try {
       const response = await permissionApi.getAuthorityProgramsByAdmin(adminTypeIndex);
-      const data = response.data || response;
-      if (Array.isArray(data)) {
-        // programIndex로만 menuIndex를 programs에서 찾아서 추가
-        const authoritiesWithMenuIndex = data.map(auth => {
-          const matchedProgram = programs.find(p => String(p.programIndex) === String(auth.programIndex));
-          return {
-            ...auth,
-            menuIndex: matchedProgram ? matchedProgram.menuIndex : undefined,
-          };
-        });
-        setAuthorities(authoritiesWithMenuIndex);
+      if (response.data) {
+        setAuthorities(response.data);
       } else {
         setAuthorities([]);
       }
     } catch (error) {
-      console.error("권한 프로그램 조회 실패:", error);
+      console.error('권한 목록 조회 실패:', error);
       setAuthorities([]);
     }
   }, [programs]);
@@ -118,7 +151,7 @@ const PermissionManagement = () => {
       
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 추가되었습니다.', severity: 'success' });
-        setOpenDialog(false);
+        setShowForm(false);
         fetchAuthorities(selectedAdminType);
         
         // 권한 갱신 (현재 사용자와 관련된 경우)
@@ -146,7 +179,7 @@ const PermissionManagement = () => {
       
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 업데이트되었습니다.', severity: 'success' });
-        setOpenDialog(false);
+        setShowForm(false);
         fetchAuthorities(selectedAdminType);
         
         // 권한 갱신 (현재 사용자와 관련된 경우)
@@ -193,11 +226,13 @@ const PermissionManagement = () => {
     }
   };
 
+  // 권한 추가
   const handleAddAuthority = () => {
     setEditingAuthority(null);
     setOpenDialog(true);
   };
 
+  // 권한 수정
   const handleEditAuthority = async (authority) => {
     let menuIndex = authority.menuIndex;
     // programs가 비어 있거나 menuIndex가 없으면 추정해서 fetch
@@ -218,20 +253,53 @@ const PermissionManagement = () => {
     setOpenDialog(true);
   };
 
+  // 권한 삭제
   const handleDeleteAuthority = (authorityTypeIndex) => {
+    // 권한 체크
+    if (!buttonPermissions.canDelete) {
+      alert('권한 삭제 권한이 없습니다.');
+      return;
+    }
+
     if (window.confirm('정말로 이 권한을 삭제하시겠습니까?')) {
       deleteAuthority(authorityTypeIndex);
     }
   };
 
-  const handleSubmitAuthority = (formData) => {
-    if (editingAuthority) {
-      // 수정: 모든 필드 전송
-      updateAuthority(formData);
-    } else {
-      // 추가: userIndex, password 제외하고 전송
-      const { userIndex, password, ...insertData } = formData;
-      insertAuthority(insertData);
+  // 권한 저장 (추가/수정)
+  const handleSubmitAuthority = async (formData) => {
+    try {
+      setLoading(true);
+      
+      if (editingAuthority) {
+        // 수정
+        if (!buttonPermissions.canUpdate) {
+          alert('권한 수정 권한이 없습니다.');
+          return;
+        }
+        await updateAuthority(formData);
+      } else {
+        // 추가
+        if (!buttonPermissions.canInsert) {
+          alert('권한 추가 권한이 없습니다.');
+          return;
+        }
+        await insertAuthority(formData);
+      }
+      
+      setOpenDialog(false);
+      setEditingAuthority(null);
+      showSnackbar('권한이 성공적으로 저장되었습니다.', 'success');
+      
+      // 권한 목록 새로고침
+      if (selectedAdminType) {
+        await fetchAuthorities(selectedAdminType);
+      }
+    } catch (error) {
+      console.error('권한 저장 실패:', error);
+      showSnackbar('권한 저장에 실패했습니다.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -239,9 +307,16 @@ const PermissionManagement = () => {
     setSnackbar({ ...snackbar, open: false });
   };
 
+  // Snackbar 표시 함수
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
   return (
     <div className="permission-management">
-      <h1 className="permission-page-title">권한 관리</h1>
+      <div className="permission-management-header">
+        <h1>권한 관리</h1>
+      </div>
       <div className="permission-divider"></div>
 
       {/* 필터 섹션 */}
@@ -278,7 +353,13 @@ const PermissionManagement = () => {
             <h2>권한 목록</h2>
             <button 
               className="permission-btn permission-btn-primary" 
-              onClick={handleAddAuthority}
+              onClick={() => {
+                if (!buttonPermissions.canInsert) {
+                  alert('권한이 없습니다.');
+                  return;
+                }
+                handleAddAuthority();
+              }}
             >
               권한 추가
             </button>
@@ -311,13 +392,25 @@ const PermissionManagement = () => {
                     <td className="text-center">
                       <button 
                         className="permission-btn permission-btn-small permission-btn-secondary"
-                        onClick={() => handleEditAuthority(authority)}
+                        onClick={() => {
+                          if (!buttonPermissions.canUpdate) {
+                            alert('권한이 없습니다.');
+                            return;
+                          }
+                          handleEditAuthority(authority);
+                        }}
                       >
                         수정
                       </button>
                       <button 
                         className="permission-btn permission-btn-small permission-btn-danger"                
-                        onClick={() => handleDeleteAuthority(authority.authorityTypeIndex)}
+                        onClick={() => {
+                          if (!buttonPermissions.canDelete) {
+                            alert('권한이 없습니다.');
+                            return;
+                          }
+                          handleDeleteAuthority(authority.authorityTypeIndex);
+                        }}
                       >
                         삭제
                       </button>
