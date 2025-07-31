@@ -340,6 +340,8 @@ function StoreRegisterList() {
           setModalOpen(false);
           setSelectedStoreId(null);
           setSelectedStoreData(null);
+          // 🔄 모달 닫기 시 리스트 데이터 새로고침
+          fetchStores({ ...filter });
         }}
         storeId={selectedStoreId}
         initialData={selectedStoreData}

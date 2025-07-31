@@ -98,11 +98,27 @@ function ChatRoomWindow({
   // 채팅방 입장 시 초기화
   useEffect(() => {
     if (open && roomData && stompClient && stompClient.connected) {
+      console.log('🏠 [디버그] 채팅방 입장 시작 - roomId:', roomData.id);
+      
+      // 메시지 상태 초기화 (이전 채팅방의 메시지 제거)
+      console.log('🧹 [디버그] 메시지 상태 초기화');
+      setMessages([]);
+      
       // 메시지 중복 처리 초기화
       processedMessagesRef.current.clear();
       
       // 채팅방 구독
       subscribeToRoom(roomData.id, (messageData) => {
+        console.log('🔍 [디버그] 원본 메시지 수신:', messageData);
+        console.log('🔍 [디버그] 메시지 필드들:', {
+          id: messageData.id,
+          text: messageData.text,
+          message: messageData.message,
+          sender: messageData.sender,
+          timestamp: messageData.timestamp,
+          type: messageData.type
+        });
+        
         // 고유 메시지 키 생성
         const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
         
@@ -115,8 +131,13 @@ function ChatRoomWindow({
         // 처리된 메시지로 마킹
         processedMessagesRef.current.add(messageKey);
         
-        console.log('룸 메시지 수신:', messageData);
-        setMessages(prev => [...prev, messageData]);
+        console.log('✅ [디버그] 메시지 상태에 추가 시도:', messageData);
+        setMessages(prev => {
+          const newMessages = [...prev, messageData];
+          console.log('✅ [디버그] 새로운 메시지 배열:', newMessages);
+          console.log('✅ [디버그] 총 메시지 개수:', newMessages.length);
+          return newMessages;
+        });
       });
       
       // 채팅방 입장 알림
@@ -395,6 +416,18 @@ function ChatRoomWindow({
               backgroundColor: '#fafafa'
             }}
           >
+            {/* 메시지 렌더링 디버깅 */}
+            {console.log('🎨 [디버그] 메시지 렌더링 시작 - 총 메시지 개수:', messages.length)}
+            {console.log('🎨 [디버그] 현재 메시지 배열:', messages)}
+            
+            {messages.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                <Typography variant="body2">
+                  💬 아직 메시지가 없습니다. 첫 메시지를 보내보세요!
+                </Typography>
+              </Box>
+            )}
+            
             {messages.map((message, index) => {
               // 안전한 key 생성 (message.id가 있으면 사용, 없으면 index와 timestamp 조합)
               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;

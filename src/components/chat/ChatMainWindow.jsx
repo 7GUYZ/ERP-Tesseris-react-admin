@@ -16,8 +16,7 @@ import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 function ChatMainWindow({ open, onClose, onRoomSelect }) {
   const { 
     stompClient, 
-    currentUser, 
-    sendGlobalMessage 
+    currentUser 
   } = useChatWebSocket();
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -255,17 +254,11 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
     };
   }, [stompClient]);
 
-  // 🌍 전역 메시지 전송
+  // 🌍 전역 메시지 전송 (비활성화됨)
   const handleSendGlobalMessage = () => {
-    if (newGlobalMessage.trim() && currentUser) {
-      const success = sendGlobalMessage(newGlobalMessage.trim());
-      if (success) {
-        console.log('✅ 전역 메시지 전송 성공');
-        setNewGlobalMessage('');
-      } else {
-        console.error('❌ 전역 메시지 전송 실패');
-      }
-    }
+    console.log('⚠️ 전역 메시지 기능이 비활성화되었습니다.');
+    // 전역 메시지 기능이 제거되었습니다.
+    setNewGlobalMessage('');
   };
 
   const handleGlobalKeyPress = (e) => {

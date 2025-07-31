@@ -168,35 +168,7 @@ export const ChatWebSocketProvider = ({ children }) => {
     }
   };
 
-  // 전역 메시지 전송 함수
-  const sendGlobalMessage = (message) => {
-    if (!stompClient || !stompClient.connected) {
-      console.error('❌ 채팅 WebSocket이 연결되지 않았습니다.');
-      return false;
-    }
 
-    if (!currentUser) {
-      console.error('❌ 사용자 정보가 없습니다.');
-      return false;
-    }
-
-    const globalMessage = {
-      id: `${currentUser.id}_${Date.now()}`,
-      text: message,
-      sender: currentUser,
-      timestamp: new Date().toISOString(),
-      type: 'global'
-    };
-
-    try {
-      stompClient.send('/app/chat/global', {}, JSON.stringify(globalMessage));
-      console.log('📤 전역 메시지 전송:', globalMessage);
-      return true;
-    } catch (error) {
-      console.error('❌ 전역 메시지 전송 실패:', error);
-      return false;
-    }
-  };
 
   // 컴포넌트 언마운트 시 연결 해제
   useEffect(() => {
@@ -208,13 +180,13 @@ export const ChatWebSocketProvider = ({ children }) => {
   const value = {
     stompClient,
     isConnected,
+  
     currentUser,
     connectWebSocket,
     disconnectWebSocket,
     subscribeToRoom,
     unsubscribeFromRoom,
-    sendMessageToRoom,
-    sendGlobalMessage
+    sendMessageToRoom
   };
 
   return (
