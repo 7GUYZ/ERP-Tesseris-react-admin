@@ -8,6 +8,8 @@ import dayjs from 'dayjs';
 import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreRegisterList.css'; 
 import { getStoreRegisterList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import { permissionCheckApi } from '../../../api/auth/TaekjunAuth';
+import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import StoreRegisterDetailModal from '../../../components/feature/deokkyu/dmodal/StoreRegisterDetailModal';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
@@ -36,6 +38,8 @@ function StoreRegisterList() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [canUpdate, setCanUpdate] = useState(false);
+  const { showToast } = useToast();
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   
   // 모달 상태
@@ -95,6 +99,24 @@ function StoreRegisterList() {
       setLoading(false);
     }
   };
+
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(19); // programIndex: 19 (가맹점 신청 현황)
+        if (response.data) {
+          setCanUpdate(response.data.hasUpdateAuthority === 1);
+          console.log('가맹점 신청 현황 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanUpdate(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
 
   useEffect(() => {
     // 인터셉터 설정 (인증 토큰 자동 추가)
@@ -313,6 +335,10 @@ function StoreRegisterList() {
             checkboxSelection
             disableRowSelectionOnClick
             onRowClick={(params) => {
+              if (!canUpdate) {
+                showToast("error", "수정 권한이 없습니다.");
+                return;
+              }
               setSelectedStoreId(params.row.userId);
               setSelectedStoreData(params.row);
               setModalOpen(true);

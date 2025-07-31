@@ -27,6 +27,8 @@ export const searchCoupons = (params) => {
   });
 };
 
+
+
 // 영업실적 관련 API
 export const getBusinessGradeList = () => {
   const accessToken = localStorage.getItem("access-token");

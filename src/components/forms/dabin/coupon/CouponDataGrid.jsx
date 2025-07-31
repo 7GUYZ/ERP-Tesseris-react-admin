@@ -17,7 +17,8 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         issuanceTime: data[0].couponIssuanceTime,
         issuanceStatus: data[0].couponIssuanceStatus,
         limitTime: data[0].couponLimitTime,
-        providedTime: data[0].couponProvidedTime
+        providedTime: data[0].couponProvidedTime,
+        storeName: data[0].storeName
       });
       console.log("첫 번째 쿠폰의 모든 키:", Object.keys(data[0]));
     }
@@ -245,6 +246,16 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
     },
 
     { field: "couponName", headerName: "쿠폰명", width: 150, align: 'center', headerAlign: 'center' },
+    { 
+      field: "storeName", 
+      headerName: "발급 가맹점", 
+      width: 200, 
+      align: 'center', 
+      headerAlign: 'center',
+      valueFormatter: (params) => {
+        return params.value || "가맹점명 없음";
+      }
+    },
     { field: "couponIssuanceStatus", headerName: "쿠폰 발행 상태", width: 120, align: 'center', headerAlign: 'center' },
     { 
       field: "couponIssuanceTime", 

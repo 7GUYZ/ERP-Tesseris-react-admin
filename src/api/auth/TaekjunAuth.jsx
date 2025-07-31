@@ -10,6 +10,9 @@ export const permissionApi = {
 
   // 프로그램 조회
   getProgram: (menuIndex) => api.get(`admin/permissionsettings/getprogram`, { params: { menuIndex } }),
+  
+  // 모든 프로그램 조회
+  getAllPrograms: () => api.get("admin/permissionsettings/getallprograms"),
 
   // 관리자별 권한 프로그램 조회
   getAuthorityProgramsByAdmin: (adminTypeIndex) => api.get(`admin/permissionsettings/authorityprogramsbyadmin`,{params: {adminTypeIndex}}),
@@ -67,24 +70,25 @@ export const permissionCheckApi = {
     console.log('API 호출 - programIndex:', programIndex);
     console.log('API 호출 - permissionType:', permissionType);
     
-    return await api.post(`checkpermission`, {
+    return await api.post("checkpermission", {
       adminTypeIndex: parseInt(adminTypeIndex),
       programIndex: parseInt(programIndex)
     });
   },
 
   // 현재 사용자의 모든 권한 조회 (로컬스토리지의 user-info에서 admin_type_index 사용)
-  getUserPermissions: async () => {
+  getUserPermissions: async (programIndex) => {
     const userInfo = localStorage.getItem('user-info');
     const userData = userInfo ? JSON.parse(userInfo) : null;
     const adminTypeIndex = userData?.admin_type_index;
     
     console.log('getUserPermissions API 호출 - user-info:', userInfo);
     console.log('getUserPermissions API 호출 - admin_type_index:', adminTypeIndex);
+    console.log('getUserPermissions API 호출 - programIndex:', programIndex);
     
-    return await api.post(`checkpermission`, {
+    return await api.post("checkpermission", {
       adminTypeIndex: parseInt(adminTypeIndex),
-      programIndex: 1 // 기본값, 필요시 수정
+      programIndex: parseInt(programIndex)
     });
   }
 }; 
