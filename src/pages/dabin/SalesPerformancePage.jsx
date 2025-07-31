@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
+
 import SalesPerformanceSearchForm from "../../components/forms/dabin/sales/SalesPerformanceSearchForm";
 import SalesPerformanceDataGrid from "../../components/forms/dabin/sales/SalesPerformanceDataGrid";
 import SalesPerformanceExcelDownloadButton from "../../components/forms/dabin/sales/SalesPerformanceExcelDownloadButton";
@@ -9,15 +10,16 @@ import { getBusinessGradeList, getStoreRequestStatusList, searchSalesPerformance
 import '../../styles/dabin/dabinPageLayout.css';
 
 const SalesPerformancePage = () => {
-  // 상태 관리
-  const [currentForm, setCurrentForm] = useState({})           // 현재 검색 폼 데이터
-  const [salesData, setSalesData] = useState([])               // 영업실적 데이터
-  const [businessGrades, setBusinessGrades] = useState([])     // 사업자 등급 목록
-  const [storeRequestStatuses, setStoreRequestStatuses] = useState([]) // 승인 상태 목록
-  const [loading, setLoading] = useState(false)                // 로딩 상태
-  const [selectedRows, setSelectedRows] = useState(new Set())  // 선택된 행들
+  const [searchParams, setSearchParams] = useState({})
+  const [currentForm, setCurrentForm] = useState({})
+  const [salesData, setSalesData] = useState([])
+  const [businessGrades, setBusinessGrades] = useState([])
+  const [storeRequestStatuses, setStoreRequestStatuses] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [selectedRows, setSelectedRows] = useState(new Set())
 
-  // 컴포넌트 마운트 시 초기 데이터 로드
+
+
   useEffect(() => {
     setLoading(true)
     Promise.all([

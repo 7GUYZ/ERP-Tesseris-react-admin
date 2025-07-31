@@ -4,6 +4,7 @@ import {
   setCommissionSetting,
   pwCheck,
 } from "../../../api/auth/JiyoonAuth";
+import { permissionCheckApi } from "../../../api/auth/TaekjunAuth";
 import PwModal from "../../../components/feature/jiyun/PwModal";
 import { useToast } from "../../../context/jungeun/ToastContext";
 import "../../../styles/jiyun/commissionSetting/commission-setting.css";
@@ -13,9 +14,29 @@ export default function CommissionSetting() {
   const [originalSetting, setOriginalSetting] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [canEdit, setCanEdit] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { showToast } = useToast();
 
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(9); // programIndex: 9 (중개수수료율 설정)
+        if (response.data) {
+          setCanEdit(response.data.hasUpdateAuthority === 1);
+          console.log('중개수수료율 설정 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanEdit(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
+
+  // 데이터 로드
   useEffect(() => {
     const fetchCommissionSetting = async () => {
       try {
@@ -36,6 +57,10 @@ export default function CommissionSetting() {
   }, []);
 
   const handleChange = (idx, field, value) => {
+    if (!canEdit) {
+      showToast("error", "수정 권한이 없습니다.");
+      return;
+    }
     setSetting((prev) =>
       prev.map((item, i) => (i === idx ? { ...item, [field]: value } : item))
     );
@@ -95,7 +120,8 @@ export default function CommissionSetting() {
         <button
           className="save-button"
           type="submit"
-          disabled={!isSumValid || !isChanged}
+          disabled={!isSumValid || !isChanged || !canEdit}
+          style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           저장
         </button>
@@ -112,6 +138,8 @@ export default function CommissionSetting() {
               className="commission-input"
               type="number"
               value={companyRate}
+              disabled={!canEdit}
+              style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
               onChange={(e) => {
                 const realIdx = setting.findIndex(
                   (s) => s.businessGradeIndex === 1
@@ -151,6 +179,8 @@ export default function CommissionSetting() {
                       className="commission-input"
                       type="number"
                       value={grade.businessGradeRate}
+                      disabled={!canEdit}
+                      style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                       onChange={(e) =>
                         handleChange(
                           realIdx,

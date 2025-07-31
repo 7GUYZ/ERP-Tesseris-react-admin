@@ -2,11 +2,18 @@ import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '../../api/auth/TaekjunAuth';
 import '../../styles/taekjun/Dashboard.css';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import DashboardModal from '../../components/ui/taekjun/DashboardModal';
 
 const Dashboard = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [modalData, setModalData] = useState({
+    isOpen: false,
+    title: '',
+    data: [],
+    chartType: 'bar'
+  });
 
   // 차트 색상 배열
   const chartColors = [
@@ -35,6 +42,78 @@ const Dashboard = () => {
     };
     fetchStats();
   }, []);
+
+  // 모달 열기 함수
+  const openModal = (title, data, chartType = 'bar') => {
+    setModalData({
+      isOpen: true,
+      title,
+      data,
+      chartType
+    });
+  };
+
+  // 모달 닫기 함수
+  const closeModal = () => {
+    setModalData({
+      isOpen: false,
+      title: '',
+      data: [],
+      chartType: 'bar'
+    });
+  };
+
+  // 카드 클릭 핸들러
+  const handleCardClick = (groupTitle, key) => {
+    const keyName = formatKey(key);
+    const value = stats[key];
+    
+    const chartData = [
+      { name: '전체', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Total')}`] || 0 },
+      { name: '어제', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Yesterday')}`] || 0 },
+      { name: '오늘', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Today')}`] || 0 }
+    ];
+
+    openModal(`${groupTitle} - ${keyName}`, chartData, 'bar');
+  };
+
+  // 그룹 제목 클릭 핸들러
+  const handleGroupTitleClick = (groupTitle) => {
+    let chartData = [];
+    
+    switch (groupTitle) {
+      case 'CM 관련':
+        chartData = [
+          { name: '충전 CM', value: stats?.chargedCmTotal || 0 },
+          { name: '지급 CM', value: stats?.companyPaidCmTotal || 0 },
+          { name: '회수 CM', value: stats?.companyCollectedCmTotal || 0 },
+          { name: '선물 CM', value: stats?.giftCmTotal || 0 }
+        ];
+        break;
+      case '수수료 관련':
+        chartData = [
+          { name: '사업자 CM 수수료', value: stats?.businessCmCommissionTotal || 0 },
+          { name: '본사 CM Cash', value: stats?.companyCmCashTotal || 0 }
+        ];
+        break;
+      case '가맹점/사업자':
+        chartData = [
+          { name: '승인된 가맹점', value: stats?.approvedStoreTotal || 0 },
+          { name: '사업자', value: stats?.businessManTotal || 0 },
+          { name: '대기중인 가맹점', value: stats?.pendingStoreTotal || 0 }
+        ];
+        break;
+      case '기타':
+        chartData = [
+          { name: '출금 신청 완료', value: stats?.withdrawalCompletedTotal || 0 }
+        ];
+        break;
+      default:
+        return;
+    }
+
+    openModal(`${groupTitle} 전체 통계`, chartData, 'bar');
+  };
 
   // key를 보기 좋게 변환
   const formatKey = (key) => {
@@ -83,9 +162,6 @@ const Dashboard = () => {
     {
       title: '수수료 관련',
       keys: [
-        'commissionRevenueTotal', 'commissionRevenueYesterday', 'commissionRevenueToday',
-        'companyCashCommissionTotal', 'companyCashCommissionYesterday', 'companyCashCommissionToday',
-        'businessCashCommissionTotal', 'businessCashCommissionYesterday', 'businessCashCommissionToday',
         'businessCmCommissionTotal', 'businessCmCommissionYesterday', 'businessCmCommissionToday',
         'companyCmCashTotal', 'companyCmCashYesterday', 'companyCmCashToday'
       ]
@@ -106,118 +182,6 @@ const Dashboard = () => {
     }
   ];
 
-  // 차트 구성 배열
-  const chartConfigs = [
-    {
-      title: '충전 CM 차트',
-      data: [
-        { name: '전체', value: stats?.chargedCmTotal ?? 0 },
-        { name: '어제', value: stats?.chargedCmYesterday ?? 0 },
-        { name: '오늘', value: stats?.chargedCmToday ?? 0 },
-      ],
-    },
-    {
-      title: '지급 CM 차트',
-      data: [
-        { name: '전체', value: stats?.companyPaidCmTotal ?? 0 },
-        { name: '어제', value: stats?.companyPaidCmYesterday ?? 0 },
-        { name: '오늘', value: stats?.companyPaidCmToday ?? 0 },
-      ],
-    },
-    {
-      title: '회수 CM 차트',
-      data: [
-        { name: '전체', value: stats?.companyCollectedCmTotal ?? 0 },
-        { name: '어제', value: stats?.companyCollectedCmYesterday ?? 0 },
-        { name: '오늘', value: stats?.companyCollectedCmToday ?? 0 },
-      ],
-    },
-    {
-      title: '선물 CM 차트',
-      data: [
-        { name: '전체', value: stats?.giftCmTotal ?? 0 },
-        { name: '어제', value: stats?.giftCmYesterday ?? 0 },
-        { name: '오늘', value: stats?.giftCmToday ?? 0 },
-      ],
-    },
-  ];
-
-  // 수수료 관련 차트 구성 배열
-  const chartConfigsFee = [
-    {
-      title: '수수료 총액 차트',
-      data: [
-        { name: '전체', value: stats?.commissionRevenueTotal ?? 0 },
-        { name: '어제', value: stats?.commissionRevenueYesterday ?? 0 },
-        { name: '오늘', value: stats?.commissionRevenueToday ?? 0 },
-      ],
-    },
-    {
-      title: '본사 Cash 수수료 차트',
-      data: [
-        { name: '전체', value: stats?.companyCashCommissionTotal ?? 0 },
-        { name: '어제', value: stats?.companyCashCommissionYesterday ?? 0 },
-        { name: '오늘', value: stats?.companyCashCommissionToday ?? 0 },
-      ],
-    },
-    {
-      title: '사업자 Cash 수수료 차트',
-      data: [
-        { name: '전체', value: stats?.businessCashCommissionTotal ?? 0 },
-        { name: '어제', value: stats?.businessCashCommissionYesterday ?? 0 },
-        { name: '오늘', value: stats?.businessCashCommissionToday ?? 0 },
-      ],
-    },
-    {
-      title: '사업자 CM 수수료 차트',
-      data: [
-        { name: '전체', value: stats?.businessCmCommissionTotal ?? 0 },
-        { name: '어제', value: stats?.businessCmCommissionYesterday ?? 0 },
-        { name: '오늘', value: stats?.businessCmCommissionToday ?? 0 },
-      ],
-    },
-    {
-      title: '본사 CM Cash 차트',
-      data: [
-        { name: '전체', value: stats?.companyCmCashTotal ?? 0 },
-        { name: '어제', value: stats?.companyCmCashYesterday ?? 0 },
-        { name: '오늘', value: stats?.companyCmCashToday ?? 0 },
-      ],
-    },
-  ];
-
-  // 가맹점/사업자 차트 구성 배열
-  const chartConfigsStore = [
-    {
-      title: '승인된 가맹점 차트',
-      data: [
-        { name: '전체', value: stats?.approvedStoreTotal ?? 0 },
-        { name: '어제', value: stats?.approvedStoreYesterday ?? 0 },
-        { name: '오늘', value: stats?.approvedStoreToday ?? 0 },
-      ],
-    },
-    {
-      title: '사업자 차트',
-      data: [
-        { name: '전체', value: stats?.businessManTotal ?? 0 },
-        { name: '어제', value: stats?.businessManYesterday ?? 0 },
-        { name: '오늘', value: stats?.businessManToday ?? 0 },
-      ],
-    },
-  ];
-
-  // 기타 차트 구성 배열
-  const chartConfigsOther = [
-    {
-      title: '출금 신청 완료 차트',
-      data: [
-        { name: '전체', value: stats?.withdrawalCompletedTotal ?? 0 },
-        { name: '어제', value: stats?.withdrawalCompletedYesterday ?? 0 },
-        { name: '오늘', value: stats?.withdrawalCompletedToday ?? 0 },
-      ],
-    },
-  ];
-
   return (
     <div className="dashboard-root">
       <div className="dashboard-title">대시보드 통계</div>
@@ -229,7 +193,7 @@ const Dashboard = () => {
         ) : stats ? (
           groups.map(group => (
             <section key={group.title} className="dashboard-group">
-              <h2 className="dashboard-group-title">{group.title}</h2>
+              <h2 className="dashboard-group-title" onClick={() => handleGroupTitleClick(group.title)}>{group.title}</h2>
               
               {/* CM 관련과 수수료 관련은 3개씩, 가맹점/사업자는 2개씩, 기타는 1개씩 나누어서 렌더링 */}
               {group.title === 'CM 관련' || group.title === '수수료 관련' ? (
@@ -237,7 +201,7 @@ const Dashboard = () => {
                   <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
                     {chunk.map(key => (
                       stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key}>
+                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
                           <div className="card-label">{formatKey(key)}</div>
                           <div className="card-value">
                             {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
@@ -252,7 +216,7 @@ const Dashboard = () => {
                   <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
                     {chunk.map(key => (
                       stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key}>
+                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
                           <div className="card-label">{formatKey(key)}</div>
                           <div className="card-value">
                             {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
@@ -267,7 +231,7 @@ const Dashboard = () => {
                   <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
                     {chunk.map(key => (
                       stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key}>
+                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
                           <div className="card-label">{formatKey(key)}</div>
                           <div className="card-value">
                             {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
@@ -293,210 +257,17 @@ const Dashboard = () => {
                 </div>
               )}
               
-              {group.title === 'CM 관련' && chartConfigs.length > 0 && (
-                chartConfigs.map((cfg, index) => (
-                  <div key={cfg.title} className="dashboard-chart-row">
-                    <span className="dashboard-chart-label">{cfg.title}</span>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <BarChart
-                        data={cfg.data}
-                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
-                        barCategoryGap={24}
-                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
-                      >
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                          tickFormatter={value => {
-                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
-                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
-                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
-                            return value;
-                          }}
-                        />
-                        <Tooltip
-                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
-                          cursor={{ fill: '#e5eaf2' }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={24}
-                          iconType="rect"
-                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill={chartColors[index % chartColors.length]}
-                          radius={[8, 8, 0, 0]}
-                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
-                          barSize={24}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ))
-              )}
-              {group.title === '수수료 관련' && chartConfigsFee.length > 0 && (
-                chartConfigsFee.map((cfg, index) => (
-                  <div key={cfg.title} className="dashboard-chart-row">
-                    <span className="dashboard-chart-label">{cfg.title}</span>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <BarChart
-                        data={cfg.data}
-                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
-                        barCategoryGap={24}
-                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
-                      >
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                          tickFormatter={value => {
-                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
-                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
-                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
-                            return value;
-                          }}
-                        />
-                        <Tooltip
-                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
-                          cursor={{ fill: '#e5eaf2' }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={24}
-                          iconType="rect"
-                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill={chartColors[(index + 4) % chartColors.length]}
-                          radius={[8, 8, 0, 0]}
-                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
-                          barSize={24}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ))
-              )}
-              {group.title === '가맹점/사업자' && chartConfigsStore.length > 0 && (
-                chartConfigsStore.map((cfg, index) => (
-                  <div key={cfg.title} className="dashboard-chart-row">
-                    <span className="dashboard-chart-label">{cfg.title}</span>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <BarChart
-                        data={cfg.data}
-                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
-                        barCategoryGap={24}
-                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
-                      >
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                          tickFormatter={value => {
-                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
-                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
-                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
-                            return value;
-                          }}
-                        />
-                        <Tooltip
-                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
-                          cursor={{ fill: '#e5eaf2' }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={24}
-                          iconType="rect"
-                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill={chartColors[(index + 9) % chartColors.length]}
-                          radius={[8, 8, 0, 0]}
-                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
-                          barSize={24}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ))
-              )}
-              {group.title === '기타' && chartConfigsOther.length > 0 && (
-                chartConfigsOther.map((cfg, index) => (
-                  <div key={cfg.title} className="dashboard-chart-row">
-                    <span className="dashboard-chart-label">{cfg.title}</span>
-                    <ResponsiveContainer width="100%" height={160}>
-                      <BarChart
-                        data={cfg.data}
-                        margin={{ top: 12, right: 16, left: 0, bottom: 12 }}
-                        barCategoryGap={24}
-                        style={{ fontFamily: 'Pretendard, sans-serif', background: '#f7faff', borderRadius: 16 }}
-                      >
-                        <XAxis
-                          dataKey="name"
-                          tick={{ fontSize: 14, fill: '#3b7ddd', fontWeight: 700 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                        />
-                        <YAxis
-                          tick={{ fontSize: 12, fill: '#222e3c', fontWeight: 600 }}
-                          axisLine={{ stroke: '#e5eaf2' }}
-                          tickLine={false}
-                          tickFormatter={value => {
-                            if (value >= 1_000_000_000) return (value / 1_000_000_000).toFixed(2) + 'B';
-                            if (value >= 1_000_000) return (value / 1_000_000).toFixed(2) + 'M';
-                            if (value >= 1_000) return (value / 1_000).toFixed(2) + 'K';
-                            return value;
-                          }}
-                        />
-                        <Tooltip
-                          contentStyle={{ background: '#fff', border: '1px solid #e5eaf2', borderRadius: 8, fontSize: 13, color: '#222e3c' }}
-                          cursor={{ fill: '#e5eaf2' }}
-                        />
-                        <Legend
-                          verticalAlign="top"
-                          height={24}
-                          iconType="rect"
-                          wrapperStyle={{ fontSize: 13, color: '#3b7ddd', fontWeight: 600 }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill={chartColors[(index + 11) % chartColors.length]}
-                          radius={[8, 8, 0, 0]}
-                          label={{ position: 'top', fill: '#222e3c', fontWeight: 700, fontSize: 12 }}
-                          barSize={24}
-                        />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                ))
-              )}
             </section>
           ))
         ) : null}
       </div>
+      <DashboardModal
+        isOpen={modalData.isOpen}
+        onClose={closeModal}
+        title={modalData.title}
+        data={modalData.data}
+        chartType={modalData.chartType}
+      />
     </div>
   );
 };

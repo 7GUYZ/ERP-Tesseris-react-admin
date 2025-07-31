@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
+import { permissionCheckApi } from "../../api/auth/TaekjunAuth"
+import { useToast } from "../../context/jungeun/ToastContext"
 import CommissionPaymentSearchForm from "../../components/forms/dabin/commissionPayment/CommissionPaymentSearchForm";
 import CommissionPaymentDataGrid from "../../components/forms/dabin/commissionPayment/CommissionPaymentDataGrid";
 import CommissionPaymentExcelDownloadButton from "../../components/forms/dabin/commissionPayment/CommissionPaymentExcelDownloadButton";
@@ -15,6 +17,26 @@ const CommissionPaymentPage = () => {
   const [commissionData, setCommissionData] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [canUpdate, setCanUpdate] = useState(false)
+  const { showToast } = useToast()
+
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(35); // programIndex: 35 (수당 지급 내역)
+        if (response.data) {
+          setCanUpdate(response.data.hasUpdateAuthority === 1);
+          console.log('수수료 지급 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanUpdate(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
   const [dateErrors, setDateErrors] = useState({}) // 날짜 에러 상태 추가
 
   useEffect(() => {
@@ -178,6 +200,21 @@ const CommissionPaymentPage = () => {
         </Typography>
         <Box className="dabin-page-layout-buttonGroup">
           <CommissionPaymentExcelDownloadButton data={commissionData} selectedRows={selectedRows} />
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => {
+              if (!canUpdate) {
+                showToast("error", "지급 권한이 없습니다.");
+                return;
+              }
+              // TODO: 지급 처리 로직 추가
+            }}
+            disabled={!canUpdate || selectedRows.size === 0}
+            sx={{ height: 40, mr: 1 }}
+          >
+            지급
+          </Button>
           <Button
             variant="contained"
             color="primary"

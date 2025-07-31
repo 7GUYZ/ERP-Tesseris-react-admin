@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getBannerList, getPresignedUrl } from '../../api/auth/DabinAuth';
+import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
+import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/BannerListPage.css';
 
 
@@ -8,7 +10,37 @@ import '../../styles/dabin/BannerListPage.css';
 const BannerListPage = () => {
     const [banners, setBanners] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [canInsert, setCanInsert] = useState(false);
+    const [canUpdate, setCanUpdate] = useState(false);
+    const [canDelete, setCanDelete] = useState(false);
     const navigate = useNavigate();
+    const { showToast } = useToast();
+
+    // 권한 체크
+    useEffect(() => {
+        const checkPermission = async () => {
+            try {
+                const response = await permissionCheckApi.checkPermission(23); // programIndex: 23 (배너 관리)
+                if (response.data) {
+                    setCanInsert(response.data.hasInsertAuthority === 1);
+                    setCanUpdate(response.data.hasUpdateAuthority === 1);
+                    setCanDelete(response.data.hasDeleteAuthority === 1);
+                    console.log('배너 관리 권한 체크 결과:', {
+                        insert: response.data.hasInsertAuthority,
+                        update: response.data.hasUpdateAuthority,
+                        delete: response.data.hasDeleteAuthority
+                    });
+                }
+            } catch (error) {
+                console.error('권한 체크 실패:', error);
+                setCanInsert(false);
+                setCanUpdate(false);
+                setCanDelete(false);
+            }
+        };
+        
+        checkPermission();
+    }, []);
 
     useEffect(() => {
         fetchBanners();
@@ -82,6 +114,10 @@ const BannerListPage = () => {
     };
 
     const handleCreateClick = () => {
+        if (!canInsert) {
+            showToast("error", "등록 권한이 없습니다.");
+            return;
+        }
         navigate('/banner/create');
     };
 
@@ -106,7 +142,9 @@ const BannerListPage = () => {
                     <button
                         type="button"
                         className="banner-list-edit-button"
-                        onClick={handleCreateClick}>
+                        onClick={handleCreateClick}
+                        disabled={!canInsert}
+                        style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
                         배너 등록
                     </button>
                 </div>

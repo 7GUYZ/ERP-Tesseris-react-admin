@@ -1,14 +1,37 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { noticeList } from "../../../api/auth/JiyoonAuth";
+import { permissionCheckApi } from "../../../api/auth/TaekjunAuth";
+import { useToast } from "../../../context/jungeun/ToastContext";
 import "../../../styles/jiyun/notice/notice.css";
 
 export default function NoticeList() {
   const [list, setList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [canInsert, setCanInsert] = useState(false);
   const navigate = useNavigate();
+  const { showToast } = useToast();
 
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(25); // programIndex: 25 (공지사항 관리)
+        if (response.data) {
+          setCanInsert(response.data.hasInsertAuthority === 1);
+          console.log('공지사항 등록 권한 체크 결과:', response.data.hasInsertAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanInsert(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
+
+  // 공지사항 목록 로드
   useEffect(() => {
     const getnoticeList = async () => {
       try {
@@ -57,7 +80,15 @@ export default function NoticeList() {
       <div className="notice-list-top-bar">
         <button
           className="notice-list-btn-n notice-list-btn-primary"
-          onClick={() => navigate("/notice/write")}
+          onClick={() => {
+            if (!canInsert) {
+              showToast("error", "등록 권한이 없습니다.");
+              return;
+            }
+            navigate("/notice/write");
+          }}
+          disabled={!canInsert}
+          style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
         >
           공지사항 등록
         </button>
