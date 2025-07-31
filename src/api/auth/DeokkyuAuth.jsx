@@ -145,4 +145,8 @@ export const getUserChatRooms = (userid) => // 사용자 채팅방 목록 조회
 export const saveChatMessage = (messageData) => // 채팅 메시지 DB 저장 (백엔드에서 분기처리)
   api.post('/adminchat/message', messageData);
 
+// S3 이미지 관련 API
+export const getStoreImagesWithPresignedUrls = (storeIndex) => // store_index로 store_image 조회 + S3 Presigned URL 생성
+  api.get(`/store/images-with-presigned/${storeIndex}`);
+
 
