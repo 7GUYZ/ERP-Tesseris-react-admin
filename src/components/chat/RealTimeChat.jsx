@@ -9,6 +9,7 @@ function RealTimeChat() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [windowSize, setWindowSize] = useState({ width: 400, height: 600 });
   const [windowPosition, setWindowPosition] = useState({ x: window.innerWidth - 450, y: 100 });
+  const [lastView, setLastView] = useState('main');
 
   // 실시간 사이즈 추적
   const handleSizeChange = (newSize) => {
@@ -22,13 +23,15 @@ function RealTimeChat() {
 
   const handleChatButtonClick = () => {
     if (currentView === 'closed') {
-      setCurrentView('main');
+      setCurrentView(lastView);
     } else {
+      setLastView(currentView);
       setCurrentView('closed');
     }
   };
 
   const handleMainWindowClose = () => {
+    setLastView('main');
     setCurrentView('closed');
   };
 
@@ -43,6 +46,7 @@ function RealTimeChat() {
   };
 
   const handleRoomClose = () => {
+    setLastView('room');
     setCurrentView('closed');
     setSelectedRoom(null);
   };

@@ -5,7 +5,7 @@ import {
 } from '@mui/material';
 import {
   Close, Send, Minimize, DragIndicator, 
-  ArrowBack, Call, VideoCall, Info
+  ArrowBack, Call, VideoCall, Info, AttachFile
 } from '@mui/icons-material';
 
 function ChatRoomWindow({ 
@@ -243,6 +243,14 @@ function ChatRoomWindow({
     }
   };
 
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 업로드 로직을 여기에 구현
+      console.log('파일 업로드:', file.name);
+    }
+  };
+
   if (!open || !roomData) return null;
 
   return (
@@ -259,7 +267,8 @@ function ChatRoomWindow({
         borderRadius: 2,
         overflow: 'hidden',
         transition: isDragging || isResizing ? 'none' : 'height 0.3s ease',
-        cursor: isDragging ? 'grabbing' : 'default'
+        cursor: isDragging ? 'grabbing' : 'default',
+        userSelect: isDragging || isResizing ? 'none' : 'auto'
       }}
     >
       {/* 헤더 */}
@@ -286,54 +295,63 @@ function ChatRoomWindow({
             <ArrowBack />
           </IconButton>
           <DragIndicator />
-          <Box>
-            <Typography variant="subtitle1" sx={{ fontSize: '1rem', lineHeight: 1.2 }}>
-              {roomData.name || '채팅방'}
-            </Typography>
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              1:1 채팅
-            </Typography>
-          </Box>
+                     <Box>
+             <Typography variant="subtitle1" sx={{ fontSize: '1rem', lineHeight: 1.2 }}>
+               {roomData.name || '채팅방'}
+             </Typography>
+           </Box>
         </Box>
         
-        <Box className="no-drag" sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton size="small" sx={{ color: 'white', mr: 0.5 }}>
-            <Call />
-          </IconButton>
-          <IconButton size="small" sx={{ color: 'white', mr: 0.5 }}>
-            <VideoCall />
-          </IconButton>
-          <IconButton size="small" sx={{ color: 'white', mr: 0.5 }}>
-            <Info />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={() => setIsMinimized(!isMinimized)}
-            sx={{ color: 'white', mr: 0.5 }}
-          >
-            <Minimize />
-          </IconButton>
-          <IconButton
-            size="small"
-            onClick={onClose}
-            sx={{ color: 'white' }}
-          >
-            <Close />
-          </IconButton>
-        </Box>
+                 <Box className="no-drag" sx={{ display: 'flex', alignItems: 'center' }}>
+           <input
+             type="file"
+             id="file-upload"
+             style={{ display: 'none' }}
+             onChange={handleFileUpload}
+           />
+           <label htmlFor="file-upload">
+             <IconButton
+               component="span"
+               size="small"
+               sx={{ 
+                 color: 'white', 
+                 mr: 0.5,
+                 '&:hover': {
+                   backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                 }
+               }}
+             >
+               <AttachFile />
+             </IconButton>
+           </label>
+           <IconButton
+             size="small"
+             onClick={() => setIsMinimized(!isMinimized)}
+             sx={{ color: 'white', mr: 0.5 }}
+           >
+             <Minimize />
+           </IconButton>
+           <IconButton
+             size="small"
+             onClick={onClose}
+             sx={{ color: 'white' }}
+           >
+             <Close />
+           </IconButton>
+         </Box>
       </Box>
 
       {!isMinimized && (
         <>
-          {/* 메시지 목록 */}
-          <Box
-            sx={{
-              height: size.height - 180,
-              overflowY: 'auto',
-              p: 1,
-              backgroundColor: '#fafafa'
-            }}
-          >
+                     {/* 메시지 목록 */}
+           <Box
+             sx={{
+               height: size.height - 120,
+               overflowY: 'auto',
+               p: 1,
+               backgroundColor: '#fafafa'
+             }}
+           >
             {messages.map((message, index) => {
               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
               
@@ -409,46 +427,47 @@ function ChatRoomWindow({
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* 메시지 입력 */}
-          <Box
-            className="no-drag"
-            sx={{
-              display: 'flex',
-              gap: 1,
-              p: 1.5,
-              borderTop: '1px solid #e0e0e0',
-              backgroundColor: 'white'
-            }}
-          >
-            <TextField
-              fullWidth
-              size="small"
-              multiline
-              maxRows={3}
-              placeholder="메시지를 입력하세요..."
-              value={newMessage}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
+                     {/* 메시지 입력 */}
+                       <Box
+              className="no-drag"
               sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2
-                }
-              }}
-            />
-            <Button
-              variant="contained"
-              onClick={handleSendMessage}
-              disabled={!newMessage.trim()}
-              sx={{
-                minWidth: 'auto',
-                px: 2,
-                borderRadius: 2,
-                background: 'rgb(33, 150, 243)'
+                display: 'flex',
+                gap: 1,
+                p: 0.5,
+                borderTop: '1px solid #e0e0e0',
+                backgroundColor: 'white',
+                alignItems: 'center'
               }}
             >
-              <Send />
-            </Button>
-          </Box>
+                             <TextField
+                 fullWidth
+                 size="small"
+                 multiline
+                 maxRows={2}
+                 placeholder="메시지를 입력하세요..."
+                 value={newMessage}
+                 onChange={handleInputChange}
+                 onKeyPress={handleKeyPress}
+                 sx={{
+                   '& .MuiOutlinedInput-root': {
+                     borderRadius: 2
+                   }
+                 }}
+               />
+               <Button
+                 variant="contained"
+                 onClick={handleSendMessage}
+                 disabled={!newMessage.trim()}
+                 sx={{
+                   minWidth: 'auto',
+                   px: 2,
+                   borderRadius: 2,
+                   background: 'rgb(33, 150, 243)'
+                 }}
+               >
+                 <Send />
+               </Button>
+            </Box>
         </>
       )}
       

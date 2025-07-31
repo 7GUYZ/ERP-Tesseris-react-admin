@@ -222,7 +222,8 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         borderRadius: 2,
         overflow: 'hidden',
         transition: isDragging || isResizing ? 'none' : 'height 0.3s ease',
-        cursor: isDragging ? 'grabbing' : 'default'
+        cursor: isDragging ? 'grabbing' : 'default',
+        userSelect: isDragging || isResizing ? 'none' : 'auto'
       }}
     >
       {/* 헤더 */}
