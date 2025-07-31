@@ -11,6 +11,7 @@ import {
 import { downloadExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
 import "../../../../styles/jihun/memberassetdetails/MemberAssetDetailsForm.css"
 import { useToast } from '../../../../context/jungeun/ToastContext';
+import { permissionCheckApi } from "../../../../api/auth/TaekjunAuth";
 
 /**
  * 회원 자산 현황 폼 컴포넌트
@@ -41,11 +42,30 @@ const MemberAssetDetailsForm = () => {
   })
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
+  const [canUpdate, setCanUpdate] = useState(false)
 
   // 서버 사이드 페이징 상태
   const [currentPage, setCurrentPage] = useState(0)
   const [pageSize, setPageSize] = useState(25)
   const [totalCount, setTotalCount] = useState(0)
+
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(11); // programIndex: 11 (회원 자산 현황)
+        if (response.data) {
+          setCanUpdate(response.data.hasUpdateAuthority === 1);
+          console.log('회원 자산 현황 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanUpdate(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
 
   // 페이징 전용 데이터 로드 함수
   const loadDataWithPagination = useCallback(async (page, size, searchFormData = formData) => {
@@ -339,6 +359,11 @@ const MemberAssetDetailsForm = () => {
 
   // 지급 및 회수 핸들러
   const handlePaymentAndCollection = () => {
+    if (!canUpdate) {
+      showToast("error", "수정 권한이 없습니다.");
+      return;
+    }
+
     if (selectedRows.size === 0) {
       showToast("error", "지급 및 회수할 항목을 선택해주세요.");
       return;
@@ -461,7 +486,8 @@ const MemberAssetDetailsForm = () => {
           <button
             className="member-asset-details-btn payment"
             onClick={handlePaymentAndCollection}
-            disabled={false}
+            disabled={!canUpdate}
+            style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             지급 및 회수
           </button>
