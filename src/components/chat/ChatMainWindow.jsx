@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Paper, Box, Tabs, Tab, List, ListItem,
   ListItemText, IconButton, Typography, Chip,
@@ -12,8 +12,29 @@ import {
   ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
+import { useWebSocket } from './WebSocketConfig';
 
 function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
+  const { subscribeToRoom } = useWebSocket();
+  function ChatComponent() {
+    const {
+      isConnected,
+      connectWebSocket,
+      subscribeToRoom,
+      sendMessage
+    } = useWebSocket();
+
+    // 컴포넌트 마운트 시 WebSocket 연결
+    useEffect(() => {
+      const token = localStorage.getItem('access-token');
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+
+      if (token && userInfo) {
+        connectWebSocket(token, userInfo.user_index);
+      }
+    }, []);
+  }
+  // ============================================================================
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [position, setPosition] = useState(currentPosition || {
@@ -33,12 +54,14 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   // ============================================================================
   const [adminList, setAdminList] = useState([]);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
-  // 기존 코드를 이렇게 수정
   React.useEffect(() => {
     if (open && activeTab === 0) {  // 홈 탭일 때만 호출
       setLoading(true);
       adminlist().then((data) => {
-        setAdminList(data);
+        // 본인 제외하기
+        const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        const filteredData = data.filter(admin => admin.userIndex !== userInfo?.user_index);
+        setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
         console.error('관리자 목록 조회 실패:', error);
@@ -222,14 +245,18 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
     onRoomSelect(room);
   };
 
-  // 여기에 추가 (217번째 줄 다음)
-  const handleAdminClick = (admin) => {
-    onRoomSelect({
-      name: `${admin.name}님과의 채팅`,
-      id: `admin-${admin.id}`,
-      type: 'admin',
-      adminData: admin
-    });
+  // 관리자 클릭 시 채팅방 생성
+  const handleAdminClick = async (admin) => {
+    try {
+      // 3. 채팅방 창 열기
+      onRoomSelect({
+        name: `${admin.name}님과의 채팅`,
+        adminData: admin,
+        subscribeToRoom: subscribeToRoom,
+      });
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error);
+    }
   };
 
   const handleGroupToggle = (typeName) => {
@@ -366,63 +393,63 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
 
                         return sortedTypes.map(typeName => {
                           const adminsInType = groupedAdmins[typeName]
-                            .filter(admin => 
+                            .filter(admin =>
                               admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               (admin.adminTypeName && admin.adminTypeName.toLowerCase().includes(searchTerm.toLowerCase()))
                             );
 
                           if (adminsInType.length === 0) return null;
 
-                                                     const isExpanded = expandedGroups.has(typeName);
-                           
-                           return (
-                             <React.Fragment key={typeName}>
-                               {/* 그룹 헤더 */}
-                               <ListItem 
-                                 onClick={() => handleGroupToggle(typeName)}
-                                 sx={{ 
-                                   backgroundColor: '#f8f9fa', 
-                                   borderBottom: '1px solid #e0e0e0',
-                                   py: 1,
-                                   cursor: 'pointer',
-                                   '&:hover': { backgroundColor: '#e3f2fd' }
-                                 }}
-                               >
-                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                     {isExpanded ? <ExpandMore /> : <ChevronRight />}
-                                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#1976d2', ml: 1 }}>
-                                       {typeName}
-                                     </Typography>
-                                   </Box>
-                                   <Chip 
-                                     label={adminsInType.length} 
-                                     size="small" 
-                                     sx={{ height: 20, fontSize: '0.75rem' }}
-                                   />
-                                 </Box>
-                               </ListItem>
-                               
-                               {/* 그룹 내 관리자들 */}
-                               {isExpanded && adminsInType.map((admin) => (
-                                 <ListItem
-                                   key={admin.userIndex || `admin-${admin.userIndex}`}
-                                   onClick={() => handleAdminClick(admin)}
-                                   sx={{
-                                     pl: 3,
-                                     '&:hover': { backgroundColor: '#f5f5f5' },
-                                     borderBottom: '1px solid #f0f0f0',
-                                     cursor: 'pointer'
-                                   }}
-                                 >
-                                   <ListItemText
-                                     primary={admin.name}
-                                     primaryTypographyProps={{ variant: 'body2' }}
-                                   />
-                                 </ListItem>
-                               ))}
-                             </React.Fragment>
-                           );
+                          const isExpanded = expandedGroups.has(typeName);
+
+                          return (
+                            <React.Fragment key={typeName}>
+                              {/* 그룹 헤더 */}
+                              <ListItem
+                                onClick={() => handleGroupToggle(typeName)}
+                                sx={{
+                                  backgroundColor: '#f8f9fa',
+                                  borderBottom: '1px solid #e0e0e0',
+                                  py: 1,
+                                  cursor: 'pointer',
+                                  '&:hover': { backgroundColor: '#e3f2fd' }
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    {isExpanded ? <ExpandMore /> : <ChevronRight />}
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#1976d2', ml: 1 }}>
+                                      {typeName}
+                                    </Typography>
+                                  </Box>
+                                  <Chip
+                                    label={adminsInType.length}
+                                    size="small"
+                                    sx={{ height: 20, fontSize: '0.75rem' }}
+                                  />
+                                </Box>
+                              </ListItem>
+
+                              {/* 그룹 내 관리자들 */}
+                              {isExpanded && adminsInType.map((admin) => (
+                                <ListItem
+                                  key={admin.userIndex || `admin-${admin.userIndex}`}
+                                  onClick={() => handleAdminClick(admin)}
+                                  sx={{
+                                    pl: 3,
+                                    '&:hover': { backgroundColor: '#f5f5f5' },
+                                    borderBottom: '1px solid #f0f0f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <ListItemText
+                                    primary={admin.name}
+                                    primaryTypographyProps={{ variant: 'body2' }}
+                                  />
+                                </ListItem>
+                              ))}
+                            </React.Fragment>
+                          );
                         });
                       })()}
                     </List>

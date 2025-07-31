@@ -4,6 +4,7 @@ import MainHeader from "./MainHeader";
 import MainNavi from "./MainNavi";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import RealTimeChat from '../../../chat/RealTimeChat';
+import WebSocketChatProvider from "../../../chat/WebSocketConfig";
 const MainLayout = () => {
   return (
     <div className="dashboard-container">
@@ -15,7 +16,9 @@ const MainLayout = () => {
             <div className="content-area">
               <Outlet />
               {/* 실시간 채팅 컴포넌트 추가덕 */}
+              <WebSocketChatProvider>
               <RealTimeChat /> 
+              </WebSocketChatProvider>
             </div>
           </div>
         </main>

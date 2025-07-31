@@ -1,4 +1,4 @@
-import { GetAdminList } from "../../api/auth/JihunAuth";
+import { GetAdminList, SaveSendMessage } from "../../api/auth/JihunAuth";
 
 
 const adminlist = async () => {
@@ -12,9 +12,15 @@ const adminlist = async () => {
     }
 }
 
-// const chatrooms = async () => {
-//     const response = await GetChatRooms();
-//     return response.data;
-// }
+const saveSendMessage = async (messageData) => {
+    try {
+        const response = await SaveSendMessage(messageData);
+        console.log("메세지 저장 성공", response.data.data.data.room_index);
+        return response.data.data.data;
+    } catch (error) {
+        console.error('Error saving message:', error);
+        throw error;
+    }
+}
 
-export { adminlist };
+export { adminlist, saveSendMessage };
