@@ -124,11 +124,11 @@ const MemberRecommendationExcelDownloadButton = ({ data, selectedRows }) => {
       });
       return orderedRow;
     });
-    
+
     // 워크북 생성
     const wb = XLSX.utils.book_new()
     const ws = XLSX.utils.json_to_sheet(orderedData)
-    
+
     // 컬럼 너비 설정
     const colWidths = [
       { wch: 15 }, // 추천인 아이디

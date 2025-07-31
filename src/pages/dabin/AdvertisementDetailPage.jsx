@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
+import Toast from '../../components/ui/jungeun/Toast';
 import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/AdvertisementDetailPage.css';
@@ -36,6 +37,21 @@ const AdvertisementDetailPage = () => {
         
         checkPermission();
     }, []);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast1, setShowToast1] = useState(false);
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast1(true);
+    };
+
+    const closeToast = () => {
+        setShowToast1(false);
+    };
 
     useEffect(() => {
         fetchAdvertisement();
@@ -55,7 +71,7 @@ const AdvertisementDetailPage = () => {
                 setAd(adData);
             }
         } catch (error) {
-            alert('광고 정보를 불러오는데 실패했습니다.');
+            showToastMessage('광고 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -67,7 +83,7 @@ const AdvertisementDetailPage = () => {
 
     const handleEditClick = () => {
         if (!canUpdate) {
-            showToast("error", "수정 권한이 없습니다.");
+            showToast1("error", "수정 권한이 없습니다.");
             return;
         }
         navigate(`/advertisement/edit/${advertisementIndex}`);
@@ -75,20 +91,22 @@ const AdvertisementDetailPage = () => {
 
     const handleDeleteClick = async () => {
         if (!canDelete) {
-            showToast("error", "삭제 권한이 없습니다.");
+            showToast1("error", "삭제 권한이 없습니다.");
             return;
         }
         if (!window.confirm('정말로 이 광고를 삭제하시겠습니까?')) return;
         try {
             const response = await deleteAdvertisement(advertisementIndex);
             if (response.data.success) {
-                alert('광고를 삭제하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('광고를 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '광고 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '광고 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
-            alert('광고 삭제 중 오류가 발생했습니다.');
+            showToastMessage('광고 삭제 중 오류가 발생했습니다.', 'error');
         }
     };
 
@@ -155,6 +173,14 @@ const AdvertisementDetailPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast1 && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };
