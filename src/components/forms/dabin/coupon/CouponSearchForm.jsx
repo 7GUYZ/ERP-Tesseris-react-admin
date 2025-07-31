@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Grid, TextField, Select, MenuItem, FormControl, Typography, Paper, Box } from "@mui/material"
 import '../../../../styles/dabin/CouponSearchForm.css';
 
-const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsChange }) => {
+const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsChange, onDateErrorsChange }) => {
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
   const [form, setForm] = useState({
     issuanceStart: "",
@@ -21,11 +21,68 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
     couponPrice: "",
   })
 
+  // 에러 상태 추가
+  const [errors, setErrors] = useState({
+    issuanceDate: "",
+    providedDate: "",
+    limitDate: ""
+  })
+
+  // 날짜 검증 함수
+  const validateDateRange = (startDate, endDate, fieldName) => {
+    if (!startDate || !endDate) return ""; // 둘 다 비어있으면 검증 통과
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start > end) {
+      return `${fieldName} 종료일은 시작일보다 이후여야 합니다.`;
+    }
+    
+    return "";
+  }
+
   const handleChange = (e) => {
-    const newForm = { ...form, [e.target.name]: e.target.value }
-    setForm(newForm)
+    const { name, value } = e.target;
+    const newForm = { ...form, [name]: value };
+    
+    // 날짜 검증
+    let newErrors = { ...errors };
+    
+    if (name === 'issuanceStart' || name === 'issuanceEnd') {
+      newErrors.issuanceDate = validateDateRange(
+        name === 'issuanceStart' ? value : form.issuanceStart,
+        name === 'issuanceEnd' ? value : form.issuanceEnd,
+        '발행'
+      );
+    }
+    
+    if (name === 'providedStart' || name === 'providedEnd') {
+      newErrors.providedDate = validateDateRange(
+        name === 'providedStart' ? value : form.providedStart,
+        name === 'providedEnd' ? value : form.providedEnd,
+        '지급'
+      );
+    }
+    
+    if (name === 'limitStart' || name === 'limitEnd') {
+      newErrors.limitDate = validateDateRange(
+        name === 'limitStart' ? value : form.limitStart,
+        name === 'limitEnd' ? value : form.limitEnd,
+        '만기'
+      );
+    }
+    
+    setErrors(newErrors);
+    setForm(newForm);
+    
+    // 부모 컴포넌트에 에러 상태 전달
+    if (onDateErrorsChange) {
+      onDateErrorsChange(newErrors);
+    }
+    
     if (onParamsChange) {
-      onParamsChange(newForm)
+      onParamsChange(newForm);
     }
   }
 
@@ -55,8 +112,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="issuanceStart"
               value={form.issuanceStart}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.issuanceDate ? 'error' : ''}`}
             />
+            {errors.issuanceDate && (
+              <div className="error-message">{errors.issuanceDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">발행 종료일</label>
@@ -65,8 +125,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="issuanceEnd"
               value={form.issuanceEnd}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.issuanceDate ? 'error' : ''}`}
             />
+            {errors.issuanceDate && (
+              <div className="error-message">{errors.issuanceDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">지급 시작일</label>
@@ -75,8 +138,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="providedStart"
               value={form.providedStart}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.providedDate ? 'error' : ''}`}
             />
+            {errors.providedDate && (
+              <div className="error-message">{errors.providedDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">지급 종료일</label>
@@ -85,8 +151,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="providedEnd"
               value={form.providedEnd}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.providedDate ? 'error' : ''}`}
             />
+            {errors.providedDate && (
+              <div className="error-message">{errors.providedDate}</div>
+            )}
           </div>
         </div>
 
@@ -99,8 +168,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="limitStart"
               value={form.limitStart}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.limitDate ? 'error' : ''}`}
             />
+            {errors.limitDate && (
+              <div className="error-message">{errors.limitDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">만기 종료일</label>
@@ -109,8 +181,11 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
               name="limitEnd"
               value={form.limitEnd}
               onChange={handleChange}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.limitDate ? 'error' : ''}`}
             />
+            {errors.limitDate && (
+              <div className="error-message">{errors.limitDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">발행상태</label>

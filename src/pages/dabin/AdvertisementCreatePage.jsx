@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createAdvertisement } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
+import Toast from '../../components/ui/jungeun/Toast';
 import '../../styles/dabin/AdvertisementCreatePage.css';
 
 const AdvertisementCreatePage = () => {
@@ -9,7 +10,23 @@ const AdvertisementCreatePage = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast, setShowToast] = useState(false);
+    
     const navigate = useNavigate();
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    const closeToast = () => {
+        setShowToast(false);
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -27,7 +44,7 @@ const AdvertisementCreatePage = () => {
 
     const handleSubmit = async () => {
         if (!selectedFile) {
-            alert('이미지를 선택해주세요.');
+            showToastMessage('이미지를 선택해주세요.', 'error');
             return;
         }
 
@@ -48,15 +65,8 @@ const AdvertisementCreatePage = () => {
             formData.append('file', selectedFile);
             formData.append('advertisementUrl', advertisementUrl);
             
-            // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
-            const response = await api.post('/dabin/advertisement/create', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
-                },
-                timeout: 30000 // 30초 타임아웃
-            });
+            // DabinAuth의 createAdvertisement 함수 사용
+            const response = await createAdvertisement(formData);
 
             if (response.data.success) {
                 alert('팝업을 등록하였습니다.');
@@ -169,6 +179,12 @@ const AdvertisementCreatePage = () => {
                     <div className="ad-create-button-container">
                         <button
                             type="button"
+                            className="ad-create-cancel-button"
+                            onClick={handleListClick}>
+                            목록
+                        </button>
+                        <button
+                            type="button"
                             className="ad-create-register-button"
                             onClick={handleSubmit}
                             disabled={loading}>
@@ -177,6 +193,14 @@ const AdvertisementCreatePage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

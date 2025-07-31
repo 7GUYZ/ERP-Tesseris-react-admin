@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import '../../../../styles/dabin/MemberRecommendationSearchForm.css';
 
-const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange }) => {
+const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange, onDateErrorsChange }) => {
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
   const [formData, setFormData] = useState({
     suggestionUserId: "",
@@ -16,16 +16,54 @@ const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange })
     recommendationUserRole: "",
   })
 
+  // 에러 상태 추가
+  const [errors, setErrors] = useState({
+    joinDate: ""
+  })
+
+  // 날짜 검증 함수
+  const validateDateRange = (startDate, endDate, fieldName) => {
+    if (!startDate || !endDate) return ""; // 둘 다 비어있으면 검증 통과
+    
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start > end) {
+      return `${fieldName} 종료일은 시작일보다 이후여야 합니다.`;
+    }
+    
+    return "";
+  }
+
   useEffect(() => {
     onParamsChange(formData)
   }, [formData, onParamsChange])
 
   const handleChange = (field) => (event) => {
+    const { value } = event.target;
     const newFormData = {
       ...formData,
-      [field]: event.target.value,
+      [field]: value,
     }
-    setFormData(newFormData)
+    
+    // 날짜 검증
+    let newErrors = { ...errors };
+    
+    if (field === 'joinDateStart' || field === 'joinDateEnd') {
+      newErrors.joinDate = validateDateRange(
+        field === 'joinDateStart' ? value : formData.joinDateStart,
+        field === 'joinDateEnd' ? value : formData.joinDateEnd,
+        '가입'
+      );
+    }
+    
+    setErrors(newErrors);
+    setFormData(newFormData);
+    
+    // 부모 컴포넌트에 에러 상태 전달
+    if (onDateErrorsChange) {
+      onDateErrorsChange(newErrors);
+    }
   }
 
   return (
@@ -52,8 +90,11 @@ const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange })
               name="joinDateStart"
               value={formData.joinDateStart}
               onChange={handleChange("joinDateStart")}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.joinDate ? 'error' : ''}`}
             />
+            {errors.joinDate && (
+              <div className="error-message">{errors.joinDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">가입 종료일</label>
@@ -62,8 +103,11 @@ const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange })
               name="joinDateEnd"
               value={formData.joinDateEnd}
               onChange={handleChange("joinDateEnd")}
-              className="dabin-page-layout-search-input"
+              className={`dabin-page-layout-search-input ${errors.joinDate ? 'error' : ''}`}
             />
+            {errors.joinDate && (
+              <div className="error-message">{errors.joinDate}</div>
+            )}
           </div>
           <div className="dabin-page-layout-search-field">
             <label className="dabin-page-layout-search-label">추천인 아이디</label>

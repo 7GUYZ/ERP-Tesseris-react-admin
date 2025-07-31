@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, updateAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
+import Toast from '../../components/ui/jungeun/Toast';
 import '../../styles/dabin/AdvertisementEditPage.css';
 
 const AdvertisementEditPage = () => {
@@ -11,8 +12,24 @@ const AdvertisementEditPage = () => {
     const [currentImage, setCurrentImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast, setShowToast] = useState(false);
+    
     const navigate = useNavigate();
     const { advertisementIndex } = useParams();
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    const closeToast = () => {
+        setShowToast(false);
+    };
 
     useEffect(() => {
         fetchAdvertisement();
@@ -223,6 +240,14 @@ const AdvertisementEditPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };
