@@ -36,7 +36,7 @@ npm install socket.io-client
 
 npm install eslint-plugin-react-hooks --save-dev
 ^^
-
+npm install @mui/lab
 npm install date-fns
 
-운영환경 배포버전: 202507281454
+운영환경 배포버전: 202507291800
