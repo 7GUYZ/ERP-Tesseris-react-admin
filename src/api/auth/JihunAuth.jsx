@@ -19,6 +19,8 @@ export const excelDownloadMemberAssetDetails = (page = 0, size = 50000) => api.g
 export const GetAdminList = () => api.get("/adminchat/adminlist");
 // 채팅 및 방생성
 export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
+// 채팅방 목록 조회
+export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {

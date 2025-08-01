@@ -12,6 +12,7 @@ import {
   ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
+import { SearchRoom } from '../../api/auth/JihunAuth';
 import { useWebSocket } from './WebSocketConfig';
 
 function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
@@ -53,20 +54,44 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   const [loading, setLoading] = useState(false);
   // ============================================================================
   const [adminList, setAdminList] = useState([]);
+  const [chatRooms, setChatRooms] = useState([]);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
+  
+  // 관리자 목록 조회
   React.useEffect(() => {
     if (open && activeTab === 0) {  // 홈 탭일 때만 호출
       setLoading(true);
       adminlist().then((data) => {
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        console.log("관리자 목록 원본 데이터:", data);
         const filteredData = data.filter(admin => admin.userIndex !== userInfo?.user_index);
+        console.log("필터링된 관리자 목록:", filteredData);
         setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
         console.error('관리자 목록 조회 실패:', error);
         setLoading(false);
       });
+    }
+  }, [open, activeTab]);
+
+  // 채팅방 목록 조회
+  React.useEffect(() => {
+    if (open && activeTab === 1) {  // 채팅방 설정 탭일 때만 호출
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      if (userInfo?.id) {
+        SearchRoom(userInfo.id).then((response) => {
+          if (response?.data?.data) {
+            setChatRooms(response.data.data);
+          }
+          setLoading(false);
+        }).catch(error => {
+          console.error('채팅방 목록 조회 실패:', error);
+          setLoading(false);
+        });
+      }
     }
   }, [open, activeTab]);
   // ============================================================================
@@ -248,6 +273,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   // 관리자 클릭 시 채팅방 생성
   const handleAdminClick = async (admin) => {
     try {
+      console.log("클릭된 관리자 데이터:", admin);
       // 3. 채팅방 창 열기
       onRoomSelect({
         name: `${admin.name}님과의 채팅`,
@@ -461,6 +487,20 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             {/* 채팅방 탭 */}
             {activeTab === 1 && (
               <Box sx={{ height: '100%', overflow: 'hidden' }}>
+                {/* 검색 */}
+                <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
+                  <TextField
+                    fullWidth
+                    size="small"
+                    placeholder="채팅방 검색..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: '#666' }} />
+                    }}
+                  />
+                </Box>
+
                 {/* 새 채팅방 버튼 */}
                 <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
                   <Button
@@ -474,39 +514,68 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
                 </Box>
 
                 {/* 채팅방 목록 */}
-                <List sx={{ height: 'calc(100% - 80px)', overflowY: 'auto', py: 0 }}>
-                  <ListItem
-                    button
-                    onClick={() => handleRoomClick({ name: '테스트 채팅방', id: 'test-room-1' })}
-                    sx={{
-                      '&:hover': { backgroundColor: '#f5f5f5' },
-                      borderBottom: '1px solid #f0f0f0'
-                    }}
-                  >
-                    <ListItemText
-                      primary={
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Typography variant="subtitle2" noWrap>
-                            테스트 채팅방
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            방금 전
-                          </Typography>
-                        </Box>
-                      }
-                      secondary={
-                        <Box>
-                          <Typography variant="body2" color="text.secondary" noWrap>
-                            테스트 메시지입니다.
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            참여자: 테스트
-                          </Typography>
-                        </Box>
-                      }
-                    />
-                  </ListItem>
-                </List>
+                <Box sx={{ height: 'calc(100% - 140px)', overflowY: 'auto' }}>
+                  {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                      <Typography>로딩 중...</Typography>
+                    </Box>
+                  ) : chatRooms.length === 0 ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column', gap: 1 }}>
+                      <Typography variant="body2" color="text.secondary">
+                        참여 중인 채팅방이 없습니다.
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        홈 탭에서 관리자를 선택하여 채팅을 시작하세요.
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <List sx={{ py: 0 }}>
+                      {chatRooms
+                        .filter(room => 
+                          room.room_name?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((room, index) => (
+                          <ListItem
+                            key={room.room_index || index}
+                            button="true"
+                            onClick={() => handleRoomClick({
+                              name: room.room_name,
+                              id: room.room_index,
+                              roomData: room
+                            })}
+                            sx={{
+                              '&:hover': { backgroundColor: '#f5f5f5' },
+                              borderBottom: '1px solid #f0f0f0'
+                            }}
+                          >
+                            <ListItemText
+                              primary={
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="subtitle2" noWrap>
+                                    {room.room_name || '채팅방'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {room.joined_at ? new Date(room.joined_at).toLocaleDateString() : ''}
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Box component="span">
+                                  <Typography component="span" variant="body2" color="text.secondary" noWrap>
+                                    방 ID: {room.room_index}
+                                  </Typography>
+                                  <br />
+                                  <Typography component="span" variant="caption" color="text.secondary">
+                                    {room.notifications_enabled === 'true' ? '알림 켜짐' : '알림 꺼짐'}
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                    </List>
+                  )}
+                </Box>
               </Box>
             )}
 

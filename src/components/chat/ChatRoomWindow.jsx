@@ -27,7 +27,7 @@ function ChatRoomWindow({
     x: Math.max(0, window.innerWidth - Math.min(450, window.innerWidth * 0.9)),
     y: Math.max(0, window.innerHeight * 0.1)
   });
-  const { sendMessage, subscribeToRoom, isConnected } = useWebSocket();
+  const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected } = useWebSocket();
   const [size, setSize] = useState(currentSize || { 
     width: Math.min(400, window.innerWidth * 0.9), 
     height: Math.min(600, window.innerHeight * 0.8) 
@@ -63,7 +63,77 @@ function ChatRoomWindow({
       };
 
       try {
-        // 메시지 전송 로직...
+        // 디버깅을 위한 로그 추가
+        console.log("roomData:", roomData);
+        console.log("roomData.adminData:", roomData.adminData);
+        
+        // adminData가 없는 경우 처리 (기존 방에서 메시지 전송)
+        if (!roomData.adminData) {
+          console.log("기존 방에서 메시지 전송 - roomData:", roomData);
+          
+          // 기존 방의 경우 room_index를 사용
+          const messageData = {
+            room_index: roomData.roomData?.room_index || roomData.id,
+            room_name: roomData.name,
+            user_id: userInfo.id,
+            message: newMessage,
+            participants: [], // 기존 방의 경우 참가자 정보는 서버에서 처리
+            timestamp: null,
+          };
+          
+          // 1. 메세지 DB 저장
+          const response = await SaveSendMessage(messageData);
+          console.log("API 응답 전체:", response);
+          
+          // 2. 기존 방 ID 사용
+          const existingRoomId = roomData.roomData?.room_index || roomData.id;
+          setRoomId(existingRoomId);
+          
+          // 3. 기존 방 구독 요청
+          if (!roomId || roomId !== existingRoomId) {
+            console.log("기존 방 구독 요청, 방 ID:", existingRoomId);
+            const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
+              console.log('새 메시지 수신:', receivedMessage);
+
+              // 내가 보낸 메시지가 아닌 경우에만 추가
+              if (receivedMessage.user_id !== userInfo.id) {
+                setMessages(prev => [...prev, {
+                  text: receivedMessage.message,
+                  sender: { id: receivedMessage.user_id, name: receivedMessage.user_id },
+                  timestamp: receivedMessage.timestamp || new Date().toISOString()
+                }]);
+              }
+            });
+
+            if (subscribeSuccess) {
+              console.log(`채팅방 ${existingRoomId} 구독 완료`);
+            }
+          }
+          
+          // 4. WebSocket으로 메시지 전송
+          console.log("WebSocket 메시지 전송 - 방 ID:", existingRoomId);
+          sendMessage(existingRoomId, messageData);
+          
+          // 5. 로컬 메시지 추가
+          setMessages(prev => [...prev, {
+            text: newMessage,
+            sender: { id: userInfo.id, name: userInfo.name },
+            timestamp: new Date().toISOString()
+          }]);
+          
+          // 6. 입력 필드 초기화
+          setNewMessage('');
+          setIsTyping(false);
+          
+          // 7. 입력 필드에 포커스 유지
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 100);
+          
+          return; // 기존 방 처리 완료
+        }
+        
+        // 새로운 관리자와의 채팅방 생성
         const messageData = {
           room_index: roomId || null,
           room_name: generateRoomName([roomData.adminData.userId, userInfo.id]),
@@ -121,6 +191,8 @@ function ChatRoomWindow({
           sender: { id: userInfo.id, name: userInfo.name },
           timestamp: new Date().toISOString()
         }]);
+        
+        // 6. 입력 필드 초기화
         setNewMessage('');
         setIsTyping(false);
         
@@ -353,13 +425,49 @@ const handleInputChange = (e) => {
   }
 };
 
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    // 파일 업로드 로직을 여기에 구현
-    console.log('파일 업로드:', file.name);
-  }
-};
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // 파일 업로드 로직을 여기에 구현
+      console.log('파일 업로드:', file.name);
+    }
+  };
+
+  // 채팅방 나가기 시 구독 해제
+  const handleBack = () => {
+    // 현재 구독 중인 방이 있다면 구독 해제
+    if (roomId) {
+      console.log("채팅방 구독 해제:", roomId);
+      unsubscribeFromRoom(roomId);
+    }
+    
+    // 메시지 목록 초기화
+    setMessages([]);
+    
+    // 방 ID 초기화
+    setRoomId(null);
+    
+    // 뒤로가기 콜백 실행
+    onBack();
+  };
+
+  // 채팅방 닫기 시에도 구독 해제
+  const handleClose = () => {
+    // 현재 구독 중인 방이 있다면 구독 해제
+    if (roomId) {
+      console.log("채팅방 구독 해제:", roomId);
+      unsubscribeFromRoom(roomId);
+    }
+    
+    // 메시지 목록 초기화
+    setMessages([]);
+    
+    // 방 ID 초기화
+    setRoomId(null);
+    
+    // 닫기 콜백 실행
+    onClose();
+  };
 
 if (!open || !roomData) return null;
 
@@ -418,14 +526,14 @@ if (!open || !roomData) return null;
         }}
       >
       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-        <IconButton
-          size="small"
-          onClick={onBack}
-          sx={{ color: 'white' }}
-          className="no-drag"
-        >
-          <ArrowBack />
-        </IconButton>
+                 <IconButton
+           size="small"
+           onClick={handleBack}
+           sx={{ color: 'white' }}
+           className="no-drag"
+         >
+           <ArrowBack />
+         </IconButton>
         <DragIndicator />
                  <Box>
            <Typography variant="subtitle1" sx={{ 
@@ -479,13 +587,13 @@ if (!open || !roomData) return null;
         >
           <Minimize />
         </IconButton>
-        <IconButton
-          size="small"
-          onClick={onClose}
-          sx={{ color: 'white' }}
-        >
-          <Close />
-        </IconButton>
+                 <IconButton
+           size="small"
+           onClick={handleClose}
+           sx={{ color: 'white' }}
+         >
+           <Close />
+         </IconButton>
       </Box>
     </Box>
 
