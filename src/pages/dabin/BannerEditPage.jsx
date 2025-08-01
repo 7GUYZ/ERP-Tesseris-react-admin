@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getBanner, updateBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
 import Toast from '../../components/ui/jungeun/Toast';
+import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
 import '../../styles/dabin/BannerEditPage.css';
 
 const BannerEditPage = () => {
@@ -16,6 +17,7 @@ const BannerEditPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('info');
     const [showToast, setShowToast] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     
     const navigate = useNavigate();
     const { bannerIndex } = useParams();
@@ -108,11 +110,12 @@ const BannerEditPage = () => {
         }
     };
 
-    const handleDelete = async () => {
-        if (!window.confirm('정말로 이 배너를 삭제하시겠습니까?')) {
-            return;
-        }
+    const handleDelete = () => {
+        setShowConfirmModal(true);
+    };
 
+    const confirmDelete = async () => {
+        setShowConfirmModal(false);
         setLoading(true);
 
         try {
@@ -224,6 +227,14 @@ const BannerEditPage = () => {
                     type={toastType}
                     message={toastMessage}
                     onClose={closeToast}
+                />
+            )}
+            
+            {/* Confirm Modal */}
+            {showConfirmModal && (
+                <ConfirmModal
+                    message="정말로 이 배너를 삭제하시겠습니까?"
+                    onConfirm={confirmDelete}
                 />
             )}
         </div>
