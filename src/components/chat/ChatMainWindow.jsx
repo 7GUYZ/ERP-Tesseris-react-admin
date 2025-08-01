@@ -4,9 +4,12 @@ import {
   ListItemText, IconButton, Typography, Chip,
   Badge, TextField, Button, Divider, Switch, FormControlLabel
 } from '@mui/material';
+import TreeView from '@mui/lab/TreeView';
+import TreeItem from '@mui/lab/TreeItem';
 import {
   Close, Minimize, DragIndicator, PersonAdd, Settings,
-  MoreVert, Search, Add, Send, Refresh
+  MoreVert, Search, Add, Send, Home, Folder, Description,
+  ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
 import { SearchRoom } from '../../api/auth/JihunAuth';
@@ -363,8 +366,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
               className="no-drag"
               sx={{ '& .MuiTab-root': { fontSize: '0.8rem', minWidth: 'auto' } }}
             >
-              <Tab label="전체 채팅방" />
-              <Tab label="관리자" />
+              <Tab label="홈" />
               <Tab label="채팅방" />
               <Tab label="설정" />
             </Tabs>
@@ -374,192 +376,19 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
           <Box sx={{ height: size.height - 120, overflow: 'hidden' }}>
             {/* 홈 탭 */}
             {activeTab === 0 && (
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                {/* 온라인 사용자 표시 */}
-                <Box sx={{ p: 1, borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    🌍 전체 채팅방 ({onlineUsers.length}명 참여중)
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {onlineUsers.slice(0, 5).map((user, index) => (
-                      <Chip
-                        key={user.id || `user_${index}`}
-                        avatar={<Avatar sx={{ width: 16, height: 16, fontSize: '0.6rem' }}>
-                          {user.name ? user.name[0] : 'U'}
-                        </Avatar>}
-                        label={user.name || 'Unknown'}
-                        size="small"
-                        variant={user.id === currentUser?.id ? "filled" : "outlined"}
-                        color={user.id === currentUser?.id ? "primary" : "default"}
-                        sx={{ fontSize: '0.6rem', height: 20 }}
-                      />
-                    ))}
-                    {onlineUsers.length > 5 && (
-                      <Chip label={`+${onlineUsers.length - 5}`} size="small" sx={{ fontSize: '0.6rem', height: 20 }} />
-                    )}
-                  </Box>
-                </Box>
-
-                {/* 전역 메시지 목록 */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    p: 1,
-                    backgroundColor: '#fafafa'
-                  }}
-                >
-                  {globalMessages.map((message, index) => {
-                    // 안전한 key 생성 (message.id가 있으면 사용, 없으면 index와 timestamp 조합)
-                    const safeKey = message.id || `msg_${index}_${message.timestamp || Date.now()}`;
-                    
-                    return (
-                      <Box key={safeKey} sx={{ mb: 1 }}>
-                        {message.type === 'system' ? (
-                          <Box sx={{ textAlign: 'center', my: 1 }}>
-                            <Chip
-                              label={message.text}
-                              size="small"
-                              sx={{ fontSize: '0.7rem', backgroundColor: '#e3f2fd' }}
-                            />
-                          </Box>
-                        ) : (
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              justifyContent: message.sender?.id === currentUser?.id ? 'flex-end' : 'flex-start',
-                              alignItems: 'flex-start',
-                              gap: 1
-                            }}
-                          >
-                            {message.sender?.id !== currentUser?.id && (
-                              <Avatar sx={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                                {message.sender?.name ? message.sender.name[0] : 'U'}
-                              </Avatar>
-                            )}
-                            <Box>
-                              {message.sender?.id !== currentUser?.id && (
-                                <Typography variant="caption" sx={{ color: '#666', ml: 1 }}>
-                                  {message.sender?.name || 'Unknown'}
-                                </Typography>
-                              )}
-                              <Paper
-                                sx={{
-                                  p: 1,
-                                  maxWidth: 250,
-                                  backgroundColor: message.sender?.id === currentUser?.id ? '#2196F3' : 'white',
-                                  color: message.sender?.id === currentUser?.id ? 'white' : 'black',
-                                  borderRadius: 2,
-                                  boxShadow: 1
-                                }}
-                              >
-                                <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                                  {message.text}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    display: 'block',
-                                    mt: 0.5,
-                                    opacity: 0.7,
-                                    fontSize: '0.6rem'
-                                  }}
-                                >
-                                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
-                                </Typography>
-                              </Paper>
-                            </Box>
-                            {message.sender?.id === currentUser?.id && (
-                              <Avatar sx={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                                {message.sender?.name ? message.sender.name[0] : 'U'}
-                              </Avatar>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </Box>
-
-                {/* 전역 메시지 입력 */}
-                <Box
-                  className="no-drag"
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    p: 1.5,
-                    borderTop: '1px solid #e0e0e0',
-                    backgroundColor: 'white'
-                  }}
-                >
-                  <TextField
-                    fullWidth
-                    size="small"
-                    multiline
-                    maxRows={3}
-                    placeholder="전체 채팅방에 메시지를 입력하세요..."
-                    value={newGlobalMessage}
-                    onChange={(e) => setNewGlobalMessage(e.target.value)}
-                    onKeyPress={handleGlobalKeyPress}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="contained"
-                    onClick={handleSendGlobalMessage}
-                    disabled={!newGlobalMessage.trim()}
-                    sx={{
-                      minWidth: 'auto',
-                      px: 2,
-                      borderRadius: 2,
-                      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
-                    }}
-                  >
-                    <Send />
-                  </Button>
-                </Box>
-              </Box>
-            )}
-
-            {/* 관리자 탭 */}
-            {activeTab === 1 && (
               <Box sx={{ height: '100%', overflow: 'hidden' }}>
                 {/* 검색 */}
                 <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
                   <TextField
                     fullWidth
                     size="small"
-                    placeholder="관리자 검색..."
+                    placeholder="부서 또는 직원 검색..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
                       startAdornment: <Search sx={{ mr: 1, color: '#666' }} />
                     }}
                   />
-                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <Button
-                      startIcon={<PersonAdd />}
-                      sx={{ flex: 1 }}
-                      variant="outlined"
-                      size="small"
-                    >
-                      관리자 추가
-                    </Button>
-                    <Button
-                      startIcon={<Refresh />}
-                      onClick={fetchAdmins}
-                      disabled={adminsLoading}
-                      variant="outlined"
-                      size="small"
-                      sx={{ minWidth: 'auto' }}
-                    >
-                      새로고침
-                    </Button>
-                  </Box>
                 </Box>
 
                 {/* 관리자 목록 */}
@@ -651,7 +480,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
                       })()}
                     </List>
                   )}
-                </List>
+                </Box>
               </Box>
             )}
 
