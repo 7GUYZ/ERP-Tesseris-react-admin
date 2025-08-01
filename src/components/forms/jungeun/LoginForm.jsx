@@ -12,10 +12,12 @@ import "../../../styles/jungeun/login.css"
 
 import { useWebSocket } from "../../../context/jungeun/WebSocketContext.jsx"
 import { useNotificationToast } from "../../../context/jungeun/NotificationToastContext.jsx"
+import { useChatWebSocket } from "../../../context/ChatWebSocketContext.jsx"
 
 const LoginForm = () => {
   
   const { connectWebSocket } = useWebSocket();
+  const { connectWebSocket: connectChatWebSocket } = useChatWebSocket();
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -127,11 +129,20 @@ const LoginForm = () => {
             // 권한 조회 실패해도 로그인은 진행
           }
 
-          // WebSocket 연결 (Context 사용)
+          // 기존 WebSocket 연결 (알림용)
           connectWebSocket(accessToken, userInfo.user_index, (notification) => {
             console.log('알림 수신:', notification);
             showNotificationToast("info", notification.message);
           });
+
+          // 채팅 WebSocket 연결
+          const chatUser = {
+            id: userInfo.user_index,
+            name: userInfo.name,
+            email: userInfo.email,
+            role: userInfo.user_role_index
+          };
+          connectChatWebSocket(chatUser);
 
           // Zustand 상태 업데이트
           zu_login()

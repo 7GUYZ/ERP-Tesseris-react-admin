@@ -155,6 +155,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponPrice - params가 undefined");
+          return "0";
+        }
+        
         console.log("couponPrice valueFormatter - params:", params);
         
         // params가 직접 값인지 확인
@@ -210,6 +216,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponLimit - params가 undefined");
+          return "0";
+        }
+        
         console.log("couponLimit valueFormatter - params:", params);
         
         // params가 직접 값인지 확인
@@ -264,6 +276,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponIssuanceTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponIssuanceTime valueFormatter - params:", params);
         
         // params가 직접 값인지 확인
@@ -335,6 +353,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponProvidedTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponProvidedTime valueFormatter - params:", params);
         
         // params가 직접 값인지 확인
@@ -402,6 +426,12 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponLimitTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponLimitTime valueFormatter - params:", params);
         
         // params가 직접 값인지 확인
@@ -463,6 +493,24 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       }
     },
   ]
+
+  // 데이터가 로드되지 않은 경우 로딩 표시
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ 
+        height: 600, 
+        width: "100%", 
+        backgroundColor: "white", 
+        borderRadius: "12px", 
+        border: "1px solid lightgray",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div>데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: 600, width: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid lightgray" }}>
