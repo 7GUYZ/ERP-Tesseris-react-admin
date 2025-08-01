@@ -5,8 +5,6 @@ import {
   Badge, TextField, Button, Divider, Switch, FormControlLabel,
   CircularProgress
 } from '@mui/material';
-import TreeView from '@mui/lab/TreeView';
-import TreeItem from '@mui/lab/TreeItem';
 import {
   Close, Minimize, DragIndicator, PersonAdd, Settings,
   MoreVert, Search, Add, Send, Refresh
@@ -263,12 +261,12 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
     setNewGlobalMessage('');
   };
 
-  // const handleGlobalKeyPress = (e) => {
-  //   if (e.key === 'Enter' && !e.shiftKey) {
-  //     e.preventDefault();
-  //     handleSendGlobalMessage();
-  //   }
-  // };
+  const handleGlobalKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendGlobalMessage();
+    }
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -817,7 +815,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
                       label="알림 받기"
                     />
                   </ListItem>
-                  
+                   
                   <ListItem>
                     <FormControlLabel
                       control={
