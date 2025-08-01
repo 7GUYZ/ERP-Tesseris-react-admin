@@ -1,0 +1,106 @@
+// 프로그램 인덱스 상수들
+export const PROGRAM_INDEXES = {
+  // 기본 프로그램들
+  MAIN: 1,
+  PAYMENT: 2,
+  CHARGE: 3,
+  COUPON: 4,
+  CUSTOMER_MANAGEMENT: 5,
+  BUSINESSMAN_LIST: 6,
+  BUSINESS_MEMBER_LIST: 17, // 사업자 회원 리스트
+  ADMIN_MYPAGE: 7,
+  DASHBOARD: 8,
+  
+  // 권한 관련
+  PERMISSION_SETTINGS: 9,
+  AUTHORITY_MANAGEMENT: 10,
+  
+  // 기타 프로그램들
+  NOTICE: 11,
+  QNA: 12,
+  EVENT: 13,
+  ADVERTISEMENT: 14,
+  COMMISSION: 15,
+  MEMBER_ACCOUNT: 16,
+  MEMBER_ASSET_DETAILS: 17,
+  ALERT: 18,
+  CMS_ACCESS_LOG: 19,
+  COMMISSION_SETTING: 20,
+  UPDATE_LOG: 21,
+  MONTHLY_CM_LIMIT: 22,
+  LOGIN: 23,
+  SIGNUP: 24,
+  PASSWORD_FIND: 25,
+  TERMS: 26,
+  PIN_CHANGE: 27,
+  MYPAGE: 28,
+  BROKERAGE_FEE: 29,
+  BUSINESS_LIST: 30,
+  GIFT: 31,
+  COUPON_LIST: 32,
+  CUSTOMER_MANAGEMENT_USER: 33,
+  PASSWORD_FIND_PAGE: 34,
+  REGISTER_STORE: 35,
+  REGISTER_COMPLETE: 36,
+  EVENT_DETAIL: 37,
+  EVENT_LIST: 38,
+  EVENT_REGISTRATION: 39,
+  QNA_DETAIL: 40,
+  QNA_INQUIRY: 41,
+  QNA_LIST: 42,
+  ADMIN_QNA_DETAIL: 43,
+  ADMIN_QNA_LIST: 44
+};
+
+// 경로별 프로그램 인덱스 매핑
+export const getProgramIndexByPath = (path) => {
+  const pathToIndex = {
+    '/main': PROGRAM_INDEXES.MAIN,
+    '/payment': PROGRAM_INDEXES.PAYMENT,
+    '/charge': PROGRAM_INDEXES.CHARGE,
+    '/coupon': PROGRAM_INDEXES.COUPON,
+    '/customermanagement': PROGRAM_INDEXES.CUSTOMER_MANAGEMENT,
+    '/businessmanlist': PROGRAM_INDEXES.BUSINESSMAN_LIST,
+    '/businessman-admin-list': PROGRAM_INDEXES.BUSINESS_MEMBER_LIST, // 사업자 회원 리스트
+    '/adminmypage': PROGRAM_INDEXES.ADMIN_MYPAGE,
+    '/dashboard': PROGRAM_INDEXES.DASHBOARD,
+    '/permissionsettings': PROGRAM_INDEXES.PERMISSION_SETTINGS,
+    '/authoritymanagement': PROGRAM_INDEXES.AUTHORITY_MANAGEMENT,
+    '/notice': PROGRAM_INDEXES.NOTICE,
+    '/qna': PROGRAM_INDEXES.QNA,
+    '/event': PROGRAM_INDEXES.EVENT,
+    '/advertisement': PROGRAM_INDEXES.ADVERTISEMENT,
+    '/commission': PROGRAM_INDEXES.COMMISSION,
+    '/memberaccount': PROGRAM_INDEXES.MEMBER_ACCOUNT,
+    '/memberassetdetails': PROGRAM_INDEXES.MEMBER_ASSET_DETAILS,
+    '/alert': PROGRAM_INDEXES.ALERT,
+    '/cmsaccesslog': PROGRAM_INDEXES.CMS_ACCESS_LOG,
+    '/commissionsetting': PROGRAM_INDEXES.COMMISSION_SETTING,
+    '/updatelog': PROGRAM_INDEXES.UPDATE_LOG,
+    '/monthlycmlimit': PROGRAM_INDEXES.MONTHLY_CM_LIMIT,
+    '/login': PROGRAM_INDEXES.LOGIN,
+    '/signup': PROGRAM_INDEXES.SIGNUP,
+    '/passwordfind': PROGRAM_INDEXES.PASSWORD_FIND,
+    '/terms': PROGRAM_INDEXES.TERMS,
+    '/pin-change': PROGRAM_INDEXES.PIN_CHANGE,
+    '/mypage': PROGRAM_INDEXES.MYPAGE,
+    '/brokeragefee': PROGRAM_INDEXES.BROKERAGE_FEE,
+    '/businesslist': PROGRAM_INDEXES.BUSINESS_LIST,
+    '/gift': PROGRAM_INDEXES.GIFT,
+    '/couponlist': PROGRAM_INDEXES.COUPON_LIST,
+    '/customermanagementuser': PROGRAM_INDEXES.CUSTOMER_MANAGEMENT_USER,
+    '/passwordfindpage': PROGRAM_INDEXES.PASSWORD_FIND_PAGE,
+    '/registerstore': PROGRAM_INDEXES.REGISTER_STORE,
+    '/registercomplete': PROGRAM_INDEXES.REGISTER_COMPLETE,
+    '/eventdetail': PROGRAM_INDEXES.EVENT_DETAIL,
+    '/eventlist': PROGRAM_INDEXES.EVENT_LIST,
+    '/eventregistration': PROGRAM_INDEXES.EVENT_REGISTRATION,
+    '/qnadetail': PROGRAM_INDEXES.QNA_DETAIL,
+    '/qnainquiry': PROGRAM_INDEXES.QNA_INQUIRY,
+    '/qnalist': PROGRAM_INDEXES.QNA_LIST,
+    '/adminqnadetail': PROGRAM_INDEXES.ADMIN_QNA_DETAIL,
+    '/adminqnalist': PROGRAM_INDEXES.ADMIN_QNA_LIST
+  };
+  
+  return pathToIndex[path] || PROGRAM_INDEXES.MAIN;
+}; 

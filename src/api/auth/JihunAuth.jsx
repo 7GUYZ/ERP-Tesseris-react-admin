@@ -14,7 +14,13 @@ export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdeta
 // 엑셀 다운로드 API
 export const excelDownloadMemberAccount = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberaccount?page=${page}&size=${size}`);
 export const excelDownloadMemberAssetDetails = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberassetdetails?page=${page}&size=${size}`);
-
+// ============================================================================
+// 채팅방 관리자 목록 호출
+export const GetAdminList = () => api.get("/adminchat/adminlist");
+// 채팅 및 방생성
+export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
+// 채팅방 목록 조회
+export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
@@ -83,7 +89,7 @@ export function setupInterceptors() {
           }, 4000);
 
           return Promise.reject(e);
-          
+
         }
       }
 
