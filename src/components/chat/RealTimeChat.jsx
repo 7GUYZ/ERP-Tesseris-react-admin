@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import RealTimeChatButton from './RealTimeChatButton';
 import ChatMainWindow from './ChatMainWindow';
 import ChatRoomWindow from './ChatRoomWindow';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 
 function RealTimeChat() {
   const [currentView, setCurrentView] = useState('closed');

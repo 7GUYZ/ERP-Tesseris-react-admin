@@ -18,12 +18,12 @@ const AdvertisementListPage = () => {
     useEffect(() => {
         const checkPermission = async () => {
             try {
-                const response = await permissionCheckApi.checkPermission(24); // programIndex: 24 (광고 관리)
+                const response = await permissionCheckApi.checkPermission(24); // programIndex: 24 (팝업 관리)
                 if (response.data) {
                     setCanInsert(response.data.hasInsertAuthority === 1);
                     setCanUpdate(response.data.hasUpdateAuthority === 1);
                     setCanDelete(response.data.hasDeleteAuthority === 1);
-                    console.log('광고 관리 권한 체크 결과:', {
+                    console.log('팝업 관리 권한 체크 결과:', {
                         insert: response.data.hasInsertAuthority,
                         update: response.data.hasUpdateAuthority,
                         delete: response.data.hasDeleteAuthority
@@ -70,7 +70,7 @@ const AdvertisementListPage = () => {
                 setAdvertisements(adsWithUrls);
             }
         } catch (error) {
-            console.error('광고 목록 조회 오류:', error);
+            console.error('팝업 목록 조회 오류:', error);
         } finally {
             setLoading(false);
         }
@@ -96,13 +96,13 @@ const AdvertisementListPage = () => {
         <div className="ad-list-page">
             {/* Breadcrumb */}
             <ul className="ad-list-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>광고 관리</li>
+                <li>팝업 및 배너 관리</li>
+                <li>팝업 관리</li>
             </ul>
 
             {/* Header */}
             <div className="ad-list-flex-between ad-list-mb10">
-                <p className="ad-list-font-20 ad-list-bold">광고 목록</p>
+                <p className="ad-list-font-20 ad-list-bold">팝업 목록</p>
                 <div className="ad-list-flex-end">
                     <button
                         type="button"
@@ -110,7 +110,7 @@ const AdvertisementListPage = () => {
                         onClick={handleCreateClick}
                         disabled={!canInsert}
                         style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
-                        광고 등록
+                        팝업 등록
                     </button>
                 </div>
             </div>
@@ -125,14 +125,14 @@ const AdvertisementListPage = () => {
                                     <th>#</th>
                                     <th>등록한 관리자</th>
                                     <th>등록된 이미지</th>
-                                    <th>광고 주소</th>
+                                    <th>팝업 이미지 URL</th>
                                     <th>등록일</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {advertisements.length === 0 ? (
                                     <tr>
-                                        <td colSpan="5">등록된 광고 이미지가 없습니다.</td>
+                                        <td colSpan="5">등록된 팝업 이미지가 없습니다.</td>
                                     </tr>
                                 ) : (
                                     advertisements.map((ad, index) => (
@@ -146,7 +146,7 @@ const AdvertisementListPage = () => {
                                                 <div className="ad-list-banner-img">
                                                     <img
                                                         src={ad.presignedUrl || ad.advertisementPhoto}
-                                                        alt="광고 이미지"
+                                                        alt="팝업 이미지"
                                                         onError={(e) => {
                                                             e.target.src = '/placeholder-image.png';
                                                         }}
