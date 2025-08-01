@@ -47,6 +47,35 @@ function ChatRoomWindow({
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const messagesRef = useRef([]); // 메시지 목록을 ref로 관리
+
+  // UUID를 이름으로 변환하는 함수
+  const getAdminNameById = useCallback((userId) => {
+    console.log('getAdminNameById 호출 - userId:', userId);
+    console.log('현재 adminList:', adminList);
+    console.log('isAdminListLoaded:', isAdminListLoaded);
+    
+    // adminList가 로딩되지 않았거나 비어있는 경우
+    if (!isAdminListLoaded || !adminList || adminList.length === 0) {
+      console.log('adminList가 로딩되지 않음 또는 비어있음 - userId 반환:', userId);
+      return userId;
+    }
+    
+    const admin = adminList.find(admin => admin.userId === userId);
+    console.log('찾은 admin:', admin);
+    const result = admin ? admin.name : userId;
+    console.log('반환할 이름:', result);
+    return result;
+  }, [adminList, isAdminListLoaded]);
+
+  // 메시지 추가 함수
+  const addMessage = useCallback((newMessage) => {
+    setMessages(prev => {
+      const updatedMessages = [...prev, newMessage];
+      messagesRef.current = updatedMessages; // ref도 업데이트
+      return updatedMessages;
+    });
+  }, []);
 
   // 방 타입 체크 및 초기화
   React.useEffect(() => {
@@ -74,26 +103,26 @@ function ChatRoomWindow({
 
           // 내가 보낸 메시지가 아닌 경우에만 추가
           if (receivedMessage.user_id !== userInfo.id) {
-            setMessages(prev => {
-              // 이미 같은 내용의 로컬 메시지가 있는지 확인
-              const hasLocalMessage = prev.some(msg => 
-                msg.isLocal && 
-                msg.text === receivedMessage.message && 
-                msg.sender.id === userInfo.id
-              );
-              
-              // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-              const filteredMessages = hasLocalMessage 
-                ? prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message))
-                : prev;
-              
-              return [...filteredMessages, {
-                id: `server_${Date.now()}_${Math.random()}`,
-                text: receivedMessage.message,
-                sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
-                timestamp: receivedMessage.timestamp || new Date().toISOString(),
-                isLocal: false
-              }];
+            const currentMessages = messagesRef.current;
+            // 이미 같은 내용의 로컬 메시지가 있는지 확인
+            const hasLocalMessage = currentMessages.some(msg => 
+              msg.isLocal && 
+              msg.text === receivedMessage.message && 
+              msg.sender.id === userInfo.id
+            );
+            
+            // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+            if (hasLocalMessage) {
+              setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+            }
+            
+            // 새 메시지 추가
+            addMessage({
+              id: `server_${Date.now()}_${Math.random()}`,
+              text: receivedMessage.message,
+              sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
+              timestamp: receivedMessage.timestamp || new Date().toISOString(),
+              isLocal: false
             });
           }
         });
@@ -103,9 +132,10 @@ function ChatRoomWindow({
         }
       } else {
         console.log('새로운 방 - 첫 메시지 전송 시 방 생성 예정');
+        // 새로운 방인 경우에도 메시지 목록을 초기화하지 않음 (기존 메시지 유지)
       }
     }
-  }, [open, roomData, subscribeToRoom]);
+  }, [open, roomData, subscribeToRoom, addMessage]);
 
   // 관리자 목록 불러오기
   React.useEffect(() => {
@@ -135,25 +165,6 @@ function ChatRoomWindow({
       loadAdminList();
     }
   }, [open]);
-
-  // UUID를 이름으로 변환하는 함수
-  const getAdminNameById = (userId) => {
-    console.log('getAdminNameById 호출 - userId:', userId);
-    console.log('현재 adminList:', adminList);
-    console.log('isAdminListLoaded:', isAdminListLoaded);
-    
-    // adminList가 로딩되지 않았거나 비어있는 경우
-    if (!isAdminListLoaded || !adminList || adminList.length === 0) {
-      console.log('adminList가 로딩되지 않음 또는 비어있음 - userId 반환:', userId);
-      return userId;
-    }
-    
-    const admin = adminList.find(admin => admin.userId === userId);
-    console.log('찾은 admin:', admin);
-    const result = admin ? admin.name : userId;
-    console.log('반환할 이름:', result);
-    return result;
-  };
 
   // ===============================메세지 보내기=======================================
   const handleSendMessage = async () => {
@@ -200,15 +211,15 @@ function ChatRoomWindow({
           console.log("기존 방 WebSocket 메시지 전송 - 방 ID:", roomId);
           sendMessage(roomId, messageData);
           
-          // 3. 로컬 메시지 추가
-          const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          setMessages(prev => [...prev, {
-            id: localMessageId,
-            text: newMessage,
-            sender: { id: userInfo.id, name: userInfo.name },
-            timestamp: new Date().toISOString(),
-            isLocal: true
-          }]);
+                     // 3. 로컬 메시지 추가
+           const localMessageId = `local_${Date.now()}_${Math.random()}`;
+           addMessage({
+             id: localMessageId,
+             text: newMessage,
+             sender: { id: userInfo.id, name: userInfo.name },
+             timestamp: new Date().toISOString(),
+             isLocal: true
+           });
           
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
@@ -247,30 +258,30 @@ function ChatRoomWindow({
               console.log('receivedMessage.user_id:', receivedMessage.user_id);
               console.log('receivedMessage.user_name:', receivedMessage.user_name);
 
-              // 내가 보낸 메시지가 아닌 경우에만 추가
-              if (receivedMessage.user_id !== userInfo.id) {
-                setMessages(prev => {
-                  // 이미 같은 내용의 로컬 메시지가 있는지 확인
-                  const hasLocalMessage = prev.some(msg => 
-                    msg.isLocal && 
-                    msg.text === receivedMessage.message && 
-                    msg.sender.id === userInfo.id
-                  );
-                  
-                  // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-                  const filteredMessages = hasLocalMessage 
-                    ? prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message))
-                    : prev;
-                  
-                  return [...filteredMessages, {
-                    id: `server_${Date.now()}_${Math.random()}`,
-                    text: receivedMessage.message,
-                    sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
-                    timestamp: receivedMessage.timestamp || new Date().toISOString(),
-                    isLocal: false
-                  }];
-                });
-              }
+                             // 내가 보낸 메시지가 아닌 경우에만 추가
+               if (receivedMessage.user_id !== userInfo.id) {
+                 const currentMessages = messagesRef.current;
+                 // 이미 같은 내용의 로컬 메시지가 있는지 확인
+                 const hasLocalMessage = currentMessages.some(msg => 
+                   msg.isLocal && 
+                   msg.text === receivedMessage.message && 
+                   msg.sender.id === userInfo.id
+                 );
+                 
+                 // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+                 if (hasLocalMessage) {
+                   setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+                 }
+                 
+                 // 새 메시지 추가
+                 addMessage({
+                   id: `server_${Date.now()}_${Math.random()}`,
+                   text: receivedMessage.message,
+                   sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
+                   timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                   isLocal: false
+                 });
+               }
             });
 
             if (subscribeSuccess) {
@@ -287,15 +298,15 @@ function ChatRoomWindow({
             }
           }
           
-          // 5. 로컬 메시지 추가
-          const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          setMessages(prev => [...prev, {
-            id: localMessageId,
-            text: newMessage,
-            sender: { id: userInfo.id, name: userInfo.name },
-            timestamp: new Date().toISOString(),
-            isLocal: true
-          }]);
+                     // 5. 로컬 메시지 추가
+           const localMessageId = `local_${Date.now()}_${Math.random()}`;
+           addMessage({
+             id: localMessageId,
+             text: newMessage,
+             sender: { id: userInfo.id, name: userInfo.name },
+             timestamp: new Date().toISOString(),
+             isLocal: true
+           });
         }
         
         // 6. 입력 필드 초기화
@@ -309,13 +320,13 @@ function ChatRoomWindow({
         
       } catch (error) {
         console.error("메시지 전송 실패:", error);
-        // 에러 발생 시에도 로컬 메시지는 추가
-        setMessages(prev => [...prev, {
-          text: newMessage,
-          sender: { id: userInfo.id, name: userInfo.name },
-          timestamp: new Date().toISOString(),
-          error: true // 에러 표시용
-        }]);
+                 // 에러 발생 시에도 로컬 메시지는 추가
+         addMessage({
+           text: newMessage,
+           sender: { id: userInfo.id, name: userInfo.name },
+           timestamp: new Date().toISOString(),
+           error: true // 에러 표시용
+         });
         setNewMessage('');
         setIsTyping(false);
         

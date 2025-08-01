@@ -14,29 +14,29 @@ export const useWebSocket = () => {
   return context;
 };
 
-  // WebSocket Provider 컴포넌트
-  export const WebSocketChatProvider = ({ children }) => {
-    const [isConnected, setIsConnected] = useState(false);
-    const [currentRoomId, setCurrentRoomId] = useState(null);
-    const stompClientRef = useRef(null);
-    const subscriptionsRef = useRef(new Map());
-    
-    // 연결 상태 동기화를 위한 useEffect
-    useEffect(() => {
-      const checkConnectionStatus = () => {
-        if (stompClientRef.current) {
-          const actualConnected = stompClientRef.current.connected;
-          if (isConnected !== actualConnected) {
-            console.log(`🔄 연결 상태 동기화: ${isConnected} → ${actualConnected}`);
-            setIsConnected(actualConnected);
-          }
+// WebSocket Provider 컴포넌트
+export const WebSocketChatProvider = ({ children }) => {
+  const [isConnected, setIsConnected] = useState(false);
+  const [currentRoomId, setCurrentRoomId] = useState(null);
+  const stompClientRef = useRef(null);
+  const subscriptionsRef = useRef(new Map());
+
+  // 연결 상태 동기화를 위한 useEffect
+  useEffect(() => {
+    const checkConnectionStatus = () => {
+      if (stompClientRef.current) {
+        const actualConnected = stompClientRef.current.connected;
+        if (isConnected !== actualConnected) {
+          console.log(`🔄 연결 상태 동기화: ${isConnected} → ${actualConnected}`);
+          setIsConnected(actualConnected);
         }
-      };
-      
-      // 주기적으로 연결 상태 확인
-      const interval = setInterval(checkConnectionStatus, 2000);
-      return () => clearInterval(interval);
-    }, [isConnected]);
+      }
+    };
+
+    // 주기적으로 연결 상태 확인
+    const interval = setInterval(checkConnectionStatus, 2000);
+    return () => clearInterval(interval);
+  }, [isConnected]);
 
   // WebSocket 연결 함수
   const connectWebSocket = async (accessToken, userIndex) => {
@@ -47,26 +47,28 @@ export const useWebSocket = () => {
 
     try {
       console.log('🔌 WebSocket 연결 시도...', { userIndex });
-      
+
       // Bearer 접두사 제거
       const cleanToken = accessToken.startsWith('Bearer ') ? accessToken.substring(7) : accessToken;
-      
+
       // WebSocket URL 설정
       const getWebSocketUrl = () => {
         const currentHost = window.location.hostname;
         const currentProtocol = window.location.protocol;
-        
+
         // 개발 환경 (localhost)
         if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
           return `${currentProtocol}//${currentHost}:19091/ws/adminchat`;
         }
-        
-      // 배포 환경 (kschost.ddns.net)
-      if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/springboot/api/ws/adminchat`;
-      }
+
+        // 배포 환경 (kschost.ddns.net)
+        if (currentHost === 'kschost.ddns.net') {
+          return `${currentProtocol}//${currentHost}/springboot/api/ws/adminchat`;
+        }
+        // 기타 배포 환경
+        return `${currentProtocol}//${currentHost}/api/ws/adminchat`;
       };
-      
+
       const socket = new SockJS(getWebSocketUrl());
       const stompClient = new StompClient({
         webSocketFactory: () => socket,
@@ -83,7 +85,7 @@ export const useWebSocket = () => {
         setIsConnected(true);
         stompClientRef.current = stompClient;
         console.log('🔗 연결 상태 업데이트:', stompClient.connected);
-        
+
         // 연결 성공 후 기존 구독 복구
         if (subscriptionsRef.current.size > 0) {
           console.log('🔄 기존 구독 복구 시도...');
@@ -115,7 +117,7 @@ export const useWebSocket = () => {
       };
 
       await stompClient.activate();
-      
+
     } catch (error) {
       console.error('❌ WebSocket 연결 실패:', error);
       setIsConnected(false);
@@ -136,17 +138,17 @@ export const useWebSocket = () => {
   // 채팅방 구독 함수
   const subscribeToRoom = (roomId, onMessageReceived) => {
     console.log('🔍 구독 시도 - 연결 상태:', isConnected, '클라이언트:', !!stompClientRef.current);
-    
+
     // 연결 대기 함수
     const waitForConnection = () => {
       return new Promise((resolve, reject) => {
         let attempts = 0;
         const maxAttempts = 10;
-        
+
         const checkConnection = () => {
           attempts++;
           console.log(`🔍 연결 확인 시도 ${attempts}/${maxAttempts}`);
-          
+
           if (stompClientRef.current && stompClientRef.current.connected) {
             console.log('✅ 연결 확인됨');
             resolve(true);
@@ -157,7 +159,7 @@ export const useWebSocket = () => {
             setTimeout(checkConnection, 500);
           }
         };
-        
+
         checkConnection();
       });
     };
@@ -166,7 +168,7 @@ export const useWebSocket = () => {
       try {
         // 연결 대기
         await waitForConnection();
-        
+
         // 기존 구독 해제
         unsubscribeFromRoom(roomId);
 
@@ -180,10 +182,10 @@ export const useWebSocket = () => {
         // 구독 정보 저장
         subscriptionsRef.current.set(roomId, subscription);
         setCurrentRoomId(roomId);
-        
+
         console.log(`✅ 채팅방 ${roomId} 구독 완료`);
         return true;
-        
+
       } catch (error) {
         console.error(`❌ 채팅방 ${roomId} 구독 실패:`, error);
         return false;
@@ -220,17 +222,17 @@ export const useWebSocket = () => {
   // 메시지 전송 함수
   const sendMessage = (roomId, messageData) => {
     console.log('🔍 메시지 전송 시도 - 연결 상태:', isConnected, '클라이언트:', !!stompClientRef.current);
-    
+
     // 연결 대기 함수
     const waitForConnection = () => {
       return new Promise((resolve, reject) => {
         let attempts = 0;
         const maxAttempts = 10;
-        
+
         const checkConnection = () => {
           attempts++;
           console.log(`🔍 전송 연결 확인 시도 ${attempts}/${maxAttempts}`);
-          
+
           if (stompClientRef.current && stompClientRef.current.connected) {
             console.log('✅ 전송 연결 확인됨');
             resolve(true);
@@ -241,7 +243,7 @@ export const useWebSocket = () => {
             setTimeout(checkConnection, 500);
           }
         };
-        
+
         checkConnection();
       });
     };
@@ -250,15 +252,15 @@ export const useWebSocket = () => {
       try {
         // 연결 대기
         await waitForConnection();
-        
+
         stompClientRef.current.publish({
           destination: `/app/adminchat.sendMessage/${roomId}`,
           body: JSON.stringify(messageData)
         });
-        
+
         console.log(`📤 채팅방 ${roomId} 메시지 전송:`, messageData);
         return true;
-        
+
       } catch (error) {
         console.error(`❌ 메시지 전송 실패:`, error);
         return false;
@@ -283,6 +285,9 @@ export const useWebSocket = () => {
   };
 
   // 컴포넌트 언마운트 시 정리
+
+
+  
   useEffect(() => {
     return () => {
       disconnectWebSocket();
