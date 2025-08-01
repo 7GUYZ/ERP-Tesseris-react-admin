@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, updateAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
+import Toast from '../../components/ui/jungeun/Toast';
 import '../../styles/dabin/AdvertisementEditPage.css';
 
 const AdvertisementEditPage = () => {
@@ -11,8 +12,24 @@ const AdvertisementEditPage = () => {
     const [currentImage, setCurrentImage] = useState(null);
     const [loading, setLoading] = useState(false);
     const [initialLoading, setInitialLoading] = useState(true);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast, setShowToast] = useState(false);
+    
     const navigate = useNavigate();
     const { advertisementIndex } = useParams();
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    const closeToast = () => {
+        setShowToast(false);
+    };
 
     useEffect(() => {
         fetchAdvertisement();
@@ -36,7 +53,7 @@ const AdvertisementEditPage = () => {
             setPreviewImage(presignedUrl || ad.advertisementPhoto);
         } catch (error) {
             console.error('광고 조회 오류:', error);
-            alert('광고 정보를 불러오는데 실패했습니다.');
+            showToastMessage('광고 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setInitialLoading(false);
         }
@@ -58,14 +75,14 @@ const AdvertisementEditPage = () => {
 
     const handleUpdate = async () => {
         if (!advertisementUrl || advertisementUrl === 'https://') {
-            alert('광고 링크 주소를 입력해주세요.');
+            showToastMessage('광고 링크 주소를 입력해주세요.', 'error');
             return;
         }
 
         // URL 유효성 검사
         const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
         if (!urlRegex.test(advertisementUrl)) {
-            alert('광고주소를 다시한번 확인하세요.');
+            showToastMessage('광고주소를 다시한번 확인하세요.', 'error');
             return;
         }
 
@@ -89,14 +106,16 @@ const AdvertisementEditPage = () => {
             });
 
             if (response.data.success) {
-                alert('광고를 수정하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('광고를 수정하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '광고 수정에 실패했습니다.');
+                showToastMessage(response.data.message || '광고 수정에 실패했습니다.', 'error');
             }
         } catch (error) {
             console.error('광고 수정 오류:', error);
-            alert('광고 수정 중 오류가 발생했습니다.');
+            showToastMessage('광고 수정 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -113,14 +132,16 @@ const AdvertisementEditPage = () => {
             const response = await deleteAdvertisement(advertisementIndex);
 
             if (response.data.success) {
-                alert('광고를 삭제하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('광고를 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '광고 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '광고 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
             console.error('광고 삭제 오류:', error);
-            alert('광고 삭제 중 오류가 발생했습니다.');
+            showToastMessage('광고 삭제 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -226,6 +247,14 @@ const AdvertisementEditPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

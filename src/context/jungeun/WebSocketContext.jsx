@@ -27,16 +27,16 @@ export const WebSocketProvider = ({ children }) => {
       
       // 개발 환경 (localhost)
       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}:19091/api/ws/notifications`;
       }
       
       // 배포 환경 (kschost.ddns.net)
       if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+        return `${currentProtocol}//${currentHost}/springboot/api/ws/notifications`;
       }
       
       // 기타 배포 환경
-      return `${currentProtocol}//${currentHost}/springboot/ws/notifications`;
+      return `${currentProtocol}//${currentHost}/api/ws/notifications`;
     };
     
     const socket = new SockJS(getWebSocketUrl());
@@ -76,8 +76,45 @@ export const WebSocketProvider = ({ children }) => {
       console.log('💾 WebSocket 클라이언트 저장 완료');
     };
 
-    stompClient.onStompError = (frame) => {
+    stompClient.onStompError = async (frame) => {
       console.error('❌ WebSocket STOMP 오류:', frame);
+      
+      // 토큰 관련 오류인 경우 갱신 시도
+      if (frame.headers && frame.headers.message && 
+          (frame.headers.message.includes('token') || frame.headers.message.includes('unauthorized'))) {
+        console.log('토큰 오류 감지, 갱신 시도...');
+        
+        try {
+          const result = await fetch('/api/auth/refresh', {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (result.ok) {
+            const newToken = result.headers.get('Authorization')?.replace('Bearer ', '');
+            if (newToken) {
+              localStorage.setItem('access-token', `Bearer ${newToken}`);
+              console.log('토큰 갱신 성공, WebSocket 재연결...');
+              
+              // 새로운 토큰으로 재연결
+              setTimeout(() => {
+                connectWebSocket(`Bearer ${newToken}`, userIndex, onMessage);
+              }, 1000);
+              return;
+            }
+          }
+        } catch (e) {
+          console.error('토큰 갱신 실패:', e);
+        }
+        
+        // 토큰 갱신 실패 시 로그인 페이지로 이동
+        localStorage.removeItem('access-token');
+        localStorage.removeItem('user-info');
+        window.location.href = '/';
+      }
     };
     
     stompClient.onWebSocketClose = () => {

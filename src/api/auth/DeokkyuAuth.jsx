@@ -82,6 +82,9 @@ export const getStoreList = (params) => // 가맹점 회원 리스트
 export const getAdminList = (params) => // 관리자 리스트
   api.get('/admin/list',{ params });
 
+export const createAdmin = (data) => // 관리자 등록
+  api.post('/admin/create', data);
+
 export const getCustomerAllStoreList = (params) => // 가맹점 고객현황 - 가맹점리스트
   api.get('/store/customerlist',{ params });
 

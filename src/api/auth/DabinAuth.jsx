@@ -27,6 +27,8 @@ export const searchCoupons = (params) => {
   });
 };
 
+
+
 // 영업실적 관련 API
 export const getBusinessGradeList = () => {
   const accessToken = localStorage.getItem("access-token");
@@ -120,7 +122,8 @@ export const createAdvertisement = (formData) => {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
       'Content-Type': 'multipart/form-data',
-    }
+    },
+    timeout: 30000 // 30초 타임아웃
   });
 };
 

@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
+import Toast from '../../components/ui/jungeun/Toast';
+import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
+import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/AdvertisementDetailPage.css';
 
 const AdvertisementDetailPage = () => {
@@ -8,6 +11,47 @@ const AdvertisementDetailPage = () => {
     const navigate = useNavigate();
     const [ad, setAd] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [canUpdate, setCanUpdate] = useState(false);
+    const [canDelete, setCanDelete] = useState(false);
+    const { showToast } = useToast();
+
+    // 권한 체크
+    useEffect(() => {
+        const checkPermission = async () => {
+            try {
+                const response = await permissionCheckApi.checkPermission(24); // programIndex: 24 (광고 관리)
+                if (response.data) {
+                    setCanUpdate(response.data.hasUpdateAuthority === 1);
+                    setCanDelete(response.data.hasDeleteAuthority === 1);
+                    console.log('광고 관리 권한 체크 결과:', {
+                        update: response.data.hasUpdateAuthority,
+                        delete: response.data.hasDeleteAuthority
+                    });
+                }
+            } catch (error) {
+                console.error('권한 체크 실패:', error);
+                setCanUpdate(false);
+                setCanDelete(false);
+            }
+        };
+        
+        checkPermission();
+    }, []);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast1, setShowToast1] = useState(false);
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast1(true);
+    };
+
+    const closeToast = () => {
+        setShowToast1(false);
+    };
 
     useEffect(() => {
         fetchAdvertisement();
@@ -27,7 +71,7 @@ const AdvertisementDetailPage = () => {
                 setAd(adData);
             }
         } catch (error) {
-            alert('광고 정보를 불러오는데 실패했습니다.');
+            showToastMessage('광고 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -38,21 +82,31 @@ const AdvertisementDetailPage = () => {
     };
 
     const handleEditClick = () => {
+        if (!canUpdate) {
+            showToast1("error", "수정 권한이 없습니다.");
+            return;
+        }
         navigate(`/advertisement/edit/${advertisementIndex}`);
     };
 
     const handleDeleteClick = async () => {
+        if (!canDelete) {
+            showToast1("error", "삭제 권한이 없습니다.");
+            return;
+        }
         if (!window.confirm('정말로 이 광고를 삭제하시겠습니까?')) return;
         try {
             const response = await deleteAdvertisement(advertisementIndex);
             if (response.data.success) {
-                alert('광고를 삭제하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('광고를 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '광고 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '광고 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
-            alert('광고 삭제 중 오류가 발생했습니다.');
+            showToastMessage('광고 삭제 중 오류가 발생했습니다.', 'error');
         }
     };
 
@@ -73,8 +127,22 @@ const AdvertisementDetailPage = () => {
                 <p className="ad-detail-font-20 ad-detail-bold">광고 상세</p>
                 <div>
                     <button type="button" className="ad-detail-cancel-button" onClick={handleListClick}>목록</button>
-                    <button type="button" className="ad-detail-delete-button" onClick={handleDeleteClick}>삭제</button>
-                    <button type="button" className="ad-detail-edit-button" onClick={handleEditClick}>수정</button>
+                    <button 
+                        type="button" 
+                        className="ad-detail-delete-button" 
+                        onClick={handleDeleteClick}
+                        disabled={!canDelete}
+                        style={!canDelete ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
+                        삭제
+                    </button>
+                    <button 
+                        type="button" 
+                        className="ad-detail-edit-button" 
+                        onClick={handleEditClick}
+                        disabled={!canUpdate}
+                        style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}>
+                        수정
+                    </button>
                 </div>
             </div>
 
@@ -105,6 +173,14 @@ const AdvertisementDetailPage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast1 && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

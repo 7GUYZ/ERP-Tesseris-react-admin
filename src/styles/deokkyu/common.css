@@ -99,6 +99,35 @@
   transform: none;
 }
 
+/* 등록 버튼 */
+.taekjun-btn.admin.create {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  background-color: #3b82f6;
+  color: white;
+}
+
+.taekjun-btn.admin.create:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.taekjun-btn.admin.create:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
 /* 수정 버튼 */
 .deokkyu-btn.edit {
   background-color: #f59e0b;
@@ -298,4 +327,306 @@
   .deokkyu-filter-label {
     font-size: 13px;
   }
+}
+
+/* ============================================================================
+   관리자 등록 모달 스타일
+   ============================================================================ */
+
+/* 관리자 등록 모달 오버레이 */
+.admin-create-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+/* 관리자 등록 모달 컨텐츠 */
+.admin-create-modal-content {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: adminCreateModalSlideIn 0.3s ease-out;
+}
+
+@keyframes adminCreateModalSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 관리자 등록 모달 헤더 */
+.admin-create-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 12px 12px 0 0;
+}
+
+.admin-create-modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
+
+/* 관리자 등록 모달 닫기 버튼 */
+.admin-create-modal-close {
+  background: #3b82f6;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: white;
+  padding: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-weight: bold;
+}
+
+.admin-create-modal-close:hover {
+  background-color: #2563eb;
+  transform: scale(1.05);
+}
+
+/* 관리자 등록 모달 바디 */
+.admin-create-modal-body {
+  padding: 24px;
+}
+
+/* 관리자 등록 섹션 */
+.admin-create-section {
+  margin-bottom: 32px;
+}
+
+.admin-create-section:last-child {
+  margin-bottom: 0;
+}
+
+.admin-create-section-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 16px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+/* 필수 필드 라벨 */
+.admin-create-form-field label.required {
+  color: #dc2626;
+}
+
+/* 주소 검색 필드 */
+.admin-create-address-field {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-create-address-field input {
+  flex: 1;
+}
+
+.admin-create-address-search-btn {
+  padding: 12px 16px;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.admin-create-address-search-btn:hover {
+  background-color: #2563eb;
+}
+
+/* 관리자 등록 폼 그리드 */
+.admin-create-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* 관리자 등록 폼 필드 */
+.admin-create-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.admin-create-form-field label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.admin-create-form-field input,
+.admin-create-form-field select {
+  padding: 12px 16px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  background-color: white;
+  color: #1f2937;
+}
+
+.admin-create-form-field input:focus,
+.admin-create-form-field select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.admin-create-form-field input:hover,
+.admin-create-form-field select:hover {
+  border-color: #9ca3af;
+}
+
+.admin-create-form-field input::placeholder {
+  color: #9ca3af;
+}
+
+/* 관리자 등록 모달 액션 */
+.admin-create-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+/* 관리자 등록 모달 버튼 */
+.admin-create-modal-btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-create-modal-btn.primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.admin-create-modal-btn.primary:hover {
+  background-color: #2563eb;
+  transform: translateY(-1px);
+}
+
+.admin-create-modal-btn.primary:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.admin-create-modal-btn.secondary {
+  background-color: #f3f4f6;
+  color: #374151;
+}
+
+.admin-create-modal-btn.secondary:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+/* 반응형 관리자 등록 모달 */
+@media (max-width: 640px) {
+  .admin-create-modal-content {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .admin-create-form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .admin-create-modal-actions {
+    flex-direction: column;
+  }
+  
+  .admin-create-modal-btn {
+    width: 100%;
+  }
+}
+
+/* 주소 검색 결과 스타일 */
+.admin-create-address-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.admin-create-address-result-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+}
+
+.admin-create-address-result-item:hover {
+  background-color: #f5f5f5;
+}
+
+.admin-create-address-result-item:last-child {
+  border-bottom: none;
+}
+
+.admin-create-selected-address {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f0f9ff;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  font-size: 14px;
+  color: #1e40af;
+}
+
+.admin-create-address-field {
+  position: relative;
 } 

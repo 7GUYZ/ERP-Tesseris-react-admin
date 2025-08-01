@@ -62,8 +62,51 @@ function RealTimeChat() {
         id: `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         name: `게스트${Math.floor(Math.random() * 1000)}`,
         avatar: null
+<<<<<<< HEAD
       };
       setCurrentUser(guestUser);
+=======
+      });
+    }
+  }, []);
+
+  // WebSocket 연결 (메인 창이 열릴 때만)
+  useEffect(() => {
+    if (!currentUser || currentView === 'closed') return;
+
+    console.log('🔗 WebSocket 연결 시도:', currentUser.name, currentUser.id);
+
+    // 이미 연결되어 있다면 중복 연결 방지
+    if (socket?.connected) {
+      console.log('⚠️ 이미 연결되어 있음, 새 연결 건너뛰기');
+      return;
+    }
+    const socketConnection = io(process.env.NODE_ENV === 'development' ? 'ws://localhost:4000' : `ws://${process.env.REACT_APP_CHAT_SERVER_HOST}:4000`, {
+      query: { userId: currentUser.id, userName: currentUser.name },
+      forceNew: true,
+      timeout: 5000,
+      transports: ['websocket']
+    });
+
+    socketConnection.on('connect', () => {
+      setIsConnected(true);
+      console.log('✅ 채팅 서버에 연결됨:', socketConnection.id, '사용자:', currentUser.name);
+    });
+
+    socketConnection.on('disconnect', (reason) => {
+      setIsConnected(false);
+      console.log('❌ 채팅 서버 연결 끊김:', reason, '사용자:', currentUser.name);
+    });
+
+    socketConnection.on('connect_error', (error) => {
+      console.error('🚨 연결 오류:', error);
+      setIsConnected(false);
+    });
+
+    // 전역 알림 처리
+    socketConnection.on('message', (message) => {
+      console.log('🌍 전역 메시지 수신:', message);
+>>>>>>> dev
       
       if (currentView !== 'closed') {
         connectWebSocket(guestUser);

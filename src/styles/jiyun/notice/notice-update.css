@@ -2,7 +2,6 @@
   padding: 40px;
   background-color: #f4f6fa;
   min-height: 100vh;
-  font-family: "Noto Sans KR", sans-serif;
 }
 
 .notice-update-breadcrumb {
@@ -43,7 +42,7 @@
 .notice-update-form .notice-update-input,
 .notice-update-form .notice-update-textarea {
   width: 100%;
-  padding: 10px 12px;
+  padding: 10px 1px;
   font-size: 14px;
   border: 1px solid #d1d5db;
   border-radius: 6px;

@@ -142,6 +142,26 @@
   border-color: #9ca3af;
 }
 
+/* 에러 상태 스타일 */
+.dabin-page-layout-search-input.error {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 1px #d32f2f !important;
+}
+
+.dabin-page-layout-search-input.error:focus {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+}
+
+.error-message {
+  color: #d32f2f;
+  font-size: 12px;
+  margin-top: 4px;
+  margin-left: 4px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+
 /* DataGrid 체크박스 스타일 - 완전히 새로운 접근 */
 .dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-columnHeader:first-of-type,
 .dabin-page-layout-container .MuiDataGrid-root .MuiDataGrid-cell:first-of-type {
