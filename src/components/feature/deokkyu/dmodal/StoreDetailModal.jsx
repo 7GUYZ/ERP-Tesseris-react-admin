@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
-import { getStoreDetail, updateStore, getStoreTransactionHistory, setupInterceptors } from '../../../../api/auth/DeokkyuAuth';
+import { getStoreDetail, updateStore, getStoreTransactionHistory, getStoreImagesWithPresignedUrls, setupInterceptors } from '../../../../api/auth/DeokkyuAuth';
 import DetailModal from '../../../ui/deokkyu/DetailModal';
 import NoRowsOverlay from '../../../ui/deokkyu/NoRowsOverlay';
 
@@ -33,6 +33,10 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
   // 거래내역 관련 상태
   const [transactionHistory, setTransactionHistory] = useState([]);
   const [transactionLoading, setTransactionLoading] = useState(false);
+  
+  // 이미지 관련 상태
+  const [storeImages, setStoreImages] = useState([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
 
   // 거래내역 컬럼 정의
   const transactionColumns = [
@@ -107,6 +111,13 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
     }
   }, [isOpen, storeId]);
 
+  // 이미지 로딩 (storeIndex가 있을 때)
+  useEffect(() => {
+    if (storeData.storeIndex) {
+      fetchStoreImages();
+    }
+  }, [storeData.storeIndex]);
+
   // 거래내역 불러오기
   const fetchTransactionHistory = async () => {
     try {
@@ -171,6 +182,8 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
         // 사용자 상세 정보 (user_tesseris 테이블)
         userBirthday: response.data.userBirthday || '',
         userGenderIndex: response.data.userGenderIndex || 0,
+        // 가맹점 기본 정보
+        storeIndex: response.data.storeIndex || null, // ✅ store_index 추가
         // 가맹점 사진 정보들 (store 테이블)
         storeProntPhoto: response.data.storeProntPhoto || '',
         storeBusinessLicensePhoto: response.data.storeBusinessLicensePhoto || '',
@@ -186,6 +199,32 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
       setEditData(initialData || {});
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 가맹점 이미지 목록 조회 (Presigned URL 포함)
+  const fetchStoreImages = async () => {
+    try {
+      setImagesLoading(true);
+      console.log('🖼️ 가맹점 이미지 목록 + Presigned URL 요청:', storeData.storeIndex);
+      
+      setupInterceptors();
+      const response = await getStoreImagesWithPresignedUrls(storeData.storeIndex);
+      console.log('✅ 가맹점 이미지 + Presigned URL 응답:', response.data);
+      
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        setStoreImages(response.data);
+        console.log('🎉 이미지 로딩 완료:', response.data.length, '개');
+      } else {
+        console.log('📭 등록된 이미지가 없습니다.');
+        setStoreImages([]);
+      }
+      
+    } catch (error) {
+      console.error('🚨 가맹점 이미지 로딩 실패:', error);
+      setStoreImages([]);
+    } finally {
+      setImagesLoading(false);
     }
   };
 
@@ -584,101 +623,176 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
 
             {/* 사진 섹션 */}
             <div className="store-detail-section">
-              <h3 className="store-detail-section-title">사진</h3>
+              <h3 className="store-detail-section-title">
+                사진 
+                {imagesLoading && <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>🔄 로딩중...</span>}
+                <span style={{ fontSize: '12px', color: '#666', marginLeft: '8px' }}>
+                  (총 {storeImages.length}개)
+                </span>
+              </h3>
               <div className="store-detail-photo-section">
                 
-                
-                {/* 가맹점 프론트 사진 */}
-                <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">가맹점 프론트</h4>
-                  <div className="store-detail-photo-placeholder">
-                    {displayData.storeProntPhoto ? (
-                      <>
-                        <img
-                          src={displayData.storeProntPhoto}
-                          alt="가맹점 프론트" 
-                          className="store-detail-photo-image"
-                        />
-                        <div className="store-detail-photo-string">
-                          <small>String 값: {displayData.storeProntPhoto}</small>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="store-detail-photo-empty">
-                        <p>가맹점 프론트 사진이 등록되지 않았습니다.</p>
-                        {editMode && (
-                          <button 
-                            className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('pront')}
-                          >
-                            사진 업로드
-                          </button>
+                {/* Store 테이블 기본 사진들 */}
+                <div style={{ marginBottom: '24px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#495057' }}>
+                    📋 기본 등록 사진 (Store 테이블)
+                  </h4>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+                    {/* 가맹점 프론트 사진 */}
+                    <div className="store-detail-photo-item">
+                      <h5 className="store-detail-photo-title">🏪 외관</h5>
+                      <div className="store-detail-photo-placeholder" style={{ height: '150px' }}>
+                        {displayData.storeProntPhoto ? (
+                          <img
+                            src={displayData.storeProntPhoto}
+                            alt="가맹점 외관" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#f8f9fa', borderRadius: '4px', color: '#6c757d' }}>
+                            등록된 외관 사진이 없습니다
+                          </div>
                         )}
                       </div>
-                    )}
+                    </div>
+
+                    {/* 사업자 등록증 사진 */}
+                    <div className="store-detail-photo-item">
+                      <h5 className="store-detail-photo-title">📄 사업자등록증</h5>
+                      <div className="store-detail-photo-placeholder" style={{ height: '150px' }}>
+                        {displayData.storeBusinessLicensePhoto ? (
+                          <img 
+                            src={displayData.storeBusinessLicensePhoto} 
+                            alt="사업자등록증" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#f8f9fa', borderRadius: '4px', color: '#6c757d' }}>
+                            등록된 사업자등록증이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* 간판 사진 */}
+                    <div className="store-detail-photo-item">
+                      <h5 className="store-detail-photo-title">🪧 간판</h5>
+                      <div className="store-detail-photo-placeholder" style={{ height: '150px' }}>
+                        {displayData.storeSignPhoto ? (
+                          <img 
+                            src={displayData.storeSignPhoto} 
+                            alt="간판 사진" 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '4px' }}
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', backgroundColor: '#f8f9fa', borderRadius: '4px', color: '#6c757d' }}>
+                            등록된 간판 사진이 없습니다
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* 사업자 등록증 사진 (새로운 필드) */}
-                <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">사업자 등록증 (새로운)</h4>
-                  <div className="store-detail-photo-placeholder">
-                    {displayData.storeBusinessLicensePhoto ? (
-                      <>
-                        <img 
-                          src={displayData.storeBusinessLicensePhoto} 
-                          alt="사업자 등록증 (새로운)" 
-                          className="store-detail-photo-image"
-                        />
-                        <div className="store-detail-photo-string">
-                          <small>String 값: {displayData.storeBusinessLicensePhoto}</small>
+                {/* StoreImage 테이블 S3 사진들 */}
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#495057' }}>
+                    🖼️ 업로드된 매장 이미지 (S3 Presigned URL)
+                  </h4>
+                  
+                  {imagesLoading ? (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                      🔄 이미지를 불러오는 중...
+                    </div>
+                  ) : storeImages.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                      {storeImages.map((image, index) => (
+                        <div key={image.storeImageIndex || index} className="store-detail-photo-item">
+                          <div style={{ position: 'relative' }}>
+                            <img 
+                              src={image.presignedUrl || image.storeImage} 
+                              alt={`매장 이미지 ${index + 1}`}
+                              style={{ 
+                                width: '100%', 
+                                height: '150px', 
+                                objectFit: 'cover', 
+                                borderRadius: '8px',
+                                border: image.presignedUrl ? '2px solid #28a745' : '2px solid #dc3545'
+                              }}
+                              onError={(e) => {
+                                console.error('이미지 로딩 실패:', image);
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                            <div style={{ 
+                              display: 'none', 
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              height: '150px', 
+                              backgroundColor: '#f8f9fa', 
+                              borderRadius: '8px', 
+                              color: '#6c757d',
+                              border: '2px dashed #dc3545'
+                            }}>
+                              🖼️ 이미지 로딩 실패
+                            </div>
+                            
+                            {/* 이미지 상태 배지 */}
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              right: '8px',
+                              backgroundColor: image.presignedUrl ? '#28a745' : '#dc3545',
+                              color: 'white',
+                              padding: '4px 8px',
+                              borderRadius: '12px',
+                              fontSize: '10px',
+                              fontWeight: '600'
+                            }}>
+                              {image.presignedUrl ? '✅ Presigned' : '❌ Direct'}
+                            </div>
+                            
+                            {/* 이미지 타입 표시 */}
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '8px',
+                              left: '8px',
+                              backgroundColor: 'rgba(0,0,0,0.7)',
+                              color: 'white',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px'
+                            }}>
+                              {image.storeMainImageStatus || 'Unknown'}
+                            </div>
+                          </div>
+                          
+                          {/* 이미지 정보 */}
+                          <div style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
+                            <div>ID: {image.storeImageIndex}</div>
+                            <div style={{ wordBreak: 'break-all' }}>
+                              {image.presignedUrl ? '🔗 Presigned URL' : `📁 ${image.storeImage?.substring(0, 30)}...`}
+                            </div>
+                          </div>
                         </div>
-                      </>
-                    ) : (
-                      <div className="store-detail-photo-empty">
-                        <p>사업자 등록증 (새로운) 사진이 등록되지 않았습니다.</p>
-                        {editMode && (
-                          <button 
-                            className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('businessLicenseNew')}
-                          >
-                            사진 업로드
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* 가맹점 서명 사진 */}
-                <div className="store-detail-photo-item">
-                  <h4 className="store-detail-photo-title">가맹점 서명</h4>
-                  <div className="store-detail-photo-placeholder">
-                    {displayData.storeSignPhoto ? (
-                      <>
-                        <img 
-                          src={displayData.storeSignPhoto} 
-                          alt="가맹점 서명" 
-                          className="store-detail-photo-image"
-                        />
-                        <div className="store-detail-photo-string">
-                          <small>String 값: {displayData.storeSignPhoto}</small>
-                        </div>
-                      </>
-                    ) : (
-                      <div className="store-detail-photo-empty">
-                        <p>가맹점 서명 사진이 등록되지 않았습니다.</p>
-                        {editMode && (
-                          <button 
-                            className="store-detail-photo-upload-btn"
-                            onClick={() => handlePhotoUpload('sign')}
-                          >
-                            사진 업로드
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      textAlign: 'center', 
+                      padding: '40px', 
+                      backgroundColor: '#f8f9fa', 
+                      borderRadius: '8px',
+                      color: '#6c757d',
+                      border: '2px dashed #dee2e6'
+                    }}>
+                      📭 등록된 매장 이미지가 없습니다
+                      <br />
+                      <small>store_image 테이블에 데이터가 없습니다</small>
+                    </div>
+                  )}
                 </div>
                 
               </div>
