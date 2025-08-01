@@ -51,7 +51,11 @@ function ChatRoomWindow({
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
       const generateRoomName = (participants) => {
         if (participants.length === 2) {
-          // 1:1 채팅
+          // 1:1 채팅 - adminData에서 이름 사용
+          if (roomData.adminData) {
+            return `${roomData.adminData.name}님과의 채팅`;
+          }
+          // 기존 방의 경우 UUID 사용 (임시)
           const otherUser = participants.find(p => p !== userInfo.id);
           return `${otherUser}님과의 채팅`;
         } else if (participants.length > 2) {
@@ -92,18 +96,18 @@ function ChatRoomWindow({
           // 3. 기존 방 구독 요청
           if (!roomId || roomId !== existingRoomId) {
             console.log("기존 방 구독 요청, 방 ID:", existingRoomId);
-            const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
-              console.log('새 메시지 수신:', receivedMessage);
+                         const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
+               console.log('새 메시지 수신:', receivedMessage);
 
-              // 내가 보낸 메시지가 아닌 경우에만 추가
-              if (receivedMessage.user_id !== userInfo.id) {
-                setMessages(prev => [...prev, {
-                  text: receivedMessage.message,
-                  sender: { id: receivedMessage.user_id, name: receivedMessage.user_id },
-                  timestamp: receivedMessage.timestamp || new Date().toISOString()
-                }]);
-              }
-            });
+               // 내가 보낸 메시지가 아닌 경우에만 추가
+               if (receivedMessage.user_id !== userInfo.id) {
+                 setMessages(prev => [...prev, {
+                   text: receivedMessage.message,
+                   sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || receivedMessage.user_id },
+                   timestamp: receivedMessage.timestamp || new Date().toISOString()
+                 }]);
+               }
+             });
 
             if (subscribeSuccess) {
               console.log(`채팅방 ${existingRoomId} 구독 완료`);
@@ -156,18 +160,18 @@ function ChatRoomWindow({
           // 3. 첫 메세지인 경우 방 구독 요청 (roomId가 null이거나 변경된 경우)
           if (!roomId || roomId !== newRoomId) {
             console.log("첫 메시지 또는 방 변경 - 구독 요청, 방 ID:", newRoomId);
-            const subscribeSuccess = subscribeToRoom(newRoomId, (receivedMessage) => {
-              console.log('새 메시지 수신:', receivedMessage);
+                         const subscribeSuccess = subscribeToRoom(newRoomId, (receivedMessage) => {
+               console.log('새 메시지 수신:', receivedMessage);
 
-              // 내가 보낸 메시지가 아닌 경우에만 추가
-              if (receivedMessage.user_id !== userInfo.id) {
-                setMessages(prev => [...prev, {
-                  text: receivedMessage.message,
-                  sender: { id: receivedMessage.user_id, name: receivedMessage.user_id },
-                  timestamp: receivedMessage.timestamp || new Date().toISOString()
-                }]);
-              }
-            });
+               // 내가 보낸 메시지가 아닌 경우에만 추가
+               if (receivedMessage.id !== userInfo.id) {
+                 setMessages(prev => [...prev, {
+                   text: receivedMessage.message,
+                   sender: { id: receivedMessage.id, name: receivedMessage.name || receivedMessage.id },
+                   timestamp: receivedMessage.timestamp || new Date().toISOString()
+                 }]);
+               }
+             });
 
             if (subscribeSuccess) {
               console.log(`채팅방 ${newRoomId} 구독 완료`);
@@ -552,9 +556,9 @@ if (!open || !roomData) return null;
                textOverflow: 'ellipsis',
                whiteSpace: 'nowrap',
              }
-           }}>
-             {roomData.name || '채팅방'}
-           </Typography>
+                       }}>
+              {roomData.adminData ? roomData.adminData.name : (roomData.name || '채팅방')}
+            </Typography>
          </Box>
       </Box>
 
