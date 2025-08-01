@@ -136,3 +136,20 @@ export const updateStoreRegister = (storeId, data) => // 가맹점 신청 정보
 export const getWithdrawalDetails = (params) => // 출금 상세 내역 조회
   api.get('/withdrawal/details', { params });
 
+
+
+// 채팅 관련 API
+export const getChatAdminList = () => // 전체 관리자 목록 조회
+  api.get('/adminchat/list');
+
+export const getUserChatRooms = (userid) => // 사용자 채팅방 목록 조회
+  api.get(`/adminchat/${userid}`);
+
+export const saveChatMessage = (messageData) => // 채팅 메시지 DB 저장 (백엔드에서 분기처리)
+  api.post('/adminchat/message', messageData);
+
+// S3 이미지 관련 API
+export const getStoreImagesWithPresignedUrls = (storeIndex) => // store_index로 store_image 조회 + S3 Presigned URL 생성
+  api.get(`/store/images-with-presigned/${storeIndex}`);
+
+

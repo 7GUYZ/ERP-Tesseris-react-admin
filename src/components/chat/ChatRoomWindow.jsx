@@ -7,16 +7,23 @@ import {
   Close, Send, Minimize, DragIndicator, 
   ArrowBack, Call, VideoCall, Info
 } from '@mui/icons-material';
+import { saveChatMessage, setupInterceptors } from '../../api/auth/DeokkyuAuth';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 
 
 function ChatRoomWindow({ 
   open, 
   onClose, 
   onBack, 
-  roomData, 
-  socket, 
-  currentUser 
+  roomData
 }) {
+  const { 
+    stompClient, 
+    currentUser, 
+    subscribeToRoom, 
+    unsubscribeFromRoom, 
+    sendMessageToRoom 
+  } = useChatWebSocket();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [position, setPosition] = useState({ 
@@ -90,64 +97,98 @@ function ChatRoomWindow({
 
   // 채팅방 입장 시 초기화
   useEffect(() => {
-    if (open && roomData && socket) {
+    if (open && roomData && stompClient && stompClient.connected) {
+      console.log('🏠 [디버그] 채팅방 입장 시작 - roomId:', roomData.id);
+      
+      // 메시지 상태 초기화 (이전 채팅방의 메시지 제거)
+      console.log('🧹 [디버그] 메시지 상태 초기화');
+      setMessages([]);
+      
       // 메시지 중복 처리 초기화
       processedMessagesRef.current.clear();
       
-      // 채팅방 입장
-      socket.emit('joinRoom', { 
-        roomId: roomData.id, 
-        user: currentUser 
+      // 채팅방 구독
+      subscribeToRoom(roomData.id, (messageData) => {
+        console.log('🔍 [디버그] 원본 메시지 수신:', messageData);
+        console.log('🔍 [디버그] 메시지 필드들:', {
+          id: messageData.id,
+          text: messageData.text,
+          message: messageData.message,
+          sender: messageData.sender,
+          timestamp: messageData.timestamp,
+          type: messageData.type
+        });
+        
+        // 고유 메시지 키 생성
+        const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
+        
+        // 이미 처리된 메시지인지 확인
+        if (processedMessagesRef.current.has(messageKey)) {
+          console.log('🔄 중복 룸 메시지 무시:', messageKey);
+          return;
+        }
+        
+        // 처리된 메시지로 마킹
+        processedMessagesRef.current.add(messageKey);
+        
+        console.log('✅ [디버그] 메시지 상태에 추가 시도:', messageData);
+        setMessages(prev => {
+          const newMessages = [...prev, messageData];
+          console.log('✅ [디버그] 새로운 메시지 배열:', newMessages);
+          console.log('✅ [디버그] 총 메시지 개수:', newMessages.length);
+          return newMessages;
+        });
       });
+      
+      // 채팅방 입장 알림
+      stompClient.send('/app/chat/join-room', {}, JSON.stringify({
+        roomId: roomData.id,
+        user: currentUser
+      }));
 
       // 기존 메시지 불러오기 요청
-      socket.emit('getRoomMessages', roomData.id);
+      stompClient.send('/app/chat/get-messages', {}, JSON.stringify({
+        roomId: roomData.id
+      }));
     }
-  }, [open, roomData, socket, currentUser]);
-
-  // WebSocket 이벤트 리스너
-  useEffect(() => {
-    if (!socket) return;
-
-    // 룸 메시지 수신 - 중복 방지 로직 추가
-    const handleRoomMessage = (message) => {
-      // 고유 메시지 키 생성
-      const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
-      
-      // 이미 처리된 메시지인지 확인
-      if (processedMessagesRef.current.has(messageKey)) {
-        console.log('🔄 중복 룸 메시지 무시:', messageKey);
-        return;
+    
+    // 채팅방 나갈 때 구독 해제
+    return () => {
+      if (roomData) {
+        unsubscribeFromRoom(roomData.id);
       }
-      
-      // 처리된 메시지로 마킹
-      processedMessagesRef.current.add(messageKey);
-      
-      console.log('룸 메시지 수신:', message);
-      setMessages(prev => [...prev, message]);
     };
+  }, [open, roomData, stompClient, currentUser, subscribeToRoom, unsubscribeFromRoom]);
 
-    // 기존 메시지 목록 수신
-    const handleRoomMessages = (messageList) => {
+  // 기존 메시지 목록 수신 구독
+  useEffect(() => {
+    if (!stompClient || !stompClient.connected || !roomData) return;
+
+    const roomMessagesSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/messages`, (message) => {
+      const messageList = JSON.parse(message.body);
       if (Array.isArray(messageList)) {
         // 기존 메시지들도 중복 처리 마킹
-        messageList.forEach(message => {
-          const messageKey = `${message.id || 'no-id'}_${message.timestamp || Date.now()}_${message.sender?.id || 'no-sender'}`;
+        messageList.forEach(messageData => {
+          const messageKey = `${messageData.id || 'no-id'}_${messageData.timestamp || Date.now()}_${messageData.sender?.id || 'no-sender'}`;
           processedMessagesRef.current.add(messageKey);
         });
         setMessages(messageList);
       }
-    };
+    });
 
-    // 참여자 목록 수신
-    const handleRoomParticipants = (participants) => {
+    // 참여자 목록 수신 구독
+    const participantsSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/participants`, (message) => {
+      const participants = JSON.parse(message.body);
       if (Array.isArray(participants)) {
         setRoomParticipants(participants);
       }
-    };
+    });
 
-    // 타이핑 상태 수신
-    const handleUserTyping = ({ userId, userName, isTyping: typing }) => {
+    // 타이핑 상태 수신 구독
+    const typingSubscription = stompClient.subscribe(`/topic/room/${roomData.id}/typing`, (message) => {
+      const typingData = JSON.parse(message.body);
+      const { userId, userName, isTyping: typing } = typingData;
+      
       if (userId !== currentUser?.id) {
         setTypingUsers(prev => {
           if (typing) {
@@ -157,65 +198,88 @@ function ChatRoomWindow({
           }
         });
       }
-    };
-
-    // 이벤트 리스너 등록
-    socket.on('roomMessage', handleRoomMessage);
-    socket.on('roomMessages', handleRoomMessages);
-    socket.on('roomParticipants', handleRoomParticipants);
-    socket.on('userTyping', handleUserTyping);
+    });
 
     // 정리 함수
     return () => {
-      socket.off('roomMessage', handleRoomMessage);
-      socket.off('roomMessages', handleRoomMessages);
-      socket.off('roomParticipants', handleRoomParticipants);
-      socket.off('userTyping', handleUserTyping);
+      roomMessagesSubscription?.unsubscribe();
+      participantsSubscription?.unsubscribe();
+      typingSubscription?.unsubscribe();
     };
-  }, [socket, currentUser]);
+  }, [stompClient, roomData, currentUser]);
 
   // 타이핑 인디케이터
   useEffect(() => {
-    if (isTyping) {
-      socket?.emit('typing', { 
-        roomId: roomData?.id, 
-        userId: currentUser?.id, 
-        userName: currentUser?.name, 
-        isTyping: true 
-      });
+    if (isTyping && stompClient && stompClient.connected) {
+      stompClient.send(`/app/chat/typing`, {}, JSON.stringify({
+        roomId: roomData?.id,
+        userId: currentUser?.id,
+        userName: currentUser?.name,
+        isTyping: true
+      }));
       
       const timer = setTimeout(() => {
-        socket?.emit('typing', { 
-          roomId: roomData?.id, 
-          userId: currentUser?.id, 
-          userName: currentUser?.name, 
-          isTyping: false 
-        });
+        stompClient.send(`/app/chat/typing`, {}, JSON.stringify({
+          roomId: roomData?.id,
+          userId: currentUser?.id,
+          userName: currentUser?.name,
+          isTyping: false
+        }));
         setIsTyping(false);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [isTyping, socket, roomData, currentUser]);
+  }, [isTyping, stompClient, roomData, currentUser]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && socket && currentUser && roomData) {
-      // 고유 ID 생성 (중복 방지를 위해 더 정확한 ID 생성)
-      messageCounterRef.current += 1;
-      const uniqueId = `${currentUser.id}_${Date.now()}_${messageCounterRef.current}`;
-      
-      const message = {
-        id: uniqueId,
-        text: newMessage,
-        sender: currentUser,
-        roomId: roomData.id,
-        timestamp: new Date().toISOString(),
-        type: 'user'
-      };
+  const handleSendMessage = async () => {
+    if (newMessage.trim() && currentUser && roomData) {
+      try {
+        // 1. DB에 메시지 저장
+        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userId = userInfo.id;
+        
+        if (userId) {
+          const messageData = {
+            user_id: userId,
+            sent_at: new Date().toISOString(),
+            message: newMessage.trim(),
+            room_index: roomData.room_index || roomData.roomIndex || null,
+            room_name: roomData.name || roomData.roomName || '채팅방',
+            participants: roomData.participants || []
+          };
 
-      socket.emit('sendRoomMessage', message);
-      setNewMessage('');
-      setIsTyping(false);
+          console.log('💾 채팅 메시지 DB 저장:', messageData);
+          setupInterceptors();
+          await saveChatMessage(messageData);
+          console.log('✅ 메시지 DB 저장 성공');
+        }
+
+        // 2. WebSocket으로 실시간 전송
+        const success = sendMessageToRoom(roomData.id, newMessage.trim());
+        if (success) {
+          console.log('✅ 메시지 전송 성공');
+        } else {
+          console.error('❌ 메시지 전송 실패');
+        }
+
+        setNewMessage('');
+        setIsTyping(false);
+
+      } catch (error) {
+        console.error('🚨 메시지 저장 실패:', error);
+        
+        // DB 저장 실패해도 WebSocket 전송은 계속
+        const success = sendMessageToRoom(roomData.id, newMessage.trim());
+        if (success) {
+          console.log('✅ 메시지 전송 성공 (DB 저장 실패 후)');
+        } else {
+          console.error('❌ 메시지 전송 실패 (DB 저장 실패 후)');
+        }
+        
+        setNewMessage('');
+        setIsTyping(false);
+      }
     }
   };
 
@@ -352,6 +416,18 @@ function ChatRoomWindow({
               backgroundColor: '#fafafa'
             }}
           >
+            {/* 메시지 렌더링 디버깅 */}
+            {console.log('🎨 [디버그] 메시지 렌더링 시작 - 총 메시지 개수:', messages.length)}
+            {console.log('🎨 [디버그] 현재 메시지 배열:', messages)}
+            
+            {messages.length === 0 && (
+              <Box sx={{ textAlign: 'center', py: 4, color: 'text.secondary' }}>
+                <Typography variant="body2">
+                  💬 아직 메시지가 없습니다. 첫 메시지를 보내보세요!
+                </Typography>
+              </Box>
+            )}
+            
             {messages.map((message, index) => {
               // 안전한 key 생성 (message.id가 있으면 사용, 없으면 index와 timestamp 조합)
               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;

@@ -1,20 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import io from 'socket.io-client';
 
 import RealTimeChatButton from './RealTimeChatButton';
 import ChatMainWindow from './ChatMainWindow';
 import ChatRoomWindow from './ChatRoomWindow';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 
 function RealTimeChat() {
+  // ChatWebSocket Context 사용
+  const { 
+    stompClient, 
+    isConnected, 
+    currentUser: contextCurrentUser,
+    connectWebSocket,
+    disconnectWebSocket
+  } = useChatWebSocket();
+  
   // 채팅 시스템 상태
   const [currentView, setCurrentView] = useState('closed'); // 'closed', 'main', 'room'
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [socket, setSocket] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isConnected, setIsConnected] = useState(false);
 
-  // localStorage에서 사용자 정보 가져오기
+  // localStorage에서 사용자 정보 가져오기 및 WebSocket 연결
   useEffect(() => {
     const userInfoStr = localStorage.getItem('user-info');
     
@@ -29,82 +36,42 @@ function RealTimeChat() {
         
         console.log('👤 로그인된 사용자 정보 사용:', user);
         setCurrentUser(user);
+        
+        // Context의 WebSocket 연결 사용
+        if (currentView !== 'closed') {
+          connectWebSocket(user);
+        }
       } catch (error) {
         console.error('사용자 정보 파싱 오류:', error);
         // 파싱 실패 시 기본값 사용
-        setCurrentUser({
+        const guestUser = {
           id: `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
           name: `게스트${Math.floor(Math.random() * 1000)}`,
           avatar: null
-        });
+        };
+        setCurrentUser(guestUser);
+        
+        if (currentView !== 'closed') {
+          connectWebSocket(guestUser);
+        }
       }
     } else {
       console.warn('로그인 정보 없음, 기본 사용자 생성');
       // 로그인 정보 없으면 기본값 사용
-      setCurrentUser({
+      const guestUser = {
         id: `guest_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
         name: `게스트${Math.floor(Math.random() * 1000)}`,
         avatar: null
-      });
-    }
-  }, []);
-
-  // WebSocket 연결 (메인 창이 열릴 때만)
-  useEffect(() => {
-    if (!currentUser || currentView === 'closed') return;
-
-    console.log('🔗 WebSocket 연결 시도:', currentUser.name, currentUser.id);
-
-    // 이미 연결되어 있다면 중복 연결 방지
-    if (socket?.connected) {
-      console.log('⚠️ 이미 연결되어 있음, 새 연결 건너뛰기');
-      return;
-    }
-    const socketConnection = io(process.env.NODE_ENV === 'development' ? 'ws://localhost:4000' : `ws://${process.env.REACT_APP_CHAT_SERVER_HOST}:4000`, {
-      query: { userId: currentUser.id, userName: currentUser.name },
-      forceNew: true,
-      timeout: 5000,
-      transports: ['websocket']
-    });
-
-    socketConnection.on('connect', () => {
-      setIsConnected(true);
-      console.log('✅ 채팅 서버에 연결됨:', socketConnection.id, '사용자:', currentUser.name);
-    });
-
-    socketConnection.on('disconnect', (reason) => {
-      setIsConnected(false);
-      console.log('❌ 채팅 서버 연결 끊김:', reason, '사용자:', currentUser.name);
-    });
-
-    socketConnection.on('connect_error', (error) => {
-      console.error('🚨 연결 오류:', error);
-      setIsConnected(false);
-    });
-
-    // 전역 알림 처리
-    socketConnection.on('message', (message) => {
-      console.log('🌍 전역 메시지 수신:', message);
+      };
+      setCurrentUser(guestUser);
       
-      if (currentView === 'closed' && 
-          message.sender && 
-          message.sender.id && 
-          currentUser && 
-          message.sender.id !== currentUser.id) {
-        setUnreadCount(prev => prev + 1);
+      if (currentView !== 'closed') {
+        connectWebSocket(guestUser);
       }
-    });
+    }
+  }, [currentView, connectWebSocket]);
 
-    setSocket(socketConnection);
 
-    // 정리 함수
-    return () => {
-      console.log('🔌 WebSocket 연결 정리:', currentUser.name, currentUser.id);
-      if (socketConnection.connected) {
-        socketConnection.disconnect();
-      }
-    };
-  }, [currentUser?.id, currentView]);
 
   // 버튼 클릭 핸들러 - ChatMainWindow 열기
   const handleChatButtonClick = () => {
@@ -115,12 +82,8 @@ function RealTimeChat() {
   // 메인 창 닫기
   const handleMainWindowClose = () => {
     setCurrentView('closed');
-    // 소켓 연결 해제
-    if (socket?.connected) {
-      socket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
-    }
+    // Context의 WebSocket 연결 해제 사용
+    disconnectWebSocket();
   };
 
   // 채팅방 선택 핸들러
@@ -139,21 +102,18 @@ function RealTimeChat() {
   // 채팅방 닫기
   const handleRoomClose = () => {
     setCurrentView('closed');
-    setSelectedRoom(null);
     
-    if (socket && selectedRoom && currentUser) {
-      socket.emit('leaveRoom', { 
-        roomId: selectedRoom.id, 
-        user: currentUser 
-      });
+    // 채팅방 퇴장 메시지 전송 (TODO: Context에 퇴장 메서드 추가 후 사용)
+    if (stompClient && stompClient.connected && selectedRoom && currentUser) {
+      stompClient.send('/app/chat/leave', {}, JSON.stringify({
+        roomId: selectedRoom.id,
+        user: currentUser
+      }));
     }
-
-    // 소켓 연결 해제
-    if (socket?.connected) {
-      socket.disconnect();
-      setSocket(null);
-      setIsConnected(false);
-    }
+    
+    setSelectedRoom(null);
+    // Context의 WebSocket 연결 해제 사용
+    disconnectWebSocket();
   };
 
   if (!currentUser) return null;
@@ -167,12 +127,12 @@ function RealTimeChat() {
         isOnline={isConnected}
       />
 
-      {/* 메인 채팅 창 (친구, 채팅방 목록, 설정) */}
+      {/* 메인 채팅 창 (관리자, 채팅방 목록, 설정) */}
       <ChatMainWindow
         open={currentView === 'main'}
         onClose={handleMainWindowClose}
         onRoomSelect={handleRoomSelect}
-        socket={socket}
+        stompClient={stompClient}
         currentUser={currentUser}
       />
 
@@ -182,7 +142,7 @@ function RealTimeChat() {
         onClose={handleRoomClose}
         onBack={handleBackToMain}
         roomData={selectedRoom}
-        socket={socket}
+        stompClient={stompClient}
         currentUser={currentUser}
       />
     </>

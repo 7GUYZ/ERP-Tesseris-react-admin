@@ -317,7 +317,7 @@ const MainNavi = () => {
           {
             id: "advertisement-management",
             programIndex: 24,
-            label: "광고 관리",
+            label: "팝업 관리",
             type: "link",
             href: "/advertisement/list",
           },
