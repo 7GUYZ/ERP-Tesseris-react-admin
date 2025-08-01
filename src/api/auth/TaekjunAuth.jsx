@@ -61,7 +61,7 @@ export const userListApi = {
 export const permissionCheckApi = {
   // 특정 권한 체크 (로컬스토리지의 user-info에서 admin_type_index 사용)
   checkPermission: async (programIndex, permissionType) => {
-    const userInfo = localStorage.getItem('user-info');
+    const userInfo = localStorage.getItem('admin-info');
     const userData = userInfo ? JSON.parse(userInfo) : null;
     const adminTypeIndex = userData?.admin_type_index;
     
@@ -78,7 +78,7 @@ export const permissionCheckApi = {
 
   // 현재 사용자의 모든 권한 조회 (로컬스토리지의 user-info에서 admin_type_index 사용)
   getUserPermissions: async (programIndex) => {
-    const userInfo = localStorage.getItem('user-info');
+    const userInfo = localStorage.getItem('admin-info');
     const userData = userInfo ? JSON.parse(userInfo) : null;
     const adminTypeIndex = userData?.admin_type_index;
     

@@ -21,7 +21,7 @@ const AdminQnaDetailPage = () => {
 
     const fetchQnaDetail = async () => {
         try {
-            const token = localStorage.getItem('access-token');
+            const token = localStorage.getItem('admin-access-token');
             if (!token) {
                 setError('인증 토큰이 없습니다. 다시 로그인해주세요.');
                 setLoading(false);
@@ -65,7 +65,7 @@ const AdminQnaDetailPage = () => {
         setIsSubmitting(true);
         
         try {
-            const token = localStorage.getItem('access-token');
+            const token = localStorage.getItem('admin-access-token');
             if (!token) {
                 alert('인증 토큰이 없습니다. 다시 로그인해주세요.');
                 setIsSubmitting(false);

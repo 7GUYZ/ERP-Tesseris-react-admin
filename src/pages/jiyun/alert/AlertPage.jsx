@@ -110,7 +110,7 @@ export default function AlertPage() {
   } = useNotificationStore();
 
   useEffect(() => {
-    const userInfo = JSON.parse(localStorage.getItem("user-info"));
+    const userInfo = JSON.parse(localStorage.getItem("admin-info"));
     const adminTypeIndex = userInfo?.admin_type_index;
 
     // 전체 페이지 로딩 처리
@@ -121,7 +121,7 @@ export default function AlertPage() {
         
         // 1. 권한 조회 및 알림 설정 로드
         const authorityResponse = await menuAuthority(adminTypeIndex);
-        const userInfo = JSON.parse(localStorage.getItem("user-info"));
+        const userInfo = JSON.parse(localStorage.getItem("admin-info"));
         const userIndex = userInfo?.user_index;
 
         if (!userIndex) {
@@ -172,7 +172,7 @@ export default function AlertPage() {
   const handleSettingChange = async (key) => {
     try {
       // 사용자 정보 가져오기
-      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const userInfo = JSON.parse(localStorage.getItem("admin-info"));
       const userIndex = userInfo?.user_index;
 
       if (!userIndex) {

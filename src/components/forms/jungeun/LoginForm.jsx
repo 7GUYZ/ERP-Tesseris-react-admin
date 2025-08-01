@@ -109,9 +109,9 @@ const LoginForm = () => {
 
           if (accessToken) {
             // localStorage에 토큰 저장
-            localStorage.setItem("access-token", accessToken)
+            localStorage.setItem("admin-access-token", accessToken)
             // localStorage에 user-info 저장 - 백엔드에서 응답 본문에 포함된 데이터 저장
-            localStorage.setItem("user-info", JSON.stringify(response.data.data))
+            localStorage.setItem("admin-info", JSON.stringify(response.data.data))
           }
 
           // 권한 조회 및 캐싱

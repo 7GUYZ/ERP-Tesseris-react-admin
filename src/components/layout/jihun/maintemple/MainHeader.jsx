@@ -29,8 +29,8 @@ const MainHeader = () => {
 
       // 응답 상태와 관계없이 로컬 정리 수행
       useAuthStore.getState().zu_logout();
-      localStorage.removeItem("access-token");
-      localStorage.removeItem("user-info");
+      localStorage.removeItem("admin-access-token");
+      localStorage.removeItem("admin-info");
       // 권한 캐시 클리어
       clearAuthorityCache();
       // 홈으로 이동
@@ -40,8 +40,8 @@ const MainHeader = () => {
       console.error("로그아웃 중 오류 발생:", error);
       // 에러가 발생해도 로컬 정리 수행
       useAuthStore.getState().zu_logout();
-      localStorage.removeItem("access-token");
-      localStorage.removeItem("user-info");
+      localStorage.removeItem("admin-access-token");
+      localStorage.removeItem("admin-info");
       clearAuthorityCache();
       navigate("/");
     }

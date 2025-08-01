@@ -30,7 +30,7 @@ const AdminMyPage = () => {
 
   // 로그인된 사용자 정보에서 userIndex 가져오기
   const getUserIndex = () => {
-    const userInfo = localStorage.getItem('user-info');
+    const userInfo = localStorage.getItem('admin-info');
     if (userInfo) {
       try {
         const parsedUserInfo = JSON.parse(userInfo);

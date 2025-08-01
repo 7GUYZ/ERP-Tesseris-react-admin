@@ -32,13 +32,13 @@ const MainNavi = () => {
   const [authorityList, setAuthorityList] = useState([]); // eslint-disable-line no-unused-vars
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
-  const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
+  const userInfo = JSON.parse(localStorage.getItem("admin-info")) || {};
   const userName = userInfo.name || "";
   const adminType = userInfo.admin_type_name || "";
   useEffect(() => {
     // 1. localStorage에서 권한 정보 확인
     const getAuthority = async () => {
-      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const userInfo = JSON.parse(localStorage.getItem("admin-info"));
       const storedAuthority = localStorage.getItem("user-authority");
       
       if (storedAuthority) {
