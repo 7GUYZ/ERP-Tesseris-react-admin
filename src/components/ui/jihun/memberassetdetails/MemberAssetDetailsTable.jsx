@@ -128,7 +128,12 @@ const MemberAssetDetailsTable = ({
       align: 'center',
       headerAlign: 'center',
       valueFormatter: (params) => {
-        // params 자체가 값이므로 params.value 대신 params 사용
+        // params가 undefined인 경우 처리
+        if (!params) {
+          return "0";
+        }
+        
+        // params.value가 undefined인 경우 처리
         const value = params.value !== undefined ? params.value : params;
         
         // null, undefined, 빈 문자열 체크

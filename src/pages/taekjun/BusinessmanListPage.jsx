@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-import { businessmanListApi, permissionCheckApi } from '../../api/auth/TaekjunAuth';
-
-
+import { businessmanListApi } from '../../api/auth/TaekjunAuth';
+import usePermissionStore from '../../store/taekjun/PermissionStore';
+import PermissionGuard from '../../components/common/PermissionGuard';
+import { getProgramIndexByPath, PROGRAM_INDEXES } from '../../constants/programIndexes';
 import '../../styles/taekjun/BusinessmanListPage.css';
 
 // DataGrid 컬럼 정의
@@ -42,9 +43,6 @@ const loadKakaoAddressScript = () => {
 
 const BusinessmanListPage = () => {
   const location = useLocation();
-  
-
-  
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,7 +57,6 @@ const BusinessmanListPage = () => {
     userPhone: '',
     businessGradeName: '',
     bossEmail: '',
-    bossName: '',
     businessAreaName: '',
     businessManDistributionFlag: ''
   });
@@ -78,41 +75,26 @@ const BusinessmanListPage = () => {
   const [showBossSelectModal, setShowBossSelectModal] = useState(false);
   const [bossSearchTerm, setBossSearchTerm] = useState('');
   const [filteredBossList, setFilteredBossList] = useState([]);
-  const [buttonPermissions, setButtonPermissions] = useState({
-    canInsert: false,
-    canUpdate: false,
-    canDelete: false
-  });
 
+  // 권한 체크 훅 사용
+  const { checkPermission, hasPermission } = usePermissionStore();
 
+  // 현재 페이지의 programIndex 결정
+  const programIndex = getProgramIndexByPath(location.pathname) || PROGRAM_INDEXES.BUSINESS_MEMBER_LIST;
 
-  // 페이지 로드 시 권한 체크 - 한 번의 API 호출로 모든 권한 체크
+  // 컴포넌트 마운트 시 권한 체크
   useEffect(() => {
-    const initializePermissions = async () => {
+    const checkBusinessmanPermissions = async () => {
       try {
-        const response = await permissionCheckApi.checkPermission(17); // programIndex: 17 (사업자 회원 리스트)
-        
-        if (response.data) {
-          setButtonPermissions({
-            canInsert: response.data.hasInsertAuthority === 1,
-            canUpdate: response.data.hasUpdateAuthority === 1,
-            canDelete: response.data.hasDeleteAuthority === 1
-          });
-          
-          console.log('사업자 리스트 버튼 권한 체크 결과:', response.data);
-        }
+        // 사업자 관리 관련 권한들 체크
+        await checkPermission(programIndex);
       } catch (error) {
         console.error('권한 체크 실패:', error);
-        setButtonPermissions({
-          canInsert: false,
-          canUpdate: false,
-          canDelete: false
-        });
       }
     };
     
-    initializePermissions();
-  }, []);
+    checkBusinessmanPermissions();
+  }, [checkPermission, programIndex]);
 
   // 사업자 등급 데이터 로드
   const fetchBusinessGrades = useCallback(async () => {
@@ -232,6 +214,12 @@ const BusinessmanListPage = () => {
 
   // 검색 실행
   const handleSearch = async () => {
+    // 권한 체크
+    if (!hasPermission(2, 'insert')) { // 조회 권한은 insert로 가정
+      alert('조회 권한이 없습니다.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -264,6 +252,12 @@ const BusinessmanListPage = () => {
 
   // 엑셀 다운로드
   const handleExcelDownload = async () => {
+    // 권한 체크
+    if (!hasPermission(2, 'insert')) { // 엑셀 다운로드 권한은 insert로 가정
+      alert('엑셀 다운로드 권한이 없습니다.');
+      return;
+    }
+
     try {
       setLoading(true);
       console.log('사업자 목록 엑셀 다운로드 시작...');
@@ -301,6 +295,11 @@ const BusinessmanListPage = () => {
 
   // 사업자 생성
   const handleCreateBusinessman = () => {
+    // 권한 체크
+    if (!hasPermission(2, 'insert')) {
+      alert('사업자 생성 권한이 없습니다.');
+      return;
+    }
 
     setCreateForm({
       email: '',
@@ -322,6 +321,11 @@ const BusinessmanListPage = () => {
 
   // 사업자 수정
   const handleEditBusinessman = (businessman) => {
+    // 권한 체크
+    if (!hasPermission(2, 'update')) {
+      alert('사업자 수정 권한이 없습니다.');
+      return;
+    }
 
     console.log('수정할 사업자 데이터:', businessman);
     setEditingBusinessman(businessman);
@@ -615,41 +619,27 @@ const BusinessmanListPage = () => {
           <button className="businessman-list-action-btn" onClick={handleSearch}>
             조회
           </button>
-          <button className="businessman-list-action-btn" onClick={() => {
-            if (!buttonPermissions.canInsert) {
-              alert('생성 권한이 없습니다.');
-              return;
-            }
-            handleCreateBusinessman();
-          }}>
-            생성
-          </button>
-          <button 
-            className="businessman-list-action-btn" 
-            onClick={() => {
-              if (!buttonPermissions.canUpdate) {
-                alert('수정 권한이 없습니다.');
-                return;
-              }
-              if (selectedRows.size > 0) {
-                handleEditBusinessman(rows.find(b => b.id === Array.from(selectedRows)[0]));
-              }
-            }}
-          >
-            수정
-          </button>
-          <button 
-            className="businessman-list-action-btn businessman-list-action-btn-danger" 
-            onClick={() => {
-              if (!buttonPermissions.canDelete) {
-                alert('삭제 권한이 없습니다.');
-                return;
-              }
-              handleDeleteBusinessman();
-            }}
-          >
-            비활성화
-          </button>
+          <PermissionGuard programIndex={programIndex} permissionType="insert">
+            <button className="businessman-list-action-btn" onClick={handleCreateBusinessman}>
+              생성
+            </button>
+          </PermissionGuard>
+          <PermissionGuard programIndex={programIndex} permissionType="update">
+            <button 
+              className="businessman-list-action-btn" 
+              onClick={() => selectedRows.size > 0 && handleEditBusinessman(rows.find(b => b.id === Array.from(selectedRows)[0]))}
+            >
+              수정
+            </button>
+          </PermissionGuard>
+          <PermissionGuard programIndex={programIndex} permissionType="delete">
+            <button 
+              className="businessman-list-action-btn businessman-list-action-btn-danger" 
+              onClick={handleDeleteBusinessman}
+            >
+              비활성화
+            </button>
+          </PermissionGuard>
         </div>
       </div>
 
@@ -702,16 +692,6 @@ const BusinessmanListPage = () => {
                   </option>
                 ))}
               </select>
-            </div>
-            <div className="businessman-list-search-item">
-              <label>상사 이름</label>
-              <input
-                type="text"
-                placeholder="상사 이름을 입력하세요."
-                value={searchFilters.bossName}
-                onChange={(e) => handleFilterChange('bossName', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
             </div>
             <div className="businessman-list-search-item">
               <label>상사 이메일</label>
