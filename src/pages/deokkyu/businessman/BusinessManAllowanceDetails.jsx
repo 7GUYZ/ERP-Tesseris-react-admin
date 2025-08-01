@@ -9,7 +9,6 @@ import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/BusinessManAllowanceDetails.css'; 
 import { getAllowanceList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
-import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
@@ -301,7 +300,6 @@ function BusinessManAllowanceDetails() {
           />
         </div>
       </Box>
-      <RealTimeChat />
     </LocalizationProvider>
   );
 }
