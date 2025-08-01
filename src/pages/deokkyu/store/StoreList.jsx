@@ -12,7 +12,6 @@ import { permissionCheckApi } from '../../../api/auth/TaekjunAuth';
 import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import StoreDetailModal from '../../../components/feature/deokkyu/dmodal/StoreDetailModal';
-import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [

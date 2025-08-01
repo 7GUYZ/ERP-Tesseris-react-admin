@@ -1,184 +1,206 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  Paper, Box, Tabs, Tab, List, ListItem, ListItemAvatar,
-  ListItemText, Avatar, IconButton, Typography, Chip,
-  Badge, TextField, Button, Divider, Switch, FormControlLabel,
-  CircularProgress
+  Paper, Box, Tabs, Tab, List, ListItem,
+  ListItemText, IconButton, Typography, Chip,
+  Badge, TextField, Button, Divider, Switch, FormControlLabel
 } from '@mui/material';
+import TreeView from '@mui/lab/TreeView';
+import TreeItem from '@mui/lab/TreeItem';
 import {
   Close, Minimize, DragIndicator, PersonAdd, Settings,
-  MoreVert, Search, Add, Send, Refresh
+  MoreVert, Search, Add, Send, Home, Folder, Description,
+  ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
-import { getChatAdminList, getUserChatRooms, setupInterceptors } from '../../api/auth/DeokkyuAuth';
-import { useChatWebSocket } from '../../context/ChatWebSocketContext';
+import { adminlist } from './ChatService';
+import { SearchRoom } from '../../api/auth/JihunAuth';
+import { useWebSocket } from './WebSocketConfig';
 
+function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
+  const { subscribeToRoom } = useWebSocket();
+  function ChatComponent() {
+    const {
+      isConnected,
+      connectWebSocket,
+      subscribeToRoom,
+      sendMessage
+    } = useWebSocket();
 
-function ChatMainWindow({ open, onClose, onRoomSelect }) {
-  const { 
-    stompClient, 
-    currentUser 
-  } = useChatWebSocket();
+    // 컴포넌트 마운트 시 WebSocket 연결
+    useEffect(() => {
+      const token = localStorage.getItem('access-token');
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+
+      if (token && userInfo) {
+        connectWebSocket(token, userInfo.user_index);
+      }
+    }, []);
+  }
+  // ============================================================================
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [position, setPosition] = useState({ 
-    x: window.innerWidth - 450, 
-    y: 100 
+  const [position, setPosition] = useState(currentPosition || {
+    x: window.innerWidth - 450,
+    y: 100
   });
+  const [size, setSize] = useState(currentSize || { width: 400, height: 600 });
   const [isDragging, setIsDragging] = useState(false);
+  const [isResizing, setIsResizing] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [isMinimized, setIsMinimized] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [notifications, setNotifications] = useState(true);
-  const [darkMode, setDarkMode] = useState(false);
-  
-  // 👥 관리자 목록 상태
-  const [admins, setAdmins] = useState([]);
-  const [adminsLoading, setAdminsLoading] = useState(false);
-  
-  // 💬 채팅방 목록 상태
-  const [chatRooms, setChatRooms] = useState([]);
-  const [chatRoomsLoading, setChatRoomsLoading] = useState(false);
-  
-  // 🌍 전체 채팅방 상태
-  const [globalMessages, setGlobalMessages] = useState([]);
-  const [newGlobalMessage, setNewGlobalMessage] = useState('');
-  const messagesEndRef = useRef(null);
-  
-  // 메시지 중복 처리 방지
-  const processedMessagesRef = useRef(new Set());
-  const messageCounterRef = useRef(0);
-  
   const chatRef = useRef(null);
-
-  // 관리자 목록 가져오기
-  const fetchAdmins = async () => {
-    try {
-      setAdminsLoading(true);
-      setupInterceptors();
-      const response = await getChatAdminList();
-      console.log('👥 관리자 목록 조회 성공:', response.data);
-      
-      // API 응답 구조에 맞게 데이터 처리
-      const adminsData = response.data?.map(admin => ({
-        id: admin.adminUserIndex || admin.id || 'unknown',
-        name: admin.adminName || '이름없음',
-        userIndex: admin.adminUserIndex,
-        typeName: admin.adminTypeName || '미지정',
-        rankName: admin.adminRankName || '미지정',
-        status: '온라인', // 실제로는 온라인 상태 API에서 확인 필요
-        avatar: null,
-        // 원본 데이터도 유지
-        ...admin
-      })) || [];
-      
-      setAdmins(adminsData);
-      
-    } catch (error) {
-      console.error('🚨 관리자 목록 조회 실패:', error);
-      // 실패 시 빈 배열로 설정
-      setAdmins([]);
-    } finally {
-      setAdminsLoading(false);
+  const [loading, setLoading] = useState(false);
+  // ============================================================================
+  const [adminList, setAdminList] = useState([]);
+  const [chatRooms, setChatRooms] = useState([]);
+  const [expandedGroups, setExpandedGroups] = useState(new Set());
+  
+  // 관리자 목록 조회
+  React.useEffect(() => {
+    if (open && activeTab === 0) {  // 홈 탭일 때만 호출
+      setLoading(true);
+      adminlist().then((data) => {
+        // 본인 제외하기
+        const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        console.log("관리자 목록 원본 데이터:", data);
+        const filteredData = data.filter(admin => admin.userIndex !== userInfo?.user_index);
+        console.log("필터링된 관리자 목록:", filteredData);
+        setAdminList(filteredData);
+        setLoading(false);
+      }).catch(error => {
+        console.error('관리자 목록 조회 실패:', error);
+        setLoading(false);
+      });
     }
-  };
+  }, [open, activeTab]);
 
-  // 채팅방 목록 가져오기
-  const fetchChatRooms = async () => {
-    try {
-      setChatRoomsLoading(true);
-      
-      // 로컬스토리지에서 user_index 가져오기
-      const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
-      const userId = userInfo.id;
-      
-      console.log('📋 로컬스토리지 user-info:', userInfo);
-      console.log('🔑 추출된 userId:', userId);
-      
-      if (!userId) {
-        console.warn('⚠️ 사용자 정보가 없습니다. 로그인이 필요합니다.');
-        console.warn('📋 현재 user-info:', userInfo);
-        setChatRooms([]);
-        return;
+  // 채팅방 목록 조회
+  React.useEffect(() => {
+    if (open && activeTab === 1) {  // 채팅방 설정 탭일 때만 호출
+      setLoading(true);
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      if (userInfo?.id) {
+        SearchRoom(userInfo.id).then((response) => {
+          if (response?.data?.data) {
+            setChatRooms(response.data.data);
+          }
+          setLoading(false);
+        }).catch(error => {
+          console.error('채팅방 목록 조회 실패:', error);
+          setLoading(false);
+        });
       }
-
-      setupInterceptors();
-      const response = await getUserChatRooms(userId);
-      console.log('💬 채팅방 목록 조회 성공:', response.data);
-      
-      // API 응답 구조 처리 - {resultCode, resultMessage, data?} 형태
-      const responseData = response.data;
-      console.log('🔍 전체 응답 구조:', responseData);
-      
-      if (responseData.resultCode !== 200) {
-        console.warn('⚠️ API 응답 실패:', responseData.resultMessage);
-        setChatRooms([]);
-        return;
-      }
-      
-      // resultMessage에 에러가 포함되어 있는 경우 처리
-      if (responseData.resultMessage && responseData.resultMessage.includes('Error')) {
-        console.error('🚨 백엔드 파싱 오류:', responseData.resultMessage);
-        setChatRooms([]);
-        return;
-      }
-      
-      // data 필드가 있는지 확인
-      if (!responseData.data) {
-        console.warn('⚠️ 응답에 데이터가 없습니다:', responseData);
-        setChatRooms([]);
-        return;
-      }
-      
-      const roomsData = responseData.data?.map(room => ({
-        id: room.roomId || room.id || Math.random().toString(36),
-        name: room.roomName || room.name || '채팅방',
-        lastMessage: room.lastMessage || '메시지가 없습니다',
-        lastTime: room.lastTime || room.updatedAt || '알 수 없음',
-        unreadCount: room.unreadCount || 0,
-        participants: room.participants || room.memberNames || [],
-        roomType: room.roomType || room.type || 'group',
-        room_index: room.roomIndex || room.room_index || room.id, // room_index 추가
-        createdAt: room.createdAt,
-        updatedAt: room.updatedAt,
-        // 원본 데이터도 유지
-        ...room
-      })) || [];
-      
-      console.log('📋 처리된 채팅방 데이터:', roomsData);
-      setChatRooms(roomsData);
-      
-    } catch (error) {
-      console.error('🚨 채팅방 목록 조회 실패:', error);
-      // 실패 시 빈 배열로 설정
-      setChatRooms([]);
-    } finally {
-      setChatRoomsLoading(false);
     }
-  };
-
+  }, [open, activeTab]);
+  // ============================================================================
   // 드래그 기능
   const handleMouseMove = useCallback((e) => {
     if (!isDragging) return;
-    
+
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
-    
-    const maxX = window.innerWidth - 400;
-    const maxY = window.innerHeight - (isMinimized ? 60 : 600);
-    
-    setPosition({
+
+    const maxX = window.innerWidth - size.width;
+    const maxY = window.innerHeight - (isMinimized ? 60 : size.height);
+
+    const newPosition = {
       x: Math.max(0, Math.min(newX, maxX)),
       y: Math.max(0, Math.min(newY, maxY))
-    });
-  }, [isDragging, dragStart.x, dragStart.y, isMinimized]);
+    };
+    setPosition(newPosition);
 
+    // 부모 컴포넌트에 위치 변경 알림
+    if (onPositionChange) {
+      onPositionChange(newPosition);
+    }
+  }, [isDragging, dragStart.x, dragStart.y, isMinimized, size.width, size.height, onPositionChange]);
+
+  // 리사이즈 기능
+  const handleResizeMove = useCallback((e) => {
+    if (!isResizing) return;
+
+    const deltaX = e.clientX - resizeStart.x;
+    const deltaY = e.clientY - resizeStart.y;
+
+    let newWidth = resizeStart.width;
+    let newHeight = resizeStart.height;
+    let newX = resizeStart.positionX;
+    let newY = resizeStart.positionY;
+
+    // 오른쪽 하단에서 리사이즈
+    if (resizeStart.direction === 'bottom-right') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width + deltaX));
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height + deltaY));
+    }
+    // 왼쪽 하단에서 리사이즈
+    else if (resizeStart.direction === 'bottom-left') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width - deltaX));
+      newX = resizeStart.positionX + (resizeStart.width - newWidth);
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height + deltaY));
+    }
+    // 오른쪽 상단에서 리사이즈
+    else if (resizeStart.direction === 'top-right') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width + deltaX));
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height - deltaY));
+      newY = resizeStart.positionY + (resizeStart.height - newHeight);
+    }
+    // 왼쪽 상단에서 리사이즈
+    else if (resizeStart.direction === 'top-left') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width - deltaX));
+      newX = resizeStart.positionX + (resizeStart.width - newWidth);
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height - deltaY));
+      newY = resizeStart.positionY + (resizeStart.height - newHeight);
+    }
+    // 오른쪽에서 리사이즈
+    else if (resizeStart.direction === 'right') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width + deltaX));
+    }
+    // 왼쪽에서 리사이즈
+    else if (resizeStart.direction === 'left') {
+      newWidth = Math.max(300, Math.min(window.innerWidth - 50, resizeStart.width - deltaX));
+      newX = resizeStart.positionX + (resizeStart.width - newWidth);
+    }
+    // 아래쪽에서 리사이즈
+    else if (resizeStart.direction === 'bottom') {
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height + deltaY));
+    }
+    // 위쪽에서 리사이즈
+    else if (resizeStart.direction === 'top') {
+      newHeight = Math.max(400, Math.min(window.innerHeight - 100, resizeStart.height - deltaY));
+      newY = resizeStart.positionY + (resizeStart.height - newHeight);
+    }
+
+    const maxX = window.innerWidth - newWidth;
+    const maxY = window.innerHeight - newHeight;
+
+    const newSize = { width: newWidth, height: newHeight };
+    setSize(newSize);
+    const newPosition = {
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    };
+    setPosition(newPosition);
+
+    // 부모 컴포넌트에 사이즈 변경 알림
+    if (onSizeChange) {
+      onSizeChange(newSize);
+    }
+
+    // 부모 컴포넌트에 위치 변경 알림
+    if (onPositionChange) {
+      onPositionChange(newPosition);
+    }
+  }, [isResizing, resizeStart]);
   const handleMouseUp = useCallback(() => {
     setIsDragging(false);
+    setIsResizing(false);
   }, []);
 
   const handleMouseDown = (e) => {
     if (e.target.closest('.no-drag')) return;
-    
+
     setIsDragging(true);
     const rect = chatRef.current.getBoundingClientRect();
     setDragStart({
@@ -187,137 +209,93 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
     });
   };
 
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
+  const handleResizeStart = (e, direction) => {
+    e.stopPropagation();
+    setIsResizing(true);
+    setResizeStart({
+      x: e.clientX,
+      y: e.clientY,
+      width: size.width,
+      height: size.height,
+      positionX: position.x,
+      positionY: position.y,
+      direction: direction
+    });
+  };
+  React.useEffect(() => {
+    if (isDragging || isResizing) {
+      document.addEventListener('mousemove', isDragging ? handleMouseMove : handleResizeMove);
       document.addEventListener('mouseup', handleMouseUp);
       return () => {
-        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mousemove', isDragging ? handleMouseMove : handleResizeMove);
         document.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [isDragging, handleMouseMove, handleMouseUp]);
+  }, [isDragging, isResizing, handleMouseMove, handleResizeMove, handleMouseUp]);
 
-  // 메시지 자동 스크롤 (주석 처리 - 전체 채팅방 제거)
-  // const scrollToBottom = () => {
-  //   messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  // };
+  // 화면 크기 변경 시 창 위치 자동 조정
+  React.useEffect(() => {
+    const handleResize = () => {
+      const maxX = window.innerWidth - size.width;
+      const maxY = window.innerHeight - (isMinimized ? 60 : size.height);
 
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [globalMessages]);
-
-  // 컴포넌트 마운트 시 관리자 목록 가져오기
-  useEffect(() => {
-    if (open) {
-      fetchAdmins();
-    }
-  }, [open]);
-
-  // STOMP 이벤트 리스너
-  useEffect(() => {
-    if (!stompClient || !stompClient.connected) return;
-
-    // 👥 온라인 사용자 업데이트 구독
-    const usersSubscription = stompClient.subscribe('/topic/users', (message) => {
-      const users = JSON.parse(message.body);
-      if (Array.isArray(users)) {
-        setOnlineUsers(users);
-        console.log('🔗 온라인 사용자 업데이트:', users.length, '명');
-      }
-    });
-
-    // 🌍 전역 메시지 구독
-    const globalSubscription = stompClient.subscribe('/topic/global', (message) => {
-      const chatMessage = JSON.parse(message.body);
-      console.log('🌍 전역 메시지 수신:', chatMessage);
-      setGlobalMessages(prev => [...prev, chatMessage]);
-    });
-
-    // 🚀 사용자 입장/퇴장 알림 구독
-    const joinSubscription = stompClient.subscribe('/topic/user-join', (message) => {
-      const user = JSON.parse(message.body);
-      console.log('👋 새 사용자 입장:', user);
-    });
-
-    const leaveSubscription = stompClient.subscribe('/topic/user-leave', (message) => {
-      const user = JSON.parse(message.body);
-      console.log('🚪 사용자 퇴장:', user);
-    });
-
-    // 정리 함수
-    return () => {
-      globalSubscription?.unsubscribe();
-      usersSubscription?.unsubscribe();
-      joinSubscription?.unsubscribe();
-      leaveSubscription?.unsubscribe();
+      setPosition(prev => ({
+        x: Math.max(0, Math.min(prev.x, maxX)),
+        y: Math.max(0, Math.min(prev.y, maxY))
+      }));
     };
-  }, [stompClient]);
 
-  // 🌍 전역 메시지 전송 (비활성화됨)
-  const handleSendGlobalMessage = () => {
-    console.log('⚠️ 전역 메시지 기능이 비활성화되었습니다.');
-    // 전역 메시지 기능이 제거되었습니다.
-    setNewGlobalMessage('');
-  };
-
-  const handleGlobalKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendGlobalMessage();
-    }
-  };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMinimized, size.width, size.height]);
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
-    
-    // 🌍 전체 채팅방 탭(0번)에 진입할 때 서버에 알림
-    if (newValue === 0 && stompClient && stompClient.connected && currentUser) {
-      console.log('🌍 전체 채팅방 입장:', currentUser.name);
-      // STOMP로 전체 채팅방 입장 알림
-      stompClient.send('/app/chat/join-global', {}, JSON.stringify({
-        user: currentUser
-      }));
-    }
-    
-    // 💬 채팅방 탭(2번)에 진입할 때 채팅방 목록 조회
-    if (newValue === 2) {
-      console.log('💬 채팅방 탭 진입 - 채팅방 목록 조회');
-      fetchChatRooms();
-    }
   };
+
+  // 최상위에서 전달받은 값이 변경될 때 로컬 상태 업데이트
+  React.useEffect(() => {
+    if (currentSize) {
+      setSize(currentSize);
+    }
+  }, [currentSize]);
+
+  React.useEffect(() => {
+    if (currentPosition) {
+      setPosition(currentPosition);
+    }
+  }, [currentPosition]);
 
   const handleRoomClick = (room) => {
     onRoomSelect(room);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case '온라인': return '#4CAF50';
-      case '자리비움': return '#FF9800';
-      default: return '#757575';
+  // 관리자 클릭 시 채팅방 생성
+  const handleAdminClick = async (admin) => {
+    try {
+      console.log("클릭된 관리자 데이터:", admin);
+      // 3. 채팅방 창 열기
+      onRoomSelect({
+        name: `${admin.name}님과의 채팅`,
+        adminData: admin,
+        subscribeToRoom: subscribeToRoom,
+      });
+    } catch (error) {
+      console.error('채팅방 생성 실패:', error);
     }
   };
 
-  const getAdminTypeColor = (typeName) => {
-    switch (typeName) {
-      case '슈퍼관리자': return '#f44336';
-      case '일반관리자': return '#2196f3';
-      case '운영자': return '#4caf50';
-      default: return '#9e9e9e';
-    }
+  const handleGroupToggle = (typeName) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(typeName)) {
+        newSet.delete(typeName);
+      } else {
+        newSet.add(typeName);
+      }
+      return newSet;
+    });
   };
-
-  const getAdminRankColor = (rankName) => {
-    switch (rankName) {
-      case '최고관리자': return '#d32f2f';
-      case '부관리자': return '#1976d2';
-      case '일반관리자': return '#388e3c';
-      case '운영자': return '#f57c00';
-      default: return '#757575';
-    }
-  };
-
 
   if (!open) return null;
 
@@ -329,20 +307,21 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
         position: 'fixed',
         left: position.x,
         top: position.y,
-        width: 400,
-        height: isMinimized ? 60 : 600,
+        width: size.width,
+        height: isMinimized ? 60 : size.height,
         zIndex: 1300,
         borderRadius: 2,
         overflow: 'hidden',
-        transition: isDragging ? 'none' : 'height 0.3s ease',
-        cursor: isDragging ? 'grabbing' : 'default'
+        transition: isDragging || isResizing ? 'none' : 'height 0.3s ease',
+        cursor: isDragging ? 'grabbing' : 'default',
+        userSelect: isDragging || isResizing ? 'none' : 'auto'
       }}
     >
       {/* 헤더 */}
       <Box
         onMouseDown={handleMouseDown}
         sx={{
-          background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)',
+          background: 'linear-gradient(45deg, rgb(33, 150, 243) 30%, rgb(33, 203, 243) 90%)',
           color: 'white',
           p: 1.5,
           cursor: isDragging ? 'grabbing' : 'grab',
@@ -355,17 +334,8 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <DragIndicator />
           <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-            채팅
+            관리자 채팅
           </Typography>
-          <Chip
-            label={`${onlineUsers.length}명 온라인`}
-            size="small"
-            sx={{
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              color: 'white',
-              fontSize: '0.7rem'
-            }}
-          />
         </Box>
         <Box className="no-drag">
           <IconButton
@@ -387,7 +357,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
 
       {!isMinimized && (
         <>
-          {/* 탭 - 전체 채팅방 탭 제거, 친구를 홈으로 변경 */}
+          {/* 탭 */}
           <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
             <Tabs
               value={activeTab}
@@ -396,169 +366,125 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
               className="no-drag"
               sx={{ '& .MuiTab-root': { fontSize: '0.8rem', minWidth: 'auto' } }}
             >
-              <Tab label="전체 채팅방" />
-              <Tab label="관리자" />
+              <Tab label="홈" />
               <Tab label="채팅방" />
               <Tab label="설정" />
             </Tabs>
           </Box>
 
           {/* 탭 내용 */}
-          <Box sx={{ height: 480, overflow: 'hidden' }}>
-            {/* 🏠 홈 탭 (기존 친구 탭을 홈으로 변경) */}
+          <Box sx={{ height: size.height - 120, overflow: 'hidden' }}>
+            {/* 홈 탭 */}
             {activeTab === 0 && (
-              <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                {/* 온라인 사용자 표시 */}
-                <Box sx={{ p: 1, borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
-                  <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                    🌍 전체 채팅방 ({onlineUsers.length}명 참여중)
-                  </Typography>
-                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
-                    {onlineUsers.slice(0, 5).map((user, index) => (
-                      <Chip
-                        key={user.id || `user_${index}`}
-                        avatar={<Avatar sx={{ width: 16, height: 16, fontSize: '0.6rem' }}>
-                          {user.name ? user.name[0] : 'U'}
-                        </Avatar>}
-                        label={user.name || 'Unknown'}
-                        size="small"
-                        variant={user.id === currentUser?.id ? "filled" : "outlined"}
-                        color={user.id === currentUser?.id ? "primary" : "default"}
-                        sx={{ fontSize: '0.6rem', height: 20 }}
-                      />
-                    ))}
-                    {onlineUsers.length > 5 && (
-                      <Chip label={`+${onlineUsers.length - 5}`} size="small" sx={{ fontSize: '0.6rem', height: 20 }} />
-                    )}
-                  </Box>
-                </Box>
-
-                {/* 전역 메시지 목록 */}
-                <Box
-                  sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    p: 1,
-                    backgroundColor: '#fafafa'
-                  }}
-                >
-                  {globalMessages.map((message, index) => {
-                    // 안전한 key 생성 (message.id가 있으면 사용, 없으면 index와 timestamp 조합)
-                    const safeKey = message.id || `msg_${index}_${message.timestamp || Date.now()}`;
-                    
-                    return (
-                      <Box key={safeKey} sx={{ mb: 1 }}>
-                        {message.type === 'system' ? (
-                          <Box sx={{ textAlign: 'center', my: 1 }}>
-                            <Chip
-                              label={message.text}
-                              size="small"
-                              sx={{ fontSize: '0.7rem', backgroundColor: '#e3f2fd' }}
-                            />
-                          </Box>
-                        ) : (
-                          <Box
-                            sx={{
-                              display: 'flex',
-                              justifyContent: message.sender?.id === currentUser?.id ? 'flex-end' : 'flex-start',
-                              alignItems: 'flex-start',
-                              gap: 1
-                            }}
-                          >
-                            {message.sender?.id !== currentUser?.id && (
-                              <Avatar sx={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                                {message.sender?.name ? message.sender.name[0] : 'U'}
-                              </Avatar>
-                            )}
-                            <Box>
-                              {message.sender?.id !== currentUser?.id && (
-                                <Typography variant="caption" sx={{ color: '#666', ml: 1 }}>
-                                  {message.sender?.name || 'Unknown'}
-                                </Typography>
-                              )}
-                              <Paper
-                                sx={{
-                                  p: 1,
-                                  maxWidth: 250,
-                                  backgroundColor: message.sender?.id === currentUser?.id ? '#2196F3' : 'white',
-                                  color: message.sender?.id === currentUser?.id ? 'white' : 'black',
-                                  borderRadius: 2,
-                                  boxShadow: 1
-                                }}
-                              >
-                                <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-                                  {message.text}
-                                </Typography>
-                                <Typography
-                                  variant="caption"
-                                  sx={{
-                                    display: 'block',
-                                    mt: 0.5,
-                                    opacity: 0.7,
-                                    fontSize: '0.6rem'
-                                  }}
-                                >
-                                  {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
-                                </Typography>
-                              </Paper>
-                            </Box>
-                            {message.sender?.id === currentUser?.id && (
-                              <Avatar sx={{ width: 28, height: 28, fontSize: '0.7rem' }}>
-                                {message.sender?.name ? message.sender.name[0] : 'U'}
-                              </Avatar>
-                            )}
-                          </Box>
-                        )}
-                      </Box>
-                    );
-                  })}
-                  <div ref={messagesEndRef} />
-                </Box>
-
-                {/* 전역 메시지 입력 */}
-                <Box
-                  className="no-drag"
-                  sx={{
-                    display: 'flex',
-                    gap: 1,
-                    p: 1.5,
-                    borderTop: '1px solid #e0e0e0',
-                    backgroundColor: 'white'
-                  }}
-                >
+              <Box sx={{ height: '100%', overflow: 'hidden' }}>
+                {/* 검색 */}
+                <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
                   <TextField
                     fullWidth
                     size="small"
-                    multiline
-                    maxRows={3}
-                    placeholder="전체 채팅방에 메시지를 입력하세요..."
-                    value={newGlobalMessage}
-                    onChange={(e) => setNewGlobalMessage(e.target.value)}
-                    onKeyPress={handleGlobalKeyPress}
-                    sx={{
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
+                    placeholder="부서 또는 직원 검색..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    InputProps={{
+                      startAdornment: <Search sx={{ mr: 1, color: '#666' }} />
                     }}
                   />
-                  <Button
-                    variant="contained"
-                    onClick={handleSendGlobalMessage}
-                    disabled={!newGlobalMessage.trim()}
-                    sx={{
-                      minWidth: 'auto',
-                      px: 2,
-                      borderRadius: 2,
-                      background: 'linear-gradient(45deg, #2196F3 30%, #21CBF3 90%)'
-                    }}
-                  >
-                    <Send />
-                  </Button>
+                </Box>
+
+                {/* 관리자 목록 */}
+                <Box sx={{ height: 'calc(100% - 80px)', overflowY: 'auto' }}>
+                  {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                      <Typography>로딩 중...</Typography>
+                    </Box>
+                  ) : (
+                    <List sx={{ padding: 0 }}>
+                      {(() => {
+                        // adminTypeName으로 그룹화
+                        const groupedAdmins = adminList.reduce((groups, admin) => {
+                          const typeName = admin.adminTypeName || '기타';
+                          if (!groups[typeName]) {
+                            groups[typeName] = [];
+                          }
+                          groups[typeName].push(admin);
+                          return groups;
+                        }, {});
+
+                        // adminTypeOrder로 정렬
+                        const sortedTypes = Object.keys(groupedAdmins).sort((a, b) => {
+                          const adminA = groupedAdmins[a][0];
+                          const adminB = groupedAdmins[b][0];
+                          return (adminA.adminTypeOrder || 999) - (adminB.adminTypeOrder || 999);
+                        });
+
+                        return sortedTypes.map(typeName => {
+                          const adminsInType = groupedAdmins[typeName]
+                            .filter(admin =>
+                              admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              (admin.adminTypeName && admin.adminTypeName.toLowerCase().includes(searchTerm.toLowerCase()))
+                            );
+
+                          if (adminsInType.length === 0) return null;
+
+                          const isExpanded = expandedGroups.has(typeName);
+
+                          return (
+                            <React.Fragment key={typeName}>
+                              {/* 그룹 헤더 */}
+                              <ListItem
+                                onClick={() => handleGroupToggle(typeName)}
+                                sx={{
+                                  backgroundColor: '#f8f9fa',
+                                  borderBottom: '1px solid #e0e0e0',
+                                  py: 1,
+                                  cursor: 'pointer',
+                                  '&:hover': { backgroundColor: '#e3f2fd' }
+                                }}
+                              >
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    {isExpanded ? <ExpandMore /> : <ChevronRight />}
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', color: '#1976d2', ml: 1 }}>
+                                      {typeName}
+                                    </Typography>
+                                  </Box>
+                                  <Chip
+                                    label={adminsInType.length}
+                                    size="small"
+                                    sx={{ height: 20, fontSize: '0.75rem' }}
+                                  />
+                                </Box>
+                              </ListItem>
+
+                              {/* 그룹 내 관리자들 */}
+                              {isExpanded && adminsInType.map((admin) => (
+                                <ListItem
+                                  key={admin.userIndex || `admin-${admin.userIndex}`}
+                                  onClick={() => handleAdminClick(admin)}
+                                  sx={{
+                                    pl: 3,
+                                    '&:hover': { backgroundColor: '#f5f5f5' },
+                                    borderBottom: '1px solid #f0f0f0',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  <ListItemText
+                                    primary={admin.name}
+                                    primaryTypographyProps={{ variant: 'body2' }}
+                                  />
+                                </ListItem>
+                              ))}
+                            </React.Fragment>
+                          );
+                        });
+                      })()}
+                    </List>
+                  )}
                 </Box>
               </Box>
             )}
 
-            {/* 관리자 탭 */}
+            {/* 채팅방 탭 */}
             {activeTab === 1 && (
               <Box sx={{ height: '100%', overflow: 'hidden' }}>
                 {/* 검색 */}
@@ -566,233 +492,90 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
                   <TextField
                     fullWidth
                     size="small"
-                    placeholder="관리자 검색..."
+                    placeholder="채팅방 검색..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     InputProps={{
                       startAdornment: <Search sx={{ mr: 1, color: '#666' }} />
                     }}
                   />
-                  <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                    <Button
-                      startIcon={<PersonAdd />}
-                      sx={{ flex: 1 }}
-                      variant="outlined"
-                      size="small"
-                    >
-                      관리자 추가
-                    </Button>
-                    <Button
-                      startIcon={<Refresh />}
-                      onClick={fetchAdmins}
-                      disabled={adminsLoading}
-                      variant="outlined"
-                      size="small"
-                      sx={{ minWidth: 'auto' }}
-                    >
-                      새로고침
-                    </Button>
-                  </Box>
                 </Box>
 
-                {/* 관리자 목록 */}
-                <List sx={{ height: 'calc(100% - 140px)', overflowY: 'auto', py: 0 }}>
-                  {adminsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                      <CircularProgress size={40} />
-                      <Typography variant="body2" sx={{ ml: 2 }}>
-                        관리자 목록을 불러오는 중...
-                      </Typography>
-                    </Box>
-                  ) : admins.length === 0 ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                      <Typography variant="body2" color="text.secondary">
-                        관리자가 없습니다.
-                      </Typography>
-                    </Box>
-                  ) : (
-                    admins
-                      .filter(admin => 
-                        admin.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        admin.typeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        admin.rankName.toLowerCase().includes(searchTerm.toLowerCase())
-                      )
-                      .map((admin) => (
-                      <ListItem
-                        key={admin.id}
-                        button
-                        onClick={() => handleRoomClick({ 
-                          id: admin.id, 
-                          name: admin.name, 
-                          type: 'direct',
-                          room_index: null, // 새로운 1:1 채팅방
-                          participants: [currentUser?.id, admin.userIndex] // 나와 상대방
-                        })}
-                        sx={{
-                          '&:hover': { backgroundColor: '#f5f5f5' },
-                          borderBottom: '1px solid #f0f0f0'
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Badge
-                            overlap="circular"
-                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                            variant="dot"
-                            sx={{
-                              '& .MuiBadge-badge': {
-                                backgroundColor: getStatusColor(admin.status),
-                                color: getStatusColor(admin.status),
-                              },
-                            }}
-                          >
-                            <Avatar sx={{ 
-                              bgcolor: getAdminTypeColor(admin.typeName),
-                              fontSize: '0.8rem',
-                              fontWeight: 'bold'
-                            }}>
-                              {admin.name[0]}
-                            </Avatar>
-                          </Badge>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                {admin.name}
-                              </Typography>
-                              <Chip
-                                label={admin.rankName}
-                                size="small"
-                                sx={{
-                                  backgroundColor: getAdminRankColor(admin.rankName),
-                                  color: 'white',
-                                  fontSize: '0.6rem',
-                                  height: 16
-                                }}
-                              />
-                            </Box>
-                          }
-                          secondary={
-                            <>
-                              <Typography component="span" variant="caption" sx={{ 
-                                color: getAdminTypeColor(admin.typeName),
-                                fontWeight: 'bold'
-                              }}>
-                                {admin.typeName}
-                              </Typography>
-                              <Typography component="span" variant="caption" sx={{ 
-                                display: 'block', 
-                                color: 'text.secondary',
-                                fontSize: '0.7rem'
-                              }}>
-                                ID: {admin.userIndex}
-                              </Typography>
-                            </>
-                          }
-                        />
-                        <IconButton size="small">
-                          <MoreVert />
-                        </IconButton>
-                      </ListItem>
-                    ))
-                  )}
-                </List>
-              </Box>
-            )}
-
-            {/* 채팅방 탭 */}
-            {activeTab === 1 && (
-              <Box sx={{ height: '100%', overflow: 'hidden' }}>
                 {/* 새 채팅방 버튼 */}
                 <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }} className="no-drag">
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button
-                      startIcon={<Add />}
-                      sx={{ flex: 1 }}
-                      variant="outlined"
-                      size="small"
-                    >
-                      새 채팅방 만들기
-                    </Button>
-                    <Button
-                      startIcon={<Refresh />}
-                      onClick={fetchChatRooms}
-                      disabled={chatRoomsLoading}
-                      variant="outlined"
-                      size="small"
-                      sx={{ minWidth: 'auto' }}
-                    >
-                      새로고침
-                    </Button>
-                  </Box>
+                  <Button
+                    startIcon={<Add />}
+                    sx={{ width: '100%' }}
+                    variant="outlined"
+                    size="small"
+                  >
+                    새 채팅방 만들기
+                  </Button>
                 </Box>
 
                 {/* 채팅방 목록 */}
-                <List sx={{ height: 'calc(100% - 100px)', overflowY: 'auto', py: 0 }}>
-                  {chatRoomsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
-                      <CircularProgress size={40} />
-                      <Typography variant="body2" sx={{ ml: 2 }}>
-                        채팅방 목록을 불러오는 중...
-                      </Typography>
+                <Box sx={{ height: 'calc(100% - 140px)', overflowY: 'auto' }}>
+                  {loading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+                      <Typography>로딩 중...</Typography>
                     </Box>
                   ) : chatRooms.length === 0 ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', flexDirection: 'column', gap: 1 }}>
                       <Typography variant="body2" color="text.secondary">
                         참여 중인 채팅방이 없습니다.
                       </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        홈 탭에서 관리자를 선택하여 채팅을 시작하세요.
+                      </Typography>
                     </Box>
                   ) : (
-                    chatRooms.map((room) => (
-                      <ListItem
-                        key={room.id}
-                        button
-                        onClick={() => handleRoomClick(room)}
-                        sx={{
-                          '&:hover': { backgroundColor: '#f5f5f5' },
-                          borderBottom: '1px solid #f0f0f0'
-                        }}
-                      >
-                        <ListItemAvatar>
-                          <Badge 
-                            badgeContent={room.unreadCount > 0 ? room.unreadCount : null} 
-                            color="error"
+                    <List sx={{ py: 0 }}>
+                      {chatRooms
+                        .filter(room => 
+                          room.room_name?.toLowerCase().includes(searchTerm.toLowerCase())
+                        )
+                        .map((room, index) => (
+                          <ListItem
+                            key={room.room_index || index}
+                            button="true"
+                            onClick={() => handleRoomClick({
+                              name: room.room_name,
+                              id: room.room_index,
+                              roomData: room
+                            })}
+                            sx={{
+                              '&:hover': { backgroundColor: '#f5f5f5' },
+                              borderBottom: '1px solid #f0f0f0'
+                            }}
                           >
-                            <Avatar sx={{ 
-                              bgcolor: room.roomType === 'direct' ? '#4CAF50' : '#FF9800' 
-                            }}>
-                              {room.name[0]}
-                            </Avatar>
-                          </Badge>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="subtitle2" noWrap>
-                                {room.name}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {room.lastTime}
-                              </Typography>
-                            </Box>
-                          }
-                          secondary={
-                            <Box>
-                              <Typography variant="body2" color="text.secondary" noWrap>
-                                {room.lastMessage}
-                              </Typography>
-                              {room.participants && room.participants.length > 0 && (
-                                <Typography variant="caption" color="text.secondary">
-                                  참여자: {room.participants.join(', ')}
-                                </Typography>
-                              )}
-                            </Box>
-                          }
-                        />
-                      </ListItem>
-                    ))
+                            <ListItemText
+                              primary={
+                                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Typography variant="subtitle2" noWrap>
+                                    {room.room_name || '채팅방'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {room.joined_at ? new Date(room.joined_at).toLocaleDateString() : ''}
+                                  </Typography>
+                                </Box>
+                              }
+                              secondary={
+                                <Box component="span">
+                                  <Typography component="span" variant="body2" color="text.secondary" noWrap>
+                                    방 ID: {room.room_index}
+                                  </Typography>
+                                  <br />
+                                  <Typography component="span" variant="caption" color="text.secondary">
+                                    {room.notifications_enabled === 'true' ? '알림 켜짐' : '알림 꺼짐'}
+                                  </Typography>
+                                </Box>
+                              }
+                            />
+                          </ListItem>
+                        ))}
+                    </List>
                   )}
-                </List>
+                </Box>
               </Box>
             )}
 
@@ -802,7 +585,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
                 <Typography variant="h6" gutterBottom>
                   채팅 설정
                 </Typography>
-                
+
                 <List>
                   <ListItem>
                     <FormControlLabel
@@ -815,61 +598,125 @@ function ChatMainWindow({ open, onClose, onRoomSelect }) {
                       label="알림 받기"
                     />
                   </ListItem>
-                   
-                  <ListItem>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={darkMode}
-                          onChange={(e) => setDarkMode(e.target.checked)}
-                        />
-                      }
-                      label="다크 모드"
-                    />
-                  </ListItem>
                 </List>
-                
-                <Divider sx={{ my: 2 }} />
-                
-                <Typography variant="subtitle1" gutterBottom>
-                  내 정보
-                </Typography>
-                
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
-                  <Avatar sx={{ bgcolor: '#2196F3', width: 56, height: 56 }}>
-                    {currentUser?.name ? currentUser.name[0] : 'U'}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="subtitle2">
-                      {currentUser?.name || 'Unknown User'}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      온라인
-                    </Typography>
-                  </Box>
-                </Box>
-                
-                <Button
-                  variant="outlined"
-                  startIcon={<Settings />}
-                  fullWidth
-                  sx={{ mb: 2 }}
-                >
-                  프로필 수정
-                </Button>
-                
-                <Button
-                  variant="outlined"
-                  color="error"
-                  fullWidth
-                >
-                  로그아웃
-                </Button>
               </Box>
             )}
           </Box>
         </>
       )}
+
+      {/* 리사이즈 핸들 */}
+      {!isMinimized && (
+        <>
+          {/* 상단 왼쪽 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'top-left')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: 8,
+              height: 8,
+              cursor: 'nw-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 상단 중앙 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'top')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 8,
+              height: 8,
+              cursor: 'n-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 상단 오른쪽 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'top-right')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 8,
+              height: 8,
+              cursor: 'ne-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 오른쪽 중앙 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'right')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              width: 4,
+              height: '100%',
+              cursor: 'e-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 하단 오른쪽 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'bottom-right')}
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              right: 0,
+              width: 8,
+              height: 8,
+              cursor: 'se-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 하단 중앙 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'bottom')}
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 8,
+              height: 8,
+              cursor: 's-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 하단 왼쪽 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'bottom-left')}
+            sx={{
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              width: 8,
+              height: 8,
+              cursor: 'sw-resize',
+              zIndex: 3
+            }}
+          />
+          {/* 왼쪽 중앙 리사이즈 핸들 */}
+          <Box
+            onMouseDown={(e) => handleResizeStart(e, 'left')}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: 4,
+              height: '100%',
+              cursor: 'w-resize',
+              zIndex: 3
+            }}
+          />
+        </>
+      )}
+
     </Paper>
   );
 }
