@@ -9,98 +9,58 @@ import {
 import useNotificationStore from "../../../store/jiyun/NotificationStore";
 import LoadingSpinner from "../../../components/ui/jungeun/LoadingSpinner";
 
-// 알림 설정을 동적으로 생성하는 함수 (백엔드에서 설정 조회)
-const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
+// 알림 설정을 정적으로 생성하는 함수 (백엔드 API 호출 없이)
+const createAlertSettingsFromAuthority = (authorityList) => {
   if (!authorityList || !Array.isArray(authorityList)) {
     return [];
   }
 
-  const alertSettings = [];
+  // 매핑 가능한 권한만 필터링
+  const mappableAuthorities = authorityList.filter(auth => {
+    const { programIndex } = auth;
+    return [8, 10, 38, 9, 25, 26, 33].includes(programIndex);
+  });
 
-  // 권한 목록을 순회하며 알림 설정 생성
-  for (const auth of authorityList) {
-    const { programIndex, menuIndex } = auth;
-
-    // 특정 프로그램 인덱스에 따른 알림 설정 매핑
-    let alarmTypesId = null;
-    let label = "";
-
-    switch (programIndex) {
-      case 8: // 권한 관리
-        alarmTypesId = 1;
-        label = "권한 변경 알림";
-        break;
-      case 10: // CMS 관리자 명단
-        alarmTypesId = 2;
-        label = "관리자 추가/삭제 알림";
-        break;
-      case 38: // 월 CM 한도
-        alarmTypesId = 3;
-        label = "월 CM 한도 변경 알림";
-        break;
-      case 9: // 중개수수료율 관리
-        alarmTypesId = 4;
-        label = "중개수수료율 변경 알림";
-        break;
-      case 25: // 공지사항 관리
-        alarmTypesId = 5;
-        label = "공지사항 등록 알림";
-        break;
-      case 26: // Q&A 관리
-        alarmTypesId = 6;
-        label = "신규 Q&A 문의 알림";
-        break;
-      case 33: // 가맹점 신청 현황
-        alarmTypesId = 8;
-        label = "신규 가맹점 신청 알림";
-        break;
-      default:
-        continue; // 매핑되지 않은 프로그램은 건너뛰기
-    }
-
-    try {
-      // 백엔드에서 해당 알림 타입의 설정 조회
-      const response = await getUserAlarmSetting(userIndex, alarmTypesId);
-      const settingData = response.data;
-
-      let active = 0; // 기본값: ON (알림 활성화)
-
-      if (settingData.hasSetting) {
-        // 설정이 있는 경우: 백엔드 값 사용
-        active = settingData.isActive;
-      }
-      // 설정이 없는 경우: 기본값 0 (ON) 사용
-
-      alertSettings.push({
-        key: alarmTypesId,
-        label: label,
-        active: active,
-        programIndex: programIndex,
-        menuIndex: menuIndex,
-        alarmTypesId: alarmTypesId,
-      });
-    } catch (error) {
-      console.error(`알림 설정 조회 실패 - ${label}:`, error);
-
-      // 에러 시 기본값으로 설정
-      alertSettings.push({
-        key: alarmTypesId,
-        label: label,
-        active: 0, // 기본값: ON (알림 활성화)
-        programIndex: programIndex,
-        menuIndex: menuIndex,
-        alarmTypesId: alarmTypesId,
-      });
-    }
+  if (mappableAuthorities.length === 0) {
+    return [];
   }
 
-  return alertSettings;
+  // 알림 타입 매핑 객체
+  const alarmTypeMapping = {
+    8: { alarmTypesId: 1, label: "권한 변경 알림" },
+    10: { alarmTypesId: 2, label: "관리자 추가/삭제 알림" },
+    38: { alarmTypesId: 3, label: "월 CM 한도 변경 알림" },
+    9: { alarmTypesId: 4, label: "중개수수료율 변경 알림" },
+    25: { alarmTypesId: 5, label: "공지사항 등록 알림" },
+    26: { alarmTypesId: 6, label: "신규 Q&A 문의 알림" },
+    33: { alarmTypesId: 8, label: "신규 가맹점 신청 알림" }
+  };
+
+  // 권한에 따라 기본 설정 생성 (모든 설정을 ON으로 초기화)
+  return mappableAuthorities.map(auth => {
+    const { programIndex, menuIndex } = auth;
+    const mapping = alarmTypeMapping[programIndex];
+    
+    if (!mapping) return null;
+
+    return {
+      key: mapping.alarmTypesId,
+      label: mapping.label,
+      active: 0, // 기본값: ON (알림 활성화)
+      programIndex: programIndex,
+      menuIndex: menuIndex,
+      alarmTypesId: mapping.alarmTypesId,
+    };
+  }).filter(result => result !== null);
 };
 
 export default function AlertPage() {
   const [settings, setSettings] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState(null);
+  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   // 전역 상태에서 알림 데이터 가져오기
   const {
@@ -119,8 +79,7 @@ export default function AlertPage() {
         setPageLoading(true);
         setPageError(null);
         
-        // 1. 권한 조회 및 알림 설정 로드
-        const authorityResponse = await menuAuthority(adminTypeIndex);
+        // 사용자 정보 미리 가져오기
         const userInfo = JSON.parse(localStorage.getItem("admin-info"));
         const userIndex = userInfo?.user_index;
 
@@ -128,16 +87,13 @@ export default function AlertPage() {
           throw new Error("사용자 정보를 찾을 수 없습니다.");
         }
 
-        const authorityList = authorityResponse.data.data;
-        const alertSettings = await createAlertSettingsFromAuthority(
-          authorityList,
-          userIndex
-        );
-        setSettings(alertSettings);
+        // 1. 권한 조회와 알림 내역을 병렬로 실행
+        const [authorityResponse, alarmResponse] = await Promise.all([
+          menuAuthority(adminTypeIndex),
+          getMyAlarmHistory(userIndex)
+        ]);
 
-        // 2. 알림 내역 로드
-        const alarmResponse = await getMyAlarmHistory(userIndex);
-        
+        // 2. 알림 내역 설정
         if (
           alarmResponse &&
           alarmResponse.data &&
@@ -148,6 +104,13 @@ export default function AlertPage() {
         } else {
           setNotifications([]);
         }
+
+        // 3. 권한 기반 알림 설정 즉시 생성 (API 호출 없이)
+        const authorityList = authorityResponse.data.data;
+        const alertSettings = createAlertSettingsFromAuthority(authorityList);
+        setSettings(alertSettings);
+        setSettingsLoaded(true);
+        setNotificationsLoaded(true);
 
       } catch (error) {
         console.error("페이지 데이터 로드 실패:", error);
@@ -190,19 +153,35 @@ export default function AlertPage() {
       // 새로운 상태 계산 (0=ON, 1=OFF)
       const newActive = currentSetting.active === 0 ? 1 : 0;
 
-      // 백엔드에 업데이트 요청
-      const response = await updateUserAlarmSetting(userIndex, key, newActive);
+      // 즉시 UI 업데이트 (사용자 경험 개선)
+      setSettings((prev) =>
+        prev.map((item) =>
+          item.key === key ? { ...item, active: newActive } : item
+        )
+      );
 
-      if (response.data.success) {
-        // 성공 시 로컬 상태 업데이트
+      // 백엔드에 업데이트 요청 (백그라운드에서 실행)
+      try {
+        const response = await updateUserAlarmSetting(userIndex, key, newActive);
+        if (!response.data.success) {
+          // 실패 시 원래 상태로 되돌리기
+          setSettings((prev) =>
+            prev.map((item) =>
+              item.key === key ? { ...item, active: currentSetting.active } : item
+            )
+          );
+        }
+      } catch (error) {
+        console.error("알림 설정 업데이트 실패:", error);
+        // 실패 시 원래 상태로 되돌리기
         setSettings((prev) =>
           prev.map((item) =>
-            item.key === key ? { ...item, active: newActive } : item
+            item.key === key ? { ...item, active: currentSetting.active } : item
           )
         );
       }
     } catch (error) {
-      // 에러 처리 (콘솔 로그 제거)
+      console.error("알림 설정 변경 중 오류:", error);
     }
   };
 
@@ -220,36 +199,47 @@ export default function AlertPage() {
   );
 
   // Notification Settings Component
-  const NotificationSettings = ({ settings, onSettingChange }) => {
+  const NotificationSettings = ({ settings, onSettingChange, expanded, onToggle }) => {
     return (
       <div className="alert-settings-container">
-        <div className="alert-settings-header">
-          <h2 className="alert-section-title">알림 설정</h2>
-        </div>
-        <div className="alert-settings-grid">
-          <div className="alert-settings-column">
-            {settings.slice(0, 4).map((setting) => (
-              <div key={setting.key} className="alert-setting-item">
-                <span className="alert-setting-label">• {setting.label}</span>
-                <ToggleSwitch
-                  checked={setting.active === 0}
-                  onChange={() => onSettingChange(setting.key)}
-                />
-              </div>
-            ))}
-          </div>
-          <div className="alert-settings-column">
-            {settings.slice(4, 8).map((setting) => (
-              <div key={setting.key} className="alert-setting-item">
-                <span className="alert-setting-label">• {setting.label}</span>
-                <ToggleSwitch
-                  checked={setting.active === 0}
-                  onChange={() => onSettingChange(setting.key)}
-                />
-              </div>
-            ))}
+        <div 
+          className="alert-settings-header"
+          onClick={onToggle}
+          style={{ cursor: 'pointer' }}
+        >
+          <div className="header-content">
+            <span className="settings-toggle-icon">
+              {expanded ? '▼' : '▶'}
+            </span>
+            <h2 className="alert-section-title">알림 설정</h2>
           </div>
         </div>
+        {expanded && (
+          <div className="alert-settings-grid">
+            <div className="alert-settings-column">
+              {settings.slice(0, 4).map((setting) => (
+                <div key={setting.key} className="alert-setting-item">
+                  <span className="alert-setting-label">• {setting.label}</span>
+                  <ToggleSwitch
+                    checked={setting.active === 0}
+                    onChange={() => onSettingChange(setting.key)}
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="alert-settings-column">
+              {settings.slice(4, 8).map((setting) => (
+                <div key={setting.key} className="alert-setting-item">
+                  <span className="alert-setting-label">• {setting.label}</span>
+                  <ToggleSwitch
+                    checked={setting.active === 0}
+                    onChange={() => onSettingChange(setting.key)}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -363,35 +353,37 @@ export default function AlertPage() {
   }
 
   return (
-    <div className="alert-root-container">
-      <div className="content">
-        {/* 알림 설정 섹션 */}
-        <NotificationSettings
-          settings={settings}
-          onSettingChange={handleSettingChange}
-        />
-        {/* 새로운 알림 섹션 */}
-        <div className="notification-section">
-          <div className="section-header">
-            <div>
-              <h2 className="alert-section-title">새로운 알림</h2>
-              <p className="alert-section-description">
-                클릭 시 읽음 처리됩니다
-              </p>
+          <div className="alert-root-container">
+        <div className="content">
+          {/* 알림 설정 섹션 */}
+          <NotificationSettings
+            settings={settings}
+            onSettingChange={handleSettingChange}
+            expanded={settingsExpanded}
+            onToggle={() => setSettingsExpanded(!settingsExpanded)}
+          />
+          {/* 새로운 알림 섹션 */}
+          <div className="notification-section">
+            <div className="section-header">
+              <div>
+                <h2 className="alert-section-title">새로운 알림</h2>
+                <p className="alert-section-description">
+                  클릭 시 읽음 처리됩니다
+                </p>
+              </div>
+              <span className="count">{newCount}</span>
             </div>
-            <span className="count">{newCount}</span>
+            <NotificationList notifications={newNotifications} />
           </div>
-          <NotificationList notifications={newNotifications} />
-        </div>
-        {/* 지난 알림 섹션 */}
-        <div className="notification-section">
-          <div className="section-header">
-            <h2 className="alert-section-title">지난 알림</h2>
-            <span className="count">{pastCount}</span>
+          {/* 지난 알림 섹션 */}
+          <div className="notification-section">
+            <div className="section-header">
+              <h2 className="alert-section-title">지난 알림</h2>
+              <span className="count">{pastCount}</span>
+            </div>
+            <NotificationList notifications={pastNotifications} />
           </div>
-          <NotificationList notifications={pastNotifications} />
         </div>
       </div>
-    </div>
   );
 }
