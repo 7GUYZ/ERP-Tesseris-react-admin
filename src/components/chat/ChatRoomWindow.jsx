@@ -1064,7 +1064,8 @@ function ChatRoomWindow({
         inviter: userInfo.id
       });
 
-      if (response.data.success) {
+      // 응답 상태 코드 확인 (200이면 성공)
+      if (response.status === 200) {
         alert('사용자 초대가 완료되었습니다.');
         setShowInviteSelection(false);
         setSelectedInviteAdmins(new Set());
@@ -1364,23 +1365,25 @@ function ChatRoomWindow({
                   <List sx={{ py: 0 }}>
                                          {(() => {
                        const userInfo = JSON.parse(localStorage.getItem('user-info'));
-                       // 현재 방의 참가자 목록 가져오기
-                       // 기존 방의 경우 roomData에서 참가자 정보 추출
+                       // 현재 방의 참가자 목록 가져오기 - 더 안정적인 로직
                        let currentParticipants = [];
                        
                        if (roomId) {
-                         // 기존 방인 경우 - roomParticipants 상태 우선 사용
-                         if (roomParticipants.length > 0) {
-                           currentParticipants = roomParticipants.map(p => p.userId || p.id);
+                         // 기존 방인 경우 - 여러 소스에서 참가자 정보 확인
+                         if (roomParticipants && roomParticipants.length > 0) {
+                           currentParticipants = roomParticipants.map(p => p.userId || p.id || p.userid);
                          } else if (roomDataWithoutRefresh.roomData?.participants) {
-                           currentParticipants = roomDataWithoutRefresh.roomData.participants;
+                           currentParticipants = roomDataWithoutRefresh.roomData.participants.map(p => p.userId || p.id || p.userid);
                          } else if (roomDataWithoutRefresh.participants) {
-                           currentParticipants = roomDataWithoutRefresh.participants;
-                         } else {
+                           currentParticipants = roomDataWithoutRefresh.participants.map(p => p.userId || p.id || p.userid);
+                         } else if (roomDataWithoutRefresh.adminData?.userId) {
                            // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
-                           const userInfo = JSON.parse(localStorage.getItem('user-info'));
-                           if (roomDataWithoutRefresh.adminData?.userId) {
-                             currentParticipants = [userInfo.id, roomDataWithoutRefresh.adminData.userId];
+                           currentParticipants = [userInfo.id, roomDataWithoutRefresh.adminData.userId];
+                         } else if (adminList && adminList.length > 0) {
+                           // adminList에서 상대방 찾기 (1:1 채팅방)
+                           const otherUser = adminList.find(admin => admin.userId !== userInfo.id);
+                           if (otherUser) {
+                             currentParticipants = [userInfo.id, otherUser.userId];
                            }
                          }
                        } else {
