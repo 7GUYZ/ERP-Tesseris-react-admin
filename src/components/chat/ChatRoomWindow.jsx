@@ -1,14 +1,16 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Paper, Box, TextField, Button, IconButton,
-  Typography, Chip, Menu, MenuItem, ListItemIcon, ListItemText
+  Typography, Chip, Menu, MenuItem, ListItemIcon, ListItemText,
+  List, ListItem, Checkbox
 } from '@mui/material';
 import {
   Close, Send, Minimize, DragIndicator,
-  ArrowBack, Call, VideoCall, Info, AttachFile, MoreVert, PersonAdd, ExitToApp
+  ArrowBack, Call, VideoCall, Info, AttachFile, MoreVert, PersonAdd, ExitToApp,
+  ExpandMore, ChevronRight
 } from '@mui/icons-material';
 import { useWebSocket } from './WebSocketConfig';
-import { ChatList, LeaveRoom } from '../../api/auth/JihunAuth';
+import { ChatList, LeaveRoom, UserInvitation } from '../../api/auth/JihunAuth';
 import { generateRoomName } from '../../utils/roomNameUtils';
 
 
@@ -55,6 +57,11 @@ function ChatRoomWindow({
     { id: 'leaveRoom', label: '채팅방 나가기', icon: 'ExitToApp' }
   ]); // 더보기 옵션 리스트
 
+  // 초대하기 관련 상태
+  const [showInviteSelection, setShowInviteSelection] = useState(false);
+  const [selectedInviteAdmins, setSelectedInviteAdmins] = useState(new Set());
+  const [expandedInviteGroups, setExpandedInviteGroups] = useState(new Set());
+
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesTopRef = useRef(null); // 무한스크롤용 상단 ref
@@ -69,7 +76,7 @@ function ChatRoomWindow({
   // 발신자 이름 해결 함수
   const resolveSenderName = useCallback((userId, senderName) => {
     if (senderName) return senderName;
-    
+
     const admin = adminListRef.current.find(admin => admin.userId === userId);
     return admin ? admin.name : userId;
   }, []);
@@ -77,7 +84,7 @@ function ChatRoomWindow({
   // 수신된 메시지 처리 함수
   const handleIncomingMessage = useCallback((receivedMessage) => {
     const userInfo = JSON.parse(localStorage.getItem('user-info'));
-    
+
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     if (receivedMessage.user_id === userInfo.id) {
       const currentMessages = messagesRef.current;
@@ -93,7 +100,7 @@ function ChatRoomWindow({
         setMessages(prev => {
           const updatedMessages = [...prev];
           const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
-          
+
           updatedMessages[localMessageIndex] = {
             id: `server_${Date.now()}_${Math.random()}`,
             text: receivedMessage.message,
@@ -105,7 +112,7 @@ function ChatRoomWindow({
             messageindex: receivedMessage.messageindex || null,
             isLocal: false
           };
-          
+
           messagesRef.current = updatedMessages;
           return updatedMessages;
         });
@@ -142,7 +149,7 @@ function ChatRoomWindow({
     // 문자열이나 숫자 모두 처리
     const strA = String(indexA);
     const strB = String(indexB);
-    
+
     // 숫자로 변환하여 비교
     const numA = parseInt(strA) || 0;
     const numB = parseInt(strB) || 0;
@@ -155,14 +162,14 @@ function ChatRoomWindow({
     return existingMessages.some(existing => {
       // ID가 같으면 중복
       if (existing.id === newMessage.id) return true;
-      
+
       // 같은 내용, 같은 발신자, 같은 시간대면 중복
-      if (existing.text === newMessage.text && 
-          existing.sender?.id === newMessage.sender?.id &&
-          Math.abs(new Date(existing.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000) {
+      if (existing.text === newMessage.text &&
+        existing.sender?.id === newMessage.sender?.id &&
+        Math.abs(new Date(existing.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000) {
         return true;
       }
-      
+
       return false;
     });
   }, []);
@@ -184,19 +191,19 @@ function ChatRoomWindow({
         const result = compareIndex(a.messageindex, b.messageindex);
         if (result !== 0) return result;
       }
-      
+
       // messageindex가 하나만 있는 경우, 있는 쪽이 뒤로 (서버 메시지가 우선)
       if (a.messageindex && !b.messageindex) return 1;
       if (!a.messageindex && b.messageindex) return -1;
-      
+
       // messageindex가 둘 다 없는 경우 timestamp 사용
       const timeA = new Date(a.timestamp || 0).getTime();
       const timeB = new Date(b.timestamp || 0).getTime();
-      
+
       if (timeA !== timeB) {
         return timeA - timeB;
       }
-      
+
       // timestamp도 같은 경우 ID로 정렬 (안정성 보장)
       return (a.id || '').localeCompare(b.id || '');
     });
@@ -206,14 +213,14 @@ function ChatRoomWindow({
   const updateMessages = useCallback((newMessages) => {
     // 중복 메시지 제거
     const uniqueMessages = newMessages.filter((message, index, self) => {
-      return index === self.findIndex(m => 
-        m.id === message.id || 
-        (m.text === message.text && 
-         m.sender?.id === message.sender?.id &&
-         Math.abs(new Date(m.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000)
+      return index === self.findIndex(m =>
+        m.id === message.id ||
+        (m.text === message.text &&
+          m.sender?.id === message.sender?.id &&
+          Math.abs(new Date(m.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000)
       );
     });
-    
+
     const sortedMessages = sortMessages(uniqueMessages);
     setMessages(sortedMessages);
     messagesRef.current = sortedMessages;
@@ -227,7 +234,7 @@ function ChatRoomWindow({
       if (isDuplicateMessage(newMessage, prev)) {
         return prev;
       }
-      
+
       // 새 메시지를 배열 끝에 추가 (정렬하지 않음)
       const updatedMessages = [...prev, newMessage];
       messagesRef.current = updatedMessages;
@@ -377,19 +384,19 @@ function ChatRoomWindow({
     console.log("🔍 ChatRoomWindow useEffect - roomDataWithoutRefresh:", roomDataWithoutRefresh);
     console.log("🔍 roomDataWithoutRefresh 전체 구조:", JSON.stringify(roomDataWithoutRefresh, null, 2));
     console.log("🔍 roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
-                console.log("🔍 roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
-            console.log("🔍 roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
-            console.log("🔍 roomDataWithoutRefresh.isExisting:", roomDataWithoutRefresh.isExisting);
-            console.log("🔍 roomDataWithoutRefresh.isExistingRoom:", roomDataWithoutRefresh.isExistingRoom);
-            console.log("🔍 roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
-            
-            // 중첩된 구조에서 id 필드에 안전하게 접근
-            const hasRoomIndex = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
-            const existingRoomId = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id; // roomDataWithoutRefresh.id를 직접 사용
+    console.log("🔍 roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
+    console.log("🔍 roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
+    console.log("🔍 roomDataWithoutRefresh.isExisting:", roomDataWithoutRefresh.isExisting);
+    console.log("🔍 roomDataWithoutRefresh.isExistingRoom:", roomDataWithoutRefresh.isExistingRoom);
+    console.log("🔍 roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
+
+    // 중첩된 구조에서 id 필드에 안전하게 접근
+    const hasRoomIndex = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
+    const existingRoomId = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id; // roomDataWithoutRefresh.id를 직접 사용
     // 기존 방인지 확인 - id나 room_index가 있으면 기존 방으로 판단
-    const isExisting = roomDataWithoutRefresh.isExistingRoom || 
-                      roomDataWithoutRefresh.isExisting || 
-                      !!(roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.roomData?.room_index);
+    const isExisting = roomDataWithoutRefresh.isExistingRoom ||
+      roomDataWithoutRefresh.isExisting ||
+      !!(roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.roomData?.room_index);
 
     console.log("🔍 hasRoomIndex:", hasRoomIndex);
     console.log("🔍 existingRoomId:", existingRoomId);
@@ -404,7 +411,7 @@ function ChatRoomWindow({
 
     if (isExisting && existingRoomId) {
       console.log("🔍 기존 방 입장:", existingRoomId);
-      
+
       // 기존 방 입장
       setRoomId(existingRoomId);
 
@@ -433,6 +440,28 @@ function ChatRoomWindow({
 
             // 관리자 정보를 상태에 저장
             setAdminList(adminData);
+
+            // 참가자 정보 설정 (기존 방의 경우)
+            if (chatData.participants) {
+              setRoomParticipants(chatData.participants);
+            } else if (chatData.roomParticipants) {
+              setRoomParticipants(chatData.roomParticipants);
+            } else {
+              // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
+              const userInfo = JSON.parse(localStorage.getItem('user-info'));
+              const participants = [];
+              
+              // 본인 추가
+              participants.push({ userId: userInfo.id, name: userInfo.name || userInfo.id });
+              
+              // 상대방 찾기 (adminData에서 본인이 아닌 사람)
+              const otherUser = adminData.find(admin => admin.userId !== userInfo.id);
+              if (otherUser) {
+                participants.push({ userId: otherUser.userId, name: otherUser.name });
+              }
+              
+              setRoomParticipants(participants);
+            }
 
             // 관리자 정보를 Map으로 변환하여 빠른 검색 가능하게 함
             const adminMap = new Map();
@@ -485,15 +514,15 @@ function ChatRoomWindow({
         if (receivedMessage.room_index && !roomId) {
           console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
           setRoomId(receivedMessage.room_index);
-          
+
           // 새로 생성된 방에 대한 구독 설정
           subscribeToRoomRef.current(receivedMessage.room_index, (newRoomMessage) => {
             handleIncomingMessage(newRoomMessage);
           });
-          
+
           return;
         }
-        
+
         // 일반 메시지 처리
         handleIncomingMessage(receivedMessage);
       });
@@ -505,7 +534,7 @@ function ChatRoomWindow({
       }
     } else {
       console.log("🔍 새로운 방 생성");
-      
+
       // 새로운 방 생성 시 - 기존 구독들 모두 해제
       if (roomId) {
         unsubscribeFromRoomRef.current(roomId);
@@ -517,15 +546,15 @@ function ChatRoomWindow({
         if (receivedMessage.room_index && !roomId) {
           console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
           setRoomId(receivedMessage.room_index);
-          
+
           // 새로 생성된 방에 대한 구독 설정
           subscribeToRoomRef.current(receivedMessage.room_index, (newRoomMessage) => {
             handleIncomingMessage(newRoomMessage);
           });
-          
+
           return;
         }
-        
+
         // 일반 메시지 처리
         handleIncomingMessage(receivedMessage);
       });
@@ -557,7 +586,7 @@ function ChatRoomWindow({
         // roomId를 안전하게 추출 (중첩된 구조 고려)
         const currentRoomIndex = roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
-        
+
         console.log("🔍 handleSendMessage - roomId:", roomId);
         console.log("🔍 handleSendMessage - roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
         console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomData?.id:", roomDataWithoutRefresh.roomData?.id);
@@ -599,13 +628,13 @@ function ChatRoomWindow({
 
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
-          
+
           // 그룹 채팅인지 1:1 채팅인지 확인
           const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
           const isGroupChat = roomDataWithoutRefresh.isGroupChat || participants.length > 2;
-          
+
           let messageData;
-          
+
           if (isGroupChat) {
             // 그룹 채팅인 경우
             messageData = {
@@ -621,16 +650,16 @@ function ChatRoomWindow({
             // participants에서 상대방 ID 찾기
             const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
             const otherUserId = participants.find(id => id !== userInfo.id);
-            
+
             if (!otherUserId) {
               console.error("🔍 1:1 채팅에서 상대방 ID를 찾을 수 없습니다:", roomDataWithoutRefresh);
               return;
             }
-            
+
             // 상대방 이름 찾기
             const otherUser = adminList.find(admin => admin.userId === otherUserId);
             const roomName = otherUser ? `${otherUser.name}와의 채팅방` : generateRoomName([otherUserId, userInfo.id], null, adminList, userInfo.id, false);
-            
+
             messageData = {
               room_index: null,
               room_name: roomName,
@@ -978,6 +1007,86 @@ function ChatRoomWindow({
     }
   };
 
+  // 초대하기 관련 핸들러들
+  const handleInviteGroupToggle = (typeName) => {
+    setExpandedInviteGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(typeName)) {
+        newSet.delete(typeName);
+      } else {
+        newSet.add(typeName);
+      }
+      return newSet;
+    });
+  };
+
+  const handleInviteAdminCheckboxChange = (adminId, checked) => {
+    setSelectedInviteAdmins(prev => {
+      const newSet = new Set(prev);
+      if (checked) {
+        newSet.add(adminId);
+      } else {
+        newSet.delete(adminId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleInviteSelectAllInDepartment = (typeName, checked) => {
+    const adminsInDepartment = adminList.filter(admin => admin.adminTypeName === typeName);
+
+    setSelectedInviteAdmins(prev => {
+      const newSet = new Set(prev);
+      adminsInDepartment.forEach(admin => {
+        if (checked) {
+          newSet.add(admin.userIndex);
+        } else {
+          newSet.delete(admin.userIndex);
+        }
+      });
+      return newSet;
+    });
+  };
+
+  const handleInviteUsers = async () => {
+    if (selectedInviteAdmins.size === 0) {
+      alert('초대할 사용자를 선택해주세요.');
+      return;
+    }
+
+    const selectedAdminList = adminList.filter(admin => selectedInviteAdmins.has(admin.userIndex));
+    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+
+    try {
+      // 백엔드 API 호출 - UserInvitation 사용
+      const response = await UserInvitation(roomId, {
+        userid: selectedAdminList.map(admin => admin.userId),
+        inviter: userInfo.id
+      });
+
+      if (response.data.success) {
+        alert('사용자 초대가 완료되었습니다.');
+        setShowInviteSelection(false);
+        setSelectedInviteAdmins(new Set());
+
+        // 채팅방 목록 새로고침
+        if (refreshChatRooms) {
+          await refreshChatRooms();
+        }
+      } else {
+        alert('사용자 초대에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('사용자 초대 오류:', error);
+      alert('사용자 초대 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleBackToChat = () => {
+    setShowInviteSelection(false);
+    setSelectedInviteAdmins(new Set());
+  };
+
   const handleMoreOptionsClose = () => {
     setMoreOptionsAnchor(null);
   };
@@ -987,7 +1096,8 @@ function ChatRoomWindow({
 
     switch (optionId) {
       case 'addUser':
-        // 사용자 추가 기능 구현
+        // 초대하기 UI 표시
+        setShowInviteSelection(true);
         break;
       case 'leaveRoom':
         // 채팅방 나가기 기능 구현
@@ -1142,7 +1252,7 @@ function ChatRoomWindow({
               {(() => {
                 const userInfo = JSON.parse(localStorage.getItem('user-info'));
                 const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
-                
+
                 // 1:1 채팅인 경우
                 if (participants.length === 2) {
                   const otherUserId = participants.find(id => id !== userInfo.id);
@@ -1158,12 +1268,12 @@ function ChatRoomWindow({
                       return admin ? admin.name : userId;
                     })
                     .filter(name => name);
-                  
+
                   if (participantNames.length > 0) {
                     return `${participantNames.join(', ')} 그룹채팅`;
                   }
                 }
-                
+
                 // 기본값
                 return roomDataWithoutRefresh.adminData ? roomDataWithoutRefresh.adminData.name : (roomDataWithoutRefresh.name || '채팅방');
               })()}
@@ -1205,7 +1315,208 @@ function ChatRoomWindow({
       </Box>
 
       {!isMinimized && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 60px)', overflow: 'hidden', minHeight: 0 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 60px)', overflow: 'hidden', minHeight: 0, position: 'relative' }}>
+          {/* 초대하기 모달 오버레이 */}
+          {showInviteSelection && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                zIndex: 1000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                p: 2
+              }}
+            >
+              <Paper
+                sx={{
+                  width: '100%',
+                  maxWidth: 500,
+                  maxHeight: '80%',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}
+              >
+                <Box sx={{
+                  p: 2,
+                  borderBottom: '1px solid #e0e0e0',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <Typography variant="h6">사용자 초대</Typography>
+                  <IconButton onClick={handleBackToChat} size="small">
+                    <Close />
+                  </IconButton>
+                </Box>
+
+                <Box sx={{ p: 2, flex: 1, overflowY: 'auto' }}>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    초대할 사용자를 선택하세요
+                  </Typography>
+
+                  <List sx={{ py: 0 }}>
+                                         {(() => {
+                       const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                       // 현재 방의 참가자 목록 가져오기
+                       // 기존 방의 경우 roomData에서 참가자 정보 추출
+                       let currentParticipants = [];
+                       
+                       if (roomId) {
+                         // 기존 방인 경우 - roomParticipants 상태 우선 사용
+                         if (roomParticipants.length > 0) {
+                           currentParticipants = roomParticipants.map(p => p.userId || p.id);
+                         } else if (roomDataWithoutRefresh.roomData?.participants) {
+                           currentParticipants = roomDataWithoutRefresh.roomData.participants;
+                         } else if (roomDataWithoutRefresh.participants) {
+                           currentParticipants = roomDataWithoutRefresh.participants;
+                         } else {
+                           // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
+                           const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                           if (roomDataWithoutRefresh.adminData?.userId) {
+                             currentParticipants = [userInfo.id, roomDataWithoutRefresh.adminData.userId];
+                           }
+                         }
+                       } else {
+                         // 새 방인 경우
+                         currentParticipants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+                       }
+                       
+                       console.log("🔍 초대하기 - 현재 방 ID:", roomId);
+                       console.log("🔍 초대하기 - roomParticipants 상태:", roomParticipants);
+                       console.log("🔍 초대하기 - 현재 참가자 목록:", currentParticipants);
+                       console.log("🔍 초대하기 - 전체 관리자 목록:", adminList.map(a => ({ name: a.name, userId: a.userId })));
+                       
+                       // 본인과 이미 방에 있는 사람들을 제외한 관리자 목록
+                       const filteredAdminList = adminList.filter(admin => 
+                         admin.userId !== userInfo.id && 
+                         !currentParticipants.includes(admin.userId)
+                       );
+                       
+                       console.log("🔍 초대하기 - 필터링된 관리자 목록:", filteredAdminList.map(a => ({ name: a.name, userId: a.userId })));
+
+                      // 부서별로 관리자 그룹화
+                      const groupedAdmins = filteredAdminList.reduce((acc, admin) => {
+                        const typeName = admin.adminTypeName || '기타';
+                        if (!acc[typeName]) {
+                          acc[typeName] = [];
+                        }
+                        acc[typeName].push(admin);
+                        return acc;
+                      }, {});
+
+                      // 관리자 타입별 우선순위 정의 (높은 직급에서 낮은 직급 순)
+                      const typePriority = {
+                        '대표': 1,
+                        '임원': 2,
+                        '전산간부': 3,
+                        '전산개발': 4,
+                        '기타': 999
+                      };
+
+                      // 커스텀 정렬 로직
+                      const sortedTypes = Object.keys(groupedAdmins).sort((a, b) => {
+                        const priorityA = typePriority[a] || typePriority['기타'];
+                        const priorityB = typePriority[b] || typePriority['기타'];
+
+                        // 우선순위가 같으면 adminTypeOrder로 정렬
+                        if (priorityA === priorityB) {
+                          const adminA = groupedAdmins[a][0];
+                          const adminB = groupedAdmins[b][0];
+                          return (adminA.adminTypeOrder || 999) - (adminB.adminTypeOrder || 999);
+                        }
+
+                        return priorityA - priorityB;
+                      });
+
+                      return sortedTypes.map(typeName => {
+                        const admins = groupedAdmins[typeName];
+                        return (
+                          <Box key={typeName} sx={{ mb: 1 }}>
+                            <ListItem
+                              button
+                              onClick={() => handleInviteGroupToggle(typeName)}
+                              sx={{
+                                backgroundColor: '#f5f5f5',
+                                borderRadius: 1,
+                                mb: 0.5
+                              }}
+                            >
+                              <ListItemIcon>
+                                {expandedInviteGroups.has(typeName) ? <ExpandMore /> : <ChevronRight />}
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={
+                                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <Typography variant="subtitle2">
+                                      {typeName} ({admins.length})
+                                    </Typography>
+                                    <Checkbox
+                                      checked={admins.every(admin => selectedInviteAdmins.has(admin.userIndex))}
+                                      indeterminate={admins.some(admin => selectedInviteAdmins.has(admin.userIndex)) && !admins.every(admin => selectedInviteAdmins.has(admin.userIndex))}
+                                      onChange={(e) => handleInviteSelectAllInDepartment(typeName, e.target.checked)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      size="small"
+                                    />
+                                  </Box>
+                                }
+                              />
+                            </ListItem>
+
+                            {expandedInviteGroups.has(typeName) && (
+                              <List sx={{ pl: 2 }}>
+                                {admins.map((admin) => (
+                                  <ListItem
+                                    key={admin.userIndex}
+                                    dense
+                                    sx={{ py: 0.5 }}
+                                  >
+                                    <ListItemIcon>
+                                      <Checkbox
+                                        checked={selectedInviteAdmins.has(admin.userIndex)}
+                                        onChange={(e) => handleInviteAdminCheckboxChange(admin.userIndex, e.target.checked)}
+                                        size="small"
+                                      />
+                                    </ListItemIcon>
+                                    <ListItemText
+                                      primary={admin.name}
+                                    />
+                                  </ListItem>
+                                ))}
+                              </List>
+                            )}
+                          </Box>
+                        );
+                      });
+                    })()}
+                  </List>
+                </Box>
+
+                <Box sx={{ p: 2, borderTop: '1px solid #e0e0e0', display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                  <Button
+                    variant="outlined"
+                    onClick={handleBackToChat}
+                  >
+                    취소
+                  </Button>
+                  <Button
+                    variant="contained"
+                    onClick={handleInviteUsers}
+                    disabled={selectedInviteAdmins.size === 0}
+                  >
+                    초대하기 ({selectedInviteAdmins.size}명)
+                  </Button>
+                </Box>
+              </Paper>
+            </Box>
+          )}
+
           {/* 메시지 목록 */}
           <Box
             ref={messagesContainerRef}
@@ -1706,6 +2017,8 @@ function ChatRoomWindow({
           </MenuItem>
         ))}
       </Menu>
+
+
     </Paper>
   );
 }
