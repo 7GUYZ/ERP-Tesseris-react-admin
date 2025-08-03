@@ -62,15 +62,25 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
     if (open && activeTab === 0) {  // 홈 탭일 때만 호출
       setLoading(true);
       adminlist().then((data) => {
+        console.log("관리자 목록 원본 데이터:", data);
+        
+        // 데이터가 유효한지 확인
+        if (!data || !Array.isArray(data)) {
+          console.error('관리자 목록 데이터가 유효하지 않습니다:', data);
+          setAdminList([]);
+          setLoading(false);
+          return;
+        }
+        
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('user-info'));
-        console.log("관리자 목록 원본 데이터:", data);
         const filteredData = data.filter(admin => admin.userId !== userInfo?.id);
         console.log("필터링된 관리자 목록:", filteredData);
         setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
         console.error('관리자 목록 조회 실패:', error);
+        setAdminList([]);
         setLoading(false);
       });
     }

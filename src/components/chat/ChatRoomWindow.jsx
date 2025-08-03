@@ -8,7 +8,7 @@ import {
   ArrowBack, Call, VideoCall, Info, AttachFile
 } from '@mui/icons-material';
 import { useWebSocket } from './WebSocketConfig';
-import { SaveSendMessage } from '../../api/auth/JihunAuth';
+import { ChatList } from '../../api/auth/JihunAuth';
 
 function ChatRoomWindow({
   open,
@@ -40,133 +40,395 @@ function ChatRoomWindow({
   const [roomParticipants, setRoomParticipants] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [typingUsers, setTypingUsers] = useState([]);
-  const [adminList, setAdminList] = useState([]); // 관리자 목록 저장
-  const [isAdminListLoaded, setIsAdminListLoaded] = useState(false); // 관리자 목록 로딩 상태
-  const [isExistingRoom, setIsExistingRoom] = useState(false); // 기존 방인지 새로운 방인지 확인
+  const [adminList, setAdminList] = useState([]); // 관리자 정보 저장
+  const [currentPage, setCurrentPage] = useState(0); // 현재 페이지
+  const [hasMoreMessages, setHasMoreMessages] = useState(true); // 더 불러올 메시지가 있는지
+  const [isLoadingMore, setIsLoadingMore] = useState(false); // 추가 메시지 로딩 중
 
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const messagesTopRef = useRef(null); // 무한스크롤용 상단 ref
+  const messagesContainerRef = useRef(null); // 메시지 컨테이너 ref
   const inputRef = useRef(null);
   const messagesRef = useRef([]); // 메시지 목록을 ref로 관리
-
-  // UUID를 이름으로 변환하는 함수
-  const getAdminNameById = useCallback((userId) => {
-    console.log('getAdminNameById 호출 - userId:', userId);
-    console.log('현재 adminList:', adminList);
-    console.log('isAdminListLoaded:', isAdminListLoaded);
-    
-    // adminList가 로딩되지 않았거나 비어있는 경우
-    if (!isAdminListLoaded || !adminList || adminList.length === 0) {
-      console.log('adminList가 로딩되지 않음 또는 비어있음 - userId 반환:', userId);
-      return userId;
-    }
-    
-    const admin = adminList.find(admin => admin.userId === userId);
-    console.log('찾은 admin:', admin);
-    const result = admin ? admin.name : userId;
-    console.log('반환할 이름:', result);
-    return result;
-  }, [adminList, isAdminListLoaded]);
+  const subscribeToRoomRef = useRef(subscribeToRoom);
+  const unsubscribeFromRoomRef = useRef(unsubscribeFromRoom);
+  const addMessageRef = useRef(null);
 
   // 메시지 추가 함수
   const addMessage = useCallback((newMessage) => {
     setMessages(prev => {
-      const updatedMessages = [...prev, newMessage];
+      // 새 메시지를 시간순으로 정렬하여 삽입
+      const newTimestamp = new Date(newMessage.timestamp).getTime();
+      
+      // 기존 메시지들 중에서 새 메시지보다 늦은 시간의 메시지를 찾아서 그 앞에 삽입
+      let insertIndex = prev.length;
+      for (let i = 0; i < prev.length; i++) {
+        const currentTimestamp = new Date(prev[i].timestamp).getTime();
+        if (newTimestamp <= currentTimestamp) {
+          insertIndex = i;
+          break;
+        }
+      }
+      
+      const updatedMessages = [
+        ...prev.slice(0, insertIndex),
+        newMessage,
+        ...prev.slice(insertIndex)
+      ];
+      
       messagesRef.current = updatedMessages; // ref도 업데이트
       return updatedMessages;
     });
   }, []);
 
-  // 방 타입 체크 및 초기화
+  // ref 업데이트
   React.useEffect(() => {
-    if (open && roomData) {
-      console.log('방 데이터 확인:', roomData);
+    subscribeToRoomRef.current = subscribeToRoom;
+    unsubscribeFromRoomRef.current = unsubscribeFromRoom;
+    addMessageRef.current = addMessage;
+  }, [subscribeToRoom, unsubscribeFromRoom, addMessage]);
+
+  // 이전 메시지 불러오기 함수
+  const loadPreviousMessages = async () => {
+    if (!roomId || isLoadingMore || !hasMoreMessages) {
+      return;
+    }
+    
+    setIsLoadingMore(true);
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const nextPage = currentPage + 1;
       
-      // 기존 방인지 새로운 방인지 확인
-      const hasRoomIndex = roomData.roomData?.room_index || roomData.id;
-      const isExisting = !!(hasRoomIndex && hasRoomIndex !== 'undefined' && hasRoomIndex !== 'null' && hasRoomIndex !== 0);
+      const response = await ChatList(roomId, userInfo.id, nextPage, 25);
       
-      console.log('방 인덱스 존재 여부:', isExisting, '방 인덱스:', hasRoomIndex);
-      setIsExistingRoom(isExisting);
-      
-      // 기존 방인 경우 즉시 구독
-      if (isExisting) {
-        console.log('기존 방 발견 - 즉시 구독 시작');
-        const existingRoomId = hasRoomIndex;
-        setRoomId(existingRoomId);
+      if (response.data && response.data.resultCode === 200 && response.data.data) {
+        const chatData = response.data.data;
+        const previousMessages = chatData.messages || chatData;
         
-        const userInfo = JSON.parse(localStorage.getItem('user-info'));
-        const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
-          console.log('기존 방에서 새 메시지 수신:', receivedMessage);
-          console.log('receivedMessage.user_id:', receivedMessage.user_id);
-          console.log('receivedMessage.user_name:', receivedMessage.user_name);
-
-          // 내가 보낸 메시지가 아닌 경우에만 추가
-          if (receivedMessage.user_id !== userInfo.id) {
-            const currentMessages = messagesRef.current;
-            // 이미 같은 내용의 로컬 메시지가 있는지 확인
-            const hasLocalMessage = currentMessages.some(msg => 
-              msg.isLocal && 
-              msg.text === receivedMessage.message && 
-              msg.sender.id === userInfo.id
-            );
+        if (previousMessages.length === 0) {
+          setHasMoreMessages(false);
+          setIsLoadingMore(false);
+          return;
+        }
+        
+        // 관리자 정보를 Map으로 변환하여 빠른 검색 가능하게 함
+        const adminMap = new Map();
+        adminList.forEach(admin => {
+          adminMap.set(admin.userId, admin.name);
+        });
+        
+        // 이전 메시지를 올바른 형식으로 변환
+        const formattedPreviousMessages = previousMessages
+          .map(msg => {
+            const userId = msg.userid || msg.user_id;
+            const adminName = adminMap.get(userId);
             
-            // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-            if (hasLocalMessage) {
-              setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
-            }
-            
-            // 새 메시지 추가
-            addMessage({
-              id: `server_${Date.now()}_${Math.random()}`,
-              text: receivedMessage.message,
-              sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
-              timestamp: receivedMessage.timestamp || new Date().toISOString(),
+            return {
+              id: `previous_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
+              text: msg.message,
+              sender: { 
+                id: userId, 
+                name: adminName || userId
+              },
+              timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
               isLocal: false
-            });
-          }
+            };
+          })
+          .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        
+        // 현재 스크롤 위치 저장
+        const messagesContainer = messagesContainerRef.current;
+        const scrollHeight = messagesContainer?.scrollHeight || 0;
+        const scrollTop = messagesContainer?.scrollTop || 0;
+        
+        // 이전 메시지를 기존 메시지 앞에 추가
+        setMessages(prev => {
+          const updatedMessages = [...formattedPreviousMessages, ...prev];
+          messagesRef.current = updatedMessages;
+          return updatedMessages;
         });
-
-        if (subscribeSuccess) {
-          console.log(`기존 방 ${existingRoomId} 구독 완료`);
-        }
-      } else {
-        console.log('새로운 방 - 첫 메시지 전송 시 방 생성 예정');
-        // 새로운 방인 경우에도 메시지 목록을 초기화하지 않음 (기존 메시지 유지)
-      }
-    }
-  }, [open, roomData, subscribeToRoom, addMessage]);
-
-  // 관리자 목록 불러오기
-  React.useEffect(() => {
-    const loadAdminList = async () => {
-      try {
-        const response = await fetch('/api/adminchat/adminlist', {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-        if (response.ok) {
-          const data = await response.json();
-          console.log('관리자 목록 응답:', data);
-          if (data.data && data.data.data) {
-            console.log('설정된 관리자 목록:', data.data.data);
-            setAdminList(data.data.data);
-            setIsAdminListLoaded(true);
+        
+        // 페이지 업데이트
+        setCurrentPage(nextPage);
+        
+        // 스크롤 위치 복원 (새 메시지가 추가된 만큼)
+        setTimeout(() => {
+          if (messagesContainer) {
+            const newScrollHeight = messagesContainer.scrollHeight;
+            const heightDifference = newScrollHeight - scrollHeight;
+            messagesContainer.scrollTop = scrollTop + heightDifference;
           }
-        }
-      } catch (error) {
-        console.error('관리자 목록 불러오기 실패:', error);
+        }, 100);
       }
-    };
-
-    if (open) {
-      loadAdminList();
+    } catch (error) {
+      console.error('이전 메시지 불러오기 실패:', error);
+    } finally {
+      setIsLoadingMore(false);
     }
-  }, [open]);
+  };
 
-  // ===============================메세지 보내기=======================================
+     // 방 타입 체크 및 초기화 (첫 입장 시에만 실행)
+       React.useEffect(() => {
+      if (open && roomData) {
+       
+       // 기존 방인지 새로운 방인지 확인
+       const hasRoomIndex = roomData.roomData?.room_index || roomData.id;
+       const isExisting = !!(hasRoomIndex && hasRoomIndex !== 'undefined' && hasRoomIndex !== 'null' && hasRoomIndex !== 0);
+       
+               // 기존 방인 경우 즉시 구독 및 메시지 불러오기
+        if (isExisting) {
+          const existingRoomId = hasRoomIndex;
+          setRoomId(existingRoomId);
+          
+          // 페이지 상태 초기화
+          setCurrentPage(0);
+          setHasMoreMessages(true);
+          setIsLoadingMore(false);
+         
+         const userInfo = JSON.parse(localStorage.getItem('user-info'));
+         
+                   // 기존 메시지 불러오기
+          const loadExistingMessages = async () => {
+            try {
+              const response = await ChatList(existingRoomId, userInfo.id, 0, 25); // 최근 25개 메시지
+               
+               if (response.data && response.data.resultCode === 200 && response.data.data) {
+                 const chatData = response.data.data;
+                 const existingMessages = chatData.messages || chatData; // 새로운 구조 또는 기존 구조 지원
+                 const adminData = chatData.adminList || []; // 관리자 정보
+                 
+                 // 관리자 정보를 상태에 저장
+                 setAdminList(adminData);
+                
+                 // 관리자 정보를 Map으로 변환하여 빠른 검색 가능하게 함
+                 const adminMap = new Map();
+                 adminData.forEach(admin => {
+                   adminMap.set(admin.userId, admin.name);
+                 });
+                 
+                 // 기존 메시지를 올바른 형식으로 변환하여 추가 (백엔드에서 최신순 정렬됨)
+                 const formattedMessages = existingMessages
+                   .map(msg => {
+                     const userId = msg.userid || msg.user_id;
+                     const adminName = adminMap.get(userId);
+                     
+                     return {
+                       id: `existing_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
+                       text: msg.message,
+                       sender: { 
+                         id: userId, 
+                         name: adminName || userId // 관리자 이름이 있으면 사용, 없으면 ID 사용
+                       },
+                       timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
+                       isLocal: false
+                     };
+                   })
+                   .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // 시간순 정렬 (오래된 순)
+               
+                                 setMessages(formattedMessages);
+                 messagesRef.current = formattedMessages;
+                 
+                 // 메시지 로드 후 스크롤을 맨 아래로 이동
+                 setTimeout(() => {
+                   messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+                 }, 100);
+             }
+           } catch (error) {
+             console.error('기존 메시지 불러오기 실패:', error);
+           }
+         };
+         
+         // 기존 메시지 불러오기 실행
+         loadExistingMessages();
+         
+         const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
+           console.log('기존 방에서 새 메시지 수신:', receivedMessage);
+           
+           // 내가 보낸 메시지가 아닌 경우에만 추가
+           if (receivedMessage.user_id !== userInfo.id) {
+             const currentMessages = messagesRef.current;
+             // 이미 같은 내용의 로컬 메시지가 있는지 확인
+             const hasLocalMessage = currentMessages.some(msg => 
+               msg.isLocal && 
+               msg.text === receivedMessage.message && 
+               msg.sender.id === userInfo.id
+             );
+             
+             // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+             if (hasLocalMessage) {
+               setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+             }
+             
+             // 관리자 정보에서 이름 찾기
+             const adminMap = new Map();
+             adminList.forEach(admin => {
+               adminMap.set(admin.userId, admin.name);
+             });
+             const adminName = adminMap.get(receivedMessage.user_id);
+             
+             // 새 메시지 추가
+             addMessage({
+               id: `server_${Date.now()}_${Math.random()}`,
+               text: receivedMessage.message,
+               sender: { 
+                 id: receivedMessage.user_id, 
+                 name: adminName || receivedMessage.user_id 
+               },
+               timestamp: receivedMessage.timestamp || new Date().toISOString(),
+               isLocal: false
+             });
+           }
+         });
+
+         if (subscribeSuccess) {
+           console.log(`기존 방 ${existingRoomId} 구독 완료`);
+         }
+       } else {
+         
+         // 새로운 방 생성 시 메시지 수신을 위한 구독
+         const subscribeSuccess = subscribeToRoom("admin", (receivedMessage) => {
+           console.log('새 방 생성 후 메시지 수신:', receivedMessage);
+           
+                       // 방이 생성된 경우 room_index 업데이트
+            if (receivedMessage.room_index && !roomId) {
+              setRoomId(receivedMessage.room_index);
+              
+              // 페이지 상태 초기화
+              setCurrentPage(0);
+              setHasMoreMessages(true);
+              setIsLoadingMore(false);
+              
+              // 새로운 방으로 구독 변경 및 메시지 불러오기
+              unsubscribeFromRoom("admin");
+             
+                           // 새로 생성된 방의 기존 메시지 불러오기
+              const loadNewRoomMessages = async () => {
+                try {
+                  const response = await ChatList(receivedMessage.room_index, userInfo.id, 0, 25);
+                   
+                   if (response.data && response.data.resultCode === 200 && response.data.data) {
+                     const chatData = response.data.data;
+                     const existingMessages = chatData.messages || chatData; // 새로운 구조 또는 기존 구조 지원
+                     const adminData = chatData.adminList || []; // 관리자 정보
+                     
+                     // 관리자 정보를 상태에 저장
+                     setAdminList(adminData);
+                     
+                     // 관리자 정보를 Map으로 변환하여 빠른 검색 가능하게 함
+                     const adminMap = new Map();
+                     adminData.forEach(admin => {
+                       adminMap.set(admin.userId, admin.name);
+                     });
+                     
+                     // 기존 메시지를 올바른 형식으로 변환하여 추가 (백엔드에서 최신순 정렬됨)
+                     const formattedMessages = existingMessages
+                       .map(msg => {
+                         const userId = msg.userid || msg.user_id;
+                         const adminName = adminMap.get(userId);
+                         
+                         return {
+                           id: `existing_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
+                           text: msg.message,
+                           sender: { 
+                             id: userId, 
+                             name: adminName || userId // 관리자 이름이 있으면 사용, 없으면 ID 사용
+                           },
+                           timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
+                           isLocal: false
+                         };
+                       })
+                       .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()); // 시간순 정렬 (오래된 순)
+                   
+                                         setMessages(formattedMessages);
+                     messagesRef.current = formattedMessages;
+                     
+                     // 메시지 로드 후 스크롤을 맨 아래로 이동
+                     setTimeout(() => {
+                       messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
+                     }, 100);
+                 }
+               } catch (error) {
+                 console.error('새 방 메시지 불러오기 실패:', error);
+               }
+             };
+             
+             // 새 방 메시지 불러오기 실행
+             loadNewRoomMessages();
+             
+             subscribeToRoom(receivedMessage.room_index, (roomMessage) => {
+               console.log('새 방에서 메시지 수신:', roomMessage);
+               
+               const userInfo = JSON.parse(localStorage.getItem('user-info'));
+               if (roomMessage.user_id !== userInfo.id) {
+                 // 관리자 정보에서 이름 찾기
+                 const adminMap = new Map();
+                 adminList.forEach(admin => {
+                   adminMap.set(admin.userId, admin.name);
+                 });
+                 const adminName = adminMap.get(roomMessage.user_id);
+                 
+                 addMessage({
+                   id: `server_${Date.now()}_${Math.random()}`,
+                   text: roomMessage.message,
+                   sender: { 
+                     id: roomMessage.user_id, 
+                     name: adminName || roomMessage.user_id 
+                   },
+                   timestamp: roomMessage.timestamp || new Date().toISOString(),
+                   isLocal: false
+                 });
+               }
+             });
+           }
+           
+           // 내가 보낸 메시지가 아닌 경우에만 추가
+           const userInfo = JSON.parse(localStorage.getItem('user-info'));
+           if (receivedMessage.user_id !== userInfo.id) {
+             const currentMessages = messagesRef.current;
+             // 이미 같은 내용의 로컬 메시지가 있는지 확인
+             const hasLocalMessage = currentMessages.some(msg => 
+               msg.isLocal && 
+               msg.text === receivedMessage.message && 
+               msg.sender.id === userInfo.id
+             );
+             
+             // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+             if (hasLocalMessage) {
+               setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+             }
+             
+             // 관리자 정보에서 이름 찾기
+             const adminMap = new Map();
+             adminList.forEach(admin => {
+               adminMap.set(admin.userId, admin.name);
+             });
+             const adminName = adminMap.get(receivedMessage.user_id);
+             
+             // 새 메시지 추가
+             addMessage({
+               id: `server_${Date.now()}_${Math.random()}`,
+               text: receivedMessage.message,
+               sender: { 
+                 id: receivedMessage.user_id, 
+                 name: adminName || receivedMessage.user_id 
+               },
+               timestamp: receivedMessage.timestamp || new Date().toISOString(),
+               isLocal: false
+             });
+           }
+         });
+         
+         if (subscribeSuccess) {
+           console.log('새 방 생성 구독 완료');
+         }
+       }
+     }
+       }, [open, roomData]);
+
+
+
+    // ===============================메세지 보내기=======================================
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
@@ -188,14 +450,15 @@ function ChatRoomWindow({
       };
 
       try {
-        console.log("메시지 전송 시작 - isExistingRoom:", isExistingRoom);
+        // 현재 room_index 확인 (roomId state 우선 사용)
+        const currentRoomIndex = roomId || roomData.roomData?.room_index || roomData.id;
+        const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
         
-        // 기존 방인 경우
-        if (isExistingRoom && roomId) {
-          console.log("기존 방에서 메시지 전송 - roomId:", roomId);
+        if (hasValidRoomIndex) {
+          // 기존 방인 경우
           
           const messageData = {
-            room_index: roomId,
+            room_index: currentRoomIndex,
             room_name: roomData.name || roomData.roomData?.room_name,
             user_id: userInfo.id,
             message: newMessage,
@@ -203,30 +466,24 @@ function ChatRoomWindow({
             timestamp: null,
           };
           
-          // 1. 메세지 DB 저장
-          const response = await SaveSendMessage(messageData);
-          console.log("기존 방 API 응답:", response);
+          // WebSocket으로 메시지 전송 (DB 저장 포함)
+          sendMessage(currentRoomIndex, messageData);
           
-          // 2. WebSocket으로 메시지 전송
-          console.log("기존 방 WebSocket 메시지 전송 - 방 ID:", roomId);
-          sendMessage(roomId, messageData);
-          
-                     // 3. 로컬 메시지 추가
-           const localMessageId = `local_${Date.now()}_${Math.random()}`;
-           addMessage({
-             id: localMessageId,
-             text: newMessage,
-             sender: { id: userInfo.id, name: userInfo.name },
-             timestamp: new Date().toISOString(),
-             isLocal: true
-           });
+          // 로컬 메시지 추가
+          const localMessageId = `local_${Date.now()}_${Math.random()}`;
+          addMessage({
+            id: localMessageId,
+            text: newMessage,
+            sender: { id: userInfo.id, name: userInfo.name },
+            timestamp: new Date().toISOString(),
+            isLocal: true
+          });
           
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
-          console.log("새로운 방 생성 및 메시지 전송");
           
           const messageData = {
-            room_index: null, // 첫 메시지이므로 null
+            room_index: null,
             room_name: generateRoomName([roomData.adminData.userId, userInfo.id]),
             user_id: userInfo.id,
             message: newMessage,
@@ -234,99 +491,38 @@ function ChatRoomWindow({
             timestamp: null,
           };
 
-          // 1. 메세지 DB 저장 (방 생성 포함)
-          const response = await SaveSendMessage(messageData);
-          console.log("새 방 생성 API 응답:", response);
+          // WebSocket으로 메시지 전송 (방 생성 및 DB 저장 포함)
+          sendMessage("admin", messageData);
           
-          // 2. 방이 생성된 경우 roomId 업데이트 및 구독 요청
-          if (response && response?.data?.data) {
-            const newRoomId = response.data.data;
-            console.log("새로 생성된 방 인덱스:", newRoomId);
-            
-            // roomId를 즉시 업데이트하여 다음 메시지에서 사용할 수 있도록 함
-            setRoomId(newRoomId);
-            setIsExistingRoom(true); // 이제 기존 방이 됨
-            
-            // roomData도 업데이트하여 room_index 정보 추가
-            if (roomData && !roomData.roomData) {
-              roomData.roomData = { room_index: newRoomId };
-            }
-            
-            // 3. 새로 생성된 방 구독 요청
-            const subscribeSuccess = subscribeToRoom(newRoomId, (receivedMessage) => {
-              console.log('새 방에서 새 메시지 수신:', receivedMessage);
-              console.log('receivedMessage.user_id:', receivedMessage.user_id);
-              console.log('receivedMessage.user_name:', receivedMessage.user_name);
-
-                             // 내가 보낸 메시지가 아닌 경우에만 추가
-               if (receivedMessage.user_id !== userInfo.id) {
-                 const currentMessages = messagesRef.current;
-                 // 이미 같은 내용의 로컬 메시지가 있는지 확인
-                 const hasLocalMessage = currentMessages.some(msg => 
-                   msg.isLocal && 
-                   msg.text === receivedMessage.message && 
-                   msg.sender.id === userInfo.id
-                 );
-                 
-                 // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-                 if (hasLocalMessage) {
-                   setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
-                 }
-                 
-                 // 새 메시지 추가
-                 addMessage({
-                   id: `server_${Date.now()}_${Math.random()}`,
-                   text: receivedMessage.message,
-                   sender: { id: receivedMessage.user_id, name: receivedMessage.user_name || getAdminNameById(receivedMessage.user_id) },
-                   timestamp: receivedMessage.timestamp || new Date().toISOString(),
-                   isLocal: false
-                 });
-               }
-            });
-
-            if (subscribeSuccess) {
-              console.log(`새 방 ${newRoomId} 구독 완료`);
-            }
-            
-            // 4. WebSocket으로 메시지 전송
-            console.log("새 방 WebSocket 메시지 전송 - 방 ID:", newRoomId);
-            sendMessage(newRoomId, messageData);
-          } else {
-            console.log("방 생성 실패 - 기존 방 사용");
-            if (roomId) {
-              sendMessage(roomId, messageData);
-            }
-          }
-          
-                     // 5. 로컬 메시지 추가
-           const localMessageId = `local_${Date.now()}_${Math.random()}`;
-           addMessage({
-             id: localMessageId,
-             text: newMessage,
-             sender: { id: userInfo.id, name: userInfo.name },
-             timestamp: new Date().toISOString(),
-             isLocal: true
-           });
+          // 로컬 메시지 추가
+          const localMessageId = `local_${Date.now()}_${Math.random()}`;
+          addMessage({
+            id: localMessageId,
+            text: newMessage,
+            sender: { id: userInfo.id, name: userInfo.name },
+            timestamp: new Date().toISOString(),
+            isLocal: true
+          });
         }
         
-        // 6. 입력 필드 초기화
+        // 입력 필드 초기화
         setNewMessage('');
         setIsTyping(false);
         
-        // 7. 입력 필드에 포커스 유지
+        // 입력 필드에 포커스 유지
         setTimeout(() => {
           inputRef.current?.focus();
         }, 100);
         
       } catch (error) {
         console.error("메시지 전송 실패:", error);
-                 // 에러 발생 시에도 로컬 메시지는 추가
-         addMessage({
-           text: newMessage,
-           sender: { id: userInfo.id, name: userInfo.name },
-           timestamp: new Date().toISOString(),
-           error: true // 에러 표시용
-         });
+        // 에러 발생 시에도 로컬 메시지는 추가
+        addMessage({
+          text: newMessage,
+          sender: { id: userInfo.id, name: userInfo.name },
+          timestamp: new Date().toISOString(),
+          error: true // 에러 표시용
+        });
         setNewMessage('');
         setIsTyping(false);
         
@@ -508,14 +704,43 @@ function ChatRoomWindow({
     return () => window.removeEventListener('resize', handleResize);
   }, [isMinimized, size.width, size.height]);
 
-  // 메시지 자동 스크롤
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+       // 메시지 자동 스크롤 (새 메시지 추가 시에만)
+    const scrollToBottom = () => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
 
-  React.useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    // 스크롤 이벤트 핸들러 (무한스크롤)
+    const handleScroll = useCallback((e) => {
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      
+      // 스크롤이 상단에 가까워지면 이전 메시지 불러오기
+      if (scrollTop < 100 && hasMoreMessages && !isLoadingMore && roomId) {
+        loadPreviousMessages();
+      }
+    }, [hasMoreMessages, isLoadingMore, loadPreviousMessages, roomId]);
+
+    // 스크롤 이벤트 리스너 등록
+    React.useEffect(() => {
+      const messagesContainer = messagesContainerRef.current;
+      
+      if (messagesContainer) {
+        messagesContainer.addEventListener('scroll', handleScroll);
+        
+        return () => {
+          messagesContainer.removeEventListener('scroll', handleScroll);
+        };
+      }
+    }, [handleScroll]);
+  
+    React.useEffect(() => {
+      // 메시지가 있고, 마지막 메시지가 로컬 메시지이거나 새로 추가된 메시지인 경우에만 스크롤
+      if (messages.length > 0) {
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage.isLocal || lastMessage.id.startsWith('server_')) {
+          scrollToBottom();
+        }
+      }
+    }, [messages]);
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -554,37 +779,31 @@ function ChatRoomWindow({
 
   // 채팅방 나가기 시 구독 해제
   const handleBack = () => {
-    // 현재 구독 중인 방이 있다면 구독 해제
     if (roomId) {
-      console.log("채팅방 구독 해제:", roomId);
       unsubscribeFromRoom(roomId);
     }
     
-    // 메시지 목록 초기화
     setMessages([]);
-    
-    // 방 ID 초기화
     setRoomId(null);
+    setCurrentPage(0);
+    setHasMoreMessages(true);
+    setIsLoadingMore(false);
     
-    // 뒤로가기 콜백 실행
     onBack();
   };
 
   // 채팅방 닫기 시에도 구독 해제
   const handleClose = () => {
-    // 현재 구독 중인 방이 있다면 구독 해제
     if (roomId) {
-      console.log("채팅방 구독 해제:", roomId);
       unsubscribeFromRoom(roomId);
     }
     
-    // 메시지 목록 초기화
     setMessages([]);
-    
-    // 방 ID 초기화
     setRoomId(null);
+    setCurrentPage(0);
+    setHasMoreMessages(true);
+    setIsLoadingMore(false);
     
-    // 닫기 콜백 실행
     onClose();
   };
 
@@ -718,28 +937,53 @@ function ChatRoomWindow({
 
       {!isMinimized && (
         <>
-          {/* 메시지 목록 */}
-          <Box
-            sx={{
-              height: size.height - 120,
-              overflowY: 'auto',
-              p: 1,
-              backgroundColor: '#fafafa',
-              // 반응형 메시지 목록
-              '@media (max-width: 768px)': {
-                height: 'calc(80vh - 120px)',
-                p: 0.5,
-              },
-              '@media (max-width: 480px)': {
-                height: 'calc(90vh - 120px)',
-                p: 0.25,
-              }
-            }}
-          >
-            {messages.map((message, index) => {
-              const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
-              const userInfo = JSON.parse(localStorage.getItem('user-info'));
-              const isMyMessage = String(message.sender?.id) === String(userInfo?.id);
+                     {/* 메시지 목록 */}
+                      <Box
+              ref={messagesContainerRef}
+              sx={{
+                height: size.height - 120,
+                overflowY: 'auto',
+                p: 1,
+                backgroundColor: '#fafafa',
+                                display: 'flex',
+                 flexDirection: 'column',
+                // 반응형 메시지 목록
+                '@media (max-width: 768px)': {
+                  height: 'calc(80vh - 120px)',
+                  p: 0.5,
+                },
+                '@media (max-width: 480px)': {
+                  height: 'calc(90vh - 120px)',
+                  p: 0.25,
+                }
+              }}
+            >
+              {/* 무한스크롤 로딩 인디케이터 */}
+              {isLoadingMore && (
+                <Box sx={{ textAlign: 'center', py: 1, backgroundColor: '#f0f0f0', borderRadius: 1, mx: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    이전 메시지를 불러오는 중...
+                  </Typography>
+                </Box>
+              )}
+              
+              {/* 더 이상 불러올 메시지가 없을 때 */}
+              {!hasMoreMessages && messages.length > 0 && (
+                <Box sx={{ textAlign: 'center', py: 1, backgroundColor: '#e8f5e8', borderRadius: 1, mx: 1 }}>
+                  <Typography variant="caption" color="text.secondary">
+                    모든 메시지를 불러왔습니다
+                  </Typography>
+                </Box>
+              )}
+              
+              
+                         {messages.map((message, index) => {
+                               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
+                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                // 메시지 발신자 ID와 현재 사용자 ID를 정확히 비교
+                const messageSenderId = String(message.sender?.id || '');
+                const currentUserId = String(userInfo?.id || '');
+                const isMyMessage = messageSenderId === currentUserId && messageSenderId !== '';
 
               return (
                 <Box key={safeKey} sx={{ mb: 1 }}>
@@ -752,58 +996,107 @@ function ChatRoomWindow({
                       />
                     </Box>
                   ) : (
-                    <Box
-                      sx={{
-                        display: 'flex',
-                        justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
-                        alignItems: 'flex-start',
-                        gap: 1
-                      }}
-                    >
-                                             <Box>
-                         {!isMyMessage && (
-                           <Typography variant="caption" sx={{ color: '#666', ml: 1 }}>
+                                                              <Box
+                       sx={{
+                         display: 'flex',
+                         justifyContent: isMyMessage ? 'flex-end' : 'flex-start',
+                         alignItems: 'flex-start',
+                         gap: 1,
+                         width: '100%'
+                       }}
+                     >
+                       {!isMyMessage && (
+                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, flex: 1 }}>
+                           <Typography variant="caption" sx={{ color: '#666', ml: 1, mb: 0.5 }}>
                              {message.sender?.name && message.sender.name !== message.sender.id ? message.sender.name : 'Unknown'}
                            </Typography>
-                         )}
-                        <Paper
-                          sx={{
-                            p: 1.5,
-                            maxWidth: 280,
-                            backgroundColor: isMyMessage ? '#1976d2' : '#F8FAFC',
-                            color: isMyMessage ? 'white' : 'black',
-                            borderRadius: isMyMessage ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                            boxShadow: 1,
-                            border: isMyMessage ? 'none' : '1px solid #e0e0e0',
-                            // 반응형 메시지 버블
-                            '@media (max-width: 768px)': {
-                              maxWidth: '85%',
-                              p: 1,
-                            },
-                            '@media (max-width: 480px)': {
-                              maxWidth: '90%',
-                              p: 0.75,
-                            }
-                          }}
-                        >
-                          <Typography variant="body2">
-                            {message.text}
-                          </Typography>
-                          <Typography
-                            variant="caption"
-                            sx={{
-                              display: 'block',
-                              mt: 0.5,
-                              opacity: 0.7,
-                              fontSize: '0.6rem',
-                              textAlign: isMyMessage ? 'right' : 'left'
-                            }}
-                          >
-                            {message.timestamp ? new Date(message.timestamp).toLocaleTimeString() : ''}
-                          </Typography>
-                        </Paper>
-                      </Box>
-                    </Box>
+                           <Paper
+                             sx={{
+                               p: 1.5,
+                               maxWidth: 280,
+                               backgroundColor: '#F8FAFC',
+                               color: 'black',
+                               borderRadius: '18px 18px 18px 4px',
+                               boxShadow: 1,
+                               border: '1px solid #e0e0e0',
+                               // 반응형 메시지 버블
+                               '@media (max-width: 768px)': {
+                                 maxWidth: '85%',
+                                 p: 1,
+                               },
+                               '@media (max-width: 480px)': {
+                                 maxWidth: '90%',
+                                 p: 0.75,
+                               }
+                             }}
+                           >
+                             <Typography variant="body2">
+                               {message.text}
+                             </Typography>
+                             <Typography
+                               variant="caption"
+                               sx={{
+                                 display: 'block',
+                                 mt: 0.5,
+                                 opacity: 0.7,
+                                 fontSize: '0.6rem',
+                                 textAlign: 'left'
+                               }}
+                             >
+                               {message.timestamp ? new Date(message.timestamp).toLocaleTimeString('ko-KR', { 
+                                 hour: '2-digit', 
+                                 minute: '2-digit',
+                                 hour12: true 
+                               }) : ''}
+                             </Typography>
+                           </Paper>
+                         </Box>
+                       )}
+                       {isMyMessage && (
+                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0, flex: 1 }}>
+                           <Paper
+                             sx={{
+                               p: 1.5,
+                               maxWidth: 280,
+                               backgroundColor: '#1976d2',
+                               color: 'white',
+                               borderRadius: '18px 18px 4px 18px',
+                               boxShadow: 1,
+                               border: 'none',
+                               // 반응형 메시지 버블
+                               '@media (max-width: 768px)': {
+                                 maxWidth: '85%',
+                                 p: 1,
+                               },
+                               '@media (max-width: 480px)': {
+                                 maxWidth: '90%',
+                                 p: 0.75,
+                               }
+                             }}
+                           >
+                             <Typography variant="body2">
+                               {message.text}
+                             </Typography>
+                             <Typography
+                               variant="caption"
+                               sx={{
+                                 display: 'block',
+                                 mt: 0.5,
+                                 opacity: 0.7,
+                                 fontSize: '0.6rem',
+                                 textAlign: 'right'
+                               }}
+                             >
+                               {message.timestamp ? new Date(message.timestamp).toLocaleTimeString('ko-KR', { 
+                                 hour: '2-digit', 
+                                 minute: '2-digit',
+                                 hour12: true 
+                               }) : ''}
+                             </Typography>
+                           </Paper>
+                         </Box>
+                       )}
+                     </Box>
                   )}
                 </Box>
               );

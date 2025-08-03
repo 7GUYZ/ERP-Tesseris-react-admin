@@ -21,6 +21,8 @@ export const GetAdminList = () => api.get("/adminchat/adminlist");
 export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
 // 채팅방 목록 조회
 export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
+// 채팅방 메시지 목록 조회
+export const ChatList = (room, userid, page = 0, size = 25) => api.get(`/adminchat/${room}/chatlist/${userid}?page=${page}&size=${size}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
