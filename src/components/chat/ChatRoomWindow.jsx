@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
   Paper, Box, TextField, Button, IconButton,
-  Typography, Chip
+  Typography, Chip, Menu, MenuItem, ListItemIcon, ListItemText
 } from '@mui/material';
 import {
   Close, Send, Minimize, DragIndicator,
-  ArrowBack, Call, VideoCall, Info, AttachFile
+  ArrowBack, Call, VideoCall, Info, AttachFile, MoreVert, PersonAdd, ExitToApp
 } from '@mui/icons-material';
 import { useWebSocket } from './WebSocketConfig';
 import { ChatList } from '../../api/auth/JihunAuth';
@@ -44,6 +44,11 @@ function ChatRoomWindow({
   const [currentPage, setCurrentPage] = useState(0); // 현재 페이지
   const [hasMoreMessages, setHasMoreMessages] = useState(true); // 더 불러올 메시지가 있는지
   const [isLoadingMore, setIsLoadingMore] = useState(false); // 추가 메시지 로딩 중
+  const [moreOptionsAnchor, setMoreOptionsAnchor] = useState(null); // 더보기 메뉴 앵커
+  const [moreOptionsList, setMoreOptionsList] = useState([
+    { id: 'addUser', label: '초대하기', icon: 'PersonAdd' },
+    { id: 'leaveRoom', label: '채팅방 나가기', icon: 'ExitToApp' }
+  ]); // 더보기 옵션 리스트
 
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
@@ -88,6 +93,30 @@ function ChatRoomWindow({
     unsubscribeFromRoomRef.current = unsubscribeFromRoom;
     addMessageRef.current = addMessage;
   }, [subscribeToRoom, unsubscribeFromRoom, addMessage]);
+
+  // 채팅방이 닫히거나 변경될 때 메뉴 닫기
+  useEffect(() => {
+    if (!open || !roomData) {
+      setMoreOptionsAnchor(null);
+    }
+  }, [open, roomData]);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (moreOptionsAnchor && !event.target.closest('[data-more-options]')) {
+        setMoreOptionsAnchor(null);
+      }
+    };
+
+    if (moreOptionsAnchor) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [moreOptionsAnchor]);
 
   // 이전 메시지 불러오기 함수
   const loadPreviousMessages = async () => {
@@ -819,6 +848,59 @@ function ChatRoomWindow({
     onClose();
   };
 
+  // 더보기 메뉴 핸들러들
+  const handleMoreOptionsClick = (event) => {
+    event.stopPropagation(); // 이벤트 전파 방지
+    // 토글 기능: 이미 열려있으면 닫고, 닫혀있으면 열기
+    if (moreOptionsAnchor) {
+      setMoreOptionsAnchor(null);
+    } else {
+      setMoreOptionsAnchor(event.currentTarget);
+    }
+  };
+
+  const handleMoreOptionsClose = () => {
+    setMoreOptionsAnchor(null);
+  };
+
+  const handleMoreOptionsItemClick = (optionId) => {
+    handleMoreOptionsClose();
+    
+    switch (optionId) {
+      case 'addUser':
+        // 사용자 추가 기능 구현
+        console.log('사용자 추가 기능');
+        break;
+      case 'leaveRoom':
+        // 채팅방 나가기 기능 구현
+        console.log('채팅방 나가기 기능');
+        break;
+      default:
+        break;
+    }
+  };
+
+  // 메뉴 닫기 핸들러
+  const handleMenuClose = (event, reason) => {
+    // 모든 경우에 메뉴 닫기 (clickaway, escape, backdropClick 등)
+    setMoreOptionsAnchor(null);
+  };
+
+  // 더보기 옵션 리스트 수정 함수들
+  const addMoreOption = (newOption) => {
+    setMoreOptionsList(prev => [...prev, newOption]);
+  };
+
+  const removeMoreOption = (optionId) => {
+    setMoreOptionsList(prev => prev.filter(option => option.id !== optionId));
+  };
+
+  const updateMoreOption = (optionId, updatedOption) => {
+    setMoreOptionsList(prev => prev.map(option => 
+      option.id === optionId ? { ...option, ...updatedOption } : option
+    ));
+  };
+
   if (!open || !roomData) return null;
 
   return (
@@ -909,34 +991,28 @@ function ChatRoomWindow({
         </Box>
 
         <Box className="no-drag" sx={{ display: 'flex', alignItems: 'center' }}>
-          <input
-            type="file"
-            id="file-upload"
-            style={{ display: 'none' }}
-            onChange={handleFileUpload}
-          />
-          <label htmlFor="file-upload">
-            <IconButton
-              component="span"
-              size="small"
-              sx={{
-                color: 'white',
-                mr: 0.5,
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                }
-              }}
-            >
-              <AttachFile />
-            </IconButton>
-          </label>
-          <IconButton
-            size="small"
-            onClick={() => setIsMinimized(!isMinimized)}
-            sx={{ color: 'white', mr: 0.5 }}
-          >
-            <Minimize />
-          </IconButton>
+                            <IconButton
+                    size="small"
+                    onClick={handleMoreOptionsClick}
+                    data-more-options="button"
+                    sx={{ 
+                      color: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.8)' : 'white', 
+                      mr: 0.5,
+                      backgroundColor: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      }
+                    }}
+                  >
+                    <MoreVert />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={() => setIsMinimized(!isMinimized)}
+                    sx={{ color: 'white', mr: 0.5 }}
+                  >
+                    <Minimize />
+                  </IconButton>
           <IconButton
             size="small"
             onClick={handleClose}
@@ -947,29 +1023,32 @@ function ChatRoomWindow({
         </Box>
       </Box>
 
-      {!isMinimized && (
-        <>
-                     {/* 메시지 목록 */}
-                      <Box
-              ref={messagesContainerRef}
-              sx={{
-                height: size.height - 120,
-                overflowY: 'auto',
-                p: 1,
-                backgroundColor: '#fafafa',
-                                display: 'flex',
+             {!isMinimized && (
+         <Box sx={{ display: 'flex', flexDirection: 'column', height: 'calc(100% - 60px)', overflow: 'hidden', minHeight: 0 }}>
+                      {/* 메시지 목록 */}
+                       <Box
+               ref={messagesContainerRef}
+               sx={{
+                 flex: 1,
+                 overflowY: 'auto',
+                 overflowX: 'hidden',
+                 p: 1,
+                 backgroundColor: '#fafafa',
+                 display: 'flex',
                  flexDirection: 'column',
-                // 반응형 메시지 목록
-                '@media (max-width: 768px)': {
-                  height: 'calc(80vh - 120px)',
-                  p: 0.5,
-                },
-                '@media (max-width: 480px)': {
-                  height: 'calc(90vh - 120px)',
-                  p: 0.25,
-                }
-              }}
-            >
+                 minHeight: 0,
+                 maxHeight: 'calc(100vh - 200px)',
+                 // 반응형 메시지 목록
+                 '@media (max-width: 768px)': {
+                   p: 0.5,
+                   maxHeight: 'calc(100vh - 180px)',
+                 },
+                 '@media (max-width: 480px)': {
+                   p: 0.25,
+                   maxHeight: 'calc(100vh - 160px)',
+                 }
+               }}
+             >
               {/* 무한스크롤 로딩 인디케이터 */}
               {isLoadingMore && (
                 <Box sx={{ textAlign: 'center', py: 1, backgroundColor: '#f0f0f0', borderRadius: 1, mx: 1 }}>
@@ -1129,50 +1208,141 @@ function ChatRoomWindow({
             <div ref={messagesEndRef} />
           </Box>
 
-          {/* 메시지 입력 */}
-          <Box
-            className="no-drag"
-            sx={{
-              display: 'flex',
-              gap: 1,
-              p: 0.5,
-              borderTop: '1px solid #e0e0e0',
-              backgroundColor: 'white',
-              alignItems: 'center',
-              // 반응형 입력 영역
-              '@media (max-width: 768px)': {
-                p: 0.25,
-                gap: 0.5,
-              },
-              '@media (max-width: 480px)': {
-                p: 0.25,
-                gap: 0.25,
-              }
-            }}
-          >
-            <TextField
-              ref={inputRef}
-              fullWidth
-              size="small"
-              multiline
-              maxRows={2}
-              placeholder="메시지를 입력하세요..."
-              value={newMessage}
-              onChange={handleInputChange}
-              onKeyPress={handleKeyPress}
-              sx={{
-                '& .MuiOutlinedInput-root': {
-                  borderRadius: 2
-                },
-                // 반응형 입력 필드
-                '@media (max-width: 768px)': {
-                  fontSize: '0.9rem',
-                },
-                '@media (max-width: 480px)': {
-                  fontSize: '0.85rem',
-                }
-              }}
+                     {/* 메시지 입력 */}
+           <Box
+             className="no-drag"
+             sx={{
+               display: 'flex',
+               gap: 1,
+               p: 0.5,
+               borderTop: '1px solid #e0e0e0',
+               backgroundColor: 'white',
+               alignItems: 'center',
+               minHeight: '40px',
+               maxHeight: '80px',
+               flexShrink: 0,
+               overflow: 'hidden',
+               // 반응형 입력 영역
+               '@media (max-width: 768px)': {
+                 p: 0.25,
+                 gap: 0.5,
+                 minHeight: '35px',
+                 maxHeight: '70px',
+               },
+               '@media (max-width: 480px)': {
+                 p: 0.125,
+                 gap: 0.25,
+                 minHeight: '32px',
+                 maxHeight: '60px',
+               }
+             }}
+           >
+                                                   <TextField
+                ref={inputRef}
+                fullWidth
+                size="small"
+                multiline
+                maxRows={5}
+                placeholder="메시지를 입력하세요..."
+                value={newMessage}
+                onChange={handleInputChange}
+                onKeyPress={handleKeyPress}
+                inputProps={{
+                  style: {
+                    whiteSpace: 'nowrap',
+                    wordBreak: 'keep-all',
+                    overflowX: 'auto'
+                  }
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                    minHeight: '32px',
+                    maxHeight: '80px',
+                    overflow: 'hidden',
+                    '& fieldset': {
+                      borderColor: '#e0e0e0'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: '#bdbdbd'
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: 'rgb(33, 150, 243)'
+                    }
+                  },
+                  '& .MuiInputBase-input': {
+                    padding: '2px 6px',
+                    lineHeight: '1.2',
+                    minHeight: '16px',
+                    maxHeight: '60px',
+                    overflow: 'auto',
+                    resize: 'none',
+                    boxSizing: 'border-box',
+                    whiteSpace: 'nowrap',
+                    wordBreak: 'keep-all',
+                    '&::-webkit-scrollbar': {
+                      width: '4px'
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      background: '#f1f1f1'
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#c1c1c1',
+                      borderRadius: '2px'
+                    }
+                  },
+                  // 반응형 입력 필드
+                  '@media (max-width: 768px)': {
+                    fontSize: '0.9rem',
+                    '& .MuiOutlinedInput-root': {
+                      minHeight: '28px',
+                      maxHeight: '70px'
+                    },
+                    '& .MuiInputBase-input': {
+                      padding: '1px 5px',
+                      minHeight: '14px',
+                      maxHeight: '50px',
+                      whiteSpace: 'nowrap',
+                      wordBreak: 'keep-all'
+                    }
+                  },
+                  '@media (max-width: 480px)': {
+                    fontSize: '0.85rem',
+                    '& .MuiOutlinedInput-root': {
+                      minHeight: '24px',
+                      maxHeight: '60px'
+                    },
+                    '& .MuiInputBase-input': {
+                      padding: '0px 4px',
+                      minHeight: '12px',
+                      maxHeight: '40px',
+                      whiteSpace: 'nowrap',
+                      wordBreak: 'keep-all'
+                    }
+                  }
+                }}
+              />
+            <input
+              type="file"
+              id="file-upload"
+              style={{ display: 'none' }}
+              onChange={handleFileUpload}
             />
+                         <label htmlFor="file-upload">
+               <IconButton
+                 component="span"
+                 size="small"
+                 sx={{
+                   color: '#666666',
+                   flexShrink: 0,
+                   '&:hover': {
+                     backgroundColor: 'rgba(102, 102, 102, 0.1)'
+                   }
+                 }}
+               >
+                 <AttachFile />
+               </IconButton>
+             </label>
             <Button
               variant="contained"
               onClick={handleSendMessage}
@@ -1181,14 +1351,15 @@ function ChatRoomWindow({
                 minWidth: 'auto',
                 px: 2,
                 borderRadius: 2,
-                background: 'rgb(33, 150, 243)'
+                background: 'rgb(33, 150, 243)',
+                flexShrink: 0
               }}
             >
               <Send />
             </Button>
-          </Box>
-        </>
-      )}
+                     </Box>
+         </Box>
+       )}
 
       {/* 리사이즈 핸들 */}
       {!isMinimized && (
@@ -1301,6 +1472,59 @@ function ChatRoomWindow({
           />
         </>
       )}
+
+      {/* 더보기 메뉴 */}
+      <Menu
+        anchorEl={moreOptionsAnchor}
+        open={Boolean(moreOptionsAnchor)}
+        onClose={handleMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        disableScrollLock={false}
+        keepMounted={false}
+        data-more-options="menu"
+        sx={{
+          '& .MuiPaper-root': {
+            minWidth: 180,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            borderRadius: 2,
+            zIndex: 1500,
+          },
+          zIndex: 1500,
+        }}
+      >
+        {moreOptionsList.map((option) => (
+          <MenuItem
+            key={option.id}
+            onClick={() => handleMoreOptionsItemClick(option.id)}
+            sx={{
+              py: 1,
+              px: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(33, 150, 243, 0.08)',
+              }
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 36 }}>
+              {option.icon === 'PersonAdd' && <PersonAdd fontSize="small" />}
+              {option.icon === 'ExitToApp' && <ExitToApp fontSize="small" />}
+            </ListItemIcon>
+            <ListItemText 
+              primary={option.label}
+              primaryTypographyProps={{
+                fontSize: '0.875rem',
+                fontWeight: 500
+              }}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
     </Paper>
   );
 }
