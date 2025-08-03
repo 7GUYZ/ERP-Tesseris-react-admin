@@ -73,25 +73,109 @@ function ChatRoomWindow({
     if (!indexA) return 1;
     if (!indexB) return -1;
 
+    // 문자열이나 숫자 모두 처리
+    const strA = String(indexA);
+    const strB = String(indexB);
+    
     // 숫자로 변환하여 비교
-    const numA = parseInt(indexA) || 0;
-    const numB = parseInt(indexB) || 0;
+    const numA = parseInt(strA) || 0;
+    const numB = parseInt(strB) || 0;
 
     return numA - numB; // 오름차순 정렬 (낮은 인덱스가 먼저)
   }, []);
 
-  // 메시지 추가 함수
-  const addMessage = useCallback((newMessage) => {
-    setMessages(prev => {
-      // 새 메시지를 배열 끝에 추가하고 전체를 인덱스순으로 정렬
-      const updatedMessages = [...prev, newMessage].sort((a, b) => {
-        return compareIndex(a.messageindex, b.messageindex);
-      });
+  // 메시지 중복 체크 함수
+  const isDuplicateMessage = useCallback((newMessage, existingMessages) => {
+    return existingMessages.some(existing => {
+      // ID가 같으면 중복
+      if (existing.id === newMessage.id) return true;
+      
+      // 같은 내용, 같은 발신자, 같은 시간대면 중복
+      if (existing.text === newMessage.text && 
+          existing.sender?.id === newMessage.sender?.id &&
+          Math.abs(new Date(existing.timestamp).getTime() - new Date(newMessage.timestamp).getTime()) < 1000) {
+        return true;
+      }
+      
+      return false;
+    });
+  }, []);
 
-      messagesRef.current = updatedMessages; // ref도 업데이트
-      return updatedMessages;
+  // 메시지 정렬 함수 (messageindex 우선, 없으면 timestamp 사용)
+  const sortMessages = useCallback((messages) => {
+    if (!Array.isArray(messages) || messages.length === 0) {
+      return messages;
+    }
+
+    return [...messages].sort((a, b) => {
+      // 유효하지 않은 메시지 객체 처리
+      if (!a || !b) {
+        return 0;
+      }
+
+      // messageindex가 있으면 그것을 우선 사용
+      if (a.messageindex && b.messageindex) {
+        const result = compareIndex(a.messageindex, b.messageindex);
+        if (result !== 0) return result;
+      }
+      
+      // messageindex가 하나만 있는 경우, 있는 쪽이 뒤로 (서버 메시지가 우선)
+      if (a.messageindex && !b.messageindex) return 1;
+      if (!a.messageindex && b.messageindex) return -1;
+      
+      // messageindex가 둘 다 없는 경우 timestamp 사용
+      const timeA = new Date(a.timestamp || 0).getTime();
+      const timeB = new Date(b.timestamp || 0).getTime();
+      
+      if (timeA !== timeB) {
+        return timeA - timeB;
+      }
+      
+      // timestamp도 같은 경우 ID로 정렬 (안정성 보장)
+      return (a.id || '').localeCompare(b.id || '');
     });
   }, [compareIndex]);
+
+  // 메시지 상태 업데이트 함수 (정렬 포함, 중복 제거)
+  const updateMessages = useCallback((newMessages) => {
+    // 중복 메시지 제거
+    const uniqueMessages = newMessages.filter((message, index, self) => {
+      return index === self.findIndex(m => 
+        m.id === message.id || 
+        (m.text === message.text && 
+         m.sender?.id === message.sender?.id &&
+         Math.abs(new Date(m.timestamp).getTime() - new Date(message.timestamp).getTime()) < 1000)
+      );
+    });
+    
+    const sortedMessages = sortMessages(uniqueMessages);
+    setMessages(sortedMessages);
+    messagesRef.current = sortedMessages;
+    return sortedMessages;
+  }, [sortMessages]);
+
+  // 메시지 추가 함수 (정렬 포함, 중복 체크)
+  const addMessage = useCallback((newMessage) => {
+    setMessages(prev => {
+      // 중복 메시지 체크
+      if (isDuplicateMessage(newMessage, prev)) {
+        return prev;
+      }
+      
+      // 새 메시지를 배열 끝에 추가 (정렬하지 않음)
+      const updatedMessages = [...prev, newMessage];
+      messagesRef.current = updatedMessages;
+      return updatedMessages;
+    });
+  }, [isDuplicateMessage]);
+
+  // 메시지 배열 정렬 함수 (상태 업데이트와 함께) - 제거
+  // const sortAndUpdateMessages = useCallback((messagesToSort) => {
+  //   const sortedMessages = sortMessages(messagesToSort);
+  //   setMessages(sortedMessages);
+  //   messagesRef.current = sortedMessages;
+  //   return sortedMessages;
+  // }, [sortMessages]);
 
   // 발신자 이름 해결 함수
   const resolveSenderName = useCallback((userId, senderName) => {
@@ -193,37 +277,33 @@ function ChatRoomWindow({
         });
 
         // 이전 메시지를 올바른 형식으로 변환
-        const formattedPreviousMessages = previousMessages
-          .map(msg => {
-            const userId = msg.userid || msg.user_id;
-            const adminName = adminMap.get(userId);
+        const formattedPreviousMessages = previousMessages.map(msg => {
+          const userId = msg.userid || msg.user_id;
+          const adminName = adminMap.get(userId);
 
-            return {
-              id: `previous_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
-              text: msg.message,
-              sender: {
-                id: userId,
-                name: adminName || userId
-              },
-              timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
-              messageindex: msg.messageindex || null,
-              isLocal: false
-            };
-          })
-          .sort((a, b) => {
-            return compareIndex(a.messageindex, b.messageindex);
-          });
+          return {
+            id: `previous_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
+            text: msg.message,
+            sender: {
+              id: userId,
+              name: adminName || userId
+            },
+            timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
+            messageindex: msg.messageindex || null,
+            isLocal: false
+          };
+        });
 
         // 현재 스크롤 위치 저장
         const messagesContainer = messagesContainerRef.current;
         const scrollHeight = messagesContainer?.scrollHeight || 0;
         const scrollTop = messagesContainer?.scrollTop || 0;
 
-        // 이전 메시지를 기존 메시지 앞에 추가
+        // 이전 메시지를 기존 메시지 앞에 추가 (정렬하지 않음)
         setMessages(prev => {
-          const updatedMessages = [...formattedPreviousMessages, ...prev];
-          messagesRef.current = updatedMessages;
-          return updatedMessages;
+          const allMessages = [...formattedPreviousMessages, ...prev];
+          messagesRef.current = allMessages;
+          return allMessages;
         });
 
         // 페이지 업데이트
@@ -308,30 +388,28 @@ function ChatRoomWindow({
             });
 
             // 기존 메시지를 올바른 형식으로 변환하여 추가
-            const formattedMessages = existingMessages
-              .map(msg => {
-                const userId = msg.userid || msg.user_id;
-                const adminName = adminMap.get(userId);
+            const formattedMessages = existingMessages.map(msg => {
+              const userId = msg.userid || msg.user_id;
+              const adminName = adminMap.get(userId);
 
-                return {
-                  id: `existing_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
-                  text: msg.message,
-                  sender: {
-                    id: userId,
-                    name: adminName || userId // 관리자 이름이 있으면 사용, 없으면 ID 사용
-                  },
-                  timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
-                  messageindex: msg.messageindex || null,
-                  isLocal: false
-                };
-              })
-              .sort((a, b) => {
-                return compareIndex(a.messageindex, b.messageindex);
-              });
+              return {
+                id: `existing_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
+                text: msg.message,
+                sender: {
+                  id: userId,
+                  name: adminName || userId // 관리자 이름이 있으면 사용, 없으면 ID 사용
+                },
+                timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
+                messageindex: msg.messageindex || null,
+                isLocal: false
+              };
+            });
 
             console.log("🔍 포맷된 메시지 수:", formattedMessages.length);
-            setMessages(formattedMessages);
-            messagesRef.current = formattedMessages;
+            // 기존 메시지를 정렬하여 설정
+            const sortedMessages = sortMessages(formattedMessages);
+            setMessages(sortedMessages);
+            messagesRef.current = sortedMessages;
 
             // 메시지 로드 후 스크롤을 맨 아래로 이동
             setTimeout(() => {
@@ -350,26 +428,43 @@ function ChatRoomWindow({
 
       // 기존 방에 대한 구독 (중복 구독 방지)
       const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
-        // 내가 보낸 메시지가 아닌 경우에만 추가
-        if (receivedMessage.user_id !== userInfo.id) {
+        // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
+        if (receivedMessage.user_id === userInfo.id) {
           const currentMessages = messagesRef.current;
-          // 이미 같은 내용의 로컬 메시지가 있는지 확인
-          const hasLocalMessage = currentMessages.some(msg =>
+          // 같은 내용의 로컬 메시지 찾기
+          const localMessageIndex = currentMessages.findIndex(msg =>
             msg.isLocal &&
             msg.text === receivedMessage.message &&
             msg.sender.id === userInfo.id
           );
 
-          // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-          if (hasLocalMessage) {
-            setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+          if (localMessageIndex !== -1) {
+            // 로컬 메시지를 서버 메시지로 교체 (정렬하지 않음)
+            setMessages(prev => {
+              const updatedMessages = [...prev];
+              const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
+              
+              updatedMessages[localMessageIndex] = {
+                id: `server_${Date.now()}_${Math.random()}`,
+                text: receivedMessage.message,
+                sender: {
+                  id: receivedMessage.user_id,
+                  name: senderName
+                },
+                timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                messageindex: receivedMessage.messageindex || null,
+                isLocal: false
+              };
+              
+              messagesRef.current = updatedMessages;
+              return updatedMessages;
+            });
           }
-
-          // 발신자 이름 정보 해결
+        } else {
+          // 다른 사용자의 메시지인 경우 새로 추가
           const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
 
-          // 새 메시지 추가
-          addMessage({
+          const newServerMessage = {
             id: `server_${Date.now()}_${Math.random()}`,
             text: receivedMessage.message,
             sender: {
@@ -379,7 +474,9 @@ function ChatRoomWindow({
             timestamp: receivedMessage.timestamp || new Date().toISOString(),
             messageindex: receivedMessage.messageindex || null,
             isLocal: false
-          });
+          };
+
+          addMessage(newServerMessage);
         }
       });
 
@@ -450,14 +547,17 @@ function ChatRoomWindow({
 
           // 로컬 메시지 추가
           const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          addMessage({
+          const localMessage = {
             id: localMessageId,
             text: newMessage,
             sender: { id: userInfo.id, name: userInfo.name },
             timestamp: new Date().toISOString(),
             messageindex: null, // 로컬 메시지는 아직 서버에 저장되지 않음
             isLocal: true
-          });
+          };
+
+          // 로컬 메시지 추가
+          addMessage(localMessage);
 
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
@@ -476,14 +576,17 @@ function ChatRoomWindow({
 
           // 로컬 메시지 추가
           const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          addMessage({
+          const localMessage = {
             id: localMessageId,
             text: newMessage,
             sender: { id: userInfo.id, name: userInfo.name },
             timestamp: new Date().toISOString(),
             messageindex: null, // 로컬 메시지는 아직 서버에 저장되지 않음
             isLocal: true
-          });
+          };
+
+          // 로컬 메시지 추가
+          addMessage(localMessage);
         }
 
         // 입력 필드 초기화
@@ -497,13 +600,17 @@ function ChatRoomWindow({
 
       } catch (error) {
         // 에러 발생 시에도 로컬 메시지는 추가
-        addMessage({
+        const errorMessage = {
+          id: `error_${Date.now()}_${Math.random()}`,
           text: newMessage,
           sender: { id: userInfo.id, name: userInfo.name },
           timestamp: new Date().toISOString(),
           messageindex: null, // 에러 메시지는 인덱스 없음
           error: true // 에러 표시용
-        });
+        };
+
+        // 에러 메시지 추가
+        addMessage(errorMessage);
         setNewMessage('');
         setIsTyping(false);
 
@@ -717,7 +824,8 @@ function ChatRoomWindow({
     // 메시지가 있고, 마지막 메시지가 로컬 메시지이거나 새로 추가된 메시지인 경우에만 스크롤
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.isLocal || lastMessage.id.startsWith('server_')) {
+      // 로컬 메시지, 서버 메시지, 또는 에러 메시지인 경우 스크롤
+      if (lastMessage.isLocal || lastMessage.id.startsWith('server_') || lastMessage.error) {
         scrollToBottom();
       }
     }
