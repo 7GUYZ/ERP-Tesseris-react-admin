@@ -9,6 +9,8 @@ import {
 } from '@mui/icons-material';
 import { useWebSocket } from './WebSocketConfig';
 import { ChatList, LeaveRoom } from '../../api/auth/JihunAuth';
+import { generateRoomName } from '../../utils/roomNameUtils';
+
 
 function ChatRoomWindow({
   open,
@@ -63,6 +65,70 @@ function ChatRoomWindow({
   const unsubscribeFromRoomRef = useRef(unsubscribeFromRoom);
   const addMessageRef = useRef(null);
   const adminListRef = useRef(adminList); // adminList를 ref로 관리
+
+  // 발신자 이름 해결 함수
+  const resolveSenderName = useCallback((userId, senderName) => {
+    if (senderName) return senderName;
+    
+    const admin = adminListRef.current.find(admin => admin.userId === userId);
+    return admin ? admin.name : userId;
+  }, []);
+
+  // 수신된 메시지 처리 함수
+  const handleIncomingMessage = useCallback((receivedMessage) => {
+    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+    
+    // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
+    if (receivedMessage.user_id === userInfo.id) {
+      const currentMessages = messagesRef.current;
+      // 같은 내용의 로컬 메시지 찾기
+      const localMessageIndex = currentMessages.findIndex(msg =>
+        msg.isLocal &&
+        msg.text === receivedMessage.message &&
+        msg.sender.id === userInfo.id
+      );
+
+      if (localMessageIndex !== -1) {
+        // 로컬 메시지를 서버 메시지로 교체 (정렬하지 않음)
+        setMessages(prev => {
+          const updatedMessages = [...prev];
+          const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
+          
+          updatedMessages[localMessageIndex] = {
+            id: `server_${Date.now()}_${Math.random()}`,
+            text: receivedMessage.message,
+            sender: {
+              id: receivedMessage.user_id,
+              name: senderName
+            },
+            timestamp: receivedMessage.timestamp || new Date().toISOString(),
+            messageindex: receivedMessage.messageindex || null,
+            isLocal: false
+          };
+          
+          messagesRef.current = updatedMessages;
+          return updatedMessages;
+        });
+      }
+    } else {
+      // 다른 사용자의 메시지인 경우 새로 추가
+      const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
+
+      const newServerMessage = {
+        id: `server_${Date.now()}_${Math.random()}`,
+        text: receivedMessage.message,
+        sender: {
+          id: receivedMessage.user_id,
+          name: senderName
+        },
+        timestamp: receivedMessage.timestamp || new Date().toISOString(),
+        messageindex: receivedMessage.messageindex || null,
+        isLocal: false
+      };
+
+      addMessage(newServerMessage);
+    }
+  }, [resolveSenderName]);
 
   // 인덱스 기반 비교 함수
   const compareIndex = useCallback((indexA, indexB) => {
@@ -177,27 +243,7 @@ function ChatRoomWindow({
   //   return sortedMessages;
   // }, [sortMessages]);
 
-  // 발신자 이름 해결 함수
-  const resolveSenderName = useCallback((userId, senderName) => {
-    // 백엔드에서 전송한 sender_name 우선 사용
-    if (senderName && senderName !== "Unknown") {
-      return senderName;
-    }
 
-    // adminList가 비어있지 않은 경우에만 매핑 시도 (ref 사용)
-    const currentAdminList = adminListRef.current;
-    if (currentAdminList && currentAdminList.length > 0) {
-      const adminMap = new Map();
-      currentAdminList.forEach(admin => {
-        adminMap.set(admin.userId, admin.name);
-      });
-      const foundName = adminMap.get(userId);
-      if (foundName) {
-        return foundName;
-      }
-    }
-    return userId;
-  }, []); // adminList 의존성 제거하여 무한 루프 방지
 
   // ref 업데이트
   React.useEffect(() => {
@@ -330,13 +376,20 @@ function ChatRoomWindow({
 
     console.log("🔍 ChatRoomWindow useEffect - roomDataWithoutRefresh:", roomDataWithoutRefresh);
     console.log("🔍 roomDataWithoutRefresh 전체 구조:", JSON.stringify(roomDataWithoutRefresh, null, 2));
-    
-    const hasRoomIndex = roomDataWithoutRefresh.id;
-    const existingRoomId = roomDataWithoutRefresh.id; // roomDataWithoutRefresh.id를 직접 사용
+    console.log("🔍 roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
+                console.log("🔍 roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
+            console.log("🔍 roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
+            console.log("🔍 roomDataWithoutRefresh.isExisting:", roomDataWithoutRefresh.isExisting);
+            console.log("🔍 roomDataWithoutRefresh.isExistingRoom:", roomDataWithoutRefresh.isExistingRoom);
+            console.log("🔍 roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
+            
+            // 중첩된 구조에서 id 필드에 안전하게 접근
+            const hasRoomIndex = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
+            const existingRoomId = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id; // roomDataWithoutRefresh.id를 직접 사용
     // 기존 방인지 확인 - id나 room_index가 있으면 기존 방으로 판단
     const isExisting = roomDataWithoutRefresh.isExistingRoom || 
                       roomDataWithoutRefresh.isExisting || 
-                      !!(roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.room_index);
+                      !!(roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.roomData?.room_index);
 
     console.log("🔍 hasRoomIndex:", hasRoomIndex);
     console.log("🔍 existingRoomId:", existingRoomId);
@@ -428,56 +481,21 @@ function ChatRoomWindow({
 
       // 기존 방에 대한 구독 (중복 구독 방지)
       const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
-        // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
-        if (receivedMessage.user_id === userInfo.id) {
-          const currentMessages = messagesRef.current;
-          // 같은 내용의 로컬 메시지 찾기
-          const localMessageIndex = currentMessages.findIndex(msg =>
-            msg.isLocal &&
-            msg.text === receivedMessage.message &&
-            msg.sender.id === userInfo.id
-          );
-
-          if (localMessageIndex !== -1) {
-            // 로컬 메시지를 서버 메시지로 교체 (정렬하지 않음)
-            setMessages(prev => {
-              const updatedMessages = [...prev];
-              const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
-              
-              updatedMessages[localMessageIndex] = {
-                id: `server_${Date.now()}_${Math.random()}`,
-                text: receivedMessage.message,
-                sender: {
-                  id: receivedMessage.user_id,
-                  name: senderName
-                },
-                timestamp: receivedMessage.timestamp || new Date().toISOString(),
-                messageindex: receivedMessage.messageindex || null,
-                isLocal: false
-              };
-              
-              messagesRef.current = updatedMessages;
-              return updatedMessages;
-            });
-          }
-        } else {
-          // 다른 사용자의 메시지인 경우 새로 추가
-          const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
-
-          const newServerMessage = {
-            id: `server_${Date.now()}_${Math.random()}`,
-            text: receivedMessage.message,
-            sender: {
-              id: receivedMessage.user_id,
-              name: senderName
-            },
-            timestamp: receivedMessage.timestamp || new Date().toISOString(),
-            messageindex: receivedMessage.messageindex || null,
-            isLocal: false
-          };
-
-          addMessage(newServerMessage);
+        // 서버에서 room_index가 반환된 경우 (새 방 생성 응답)
+        if (receivedMessage.room_index && !roomId) {
+          console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
+          setRoomId(receivedMessage.room_index);
+          
+          // 새로 생성된 방에 대한 구독 설정
+          subscribeToRoomRef.current(receivedMessage.room_index, (newRoomMessage) => {
+            handleIncomingMessage(newRoomMessage);
+          });
+          
+          return;
         }
+        
+        // 일반 메시지 처리
+        handleIncomingMessage(receivedMessage);
       });
 
       if (subscribeSuccess) {
@@ -491,6 +509,31 @@ function ChatRoomWindow({
       // 새로운 방 생성 시 - 기존 구독들 모두 해제
       if (roomId) {
         unsubscribeFromRoomRef.current(roomId);
+      }
+
+      // 새로운 방 생성 시 - admin 구독으로 서버 응답 대기
+      const subscribeSuccess = subscribeToRoomRef.current("admin", (receivedMessage) => {
+        // 서버에서 room_index가 반환된 경우 (새 방 생성 응답)
+        if (receivedMessage.room_index && !roomId) {
+          console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
+          setRoomId(receivedMessage.room_index);
+          
+          // 새로 생성된 방에 대한 구독 설정
+          subscribeToRoomRef.current(receivedMessage.room_index, (newRoomMessage) => {
+            handleIncomingMessage(newRoomMessage);
+          });
+          
+          return;
+        }
+        
+        // 일반 메시지 처리
+        handleIncomingMessage(receivedMessage);
+      });
+
+      if (subscribeSuccess) {
+        console.log("🔍 새 방 생성 구독 성공");
+      } else {
+        console.log("🔍 새 방 생성 구독 실패");
       }
     }
   }, [open, roomDataWithoutRefresh?.id, roomDataWithoutRefresh?.adminData?.userIndex, roomDataWithoutRefresh?.isExistingRoom, roomDataWithoutRefresh?.isExisting]);
@@ -508,27 +551,22 @@ function ChatRoomWindow({
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
-      const generateRoomName = (participants) => {
-        if (participants.length === 2) {
-          // 1:1 채팅 - adminData에서 이름 사용
-          if (roomDataWithoutRefresh.adminData) {
-            return `${roomDataWithoutRefresh.adminData.name}님과의 채팅`;
-          }
-          // 기존 방의 경우 UUID 사용 (임시)
-          const otherUser = participants.find(p => p !== userInfo.id);
-          return `${otherUser}님과의 채팅`;
-        } else if (participants.length > 2) {
-          // 단체 채팅
-          const otherUsers = participants.filter(p => p !== userInfo.id);
-          return `${otherUsers.join(', ')}님과의 채팅`;
-        }
-        return '채팅방';
-      };
 
       try {
         // 현재 room_index 확인 (roomId state 우선 사용)
-        const currentRoomIndex = roomId || roomDataWithoutRefresh.id;
+        // roomId를 안전하게 추출 (중첩된 구조 고려)
+        const currentRoomIndex = roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
+        
+        console.log("🔍 handleSendMessage - roomId:", roomId);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomData?.id:", roomDataWithoutRefresh.roomData?.id);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomindex:", roomDataWithoutRefresh.roomindex);
+        console.log("🔍 handleSendMessage - currentRoomIndex:", currentRoomIndex);
+        console.log("🔍 handleSendMessage - hasValidRoomIndex:", hasValidRoomIndex);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
+        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
 
         if (hasValidRoomIndex) {
           // 기존 방인 경우
@@ -561,15 +599,49 @@ function ChatRoomWindow({
 
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
+          
+          // 그룹 채팅인지 1:1 채팅인지 확인
+          const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+          const isGroupChat = roomDataWithoutRefresh.isGroupChat || participants.length > 2;
+          
+          let messageData;
+          
+          if (isGroupChat) {
+            // 그룹 채팅인 경우
+            messageData = {
+              room_index: null,
+              room_name: generateRoomName(participants, null, adminList, userInfo.id, true),
+              user_id: userInfo.id,
+              message: newMessage,
+              participants: participants, // 참가자 목록 사용
+              timestamp: null,
+            };
+          } else {
+            // 1:1 채팅인 경우
+            // participants에서 상대방 ID 찾기
+            const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+            const otherUserId = participants.find(id => id !== userInfo.id);
+            
+            if (!otherUserId) {
+              console.error("🔍 1:1 채팅에서 상대방 ID를 찾을 수 없습니다:", roomDataWithoutRefresh);
+              return;
+            }
+            
+            // 상대방 이름 찾기
+            const otherUser = adminList.find(admin => admin.userId === otherUserId);
+            const roomName = otherUser ? `${otherUser.name}와의 채팅방` : generateRoomName([otherUserId, userInfo.id], null, adminList, userInfo.id, false);
+            
+            messageData = {
+              room_index: null,
+              room_name: roomName,
+              user_id: userInfo.id,
+              message: newMessage,
+              participants: [otherUserId, userInfo.id],
+              timestamp: null,
+            };
+          }
 
-          const messageData = {
-            room_index: null,
-            room_name: generateRoomName([roomDataWithoutRefresh.adminData.userId, userInfo.id]),
-            user_id: userInfo.id,
-            message: newMessage,
-            participants: [roomDataWithoutRefresh.adminData.userId, userInfo.id],
-            timestamp: null,
-          };
+          console.log("🔍 새로운 방 생성 - messageData:", messageData);
 
           // WebSocket으로 메시지 전송 (방 생성 및 DB 저장 포함)
           sendMessage("admin", messageData);
@@ -1067,7 +1139,34 @@ function ChatRoomWindow({
                 whiteSpace: 'nowrap',
               }
             }}>
-              {roomDataWithoutRefresh.adminData ? roomDataWithoutRefresh.adminData.name : (roomDataWithoutRefresh.name || '채팅방')}
+              {(() => {
+                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+                
+                // 1:1 채팅인 경우
+                if (participants.length === 2) {
+                  const otherUserId = participants.find(id => id !== userInfo.id);
+                  const otherUser = adminList.find(admin => admin.userId === otherUserId);
+                  return otherUser ? `${otherUser.name}와의 채팅방` : (roomDataWithoutRefresh.name || '채팅방');
+                }
+                // 그룹 채팅인 경우
+                else if (participants.length > 2) {
+                  const otherParticipants = participants.filter(id => id !== userInfo.id);
+                  const participantNames = otherParticipants
+                    .map(userId => {
+                      const admin = adminList.find(admin => admin.userId === userId);
+                      return admin ? admin.name : userId;
+                    })
+                    .filter(name => name);
+                  
+                  if (participantNames.length > 0) {
+                    return `${participantNames.join(', ')} 그룹채팅`;
+                  }
+                }
+                
+                // 기본값
+                return roomDataWithoutRefresh.adminData ? roomDataWithoutRefresh.adminData.name : (roomDataWithoutRefresh.name || '채팅방');
+              })()}
             </Typography>
           </Box>
         </Box>
