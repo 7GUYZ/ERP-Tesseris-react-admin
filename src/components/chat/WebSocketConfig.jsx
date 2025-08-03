@@ -27,7 +27,6 @@ export const WebSocketChatProvider = ({ children }) => {
       if (stompClientRef.current) {
         const actualConnected = stompClientRef.current.connected;
         if (isConnected !== actualConnected) {
-          console.log(`🔄 연결 상태 동기화: ${isConnected} → ${actualConnected}`);
           setIsConnected(actualConnected);
         }
       }
@@ -41,12 +40,10 @@ export const WebSocketChatProvider = ({ children }) => {
   // WebSocket 연결 함수
   const connectWebSocket = async (accessToken, userIndex) => {
     if (stompClientRef.current && stompClientRef.current.connected) {
-      console.log('🔄 이미 WebSocket이 연결되어 있습니다.');
       return;
     }
 
     try {
-      console.log('🔌 WebSocket 연결 시도...', { userIndex });
 
       // Bearer 접두사 제거
       const cleanToken = accessToken.startsWith('Bearer ') ? accessToken.substring(7) : accessToken;
@@ -81,16 +78,12 @@ export const WebSocketChatProvider = ({ children }) => {
       });
 
       stompClient.onConnect = () => {
-        console.log('✅ WebSocket 연결 성공!');
         setIsConnected(true);
         stompClientRef.current = stompClient;
-        console.log('🔗 연결 상태 업데이트:', stompClient.connected);
 
         // 연결 성공 후 기존 구독 복구
         if (subscriptionsRef.current.size > 0) {
-          console.log('🔄 기존 구독 복구 시도...');
           subscriptionsRef.current.forEach((subscription, roomId) => {
-            console.log(`🔄 방 ${roomId} 구독 복구`);
             // 구독은 이미 저장되어 있으므로 별도 처리 불필요
           });
         }
@@ -103,7 +96,6 @@ export const WebSocketChatProvider = ({ children }) => {
       };
 
       stompClient.onDisconnect = () => {
-        console.log('🔌 WebSocket 연결 해제됨');
         setIsConnected(false);
         setCurrentRoomId(null);
         subscriptionsRef.current.clear();
@@ -111,7 +103,6 @@ export const WebSocketChatProvider = ({ children }) => {
       };
 
       stompClient.onWebSocketError = (error) => {
-        console.error('❌ WebSocket 오류:', error);
         setIsConnected(false);
         stompClientRef.current = null;
       };
@@ -119,7 +110,6 @@ export const WebSocketChatProvider = ({ children }) => {
       await stompClient.activate();
 
     } catch (error) {
-      console.error('❌ WebSocket 연결 실패:', error);
       setIsConnected(false);
     }
   };
@@ -137,7 +127,15 @@ export const WebSocketChatProvider = ({ children }) => {
 
   // 채팅방 구독 함수
   const subscribeToRoom = (roomId, onMessageReceived) => {
-    console.log('🔍 구독 시도 - 연결 상태:', isConnected, '클라이언트:', !!stompClientRef.current);
+    // roomId 유효성 검사
+    if (!roomId || roomId === 'undefined' || roomId === 'null' || roomId === '') {
+      return false;
+    }
+
+    // 이미 구독 중인지 확인
+    if (subscriptionsRef.current.has(roomId)) {
+      return true; // 이미 구독 중이면 성공으로 반환
+    }
 
     // 연결 대기 함수
     const waitForConnection = () => {
@@ -147,13 +145,10 @@ export const WebSocketChatProvider = ({ children }) => {
 
         const checkConnection = () => {
           attempts++;
-          console.log(`🔍 연결 확인 시도 ${attempts}/${maxAttempts}`);
 
           if (stompClientRef.current && stompClientRef.current.connected) {
-            console.log('✅ 연결 확인됨');
             resolve(true);
           } else if (attempts >= maxAttempts) {
-            console.error('❌ 연결 대기 시간 초과');
             reject(new Error('연결 대기 시간 초과'));
           } else {
             setTimeout(checkConnection, 500);
@@ -169,32 +164,28 @@ export const WebSocketChatProvider = ({ children }) => {
         // 연결 대기
         await waitForConnection();
 
-        // 기존 구독 해제
-        unsubscribeFromRoom(roomId);
-
-        // 새로운 구독 생성
+        // 새로운 구독 생성 (기존 구독 해제 없이)
         const subscription = stompClientRef.current.subscribe(`/queue/${roomId}`, (message) => {
-          console.log(`📨 채팅방 ${roomId} 메시지 수신:`, message.body);
           const messageData = JSON.parse(message.body);
           onMessageReceived(messageData);
         });
+
+        // 구독 정보 로그 출력
+        console.log(`🔔 WebSocket 구독 생성: /queue/${roomId}, id=${subscription.id}, session=${stompClientRef.current.sessionId}`);
 
         // 구독 정보 저장
         subscriptionsRef.current.set(roomId, subscription);
         setCurrentRoomId(roomId);
 
-        console.log(`✅ 채팅방 ${roomId} 구독 완료`);
         return true;
 
       } catch (error) {
-        console.error(`❌ 채팅방 ${roomId} 구독 실패:`, error);
         return false;
       }
     };
 
     // 연결이 없으면 재연결 시도
     if (!stompClientRef.current || !stompClientRef.current.connected) {
-      console.log('🔄 연결이 없어 재연결 시도...');
       const token = localStorage.getItem('access-token');
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
       if (token && userInfo) {
@@ -213,15 +204,24 @@ export const WebSocketChatProvider = ({ children }) => {
   const unsubscribeFromRoom = (roomId) => {
     const subscription = subscriptionsRef.current.get(roomId);
     if (subscription) {
-      subscription.unsubscribe();
-      subscriptionsRef.current.delete(roomId);
-      console.log(`🔌 채팅방 ${roomId} 구독 해제`);
+      try {
+        console.log(`🔔 WebSocket 구독 해제: /queue/${roomId}, id=${subscription.id}, session=${stompClientRef.current?.sessionId}`);
+        subscription.unsubscribe();
+        subscriptionsRef.current.delete(roomId);
+        
+        // 현재 방 ID가 해제된 방과 같으면 null로 설정
+        if (currentRoomId === roomId) {
+          setCurrentRoomId(null);
+        }
+      } catch (error) {
+        // 에러가 발생해도 Map에서 제거
+        subscriptionsRef.current.delete(roomId);
+      }
     }
   };
 
   // 메시지 전송 함수
   const sendMessage = (roomId, messageData) => {
-    console.log('🔍 메시지 전송 시도 - 연결 상태:', isConnected, '클라이언트:', !!stompClientRef.current);
 
     // 연결 대기 함수
     const waitForConnection = () => {
@@ -231,13 +231,10 @@ export const WebSocketChatProvider = ({ children }) => {
 
         const checkConnection = () => {
           attempts++;
-          console.log(`🔍 전송 연결 확인 시도 ${attempts}/${maxAttempts}`);
 
           if (stompClientRef.current && stompClientRef.current.connected) {
-            console.log('✅ 전송 연결 확인됨');
             resolve(true);
           } else if (attempts >= maxAttempts) {
-            console.error('❌ 전송 연결 대기 시간 초과');
             reject(new Error('전송 연결 대기 시간 초과'));
           } else {
             setTimeout(checkConnection, 500);
@@ -258,18 +255,15 @@ export const WebSocketChatProvider = ({ children }) => {
           body: JSON.stringify(messageData)
         });
 
-        console.log(`📤 채팅방 ${roomId} 메시지 전송:`, messageData);
         return true;
 
       } catch (error) {
-        console.error(`❌ 메시지 전송 실패:`, error);
         return false;
       }
     };
 
     // 연결이 없으면 재연결 시도
     if (!stompClientRef.current || !stompClientRef.current.connected) {
-      console.log('🔄 전송을 위해 재연결 시도...');
       const token = localStorage.getItem('access-token');
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
       if (token && userInfo) {

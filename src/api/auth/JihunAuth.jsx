@@ -21,8 +21,12 @@ export const GetAdminList = () => api.get("/adminchat/adminlist");
 export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
 // 채팅방 목록 조회
 export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
+// 1:1 채팅방 존재 여부 확인
+export const CheckRoom = (messageData) => api.post("/adminchat/checkroom", messageData);
 // 채팅방 메시지 목록 조회
 export const ChatList = (room, userid, page = 0, size = 25) => api.get(`/adminchat/${room}/chatlist/${userid}?page=${page}&size=${size}`);
+// 채팅방 나가기
+export const LeaveRoom = (room, userid) => api.put(`/adminchat/${room}/leave/${userid}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {

@@ -12,29 +12,23 @@ import {
   ExpandMore, ChevronRight, Person
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
-import { SearchRoom } from '../../api/auth/JihunAuth';
+import { SearchRoom, CheckRoom } from '../../api/auth/JihunAuth';
 import { useWebSocket } from './WebSocketConfig';
 
 function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
-  const { subscribeToRoom } = useWebSocket();
-  function ChatComponent() {
-    const {
-      isConnected,
-      connectWebSocket,
-      subscribeToRoom,
-      sendMessage
-    } = useWebSocket();
-
-    // 컴포넌트 마운트 시 WebSocket 연결
-    useEffect(() => {
+  const { subscribeToRoom, connectWebSocket } = useWebSocket();
+  
+  // WebSocket 연결 설정
+  useEffect(() => {
+    if (open) {
       const token = localStorage.getItem('access-token');
       const userInfo = JSON.parse(localStorage.getItem('user-info'));
 
       if (token && userInfo) {
         connectWebSocket(token, userInfo.user_index);
       }
-    }, []);
-  }
+    }
+  }, [open, connectWebSocket]); // connectWebSocket 의존성 다시 추가
   // ============================================================================
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -57,16 +51,37 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   const [chatRooms, setChatRooms] = useState([]);
   const [expandedGroups, setExpandedGroups] = useState(new Set());
   
+  // 채팅방 목록 새로고침 함수
+  const refreshChatRooms = async () => {
+    setLoading(true);
+    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+    if (userInfo?.id) {
+      try {
+        const response = await SearchRoom(userInfo.id);
+        
+        if (response?.data?.data) {
+          setChatRooms(response.data.data);
+        } else {
+          setChatRooms([]);
+        }
+      } catch (error) {
+        setChatRooms([]);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setLoading(false);
+    }
+  };
+
   // 관리자 목록 조회
   React.useEffect(() => {
     if (open && activeTab === 0) {  // 홈 탭일 때만 호출
       setLoading(true);
       adminlist().then((data) => {
-        console.log("관리자 목록 원본 데이터:", data);
         
         // 데이터가 유효한지 확인
         if (!data || !Array.isArray(data)) {
-          console.error('관리자 목록 데이터가 유효하지 않습니다:', data);
           setAdminList([]);
           setLoading(false);
           return;
@@ -75,16 +90,14 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('user-info'));
         const filteredData = data.filter(admin => admin.userId !== userInfo?.id);
-        console.log("필터링된 관리자 목록:", filteredData);
         setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
-        console.error('관리자 목록 조회 실패:', error);
         setAdminList([]);
         setLoading(false);
       });
     }
-  }, [open, activeTab]);
+  }, [open, activeTab === 0]); // activeTab === 0으로 변경하여 불필요한 재실행 방지
 
   // 채팅방 목록 조회
   React.useEffect(() => {
@@ -98,12 +111,11 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
           }
           setLoading(false);
         }).catch(error => {
-          console.error('채팅방 목록 조회 실패:', error);
           setLoading(false);
         });
       }
     }
-  }, [open, activeTab]);
+  }, [open, activeTab === 1]); // activeTab === 1로 변경하여 불필요한 재실행 방지
   // ============================================================================
   // 드래그 기능
   const handleMouseMove = useCallback((e) => {
@@ -261,6 +273,11 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    
+    // 채팅방 탭으로 이동할 때 자동으로 새로고침
+    if (newValue === 1) {
+      refreshChatRooms();
+    }
   };
 
   // 최상위에서 전달받은 값이 변경될 때 로컬 상태 업데이트
@@ -277,21 +294,106 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   }, [currentPosition]);
 
   const handleRoomClick = (room) => {
-    onRoomSelect(room);
+    onRoomSelect({
+      ...room,
+      adminList: adminList, // 전체 관리자 목록 전달
+      refreshChatRooms: refreshChatRooms
+    });
   };
 
-  // 관리자 클릭 시 채팅방 생성
+  // 관리자 클릭 시 채팅방 생성 또는 기존 채팅방 입장
   const handleAdminClick = async (admin) => {
     try {
-      console.log("클릭된 관리자 데이터:", admin);
-      // 3. 채팅방 창 열기
-      onRoomSelect({
-        name: `${admin.name}님과의 채팅`,
-        adminData: admin,
-        subscribeToRoom: subscribeToRoom,
-      });
+      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      
+      // 1:1 채팅방 존재 여부 확인
+      const checkRoomData = {
+        room_index: null,
+        room_name: `${admin.name}님과의 채팅`,
+        user_id: userInfo.id,
+        message: "",
+        participants: [admin.userId, userInfo.id],
+        timestamp: null,
+      };
+      
+      console.log("🔍 CheckRoom 호출:", checkRoomData);
+      
+      try {
+        const checkResponse = await CheckRoom(checkRoomData);
+        
+        console.log("🔍 CheckRoom 응답:", checkResponse);
+        console.log("🔍 CheckRoom status:", checkResponse?.status);
+        console.log("🔍 CheckRoom resultCode:", checkResponse?.data?.resultCode);
+        console.log("🔍 CheckRoom data:", checkResponse?.data?.data);
+        
+        // 성공 응답이고 data가 존재하는 경우 (기존 방 발견)
+        if (checkResponse?.data?.resultCode === 200 && 
+            checkResponse?.data?.data && typeof checkResponse.data.data === 'object' && 
+            Object.keys(checkResponse.data.data).length > 0) {
+          // 기존 1:1 채팅방이 존재하는 경우
+          const existingRoom = checkResponse.data.data;
+          
+          console.log("🔍 기존 방 발견:", existingRoom);
+          
+          const roomData = {
+            id: existingRoom.id || existingRoom.roomindex || existingRoom.room_index,
+            name: existingRoom.name || existingRoom.roomname || existingRoom.room_name || `${admin.name}님과의 채팅`,
+            adminData: admin,
+            adminList: adminList,
+            subscribeToRoom: subscribeToRoom,
+            refreshChatRooms: refreshChatRooms,
+            isExistingRoom: true,
+            isExisting: true  // 추가: ChatRoomWindow에서 사용하는 속성
+          };
+          
+          console.log("🔍 기존 방 roomData:", roomData);
+          console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
+          console.log("🔍 isExisting:", roomData.isExisting);
+          
+          // 기존 채팅방에 입장
+          onRoomSelect(roomData);
+        } else {
+          console.log("🔍 새로운 방 생성");
+          
+          // 새로운 1:1 채팅방 생성
+          const roomData = {
+            name: `${admin.name}님과의 채팅`,
+            adminData: admin,
+            adminList: adminList,
+            subscribeToRoom: subscribeToRoom,
+            refreshChatRooms: refreshChatRooms,
+            isExistingRoom: false,
+            isExisting: false  // 추가: ChatRoomWindow에서 사용하는 속성
+          };
+          
+          console.log("🔍 새로운 방 roomData:", roomData);
+          console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
+          console.log("🔍 isExisting:", roomData.isExisting);
+          
+          onRoomSelect(roomData);
+        }
+      } catch (checkError) {
+        console.log("🔍 CheckRoom 오류:", checkError);
+        
+        // 확인 실패 시 새로운 채팅방 생성으로 진행
+        const roomData = {
+          name: `${admin.name}님과의 채팅`,
+          adminData: admin,
+          adminList: adminList,
+          subscribeToRoom: subscribeToRoom,
+          refreshChatRooms: refreshChatRooms,
+          isExistingRoom: false,
+          isExisting: false  // 추가: ChatRoomWindow에서 사용하는 속성
+        };
+        
+        console.log("🔍 오류 시 새로운 방 roomData:", roomData);
+        console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
+        console.log("🔍 isExisting:", roomData.isExisting);
+        
+        onRoomSelect(roomData);
+      }
     } catch (error) {
-      console.error('채팅방 생성 실패:', error);
+      console.log("🔍 handleAdminClick 오류:", error);
     }
   };
 
@@ -420,11 +522,28 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
                           return groups;
                         }, {});
 
-                        // adminTypeOrder로 정렬
+                        // 관리자 타입별 우선순위 정의 (높은 직급에서 낮은 직급 순)
+                        const typePriority = {
+                          '대표': 1,
+                          '임원': 2,
+                          '전산간부': 3,
+                          '전산개발': 4,
+                          '기타': 999
+                        };
+
+                        // 커스텀 정렬 로직
                         const sortedTypes = Object.keys(groupedAdmins).sort((a, b) => {
-                          const adminA = groupedAdmins[a][0];
-                          const adminB = groupedAdmins[b][0];
-                          return (adminA.adminTypeOrder || 999) - (adminB.adminTypeOrder || 999);
+                          const priorityA = typePriority[a] || typePriority['기타'];
+                          const priorityB = typePriority[b] || typePriority['기타'];
+                          
+                          // 우선순위가 같으면 adminTypeOrder로 정렬
+                          if (priorityA === priorityB) {
+                            const adminA = groupedAdmins[a][0];
+                            const adminB = groupedAdmins[b][0];
+                            return (adminA.adminTypeOrder || 999) - (adminB.adminTypeOrder || 999);
+                          }
+                          
+                          return priorityA - priorityB;
                         });
 
                         return sortedTypes.map(typeName => {
