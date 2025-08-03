@@ -242,44 +242,48 @@ function ChatRoomWindow({
          // 기존 메시지 불러오기 실행
          loadExistingMessages();
          
-         const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
-           console.log('기존 방에서 새 메시지 수신:', receivedMessage);
-           
-           // 내가 보낸 메시지가 아닌 경우에만 추가
-           if (receivedMessage.user_id !== userInfo.id) {
-             const currentMessages = messagesRef.current;
-             // 이미 같은 내용의 로컬 메시지가 있는지 확인
-             const hasLocalMessage = currentMessages.some(msg => 
-               msg.isLocal && 
-               msg.text === receivedMessage.message && 
-               msg.sender.id === userInfo.id
-             );
-             
-             // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-             if (hasLocalMessage) {
-               setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
-             }
-             
-             // 관리자 정보에서 이름 찾기
-             const adminMap = new Map();
-             adminList.forEach(admin => {
-               adminMap.set(admin.userId, admin.name);
-             });
-             const adminName = adminMap.get(receivedMessage.user_id);
-             
-             // 새 메시지 추가
-             addMessage({
-               id: `server_${Date.now()}_${Math.random()}`,
-               text: receivedMessage.message,
-               sender: { 
-                 id: receivedMessage.user_id, 
-                 name: adminName || receivedMessage.user_id 
-               },
-               timestamp: receivedMessage.timestamp || new Date().toISOString(),
-               isLocal: false
-             });
-           }
-         });
+                   const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
+            console.log('기존 방에서 새 메시지 수신:', receivedMessage);
+            
+            // 내가 보낸 메시지가 아닌 경우에만 추가
+            if (receivedMessage.user_id !== userInfo.id) {
+              const currentMessages = messagesRef.current;
+              // 이미 같은 내용의 로컬 메시지가 있는지 확인
+              const hasLocalMessage = currentMessages.some(msg => 
+                msg.isLocal && 
+                msg.text === receivedMessage.message && 
+                msg.sender.id === userInfo.id
+              );
+              
+              // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+              if (hasLocalMessage) {
+                setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+              }
+              
+              // 관리자 정보에서 이름 찾기 (현재 상태에서 가져오기)
+              setAdminList(currentAdminList => {
+                const adminMap = new Map();
+                currentAdminList.forEach(admin => {
+                  adminMap.set(admin.userId, admin.name);
+                });
+                const adminName = adminMap.get(receivedMessage.user_id);
+                
+                // 새 메시지 추가
+                addMessage({
+                  id: `server_${Date.now()}_${Math.random()}`,
+                  text: receivedMessage.message,
+                  sender: { 
+                    id: receivedMessage.user_id, 
+                    name: adminName || receivedMessage.user_id 
+                  },
+                  timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                  isLocal: false
+                });
+                
+                return currentAdminList;
+              });
+            }
+          });
 
          if (subscribeSuccess) {
            console.log(`기존 방 ${existingRoomId} 구독 완료`);
@@ -356,67 +360,75 @@ function ChatRoomWindow({
              // 새 방 메시지 불러오기 실행
              loadNewRoomMessages();
              
-             subscribeToRoom(receivedMessage.room_index, (roomMessage) => {
-               console.log('새 방에서 메시지 수신:', roomMessage);
-               
-               const userInfo = JSON.parse(localStorage.getItem('user-info'));
-               if (roomMessage.user_id !== userInfo.id) {
-                 // 관리자 정보에서 이름 찾기
-                 const adminMap = new Map();
-                 adminList.forEach(admin => {
-                   adminMap.set(admin.userId, admin.name);
-                 });
-                 const adminName = adminMap.get(roomMessage.user_id);
-                 
-                 addMessage({
-                   id: `server_${Date.now()}_${Math.random()}`,
-                   text: roomMessage.message,
-                   sender: { 
-                     id: roomMessage.user_id, 
-                     name: adminName || roomMessage.user_id 
-                   },
-                   timestamp: roomMessage.timestamp || new Date().toISOString(),
-                   isLocal: false
-                 });
-               }
-             });
+                           subscribeToRoom(receivedMessage.room_index, (roomMessage) => {
+                console.log('새 방에서 메시지 수신:', roomMessage);
+                
+                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                if (roomMessage.user_id !== userInfo.id) {
+                  // 관리자 정보에서 이름 찾기 (현재 상태에서 가져오기)
+                  setAdminList(currentAdminList => {
+                    const adminMap = new Map();
+                    currentAdminList.forEach(admin => {
+                      adminMap.set(admin.userId, admin.name);
+                    });
+                    const adminName = adminMap.get(roomMessage.user_id);
+                    
+                    addMessage({
+                      id: `server_${Date.now()}_${Math.random()}`,
+                      text: roomMessage.message,
+                      sender: { 
+                        id: roomMessage.user_id, 
+                        name: adminName || roomMessage.user_id 
+                      },
+                      timestamp: roomMessage.timestamp || new Date().toISOString(),
+                      isLocal: false
+                    });
+                    
+                    return currentAdminList;
+                  });
+                }
+              });
            }
            
-           // 내가 보낸 메시지가 아닌 경우에만 추가
-           const userInfo = JSON.parse(localStorage.getItem('user-info'));
-           if (receivedMessage.user_id !== userInfo.id) {
-             const currentMessages = messagesRef.current;
-             // 이미 같은 내용의 로컬 메시지가 있는지 확인
-             const hasLocalMessage = currentMessages.some(msg => 
-               msg.isLocal && 
-               msg.text === receivedMessage.message && 
-               msg.sender.id === userInfo.id
-             );
-             
-             // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
-             if (hasLocalMessage) {
-               setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
-             }
-             
-             // 관리자 정보에서 이름 찾기
-             const adminMap = new Map();
-             adminList.forEach(admin => {
-               adminMap.set(admin.userId, admin.name);
-             });
-             const adminName = adminMap.get(receivedMessage.user_id);
-             
-             // 새 메시지 추가
-             addMessage({
-               id: `server_${Date.now()}_${Math.random()}`,
-               text: receivedMessage.message,
-               sender: { 
-                 id: receivedMessage.user_id, 
-                 name: adminName || receivedMessage.user_id 
-               },
-               timestamp: receivedMessage.timestamp || new Date().toISOString(),
-               isLocal: false
-             });
-           }
+                       // 내가 보낸 메시지가 아닌 경우에만 추가
+            const userInfo = JSON.parse(localStorage.getItem('user-info'));
+            if (receivedMessage.user_id !== userInfo.id) {
+              const currentMessages = messagesRef.current;
+              // 이미 같은 내용의 로컬 메시지가 있는지 확인
+              const hasLocalMessage = currentMessages.some(msg => 
+                msg.isLocal && 
+                msg.text === receivedMessage.message && 
+                msg.sender.id === userInfo.id
+              );
+              
+              // 로컬 메시지가 있으면 제거하고 서버 메시지로 교체
+              if (hasLocalMessage) {
+                setMessages(prev => prev.filter(msg => !(msg.isLocal && msg.text === receivedMessage.message)));
+              }
+              
+              // 관리자 정보에서 이름 찾기 (현재 상태에서 가져오기)
+              setAdminList(currentAdminList => {
+                const adminMap = new Map();
+                currentAdminList.forEach(admin => {
+                  adminMap.set(admin.userId, admin.name);
+                });
+                const adminName = adminMap.get(receivedMessage.user_id);
+                
+                // 새 메시지 추가
+                addMessage({
+                  id: `server_${Date.now()}_${Math.random()}`,
+                  text: receivedMessage.message,
+                  sender: { 
+                    id: receivedMessage.user_id, 
+                    name: adminName || receivedMessage.user_id 
+                  },
+                  timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                  isLocal: false
+                });
+                
+                return currentAdminList;
+              });
+            }
          });
          
          if (subscribeSuccess) {
