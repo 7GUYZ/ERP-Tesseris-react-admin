@@ -15,6 +15,8 @@ import StoreRegisterDetailModal from '../../../components/feature/deokkyu/dmodal
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
+  { field: 'storeCreateDate', headerName: '신청일', width: 120 },
+  { field: 'storeRequestStatusName', headerName: '승인 여부', width: 100 },
   { field: 'businessUserId', headerName: '사업자 ID', width: 120 },
   { field: 'businessUserName', headerName: '사업자 이름', width: 120 },
   { field: 'businessGradeName', headerName: '사업자 등급', width: 120 },
@@ -24,11 +26,9 @@ const columns = [
   { field: 'storeBossName', headerName: '대표자 이름', width: 140 },
   { field: 'storeCorporateName', headerName: '상호명', width: 160 },
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
-  { field: 'storeRequestStatusName', headerName: '승인 여부', width: 100 },
   { field: 'storeTransactionStatus', headerName: '거래 상태', width: 100 },
   { field: 'userCmpInit', headerName: '초기지급 CMP', width: 100 },
   { field: 'totalCM', headerName: '보유 CM', width: 100 },
-  { field: 'storeCreateDate', headerName: '신청일', width: 120 },
   { field: 'storeSubscriptionFeeValue', headerName: '충전금액', width: 120 },
   { field: 'franchiseFee', headerName: '가맹비', width: 120 },
   { field: 'storeSubscriptionFeeCommissionCheck', headerName: '분배여부', width: 120 },

@@ -4,6 +4,7 @@ import { Box } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
+import { useLocation } from 'react-router-dom';
 
 import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreList.css'; 
@@ -13,13 +14,22 @@ import { addressApi } from '../../../api/auth/TaekjunAuth';
 import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
+import usePermissionStore from '../../../store/taekjun/PermissionStore';
+import PermissionGuard from '../../../components/common/PermissionGuard';
+import { getProgramIndexByPath, PROGRAM_INDEXES } from '../../../constants/programIndexes';
 
 function AdminList() {
+  const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [canInsert, setCanInsert] = useState(false);
   const { showToast } = useToast();
+  
+  // 권한 체크 훅 사용
+  const { checkPermission, hasPermission } = usePermissionStore();
+  
+  // 현재 페이지의 programIndex 결정 (관리자 리스트)
+  const programIndex = getProgramIndexByPath(location.pathname) || PROGRAM_INDEXES.ADMIN_LIST || 10;
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [filter, setFilter] = useState({
     adminUserEmail: '',
@@ -121,24 +131,20 @@ function AdminList() {
     }
   };
 
-  // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
-  // 권한 체크
+  // 컴포넌트 마운트 시 권한 체크
   useEffect(() => {
-    const checkPermission = async () => {
+    const checkAdminPermissions = async () => {
       try {
-        const response = await permissionCheckApi.checkPermission(10); // programIndex: 28 (관리자 리스트)
-        if (response.data) {
-          setCanInsert(response.data.hasInsertAuthority === 1);
-          console.log('관리자 리스트 등록 권한 체크 결과:', response.data.hasInsertAuthority);
-        }
+        // 관리자 리스트 관련 권한들 체크
+        await checkPermission(programIndex);
+        console.log('관리자 리스트 권한 체크 완료');
       } catch (error) {
         console.error('권한 체크 실패:', error);
-        setCanInsert(false);
       }
     };
     
-    checkPermission();
-  }, []);
+    checkAdminPermissions();
+  }, [programIndex, checkPermission]);
 
   useEffect(() => {
     // 인터셉터 설정 (인증 토큰 자동 추가)
@@ -156,10 +162,6 @@ function AdminList() {
 
   // 등록 모달 열기
   const handleCreateAdmin = () => {
-    if (!canInsert) {
-      showToast("error", "등록 권한이 없습니다.");
-      return;
-    }
     setCreateForm({
       adminUserEmail: '',
       adminUserName: '',
@@ -512,28 +514,29 @@ function AdminList() {
       <Box className="deokkyu-container">
         <div className="deokkyu-page-title">관리자 리스트</div>
         <div className="deokkyu-actions">
-          <button 
-            className="taekjun-btn admin create"
-            onClick={handleCreateAdmin}
-            disabled={loading || !canInsert}
-            style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-          >
-            등록
-          </button>
-          <button 
-            className="deokkyu-btn excel" 
-            onClick={handleSelectedExcelDownload}
-            disabled={selectedRows.size === 0}
-          >
-            선택 엑셀
-          </button>
-          <button 
-            className="deokkyu-btn all-excel" 
-            onClick={handleExcelDownload}
-            disabled={rows.length === 0}
-          >
-            전체 엑셀
-          </button>
+          <PermissionGuard programIndex={programIndex} permissionType="insert">
+            <button 
+              className="taekjun-btn admin create"
+              onClick={handleCreateAdmin}
+              disabled={loading}
+            >
+              등록
+            </button>
+          </PermissionGuard>
+            <button 
+              className="deokkyu-btn excel" 
+              onClick={handleSelectedExcelDownload}
+              disabled={selectedRows.size === 0}
+            >
+              선택 엑셀
+            </button>
+            <button 
+              className="deokkyu-btn all-excel" 
+              onClick={handleExcelDownload}
+              disabled={rows.length === 0}
+            >
+              전체 엑셀
+            </button>
           <button
             className="deokkyu-btn search"
             onClick={handleSearch}
@@ -837,13 +840,15 @@ function AdminList() {
               </div>
             </div>
             <div className="admin-create-modal-actions">
-              <button 
-                className="admin-create-modal-btn primary"
-                onClick={handleCreateAdminSave}
-                disabled={loading || !isCreateFormValid()}
-              >
-                {loading ? '등록 중...' : '등록'}
-              </button>
+              <PermissionGuard programIndex={programIndex} permissionType="insert">
+                <button 
+                  className="admin-create-modal-btn primary"
+                  onClick={handleCreateAdminSave}
+                  disabled={loading || !isCreateFormValid()}
+                >
+                  {loading ? '등록 중...' : '등록'}
+                </button>
+              </PermissionGuard>
               <button 
                 className="admin-create-modal-btn secondary"
                 onClick={() => setShowCreateModal(false)}
@@ -1018,13 +1023,15 @@ function AdminList() {
             <div className="admin-create-modal-actions">
               {isEditMode ? (
                 <>
-                  <button 
-                    className="admin-create-modal-btn primary"
-                    onClick={handleSaveDetailEdit}
-                    disabled={loading}
-                  >
-                    {loading ? '저장 중...' : '저장'}
-                  </button>
+                  <PermissionGuard programIndex={programIndex} permissionType="update">
+                    <button 
+                      className="admin-create-modal-btn primary"
+                      onClick={handleSaveDetailEdit}
+                      disabled={loading}
+                    >
+                      {loading ? '저장 중...' : '저장'}
+                    </button>
+                  </PermissionGuard>
                   <button 
                     className="admin-create-modal-btn secondary"
                     onClick={handleCancelEdit}
@@ -1035,12 +1042,14 @@ function AdminList() {
                 </>
               ) : (
                 <>
-                  <button 
-                    className="admin-create-modal-btn primary"
-                    onClick={handleEditFromDetail}
-                  >
-                    수정
-                  </button>
+                  <PermissionGuard programIndex={programIndex} permissionType="update">
+                    <button 
+                      className="admin-create-modal-btn primary"
+                      onClick={handleEditFromDetail}
+                    >
+                      수정
+                    </button>
+                  </PermissionGuard>
                   <button 
                     className="admin-create-modal-btn secondary"
                     onClick={() => {
