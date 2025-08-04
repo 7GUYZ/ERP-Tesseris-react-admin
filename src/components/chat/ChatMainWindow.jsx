@@ -578,7 +578,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             >
               <Tab label="홈" />
               <Tab label="채팅방" />
-              <Tab label="설정" />
             </Tabs>
           </Box>
 
@@ -997,27 +996,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             )}
 
             {/* 설정 탭 */}
-            {activeTab === 2 && (
-              <Box sx={{ height: '100%', overflowY: 'auto', p: 2 }} className="no-drag">
-                <Typography variant="h6" gutterBottom>
-                  채팅 설정
-                </Typography>
-
-                <List>
-                  <ListItem>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={notifications}
-                          onChange={(e) => setNotifications(e.target.checked)}
-                        />
-                      }
-                      label="알림 받기"
-                    />
-                  </ListItem>
-                </List>
-              </Box>
-            )}
+            {/* 설정 탭 렌더링 완전 삭제 (activeTab === 2) */}
           </Box>
         </>
       )}
