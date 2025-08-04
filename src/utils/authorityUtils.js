@@ -6,7 +6,7 @@ import { permissionCheckApi } from "../api/auth/TaekjunAuth";
  * 권한 관리자가 권한을 변경했을 때 호출
  */
 export const refreshAuthority = async () => {
-  const userInfo = JSON.parse(localStorage.getItem("user-info"));
+  const userInfo = JSON.parse(localStorage.getItem("admin-info"));
   if (userInfo?.admin_type_index) {
     try {
       const response = await menuAuthority(userInfo.admin_type_index);

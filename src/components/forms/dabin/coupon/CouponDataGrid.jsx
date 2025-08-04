@@ -155,14 +155,25 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponPrice - params가 undefined");
+          return "0";
+        }
+        
         console.log("couponPrice valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponPrice value:", value, "type:", typeof value);
@@ -205,14 +216,25 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponLimit - params가 undefined");
+          return "0";
+        }
+        
         console.log("couponLimit valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponLimit value:", value, "type:", typeof value);
@@ -246,16 +268,6 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
     },
 
     { field: "couponName", headerName: "쿠폰명", width: 150, align: 'center', headerAlign: 'center' },
-    { 
-      field: "storeName", 
-      headerName: "발급 가맹점", 
-      width: 200, 
-      align: 'center', 
-      headerAlign: 'center',
-      valueFormatter: (params) => {
-        return params.value || "가맹점명 없음";
-      }
-    },
     { field: "couponIssuanceStatus", headerName: "쿠폰 발행 상태", width: 120, align: 'center', headerAlign: 'center' },
     { 
       field: "couponIssuanceTime", 
@@ -264,14 +276,25 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponIssuanceTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponIssuanceTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponIssuanceTime value:", value, "type:", typeof value);
@@ -330,14 +353,25 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponProvidedTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponProvidedTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponProvidedTime value:", value, "type:", typeof value);
@@ -392,14 +426,25 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       align: 'center', 
       headerAlign: 'center',
       valueFormatter: (params) => {
+        // params가 undefined인 경우 처리
+        if (!params) {
+          console.log("couponLimitTime - params가 undefined");
+          return "-";
+        }
+        
         console.log("couponLimitTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponLimitTime value:", value, "type:", typeof value);
@@ -448,6 +493,24 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
       }
     },
   ]
+
+  // 데이터가 로드되지 않은 경우 로딩 표시
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ 
+        height: 600, 
+        width: "100%", 
+        backgroundColor: "white", 
+        borderRadius: "12px", 
+        border: "1px solid lightgray",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <div>데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ height: 600, width: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid lightgray" }}>

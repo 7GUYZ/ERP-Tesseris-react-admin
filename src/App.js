@@ -7,13 +7,14 @@ import useAuthStore from './store/jungeun/AuthStore';
 import { setupInterceptors } from './api/auth/JungeunAuth';
 import AppRoutes from './routes/AppRoutes';
 import { WebSocketProvider, useWebSocket } from './context/jungeun/WebSocketContext';
+import { ChatWebSocketProvider } from './context/ChatWebSocketContext';
 
 function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
     setupInterceptors(navigate);
-    const tokens = localStorage.getItem("access-token");
+    const tokens = localStorage.getItem("admin-access-token");
     if (tokens) {
       useAuthStore.getState().zu_login();
     }
@@ -21,7 +22,9 @@ function App() {
 
   return (
     <WebSocketProvider>
-      <AppContent />
+      <ChatWebSocketProvider>
+        <AppContent />
+      </ChatWebSocketProvider>
     </WebSocketProvider>
   );
 }
@@ -30,8 +33,8 @@ function AppContent() {
   const { connectWebSocket } = useWebSocket();
 
   useEffect(() => {
-    const userInfo = localStorage.getItem("user-info");
-    const token = localStorage.getItem("access-token");
+    const userInfo = localStorage.getItem("admin-info");
+    const token = localStorage.getItem("admin-access-token");
     
     if (userInfo && token) {
       const parsedUserInfo = JSON.parse(userInfo);

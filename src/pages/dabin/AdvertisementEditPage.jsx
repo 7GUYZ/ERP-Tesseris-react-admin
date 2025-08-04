@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, updateAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
 import Toast from '../../components/ui/jungeun/Toast';
+import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
 import '../../styles/dabin/AdvertisementEditPage.css';
 
 const AdvertisementEditPage = () => {
@@ -17,6 +18,7 @@ const AdvertisementEditPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('info');
     const [showToast, setShowToast] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     
     const navigate = useNavigate();
     const { advertisementIndex } = useParams();
@@ -93,7 +95,7 @@ const AdvertisementEditPage = () => {
             formData.append('advertisementUrl', advertisementUrl);
 
             // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
+            const accessToken = localStorage.getItem("admin-access-token");
             const response = await api.put(`/dabin/advertisement/${advertisementIndex}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -116,11 +118,12 @@ const AdvertisementEditPage = () => {
         }
     };
 
-    const handleDelete = async () => {
-        if (!window.confirm('정말로 이 팝업을 삭제하시겠습니까?')) {
-            return;
-        }
+    const handleDelete = () => {
+        setShowConfirmModal(true);
+    };
 
+    const confirmDelete = async () => {
+        setShowConfirmModal(false);
         setLoading(true);
 
         try {
@@ -246,6 +249,14 @@ const AdvertisementEditPage = () => {
                     type={toastType}
                     message={toastMessage}
                     onClose={closeToast}
+                />
+            )}
+            
+            {/* Confirm Modal */}
+            {showConfirmModal && (
+                <ConfirmModal
+                    message="정말로 이 광고를 삭제하시겠습니까?"
+                    onConfirm={confirmDelete}
                 />
             )}
         </div>

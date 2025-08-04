@@ -12,7 +12,6 @@ import { permissionApi, permissionCheckApi } from '../../../api/auth/TaekjunAuth
 import { addressApi } from '../../../api/auth/TaekjunAuth';
 import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
-import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
@@ -689,7 +688,6 @@ function AdminList() {
         </div>
       )}
       
-      <RealTimeChat />
     </LocalizationProvider>
   );
 }

@@ -31,7 +31,7 @@ const AuthorityForm = ({
   useEffect(() => {
     if (editingAuthority) {
       // 로컬스토리지에서 user_index 가져오기
-      const userInfo = localStorage.getItem('user-info');
+      const userInfo = localStorage.getItem('admin-info');
       let userIndex = '';
       if (userInfo) {
         try {

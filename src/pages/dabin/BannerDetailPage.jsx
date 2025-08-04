@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
 import Toast from '../../components/ui/jungeun/Toast';
+import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
 import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/BannerDetailPage.css';
@@ -42,6 +43,7 @@ const BannerDetailPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('info');
     const [showToast1, setShowToast1] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const showToastMessage = (message, type = 'info') => {
         setToastMessage(message);
@@ -91,12 +93,16 @@ const BannerDetailPage = () => {
         navigate(`/banner/edit/${bannerIndex}`);
     };
 
-    const handleDeleteClick = async () => {
+    const handleDeleteClick = () => {
         if (!canDelete) {
             showToast1("error", "삭제 권한이 없습니다.");
             return;
         }
-        if (!window.confirm('정말로 이 배너를 삭제하시겠습니까?')) return;
+        setShowConfirmModal(true);
+    };
+
+    const confirmDelete = async () => {
+        setShowConfirmModal(false);
         try {
             const response = await deleteBanner(bannerIndex);
             if (response.data.success) {
@@ -194,6 +200,14 @@ const BannerDetailPage = () => {
                     type={toastType}
                     message={toastMessage}
                     onClose={closeToast}
+                />
+            )}
+            
+            {/* Confirm Modal */}
+            {showConfirmModal && (
+                <ConfirmModal
+                    message="정말로 이 배너를 삭제하시겠습니까?"
+                    onConfirm={confirmDelete}
                 />
             )}
         </div>

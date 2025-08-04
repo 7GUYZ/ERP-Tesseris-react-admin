@@ -12,7 +12,7 @@ const PasswordModal = ({ isOpen, onConfirm, onCancel }) => {
   const handlePwCheck = async () => {
     setLoading(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const userInfo = JSON.parse(localStorage.getItem("admin-info"));
       const username = userInfo?.email;
       const response = await pwCheck({ username, password });
       if (response.data.resultCode === 200) {

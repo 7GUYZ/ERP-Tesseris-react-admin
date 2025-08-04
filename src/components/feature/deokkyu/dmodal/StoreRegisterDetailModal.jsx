@@ -2,6 +2,120 @@ import React, { useState, useEffect } from 'react';
 import { getStoreRegisterDetail, updateStoreRegister, setupInterceptors } from '../../../../api/auth/DeokkyuAuth';
 import DetailModal from '../../../ui/deokkyu/DetailModal';
 
+// 이미지 컴포넌트
+const ImageWithLoading = ({ src, alt, style, onError }) => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [enlarged, setEnlarged] = useState(false);
+
+  const handleLoad = () => setLoading(false);
+  const handleError = () => {
+    setLoading(false);
+    setError(true);
+    if (onError) onError();
+  };
+
+  if (!src) return null;
+
+  return (
+    <>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        {loading && (
+          <div style={{ 
+            position: 'absolute', 
+            top: '50%', 
+            left: '50%', 
+            transform: 'translate(-50%, -50%)',
+            color: '#6c757d',
+            fontSize: '0.9em'
+          }}>
+            🔄 로딩 중...
+          </div>
+        )}
+        {!error && (
+          <img 
+            src={src} 
+            alt={alt}
+            style={{ 
+              ...style,
+              cursor: 'pointer',
+              opacity: loading ? 0.3 : 1,
+              transition: 'opacity 0.3s'
+            }}
+            onLoad={handleLoad}
+            onError={handleError}
+            onClick={() => setEnlarged(true)}
+            title="클릭하면 크게 볼 수 있습니다"
+          />
+        )}
+        {error && (
+          <div style={{ 
+            ...style,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f8f9fa',
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            color: '#6c757d',
+            fontSize: '0.9em'
+          }}>
+            🖼️ 이미지를 불러올 수 없습니다
+          </div>
+        )}
+      </div>
+
+      {/* 확대 모달 */}
+      {enlarged && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000
+          }}
+          onClick={() => setEnlarged(false)}
+        >
+          <div style={{ position: 'relative', maxWidth: '90%', maxHeight: '90%' }}>
+            <img 
+              src={src} 
+              alt={alt}
+              style={{ 
+                maxWidth: '100%', 
+                maxHeight: '100%',
+                objectFit: 'contain'
+              }}
+            />
+            <button
+              onClick={() => setEnlarged(false)}
+              style={{
+                position: 'absolute',
+                top: '10px',
+                right: '10px',
+                backgroundColor: 'rgba(255,255,255,0.8)',
+                border: 'none',
+                borderRadius: '50%',
+                width: '40px',
+                height: '40px',
+                fontSize: '20px',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
   const [loading, setLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -25,27 +139,43 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
       const response = await getStoreRegisterDetail(storeId);
       console.log('✅ 가맹점 신청 상세정보 응답:', response);
       
+      // ✅ null 값 제거 함수
+      const removeNullValues = (obj) => {
+        const cleaned = {};
+        for (const [key, value] of Object.entries(obj)) {
+          if (value !== null && value !== undefined && value !== '') {
+            cleaned[key] = value;
+          }
+        }
+        return cleaned;
+      };
+
+      // ✅ response.data에서 null이 아닌 값들만 추출
+      const cleanedResponseData = removeNullValues(response.data);
+      
+      console.log('🧹 정리된 response.data:', cleanedResponseData);
+
       const detailData = {
         ...initialData,
-        ...response.data,
-        // 추가로 받아온 상세 정보들
-        applicationMemo: response.data.applicationMemo || '',
-        rejectionReason: response.data.rejectionReason || '',
-        approvedBy: response.data.approvedBy || '',
-        approvedDate: response.data.approvedDate || '',
-        reviewNotes: response.data.reviewNotes || '',
-        contractDocument: response.data.contractDocument || '',
-        businessLicense: response.data.businessLicense || '',
-        accountInfo: response.data.accountInfo || '',
-        emergencyContact: response.data.emergencyContact || '',
-        referralSource: response.data.referralSource || '',
-        expectedOpenDate: response.data.expectedOpenDate || '',
-        storeSize: response.data.storeSize || '',
-        employeeCount: response.data.employeeCount || 0,
-        parkingSpaces: response.data.parkingSpaces || 0,
-        hasDelivery: response.data.hasDelivery || false,
-        deliveryRadius: response.data.deliveryRadius || '',
-        specialRequests: response.data.specialRequests || ''
+        ...cleanedResponseData,  // null 값들을 제거한 데이터만 병합
+        // 추가로 받아온 상세 정보들 (null 체크 포함)
+        applicationMemo: response.data.applicationMemo || initialData.applicationMemo || '',
+        rejectionReason: response.data.rejectionReason || initialData.rejectionReason || '',
+        approvedBy: response.data.approvedBy || initialData.approvedBy || '',
+        approvedDate: response.data.approvedDate || initialData.approvedDate || '',
+        reviewNotes: response.data.reviewNotes || initialData.reviewNotes || '',
+        contractDocument: response.data.contractDocument || initialData.contractDocument || '',
+        businessLicense: response.data.businessLicense || initialData.businessLicense || '',
+        accountInfo: response.data.accountInfo || initialData.accountInfo || '',
+        emergencyContact: response.data.emergencyContact || initialData.emergencyContact || '',
+        referralSource: response.data.referralSource || initialData.referralSource || '',
+        expectedOpenDate: response.data.expectedOpenDate || initialData.expectedOpenDate || '',
+        storeSize: response.data.storeSize || initialData.storeSize || '',
+        employeeCount: response.data.employeeCount || initialData.employeeCount || 0,
+        parkingSpaces: response.data.parkingSpaces || initialData.parkingSpaces || 0,
+        hasDelivery: response.data.hasDelivery || initialData.hasDelivery || false,
+        deliveryRadius: response.data.deliveryRadius || initialData.deliveryRadius || '',
+        specialRequests: response.data.specialRequests || initialData.specialRequests || ''
       };
       
       console.log('📥 initialData:', initialData);
@@ -54,6 +184,11 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
       console.log('📥 storeRequestStatusName:', detailData.storeRequestStatusName);
       console.log('📥 storeRequestStatusIndex:', detailData.storeRequestStatusIndex);
       console.log('📥 store_request_status_index:', detailData.store_request_status_index);
+      
+      console.log('🖼️ 사진 URL 정보:');
+      console.log('   - storeBusinessLicensePhoto:', detailData.storeBusinessLicensePhoto || 'NULL');
+      console.log('   - storeSignPhoto:', detailData.storeSignPhoto || 'NULL');
+      console.log('   - storeProntPhoto:', detailData.storeProntPhoto || 'NULL');
       
       setStoreData(detailData);
       setEditData(detailData);
@@ -126,7 +261,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
         console.log('🔄 승인 처리 시작 - storeId:', storeId);
         
         // 현재 로그인한 사용자 정보 가져오기
-        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
         const approvedBy = userInfo.username || userInfo.user_name || '관리자';
         
         // 승인 데이터 구성 (store_request_status_index = 2)
@@ -180,7 +315,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
         console.log('🔄 거절 처리 시작 - storeId:', storeId);
         
         // 현재 로그인한 사용자 정보 가져오기
-        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
         const approvedBy = userInfo.username || userInfo.user_name || '관리자';
         
         // 거절 데이터 구성 (store_request_status_index = 3)
@@ -638,6 +773,121 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
             </div>
             <div className="detail-modal-field-value currency">
               {(displayData.totalCM || 0).toLocaleString()}원
+            </div>
+          </div>
+        </div>
+
+        {/* 📸 사진 정보 섹션 */}
+        <div style={{ marginBottom: '24px' }}>
+          <h3 style={{ marginBottom: '16px', color: '#495057', borderBottom: '2px solid #e9ecef', paddingBottom: '8px' }}>
+            📸 업로드된 사진
+          </h3>
+
+          {/* 사업자등록증 사진 */}
+          <div className="detail-modal-field">
+            <div className="detail-modal-field-label">
+              <span className="detail-modal-field-icon">📄</span>
+              사업자등록증
+            </div>
+            <div className="detail-modal-field-value">
+              {displayData.storeBusinessLicensePhoto ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ImageWithLoading
+                    src={displayData.storeBusinessLicensePhoto} 
+                    alt="사업자등록증"
+                    style={{ 
+                      maxWidth: '300px', 
+                      maxHeight: '200px', 
+                      objectFit: 'contain',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      backgroundColor: '#f8f9fa'
+                    }}
+                  />
+                  <a 
+                    href={displayData.storeBusinessLicensePhoto} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '0.9em', color: '#007bff' }}
+                  >
+                    🔗 원본 보기
+                  </a>
+                </div>
+              ) : (
+                <span style={{ color: '#6c757d' }}>업로드된 사진이 없습니다</span>
+              )}
+            </div>
+          </div>
+
+          {/* 간판 사진 */}
+          <div className="detail-modal-field">
+            <div className="detail-modal-field-label">
+              <span className="detail-modal-field-icon">🪧</span>
+              간판 사진
+            </div>
+            <div className="detail-modal-field-value">
+              {displayData.storeSignPhoto ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ImageWithLoading
+                    src={displayData.storeSignPhoto} 
+                    alt="간판 사진"
+                    style={{ 
+                      maxWidth: '300px', 
+                      maxHeight: '200px', 
+                      objectFit: 'contain',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      backgroundColor: '#f8f9fa'
+                    }}
+                  />
+                  <a 
+                    href={displayData.storeSignPhoto} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '0.9em', color: '#007bff' }}
+                  >
+                    🔗 원본 보기
+                  </a>
+                </div>
+              ) : (
+                <span style={{ color: '#6c757d' }}>업로드된 사진이 없습니다</span>
+              )}
+            </div>
+          </div>
+
+          {/* 외관 사진 */}
+          <div className="detail-modal-field">
+            <div className="detail-modal-field-label">
+              <span className="detail-modal-field-icon">🏪</span>
+              외관 사진
+            </div>
+            <div className="detail-modal-field-value">
+              {displayData.storeProntPhoto ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  <ImageWithLoading
+                    src={displayData.storeProntPhoto} 
+                    alt="외관 사진"
+                    style={{ 
+                      maxWidth: '300px', 
+                      maxHeight: '200px', 
+                      objectFit: 'contain',
+                      border: '1px solid #ddd',
+                      borderRadius: '4px',
+                      backgroundColor: '#f8f9fa'
+                    }}
+                  />
+                  <a 
+                    href={displayData.storeProntPhoto} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    style={{ fontSize: '0.9em', color: '#007bff' }}
+                  >
+                    🔗 원본 보기
+                  </a>
+                </div>
+              ) : (
+                <span style={{ color: '#6c757d' }}>업로드된 사진이 없습니다</span>
+              )}
             </div>
           </div>
         </div>
