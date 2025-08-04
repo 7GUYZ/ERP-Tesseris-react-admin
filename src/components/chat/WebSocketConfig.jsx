@@ -275,6 +275,77 @@ export const WebSocketChatProvider = ({ children }) => {
     return performSend();
   };
 
+  // 메시지 삭제 함수
+  const deleteMessage = (roomId, messageIndex) => {
+
+    // 연결 대기 함수
+    const waitForConnection = () => {
+      return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 10;
+
+        const checkConnection = () => {
+          attempts++;
+
+          if (stompClientRef.current && stompClientRef.current.connected) {
+            resolve(true);
+          } else if (attempts >= maxAttempts) {
+            reject(new Error('삭제 연결 대기 시간 초과'));
+          } else {
+            setTimeout(checkConnection, 500);
+          }
+        };
+
+        checkConnection();
+      });
+    };
+
+    const performDelete = async () => {
+      try {
+        // 연결 대기
+        await waitForConnection();
+
+        const deleteData = {
+          roomId: String(roomId),
+          messageIndex: String(messageIndex),
+          timestamp: new Date().toISOString()
+        };
+
+        console.log('WebSocket 삭제 요청 전송:', deleteData);
+
+        // 삭제 요청 전송
+        stompClientRef.current.publish({
+          destination: `/app/adminchat.deleteMessage/${roomId}`,
+          body: JSON.stringify(deleteData)
+        });
+
+        // 삭제 요청이 성공적으로 전송되었으므로 true 반환
+        // 실제 삭제 결과는 WebSocket 응답으로 처리됨
+        return true;
+
+      } catch (error) {
+        console.error('WebSocket 삭제 요청 실패:', error);
+        return false;
+      }
+    };
+
+    // 연결이 없으면 재연결 시도
+    if (!stompClientRef.current || !stompClientRef.current.connected) {
+      console.log('🔄 삭제를 위해 재연결 시도...');
+      const token = localStorage.getItem('admin-access-token');
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      if (token && userInfo) {
+        connectWebSocket(token, userInfo.user_index);
+        // 재연결 후 삭제 시도
+        setTimeout(() => performDelete(), 1000);
+        return true; // 삭제 진행 중으로 반환
+      }
+      return false;
+    }
+
+    return performDelete();
+  };
+
   // 컴포넌트 언마운트 시 정리
 
 
@@ -292,7 +363,8 @@ export const WebSocketChatProvider = ({ children }) => {
     disconnectWebSocket,
     subscribeToRoom,
     unsubscribeFromRoom,
-    sendMessage
+    sendMessage,
+    deleteMessage
   };
 
   return (

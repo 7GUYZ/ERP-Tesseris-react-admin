@@ -7,10 +7,10 @@ import {
 import {
   Close, Send, Minimize, DragIndicator,
   ArrowBack, Call, VideoCall, Info, AttachFile, MoreVert, PersonAdd, ExitToApp,
-  ExpandMore, ChevronRight
+  ExpandMore, ChevronRight, Delete
 } from '@mui/icons-material';
 import { useWebSocket } from './WebSocketConfig';
-import { ChatList, LeaveRoom, UserInvitation } from '../../api/auth/JihunAuth';
+import { ChatList, LeaveRoom, UserInvitation, DeleteMessage } from '../../api/auth/JihunAuth';
 import { generateRoomName } from '../../utils/roomNameUtils';
 import { useToast } from '../../context/jungeun/ToastContext';
 
@@ -35,7 +35,7 @@ function ChatRoomWindow({
     x: Math.max(0, window.innerWidth - Math.min(450, window.innerWidth * 0.9)),
     y: Math.max(0, window.innerHeight * 0.1)
   });
-  const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected } = useWebSocket();
+  const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected, deleteMessage } = useWebSocket();
   const [size, setSize] = useState(currentSize || { 
     width: Math.min(400, window.innerWidth * 0.9), 
     height: Math.min(600, window.innerHeight * 0.8) 
@@ -68,6 +68,10 @@ function ChatRoomWindow({
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
 
+  // 메시지 삭제 관련 상태
+  const [messageMenuAnchor, setMessageMenuAnchor] = useState(null);
+  const [selectedMessage, setSelectedMessage] = useState(null);
+
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesTopRef = useRef(null); // 무한스크롤용 상단 ref
@@ -89,40 +93,72 @@ function ChatRoomWindow({
 
   // 수신된 메시지 처리 함수
   const handleIncomingMessage = useCallback((receivedMessage) => {
-        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+    const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+
+    // 메시지 삭제 이벤트 처리
+    if (receivedMessage.type === 'DELETE_MESSAGE') {
+      const messageIndex = receivedMessage.messageIndex;
+      console.log('삭제 이벤트 수신:', { messageIndex, receivedMessage });
+      
+      setMessages(prev => prev.map(msg => 
+        msg.messageindex === messageIndex 
+          ? { ...msg, active: false }
+          : msg
+      ));
+      return;
+    }
+
+    // 메시지 삭제 에러 이벤트 처리
+    if (receivedMessage.type === 'DELETE_MESSAGE_ERROR') {
+      console.error('삭제 에러 이벤트 수신:', receivedMessage);
+      showToast("error", `메시지 삭제 실패: ${receivedMessage.error || '알 수 없는 오류'}`);
+      return;
+    }
 
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     if (receivedMessage.user_id === userInfo.id) {
-      const currentMessages = messagesRef.current;
-      // 같은 내용의 로컬 메시지 찾기
-      const localMessageIndex = currentMessages.findIndex(msg =>
-                msg.isLocal && 
-                msg.text === receivedMessage.message && 
-                msg.sender.id === userInfo.id
-              );
+      console.log('내 메시지 응답 수신:', {
+        tempMessageIndex: receivedMessage.tempMessageIndex,
+        messageindex: receivedMessage.messageindex,
+        active: receivedMessage.active,
+        fullMessage: receivedMessage
+      });
+      
+      // 임시 messageindex로 로컬 메시지 찾기
+      setMessages(prev => {
+        const updatedMessages = prev.map(msg => {
+          // 임시 messageindex와 매칭되는 로컬 메시지 찾기
+          if (msg.isLocal && msg.messageindex === receivedMessage.tempMessageIndex) {
+            console.log('로컬 메시지 교체:', {
+              tempIndex: msg.messageindex,
+              realIndex: receivedMessage.messageindex,
+              active: receivedMessage.active
+            });
+            
+            // 실제 messageindex가 있는 경우에만 교체
+            if (receivedMessage.messageindex && 
+                receivedMessage.messageindex !== 'undefined' && 
+                receivedMessage.messageindex !== 'null' &&
+                receivedMessage.messageindex !== undefined &&
+                receivedMessage.messageindex !== null) {
               
-      if (localMessageIndex !== -1) {
-        // 로컬 메시지를 서버 메시지로 교체 (정렬하지 않음)
-        setMessages(prev => {
-          const updatedMessages = [...prev];
-          const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
-
-          updatedMessages[localMessageIndex] = {
-                id: `server_${Date.now()}_${Math.random()}`,
-                text: receivedMessage.message,
-            sender: {
-              id: receivedMessage.user_id,
-              name: senderName
-            },
-                timestamp: receivedMessage.timestamp || new Date().toISOString(),
-            messageindex: receivedMessage.messageindex || null,
-                isLocal: false
-          };
-
-          messagesRef.current = updatedMessages;
-          return updatedMessages;
+              return {
+                ...msg,
+                messageindex: receivedMessage.messageindex, // 실제 messageindex로 교체
+                isLocal: false, // 로컬 메시지 플래그 제거
+                active: receivedMessage.active !== undefined ? receivedMessage.active : true
+              };
+            } else {
+              console.warn('실제 messageindex가 없음:', receivedMessage.messageindex);
+              return msg; // 교체하지 않음
+            }
+          }
+          return msg;
         });
-      }
+        
+        return updatedMessages;
+      });
+      return;
     } else {
       // 다른 사용자의 메시지인 경우 새로 추가
       const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
@@ -136,6 +172,7 @@ function ChatRoomWindow({
         },
         timestamp: receivedMessage.timestamp || new Date().toISOString(),
         messageindex: receivedMessage.messageindex || null,
+        active: receivedMessage.active !== undefined ? receivedMessage.active : true, // active 상태 추가
         isLocal: false
       };
 
@@ -340,7 +377,7 @@ function ChatRoomWindow({
           const userId = msg.userid || msg.user_id;
           const adminName = adminMap.get(userId);
 
-          return {
+          const formattedMessage = {
             id: `previous_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
             text: msg.message,
             sender: {
@@ -349,8 +386,19 @@ function ChatRoomWindow({
             },
             timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
             messageindex: msg.messageindex || null,
+            active: msg.active !== undefined ? msg.active : true, // active 상태 추가
             isLocal: false
           };
+          
+          // active 상태 디버깅 로그
+          console.log('이전 메시지 active 상태:', { 
+            messageIndex: msg.messageindex, 
+            active: msg.active, 
+            formattedActive: formattedMessage.active,
+            message: msg.message.substring(0, 20) + '...'
+          });
+          
+          return formattedMessage;
         });
 
         // 현재 스크롤 위치 저장
@@ -452,12 +500,12 @@ function ChatRoomWindow({
               adminMap.set(admin.userId, admin.name);
             });
 
-            // 기존 메시지를 올바른 형식으로 변환하여 추가
+            // 기존 메시지를 올바른 형식으로 변환
             const formattedMessages = existingMessages.map(msg => {
               const userId = msg.userid || msg.user_id;
               const adminName = adminMap.get(userId);
 
-              return {
+              const formattedMessage = {
                 id: `existing_${msg.messageindex || msg.messageid || msg.id || Date.now()}_${Math.random()}`,
                 text: msg.message,
                 sender: {
@@ -466,8 +514,19 @@ function ChatRoomWindow({
                 },
                 timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
                 messageindex: msg.messageindex || null,
+                active: msg.active !== undefined ? msg.active : true, // active 상태 추가
                 isLocal: false
               };
+              
+              // active 상태 디버깅 로그
+              console.log('메시지 active 상태:', { 
+                messageIndex: msg.messageindex, 
+                active: msg.active, 
+                formattedActive: formattedMessage.active,
+                message: msg.message.substring(0, 20) + '...'
+              });
+              
+              return formattedMessage;
             });
 
             // 기존 메시지를 정렬하여 설정
@@ -544,6 +603,29 @@ function ChatRoomWindow({
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      
+      // 임시 messageindex 생성 (음수로 구분)
+      const tempMessageIndex = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // 로컬 메시지 생성 (임시 messageindex 포함)
+      const localMessageId = `local_${Date.now()}_${Math.random()}`;
+      const localMessage = {
+        id: localMessageId,
+        text: newMessage,
+        sender: { id: userInfo.id, name: userInfo.name },
+        timestamp: new Date().toISOString(),
+        messageindex: tempMessageIndex, // 임시 messageindex
+        isLocal: true,
+        active: true
+      };
+
+      // 로컬 메시지 즉시 추가
+      addMessage(localMessage);
+      
+      // 입력 필드 초기화
+      setNewMessage('');
+      setIsTyping(false);
+
       const generateRoomName = (participants) => {
         if (participants.length === 2) {
           // 1:1 채팅 - adminData에서 이름 사용
@@ -568,8 +650,7 @@ function ChatRoomWindow({
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
         
         if (hasValidRoomIndex) {
-        // 기존 방인 경우
-          
+          // 기존 방인 경우
           const messageData = {
             room_index: currentRoomIndex,
             room_name: roomDataWithoutRefresh.name,
@@ -577,24 +658,11 @@ function ChatRoomWindow({
             message: newMessage,
             participants: [], // 기존 방의 경우 참가자 정보는 서버에서 처리
             timestamp: null,
+            tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
           };
           
           // WebSocket으로 메시지 전송 (DB 저장 포함)
           sendMessage(currentRoomIndex, messageData);
-
-          // 로컬 메시지 추가
-          const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          const localMessage = {
-            id: localMessageId,
-            text: newMessage,
-            sender: { id: userInfo.id, name: userInfo.name },
-            timestamp: new Date().toISOString(),
-            messageindex: null, // 로컬 메시지는 아직 서버에 저장되지 않음
-            isLocal: true
-          };
-
-          // 로컬 메시지 추가
-          addMessage(localMessage);
           
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
@@ -610,11 +678,12 @@ function ChatRoomWindow({
             messageData = {
               room_index: null,
               room_name: generateRoomName(participants, null, adminList, userInfo.id, true),
-            user_id: userInfo.id,
-            message: newMessage,
+              user_id: userInfo.id,
+              message: newMessage,
               participants: participants, // 참가자 목록 사용
-            timestamp: null,
-          };
+              timestamp: null,
+              tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
+            };
           } else {
             // 1:1 채팅인 경우
             // participants에서 상대방 ID 찾기
@@ -636,30 +705,13 @@ function ChatRoomWindow({
               message: newMessage,
               participants: [otherUserId, userInfo.id],
               timestamp: null,
+              tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
             };
           }
 
           // WebSocket으로 메시지 전송 (방 생성 및 DB 저장 포함)
           sendMessage("admin", messageData);
-
-          // 로컬 메시지 추가
-          const localMessageId = `local_${Date.now()}_${Math.random()}`;
-          const localMessage = {
-            id: localMessageId,
-            text: newMessage,
-            sender: { id: userInfo.id, name: userInfo.name },
-            timestamp: new Date().toISOString(),
-            messageindex: null, // 로컬 메시지는 아직 서버에 저장되지 않음
-            isLocal: true
-          };
-
-          // 로컬 메시지 추가
-          addMessage(localMessage);
         }
-        
-        // 입력 필드 초기화
-        setNewMessage('');
-        setIsTyping(false);
         
         // 입력 필드에 포커스 유지
         setTimeout(() => {
@@ -667,25 +719,9 @@ function ChatRoomWindow({
         }, 100);
         
       } catch (error) {
-        // 에러 발생 시에도 로컬 메시지는 추가
-        const errorMessage = {
-          id: `error_${Date.now()}_${Math.random()}`,
-          text: newMessage,
-          sender: { id: userInfo.id, name: userInfo.name },
-          timestamp: new Date().toISOString(),
-          messageindex: null, // 에러 메시지는 인덱스 없음
-          error: true // 에러 표시용
-        };
-
-        // 에러 메시지 추가
-        addMessage(errorMessage);
-        setNewMessage('');
-        setIsTyping(false);
-        
-        // 에러 발생 시에도 포커스 유지
-        setTimeout(() => {
-          inputRef.current?.focus();
-        }, 100);
+        // 에러 발생 시 로컬 메시지 제거
+        setMessages(prev => prev.filter(msg => msg.id !== localMessageId));
+        showToast("error", "메시지 전송에 실패했습니다.");
       }
     }
   };
@@ -1188,6 +1224,109 @@ function ChatRoomWindow({
     ));
   };
 
+  // 메시지 우클릭 메뉴 핸들러
+  const handleMessageContextMenu = (event, message) => {
+    event.preventDefault();
+    setSelectedMessage(message);
+    setMessageMenuAnchor(event.currentTarget);
+  };
+
+  // 메시지 삭제 핸들러
+  const handleDeleteMessage = async () => {
+    if (!selectedMessage) return;
+
+    try {
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      
+      if (!userInfo) {
+        showToast("error", "로그인이 필요합니다.");
+        return;
+      }
+
+      // 본인 메시지만 삭제 가능
+      if (selectedMessage.sender.id !== userInfo.id) {
+        showToast("error", "자신의 메시지만 삭제할 수 있습니다.");
+        return;
+      }
+
+      console.log('삭제 시도 메시지:', {
+        messageId: selectedMessage.id,
+        messageIndex: selectedMessage.messageindex,
+        active: selectedMessage.active,
+        isLocal: selectedMessage.isLocal
+      });
+
+      // 삭제 확인
+      if (!window.confirm("이 메시지를 삭제하시겠습니까?")) {
+        return;
+      }
+
+      // 임시 메시지인 경우 즉시 로컬에서 제거 (서버에 저장되지 않았으므로)
+      const isTempMessage = selectedMessage.messageindex && selectedMessage.messageindex.toString().startsWith('temp_');
+      
+      if (isTempMessage) {
+        console.log('임시 메시지 삭제:', selectedMessage.messageindex);
+        // 임시 메시지는 즉시 로컬에서 제거
+        setMessages(prev => prev.filter(msg => msg.id !== selectedMessage.id));
+        showToast("success", "메시지가 삭제되었습니다.");
+        return;
+      }
+
+      // 실제 messageindex가 있는 경우 서버 삭제 시도
+      if (!selectedMessage.messageindex || 
+          selectedMessage.messageindex === 'undefined' || 
+          selectedMessage.messageindex === 'null' ||
+          selectedMessage.messageindex === undefined ||
+          selectedMessage.messageindex === null) {
+        console.error('messageindex 없음:', selectedMessage.messageindex);
+        showToast("error", "메시지 인덱스를 찾을 수 없습니다.");
+        return;
+      }
+
+      // 먼저 로컬에서 메시지를 삭제된 상태로 표시
+      setMessages(prev => prev.map(msg => 
+        msg.id === selectedMessage.id 
+          ? { ...msg, active: false }
+          : msg
+      ));
+
+      // WebSocket을 통해 메시지 삭제 요청
+      const currentRoomId = roomId || roomDataWithoutRefresh?.id || roomDataWithoutRefresh?.roomData?.id;
+      console.log('메시지 삭제 요청:', { currentRoomId, messageIndex: selectedMessage.messageindex, selectedMessage });
+      const deleteSuccess = await deleteMessage(currentRoomId, String(selectedMessage.messageindex));
+      
+      if (deleteSuccess) {
+        showToast("success", "메시지가 삭제되었습니다.");
+      } else {
+        // 삭제 실패 시 원래 상태로 복원
+        setMessages(prev => prev.map(msg => 
+          msg.id === selectedMessage.id 
+            ? { ...msg, active: true }
+            : msg
+        ));
+        showToast("error", "메시지 삭제에 실패했습니다. WebSocket 연결을 확인해주세요.");
+      }
+    } catch (error) {
+      console.error('메시지 삭제 오류:', error);
+      // 에러 발생 시 원래 상태로 복원
+      setMessages(prev => prev.map(msg => 
+        msg.id === selectedMessage.id 
+          ? { ...msg, active: true }
+          : msg
+      ));
+      showToast("error", "메시지 삭제 중 오류가 발생했습니다.");
+    } finally {
+      setMessageMenuAnchor(null);
+      setSelectedMessage(null);
+    }
+  };
+
+  // 메시지 메뉴 닫기
+  const handleMessageMenuClose = () => {
+    setMessageMenuAnchor(null);
+    setSelectedMessage(null);
+  };
+
   if (!open || !roomDataWithoutRefresh) return null;
 
   return (
@@ -1639,6 +1778,9 @@ function ChatRoomWindow({
               const messageSenderId = String(message.sender?.id || '');
               const currentUserId = String(userInfo?.id || '');
               const isMyMessage = messageSenderId === currentUserId && messageSenderId !== '';
+              const isDeletedMessage = message.active === false || message.active === 0;
+              const isTempMessage = message.messageindex && message.messageindex.toString().startsWith('temp_');
+              const canDelete = isMyMessage && !isDeletedMessage && !isTempMessage;
 
               return (
                 <Box key={safeKey} sx={{ mb: 1 }}>
@@ -1669,8 +1811,8 @@ function ChatRoomWindow({
                             sx={{
                               p: 1.5,
                               maxWidth: 280,
-                              backgroundColor: '#F8FAFC',
-                              color: 'black',
+                              backgroundColor: isDeletedMessage ? '#f5f5f5' : '#F8FAFC',
+                              color: isDeletedMessage ? '#999' : 'black',
                               borderRadius: '18px 18px 18px 4px',
                               boxShadow: 1,
                               border: '1px solid #e0e0e0',
@@ -1685,9 +1827,19 @@ function ChatRoomWindow({
                               }
                             }}
                           >
-                            <Typography variant="body2">
-                              {message.text}
-                            </Typography>
+                                                      <Typography variant="body2" sx={{ fontStyle: 'normal' }}>
+                            {isDeletedMessage ? '삭제된 메시지입니다' : message.text}
+                            {isTempMessage && (
+                              <Box component="span" sx={{ 
+                                fontSize: '0.7rem', 
+                                opacity: 0.7, 
+                                ml: 1,
+                                fontStyle: 'italic'
+                              }}>
+                                (전송 중...)
+                              </Box>
+                            )}
+                          </Typography>
                             <Typography
                               variant="caption"
                               sx={{
@@ -1710,14 +1862,19 @@ function ChatRoomWindow({
                       {isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0, flex: 1 }}>
                         <Paper
+                          onContextMenu={canDelete ? (e) => handleMessageContextMenu(e, message) : undefined}
                           sx={{
                             p: 1.5,
                             maxWidth: 280,
-                              backgroundColor: '#1976d2',
-                              color: 'white',
-                              borderRadius: '18px 18px 4px 18px',
+                            backgroundColor: isDeletedMessage ? '#f5f5f5' : '#1976d2',
+                            color: isDeletedMessage ? '#999' : 'white',
+                            borderRadius: '18px 18px 4px 18px',
                             boxShadow: 1,
-                              border: 'none',
+                            border: 'none',
+                            cursor: canDelete ? 'pointer' : 'default',
+                            '&:hover': {
+                              backgroundColor: isDeletedMessage ? '#f5f5f5' : (canDelete ? '#1565c0' : '#1976d2'),
+                            },
                             // 반응형 메시지 버블
                             '@media (max-width: 768px)': {
                               maxWidth: '85%',
@@ -1729,8 +1886,24 @@ function ChatRoomWindow({
                             }
                           }}
                         >
-                          <Typography variant="body2">
-                            {message.text}
+                          <Typography 
+                            variant="body2" 
+                            sx={{ 
+                              fontStyle: 'normal',
+                              color: isDeletedMessage ? '#999' : 'white'
+                            }}
+                          >
+                            {isDeletedMessage ? '삭제된 메시지입니다' : message.text}
+                            {isTempMessage && !isDeletedMessage && (
+                              <Box component="span" sx={{ 
+                                fontSize: '0.7rem', 
+                                opacity: 0.7, 
+                                ml: 1,
+                                fontStyle: 'italic'
+                              }}>
+                                (전송 중...)
+                              </Box>
+                            )}
                           </Typography>
                           <Typography
                             variant="caption"
@@ -2128,6 +2301,55 @@ function ChatRoomWindow({
             />
           </MenuItem>
         ))}
+      </Menu>
+
+      {/* 메시지 우클릭 메뉴 */}
+      <Menu
+        anchorEl={messageMenuAnchor}
+        open={Boolean(messageMenuAnchor)}
+        onClose={handleMessageMenuClose}
+        anchorOrigin={{
+          vertical: 'bottom',
+          horizontal: 'right',
+        }}
+        transformOrigin={{
+          vertical: 'top',
+          horizontal: 'right',
+        }}
+        disableScrollLock={false}
+        keepMounted={false}
+        data-message-menu="menu"
+        sx={{
+          '& .MuiPaper-root': {
+            minWidth: 180,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            borderRadius: 2,
+            zIndex: 1500,
+          },
+          zIndex: 1500,
+        }}
+      >
+        <MenuItem
+          onClick={handleDeleteMessage}
+          sx={{
+            py: 1,
+            px: 2,
+            '&:hover': {
+              backgroundColor: 'rgba(255, 0, 0, 0.08)',
+            }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 36 }}>
+            <Delete fontSize="small" />
+          </ListItemIcon>
+          <ListItemText
+            primary="삭제"
+            primaryTypographyProps={{
+              fontSize: '0.875rem',
+              fontWeight: 500
+            }}
+          />
+        </MenuItem>
       </Menu>
 
     </Paper>

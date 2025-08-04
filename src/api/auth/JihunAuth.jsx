@@ -30,6 +30,8 @@ export const ChatList = (room, userid, page = 0, size = 25) => api.get(`/adminch
 export const LeaveRoom = (room, userid) => api.put(`/adminchat/${room}/leave/${userid}`);
 // 사용자 초대
 export const UserInvitation = (roomId, invitationData) => api.post(`/adminchat/${roomId}/invitation`, invitationData);
+// 메시지 삭제
+export const DeleteMessage = (roomId, messageIndex) => api.delete(`/adminchat/${roomId}/${messageIndex}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
