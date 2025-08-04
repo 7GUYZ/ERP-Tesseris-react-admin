@@ -73,6 +73,7 @@ export const MENU_PERMISSION_MAPPING = {
   
   // 수수료 지급
   '/commission-payment': { menuIndex: 18, programIndex: 1, name: '수수료지급' },
+ 
 
   // 권한 타입 관리
   '/admin-type-insert': { menuIndex: 1, programIndex: 40, name: '권한 타입 관리' }
