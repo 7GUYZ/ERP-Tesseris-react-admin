@@ -8,9 +8,10 @@ import dayjs from 'dayjs';
 import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getStoreList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import { permissionCheckApi } from '../../../api/auth/TaekjunAuth';
+import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import StoreDetailModal from '../../../components/feature/deokkyu/dmodal/StoreDetailModal';
-import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
@@ -38,6 +39,8 @@ function StoreList() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [canUpdate, setCanUpdate] = useState(false);
+  const { showToast } = useToast();
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   
   // 모달 상태
@@ -98,6 +101,24 @@ function StoreList() {
   };
 
   // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(20); // programIndex: 20 (가맹점 회원 리스트)
+        if (response.data) {
+          setCanUpdate(response.data.hasUpdateAuthority === 1);
+          console.log('가맹점 회원 리스트 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanUpdate(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
+
   useEffect(() => {
     // 인터셉터 설정 (인증 토큰 자동 추가)
     setupInterceptors();
@@ -144,6 +165,11 @@ function StoreList() {
 
   // 수정 버튼 클릭 핸들러
   const handleEditClick = () => {
+    if (!canUpdate) {
+      showToast("error", "수정 권한이 없습니다.");
+      return;
+    }
+
     console.log('🖱️ 수정 버튼 클릭, 선택된 행 수:', selectedRows.size);
     console.log('📋 선택된 행 IDs:', Array.from(selectedRows));
 
@@ -198,7 +224,8 @@ function StoreList() {
           <button
             className="deokkyu-btn edit"
             onClick={handleEditClick}
-            disabled={selectedRows.size === 0}
+            disabled={selectedRows.size === 0 || !canUpdate}
+            style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             ✏️ 수정
           </button>

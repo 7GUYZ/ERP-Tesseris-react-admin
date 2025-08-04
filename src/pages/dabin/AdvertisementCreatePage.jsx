@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createAdvertisement } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
+import Toast from '../../components/ui/jungeun/Toast';
 import '../../styles/dabin/AdvertisementCreatePage.css';
 
 const AdvertisementCreatePage = () => {
@@ -9,7 +10,23 @@ const AdvertisementCreatePage = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast, setShowToast] = useState(false);
+    
     const navigate = useNavigate();
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    const closeToast = () => {
+        setShowToast(false);
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -27,20 +44,17 @@ const AdvertisementCreatePage = () => {
 
     const handleSubmit = async () => {
         if (!selectedFile) {
-            alert('이미지를 선택해주세요.');
+            showToastMessage('이미지를 선택해주세요.', 'error');
             return;
         }
 
-        if (!advertisementUrl || advertisementUrl === 'https://') {
-            alert('광고 링크 주소를 입력해주세요.');
-            return;
-        }
-
-        // URL 유효성 검사
-        const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-/]))?/;
-        if (!urlRegex.test(advertisementUrl)) {
-            alert('광고주소를 다시한번 확인하세요.');
-            return;
+        // 링크가 입력된 경우에만 URL 유효성 검사
+        if (advertisementUrl && advertisementUrl !== 'https://') {
+            const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-/]))?/;
+            if (!urlRegex.test(advertisementUrl)) {
+                showToastMessage('팝업주소를 다시한번 확인하세요.', 'error');
+                return;
+            }
         }
 
         setLoading(true);
@@ -51,25 +65,20 @@ const AdvertisementCreatePage = () => {
             formData.append('file', selectedFile);
             formData.append('advertisementUrl', advertisementUrl);
             
-            // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
-            const response = await api.post('/dabin/advertisement/create', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
-                },
-                timeout: 30000 // 30초 타임아웃
-            });
+            // DabinAuth의 createAdvertisement 함수 사용
+            const response = await createAdvertisement(formData);
 
             if (response.data.success) {
-                alert('광고를 등록하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('팝업을 등록하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '광고 등록에 실패했습니다.');
+                showToastMessage(response.data.message || '팝업 등록에 실패했습니다.', 'error');
             }
         } catch (error) {
-            console.error('광고 등록 오류:', error);
-            alert('광고 등록 중 오류가 발생했습니다.');
+            console.error('팝업 등록 오류:', error);
+            showToastMessage('팝업 등록 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -83,35 +92,27 @@ const AdvertisementCreatePage = () => {
         <div className="ad-create-page">
             {/* Breadcrumb */}
             <ul className="ad-create-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>광고 관리</li>
-                <li>광고 등록</li>
+                <li>배너 및 팝업 관리</li>
+                <li>팝업 관리</li>
+                <li>팝업 등록</li>
             </ul>
 
             {/* Header */}
             <div className="ad-create-flex-between ad-create-mb10">
-                <p className="ad-create-font-20 ad-create-bold">광고 등록</p>
-                <div>
-                    <button
-                        type="button"
-                        className="ad-create-cancel-button"
-                        onClick={handleListClick}>
-                        목록
-                    </button>
-                </div>
+                <p className="ad-create-font-20 ad-create-bold">팝업 등록</p>
             </div>
 
             {/* Card */}
             <div className="ad-create-card">
                 <div className="ad-create-card-inner">
                     <div className="ad-create-form-grid">
-                        {/* 광고 이미지 업로드 */}
+                        {/* 팝업 이미지 업로드 */}
                         <div className="ad-create-form-item">
                             <div className="ad-create-label-horizontal">
-                                <span className="ad-create-text">광고사진 등록</span>
+                                <span className="ad-create-text">팝업사진 등록</span>
                                 <div className="ad-create-banner-btn">
                                     <label>
-                                        광고사진 등록하기
+                                        팝업사진 등록하기
                                         <input
                                             type="file"
                                             className="ad-create-file-input"
@@ -129,17 +130,17 @@ const AdvertisementCreatePage = () => {
                             </p>
                         </div>
 
-                        {/* 광고 링크 주소 */}
+                        {/* 팝업 링크 주소 */}
                         <div className="ad-create-form-item">
                             <div className="ad-create-label">
-                                <span>광고 링크주소</span>
+                                <span>팝업 링크주소 <span style={{ color: '#666', fontSize: '14px' }}>(선택사항)</span></span>
                                 <div className="ad-create-input-box">
                                     <input
                                         type="text"
                                         className="ad-create-link-input"
                                         value={advertisementUrl}
                                         onChange={(e) => setAdvertisementUrl(e.target.value)}
-                                        placeholder="등록하실 광고 링크주소를 입력하세요."
+                                        placeholder="등록하실 팝업 링크주소를 입력하세요. (선택사항)"
                                     />
                                 </div>
                             </div>
@@ -150,13 +151,13 @@ const AdvertisementCreatePage = () => {
                         {/* 이미지 미리보기 */}
                         <div className="ad-create-form-item">
                             <div className="ad-create-label-horizontal">
-                                <span className="ad-create-text">등록된 광고이미지</span>
+                                <span className="ad-create-text">등록된 팝업이미지</span>
                             </div>
                             <div className="ad-create-image-preview">
                                 {previewImage ? (
                                     <img
                                         src={previewImage}
-                                        alt="광고 이미지 미리보기"
+                                        alt="팝업 이미지 미리보기"
                                     />
                                 ) : (
                                     <div className="ad-create-upload-area">
@@ -172,6 +173,12 @@ const AdvertisementCreatePage = () => {
                     <div className="ad-create-button-container">
                         <button
                             type="button"
+                            className="ad-create-cancel-button"
+                            onClick={handleListClick}>
+                            목록
+                        </button>
+                        <button
+                            type="button"
                             className="ad-create-register-button"
                             onClick={handleSubmit}
                             disabled={loading}>
@@ -180,6 +187,14 @@ const AdvertisementCreatePage = () => {
                     </div>
                 </div>
             </div>
+            {/* Toast Component */}
+            {showToast && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

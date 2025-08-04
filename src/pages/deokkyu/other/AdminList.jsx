@@ -8,10 +8,10 @@ import dayjs from 'dayjs';
 import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/StoreList.css'; 
 import { getAdminList, createAdmin, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
-import { permissionApi } from '../../../api/auth/TaekjunAuth';
+import { permissionApi, permissionCheckApi } from '../../../api/auth/TaekjunAuth';
 import { addressApi } from '../../../api/auth/TaekjunAuth';
+import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
-import RealTimeChat from '../../../components/chat/RealTimeChat';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 const columns = [
@@ -76,6 +76,8 @@ function AdminList() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
+  const [canInsert, setCanInsert] = useState(false);
+  const { showToast } = useToast();
   const [isFilterOpen, setIsFilterOpen] = useState(true);
   const [filter, setFilter] = useState({
     adminUserEmail: '',
@@ -100,6 +102,7 @@ function AdminList() {
     
     // 관리자 정보
     adminTypeIndex: '',
+    adminRegistrationDate: '',
     adminAddress: '',
     adminDetailAddress: ''
   });
@@ -158,6 +161,24 @@ function AdminList() {
   };
 
   // 페이지 진입 시 → 빈 검색 조건으로 전체 데이터 자동 조회
+  // 권한 체크
+  useEffect(() => {
+    const checkPermission = async () => {
+      try {
+        const response = await permissionCheckApi.checkPermission(10); // programIndex: 28 (관리자 리스트)
+        if (response.data) {
+          setCanInsert(response.data.hasInsertAuthority === 1);
+          console.log('관리자 리스트 등록 권한 체크 결과:', response.data.hasInsertAuthority);
+        }
+      } catch (error) {
+        console.error('권한 체크 실패:', error);
+        setCanInsert(false);
+      }
+    };
+    
+    checkPermission();
+  }, []);
+
   useEffect(() => {
     // 인터셉터 설정 (인증 토큰 자동 추가)
     setupInterceptors();
@@ -174,6 +195,10 @@ function AdminList() {
 
   // 등록 모달 열기
   const handleCreateAdmin = () => {
+    if (!canInsert) {
+      showToast("error", "등록 권한이 없습니다.");
+      return;
+    }
     setCreateForm({
       adminUserEmail: '',
       adminUserName: '',
@@ -183,6 +208,7 @@ function AdminList() {
       adminPassword: '',
       adminPasswordConfirm: '',
       adminTypeIndex: '',
+      adminRegistrationDate: '',
       adminAddress: '',
       adminDetailAddress: ''
     });
@@ -320,7 +346,8 @@ function AdminList() {
           <button 
             className="taekjun-btn admin create"
             onClick={handleCreateAdmin}
-            disabled={loading}
+            disabled={loading || !canInsert}
+            style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
           >
             등록
           </button>
@@ -406,15 +433,6 @@ function AdminList() {
 
             {/* 두 번째 행: 관리자 등급, 등록일 시작, 등록일 종료 */}
             <div className="store-filter-row">
-              <div className="store-filter-field">
-                <label className="store-filter-label">관리자 등급</label>
-                <input
-                  className="store-filter-input"
-                  value={filter.adminRankName}
-                  onChange={(e) => setFilter({ ...filter, adminRankName: e.target.value })}
-                  placeholder="관리자 등급을 입력하세요"
-                />
-              </div>
               <div className="store-filter-field">
                 <label className="store-filter-label">등록일 시작</label>
                 <input
@@ -532,8 +550,8 @@ function AdminList() {
                       autoComplete="off"
                     >
                       <option value="">성별을 선택하세요</option>
-                      <option value="1">남자</option>
-                      <option value="2">여자</option>
+                      <option value="남자">남자</option>
+                      <option value="여자">여자</option>
                     </select>
                   </div>
                   <div className="admin-create-form-field">
@@ -594,6 +612,16 @@ function AdminList() {
                   </div>
 
                   <div className="admin-create-form-field">
+                    <label>담당자 등록일</label>
+                    <input
+                      type="date"
+                      value={createForm.adminRegistrationDate}
+                      onChange={(e) => handleCreateFormChange('adminRegistrationDate', e.target.value)}
+                      autocomplete="off"
+                      autoComplete="off"
+                    />
+                  </div>
+                  <div className="admin-create-form-field">
                     <label>주소</label>
                     <div className="admin-create-address-field">
                       <input
@@ -651,7 +679,6 @@ function AdminList() {
         </div>
       )}
       
-      <RealTimeChat />
     </LocalizationProvider>
   );
 }

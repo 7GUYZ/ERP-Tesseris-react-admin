@@ -132,7 +132,7 @@ const SalesPerformanceExcelDownloadButton = ({ data, selectedRows }) => {
       });
       return orderedRow;
     });
-    
+
     const ws = XLSX.utils.json_to_sheet(orderedData)
     const wb = XLSX.utils.book_new()
     

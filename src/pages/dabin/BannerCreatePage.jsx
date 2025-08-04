@@ -2,13 +2,30 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createBanner } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
+import Toast from '../../components/ui/jungeun/Toast';
 import '../../styles/dabin/BannerCreatePage.css';
 
 const BannerCreatePage = () => {
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    
+    // Toast states
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastType, setToastType] = useState('info');
+    const [showToast, setShowToast] = useState(false);
+    
     const navigate = useNavigate();
+
+    const showToastMessage = (message, type = 'info') => {
+        setToastMessage(message);
+        setToastType(type);
+        setShowToast(true);
+    };
+
+    const closeToast = () => {
+        setShowToast(false);
+    };
 
     const handleFileChange = (event) => {
         const file = event.target.files[0];
@@ -26,7 +43,7 @@ const BannerCreatePage = () => {
 
     const handleSubmit = async () => {
         if (!selectedFile) {
-            alert('이미지를 선택해주세요.');
+            showToastMessage('이미지를 선택해주세요.', 'error');
             return;
         }
 
@@ -38,7 +55,7 @@ const BannerCreatePage = () => {
             formData.append('file', selectedFile);
             
             // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
+            const accessToken = localStorage.getItem("admin-access-token");
             const response = await api.post('/dabin/banner/create', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -48,14 +65,16 @@ const BannerCreatePage = () => {
             });
 
             if (response.data.resultCode === 200) {
-                alert('배너를 등록하였습니다.');
-                navigate('/banner/list');
+                showToastMessage('배너를 등록하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/banner/list');
+                }, 1500);
             } else {
-                alert(response.data.resultMessage || '배너 등록에 실패했습니다.');
+                showToastMessage(response.data.resultMessage || '배너 등록에 실패했습니다.', 'error');
             }
         } catch (error) {
             console.error('배너 등록 오류:', error);
-            alert('배너 등록 중 오류가 발생했습니다.');
+            showToastMessage('배너 등록 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -77,14 +96,6 @@ const BannerCreatePage = () => {
             {/* Header */}
             <div className="banner-create-flex-between banner-create-mb10">
                 <p className="banner-create-font-20 banner-create-bold">배너 등록</p>
-                <div>
-                    <button
-                        type="button"
-                        className="banner-create-cancel-button"
-                        onClick={handleListClick}>
-                        목록
-                    </button>
-                </div>
             </div>
 
             {/* Card */}
@@ -133,6 +144,12 @@ const BannerCreatePage = () => {
                     <div className="banner-create-button-container">
                         <button
                             type="button"
+                            className="banner-create-cancel-button"
+                            onClick={handleListClick}>
+                            목록
+                        </button>
+                        <button
+                            type="button"
                             className="banner-create-register-button"
                             onClick={handleSubmit}
                             disabled={loading}>
@@ -141,6 +158,15 @@ const BannerCreatePage = () => {
                     </div>
                 </div>
             </div>
+            
+            {/* Toast Component */}
+            {showToast && (
+                <Toast
+                    type={toastType}
+                    message={toastMessage}
+                    onClose={closeToast}
+                />
+            )}
         </div>
     );
 };

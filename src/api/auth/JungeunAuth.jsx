@@ -10,7 +10,7 @@ export const alarmTest = () =>
   api.get("/alarms/HelloAlarm")
 
 export const logout = () => 
-  api.post("/auth/logout")
+  api.post("/auth/logout", {}, { headers: { "User-Type": "admin" } })
 
 // Interceptor 등록 함수로 분리
 export function setupInterceptors(navigate) {
@@ -19,7 +19,7 @@ export function setupInterceptors(navigate) {
     (config) => {
       const excludePaths = ["/auth/login", "/auth/signUp"];
       if (!excludePaths.includes(config.url)) {
-        const accessToken = localStorage.getItem("access-token");
+        const accessToken = localStorage.getItem("admin-access-token");
         if (accessToken) {
           config.headers.Authorization = accessToken.startsWith("Bearer ")
             ? accessToken
@@ -44,7 +44,7 @@ export function setupInterceptors(navigate) {
         config._retry = true;
 
         try {
-          const result = await api.post("/auth/refresh");
+          const result = await api.post("/auth/refresh", {}, { headers: { "User-Type": "admin" } });
           const { success, data: accessToken } = result.data;
 
           if (!success || !accessToken) {
@@ -54,7 +54,7 @@ export function setupInterceptors(navigate) {
           console.log("새 accessToken:", accessToken);
 
           // accessToken 저장 및 재시도
-          localStorage.setItem("access-token", `Bearer ${accessToken}`);
+          localStorage.setItem("admin-access-token", `Bearer ${accessToken}`);
           config.headers.Authorization = `Bearer ${accessToken}`;
           return api(config); // 원래 요청 재전송
 
@@ -62,8 +62,8 @@ export function setupInterceptors(navigate) {
           console.warn("refreshToken 만료 또는 서버 오류:", e.message);
 
           // 로그인 만료 처리 (전역 이벤트로 Toast 발생)
-          localStorage.removeItem("access-token");
-          localStorage.removeItem("user-info");
+          localStorage.removeItem("admin-access-token");
+          localStorage.removeItem("admin-info");
           window.dispatchEvent(
             new CustomEvent("show-toast", {
               detail: {
@@ -104,33 +104,21 @@ export const pwCheck = ({username, password}) =>
   api.post("/passwordCheck", {username, password})
 
 export const menuAuthority = (adminTypeIndex) => {
-  const token = localStorage.getItem("access-token"); // 항상 최신 토큰
   return api.get("/adminAuthority", {
-    params: { adminTypeIndex },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { adminTypeIndex }
   });
 };
 
 // 사용자의 알림 설정 조회
 export const getUserAlarmSetting = (userIndex, alarmTypesId) => {
-  const token = localStorage.getItem("access-token");
   return api.get("/alarms/user-alarm-setting", {
-    params: { userIndex, alarmTypesId },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { userIndex, alarmTypesId }
   });
 };
 
 // 사용자의 알림 설정 업데이트
 export const updateUserAlarmSetting = (userIndex, alarmTypesId, isActive) => {
-  const token = localStorage.getItem("access-token");
   return api.post("/alarms/update-user-alarm-setting", null, {
-    params: { userIndex, alarmTypesId, isActive },
-    headers: {
-      Authorization: `${token}`,
-    },
+    params: { userIndex, alarmTypesId, isActive }
   });
 };

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { CircularProgress, Box, Typography, Button } from "@mui/material"
+
 import MemberRecommendationSearchForm from "../../components/forms/dabin/memberRecommendation/MemberRecommendationSearchForm";
 import MemberRecommendationDataGrid from "../../components/forms/dabin/memberRecommendation/MemberRecommendationDataGrid";
 import MemberRecommendationExcelDownloadButton from "../../components/forms/dabin/memberRecommendation/MemberRecommendationExcelDownloadButton";
@@ -15,6 +16,8 @@ const MemberRecommendationPage = () => {
   const [userRoles, setUserRoles] = useState([])
   const [loading, setLoading] = useState(false)
   const [selectedRows, setSelectedRows] = useState(new Set())
+  const [dateErrors, setDateErrors] = useState({}) // 날짜 에러 상태 추가
+
 
   useEffect(() => {
     setLoading(true)
@@ -66,6 +69,14 @@ const MemberRecommendationPage = () => {
     setSelectedRows(newSelection);
   }
 
+  // 날짜 에러 상태 업데이트 함수
+  const handleDateErrorsChange = (errors) => {
+    setDateErrors(errors);
+  }
+
+  // 날짜 에러가 있는지 확인
+  const hasDateErrors = Object.values(dateErrors).some(error => error !== "");
+
   return (
     <Box className="dabin-page-layout-container">
       {/* 제목과 버튼들을 같은 줄에 배치 */}
@@ -95,6 +106,7 @@ const MemberRecommendationPage = () => {
               }
               handleSearch(params)
             }}
+            disabled={hasDateErrors}
             sx={{ height: 40 }}
           >
             조회
@@ -105,6 +117,7 @@ const MemberRecommendationPage = () => {
         onSearch={handleSearch}
         userRoles={userRoles}
         onParamsChange={setCurrentForm}
+        onDateErrorsChange={handleDateErrorsChange}
       />
       {loading ? (
         <Box className="dabin-page-layout-loading">

@@ -19,7 +19,8 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
-import { refreshAuthority } from "../../../../utils/authorityUtils";
+import { refreshAuthority, setCurrentPermissionContext } from "../../../../utils/authorityUtils";
+import { getPermissionByPath } from "../../../../constants/permissionMapping";
 
 const MainNavi = () => {
   const navigate = useNavigate();
@@ -30,13 +31,13 @@ const MainNavi = () => {
   const [authorityList, setAuthorityList] = useState([]); // eslint-disable-line no-unused-vars
   const [submenuPosition, setSubmenuPosition] = useState({ top: 0, left: 0 });
   const { showToast } = useToast();
-  const userInfo = JSON.parse(localStorage.getItem("user-info")) || {};
+  const userInfo = JSON.parse(localStorage.getItem("admin-info")) || {};
   const userName = userInfo.name || "";
   const adminType = userInfo.admin_type_name || "";
   useEffect(() => {
     // 1. localStorage에서 권한 정보 확인
     const getAuthority = async () => {
-      const userInfo = JSON.parse(localStorage.getItem("user-info"));
+      const userInfo = JSON.parse(localStorage.getItem("admin-info"));
       const storedAuthority = localStorage.getItem("user-authority");
 
       if (storedAuthority) {
@@ -181,6 +182,13 @@ const MainNavi = () => {
             type: "link",
             href: "/MonthlyCmLimit",
           },
+          {
+            id: "admin_type",
+            programIndex: 40,
+            label: "직급 설정",
+            type: "link",
+            href: "/admin-type-insert",
+          },
         ],
       },
       {
@@ -311,7 +319,7 @@ const MainNavi = () => {
           {
             id: "advertisement-management",
             programIndex: 24,
-            label: "광고 관리",
+            label: "팝업 관리",
             type: "link",
             href: "/advertisement/list",
           },
@@ -384,13 +392,6 @@ const MainNavi = () => {
             type: "link",
             href: "/withdrawllist",
           },
-          {
-            id: "withdrawal-management",
-            programIndex: 16,
-            label: "출금 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
-          },
         ],
       },
       {
@@ -441,6 +442,14 @@ const MainNavi = () => {
         // 페이지 이동
         setActiveMenuId(item.id);
         setActiveSubMenuId(null);
+        
+        // 권한 컨텍스트 설정
+        const permission = getPermissionByPath(item.href);
+        if (permission) {
+          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, item.href);
+          console.log(`권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+        }
+        
         navigate(item.href);
         break;
       case "expand":
@@ -491,6 +500,14 @@ const MainNavi = () => {
     switch (subItem.type) {
       case "link":
         setActiveSubMenuId(subItem.id);
+        
+        // 권한 컨텍스트 설정
+        const permission = getPermissionByPath(subItem.href);
+        if (permission) {
+          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, subItem.href);
+          console.log(`서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+        }
+        
         navigate(subItem.href);
         break;
       case "list":

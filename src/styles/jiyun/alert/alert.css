@@ -79,9 +79,30 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32px;
   padding-bottom: 20px;
   border-bottom: 2px solid #f1f5f9;
+  transition: all 0.3s ease;
+  margin-bottom: 0;
+}
+
+.alert-settings-header:hover {
+  background-color: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  margin: -16px -16px 16px -16px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.settings-toggle-icon {
+  font-size: 16px;
+  color: #64748b;
+  font-weight: 600;
+  transition: transform 0.3s ease;
 }
 
 .alert-settings-header h2 {
@@ -114,6 +135,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 40px;
+  margin-top: 32px;
 }
 
 .alert-settings-column {
