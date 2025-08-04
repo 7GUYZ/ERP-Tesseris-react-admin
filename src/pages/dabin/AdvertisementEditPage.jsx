@@ -195,10 +195,20 @@ const AdvertisementEditPage = () => {
                             </div>
                             <div className="ad-edit-image-preview">
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="팝업 이미지"
-                                    />
+                                    <div>
+                                        <img
+                                            src={previewImage}
+                                            alt="팝업 이미지"
+                                            onError={(e) => {
+                                                console.log('이미지 로드 실패:', previewImage);
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                            }}
+                                        />
+                                        <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                            이미지를 불러올 수 없습니다
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="ad-edit-upload-area">
                                         <p>이미지를 드래그하거나 클릭하여 업로드</p>

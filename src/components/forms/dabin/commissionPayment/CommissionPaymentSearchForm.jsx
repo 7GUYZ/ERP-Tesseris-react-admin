@@ -3,7 +3,7 @@
 import { useState } from "react"
 import "../../../../styles/dabin/CommissionPaymentSearchForm.css";
 
-const CommissionPaymentSearchForm = ({ onSearch, onParamsChange, onDateErrorsChange }) => {
+const CommissionPaymentSearchForm = ({ onSearch, onParamsChange }) => {
   const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
   const [searchParams, setSearchParams] = useState({
     userId: "",
@@ -17,50 +17,12 @@ const CommissionPaymentSearchForm = ({ onSearch, onParamsChange, onDateErrorsCha
     userRoleIndex: ""
   })
 
-  // 에러 상태 추가
-  const [errors, setErrors] = useState({
-    chargeTime: ""
-  })
-
-  // 날짜 검증 함수
-  const validateDateRange = (startDate, endDate, fieldName) => {
-    if (!startDate || !endDate) return ""; // 둘 다 비어있으면 검증 통과
-    
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    
-    if (start > end) {
-      return `${fieldName} 종료일은 시작일보다 이후여야 합니다.`;
-    }
-    
-    return "";
-  }
-
   const handleInputChange = (field, value) => {
     const newParams = {
       ...searchParams,
       [field]: value
     }
-    
-    // 날짜 검증
-    let newErrors = { ...errors };
-    
-    if (field === 'chargeTimeStart' || field === 'chargeTimeEnd') {
-      newErrors.chargeTime = validateDateRange(
-        field === 'chargeTimeStart' ? value : searchParams.chargeTimeStart,
-        field === 'chargeTimeEnd' ? value : searchParams.chargeTimeEnd,
-        '충전'
-      );
-    }
-    
-    setErrors(newErrors);
-    setSearchParams(newParams);
-    
-    // 부모 컴포넌트에 에러 상태 전달
-    if (onDateErrorsChange) {
-      onDateErrorsChange(newErrors);
-    }
-    
+    setSearchParams(newParams)
     if (onParamsChange) {
       onParamsChange(newParams)
     }
@@ -121,11 +83,8 @@ const CommissionPaymentSearchForm = ({ onSearch, onParamsChange, onDateErrorsCha
               type="date"
               value={searchParams.chargeTimeStart}
               onChange={(e) => handleInputChange('chargeTimeStart', e.target.value)}
-              className={`commission-payment-search-input ${errors.chargeTime ? 'error' : ''}`}
+              className="commission-payment-search-input"
             />
-            {errors.chargeTime && (
-              <div className="error-message">{errors.chargeTime}</div>
-            )}
           </div>
           <div className="commission-payment-search-field">
             <label className="commission-payment-search-label">~</label>
@@ -133,11 +92,8 @@ const CommissionPaymentSearchForm = ({ onSearch, onParamsChange, onDateErrorsCha
               type="date"
               value={searchParams.chargeTimeEnd}
               onChange={(e) => handleInputChange('chargeTimeEnd', e.target.value)}
-              className={`commission-payment-search-input ${errors.chargeTime ? 'error' : ''}`}
+              className="commission-payment-search-input"
             />
-            {errors.chargeTime && (
-              <div className="error-message">{errors.chargeTime}</div>
-            )}
           </div>
           <div className="commission-payment-search-field">
             <label className="commission-payment-search-label">거래명</label>

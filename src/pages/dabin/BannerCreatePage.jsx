@@ -86,13 +86,6 @@ const BannerCreatePage = () => {
 
     return (
         <div className="banner-create-page">
-            {/* Breadcrumb */}
-            <ul className="banner-create-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>배너 관리</li>
-                <li>배너 등록</li>
-            </ul>
-
             {/* Header */}
             <div className="banner-create-flex-between banner-create-mb10">
                 <p className="banner-create-font-20 banner-create-bold">배너 등록</p>
@@ -120,10 +113,20 @@ const BannerCreatePage = () => {
                             </div>
                             <div className="banner-create-image-preview">
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="배너 이미지 미리보기"
-                                    />
+                                    <div>
+                                        <img
+                                            src={previewImage}
+                                            alt="배너 이미지 미리보기"
+                                            onError={(e) => {
+                                                console.log('이미지 로드 실패:', previewImage);
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                            }}
+                                        />
+                                        <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                            이미지를 불러올 수 없습니다
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="banner-create-upload-area">
                                         <p>이미지를 드래그하거나 클릭하여 업로드</p>

@@ -9,7 +9,6 @@ import CommissionPaymentDataGrid from "../../components/forms/dabin/commissionPa
 import CommissionPaymentExcelDownloadButton from "../../components/forms/dabin/commissionPayment/CommissionPaymentExcelDownloadButton";
 import { searchCommissionPayments } from "../../api/auth/DabinAuth";
 import { api } from "../../api/Http";
-import '../../styles/dabin/dabinPageLayout.css';
 
 const CommissionPaymentPage = () => {
   const [searchParams, setSearchParams] = useState({})
@@ -85,7 +84,7 @@ const CommissionPaymentPage = () => {
         
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
-          id: row.detailIndex || `${row.userId}-${row.detailIndex}-${idx}`,
+          id: `${row.userId || 'unknown'}-${row.detailIndex || 'unknown'}-${idx}`,
         }))
         setCommissionData(dataWithId)
         setSelectedRows(new Set()) // 초기화
@@ -165,7 +164,7 @@ const CommissionPaymentPage = () => {
         
         const dataWithId = searchData.map((row, idx) => ({
           ...row,
-          id: row.detailIndex || `${row.userId}-${row.detailIndex}-${idx}`,
+          id: `${row.userId || 'unknown'}-${row.detailIndex || 'unknown'}-${idx}`,
         }))
         setCommissionData(dataWithId)
         setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
@@ -192,13 +191,32 @@ const CommissionPaymentPage = () => {
   const hasDateErrors = Object.values(dateErrors).some(error => error !== "");
 
   return (
-    <Box className="dabin-page-layout-container">
-      {/* 제목과 버튼들을 같은 줄에 배치 */}
-      <Box className="dabin-page-layout-titleRow">
-        <Typography variant="h4" className="dabin-page-layout-title">
+    <div style={{ 
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: '#fff'
+    }}>
+      {/* 페이지 헤더 */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '2px solid #F4F6FA'
+      }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontSize: '28px',
+            fontWeight: 700,
+            color: '#222E3C',
+            margin: 0
+          }}
+        >
           수당 지급 내역
         </Typography>
-        <Box className="dabin-page-layout-buttonGroup">
+        <div style={{ display: 'flex', gap: '12px' }}>
           <CommissionPaymentExcelDownloadButton data={commissionData} selectedRows={selectedRows} />
           <Button
             variant="contained"
@@ -211,15 +229,32 @@ const CommissionPaymentPage = () => {
           >
             조회
           </Button>
-        </Box>
-      </Box>
-      <CommissionPaymentSearchForm
-        onSearch={handleSearch}
-        onParamsChange={setCurrentForm}
-        onDateErrorsChange={handleDateErrorsChange}
-      />
+        </div>
+      </div>
+
+      {/* 검색 조건 섹션 */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        marginBottom: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        padding: '20px'
+      }}>
+        <CommissionPaymentSearchForm
+          onSearch={handleSearch}
+          onParamsChange={setCurrentForm}
+          onDateErrorsChange={handleDateErrorsChange}
+        />
+      </div>
+
+      {/* 결과 테이블 섹션 */}
       {loading ? (
-        <Box className="dabin-page-layout-loading">
+        <Box style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px'
+        }}>
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>로딩중...</Typography>
         </Box>
@@ -227,13 +262,13 @@ const CommissionPaymentPage = () => {
         <>
           {console.log("DataGrid에 전달되는 데이터:", commissionData)}
           {console.log("DataGrid에 전달되는 데이터 개수:", commissionData.length)}
-        <CommissionPaymentDataGrid 
-          data={commissionData} 
-          onSelectionChange={handleSelectionChange}
-        />
+          <CommissionPaymentDataGrid 
+            data={commissionData} 
+            onSelectionChange={handleSelectionChange}
+          />
         </>
       )}
-    </Box>
+    </div>
   )
 }
 
