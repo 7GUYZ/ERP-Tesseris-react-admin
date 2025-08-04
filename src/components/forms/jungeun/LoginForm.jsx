@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
@@ -26,6 +26,37 @@ const LoginForm = () => {
   const { showNotificationToast } = useNotificationToast();
   const zu_login = useAuthStore((state) => state.zu_login)
   const navigate = useNavigate();
+
+  // 컴포넌트 마운트 시 기존 로그인 상태 체크
+  useEffect(() => {
+    const checkExistingLogin = () => {
+      const accessToken = localStorage.getItem("admin-access-token");
+      const userInfo = localStorage.getItem("admin-info");
+      const userAuthority = localStorage.getItem("user-authority");
+
+      // 이미 로그인된 상태라면 대시보드로 리다이렉트
+      if (accessToken && userInfo && userAuthority) {
+        try {
+          const parsedUserInfo = JSON.parse(userInfo);
+          
+          // 관리자 권한 확인
+          if (parsedUserInfo.user_role_index === "4") {
+            // 이미 로그인된 상태이므로 대시보드로 이동
+            navigate("/dashboard");
+            return;
+          }
+        } catch (error) {
+          console.error("기존 로그인 정보 파싱 오류:", error);
+          // 파싱 오류 시 로컬스토리지 클리어
+          localStorage.removeItem("admin-access-token");
+          localStorage.removeItem("admin-info");
+          localStorage.removeItem("user-authority");
+        }
+      }
+    };
+
+    checkExistingLogin();
+  }, [navigate]);
 
   // 이메일 유효성 검사
   const validateEmail = (email) => {
@@ -109,9 +140,9 @@ const LoginForm = () => {
 
           if (accessToken) {
             // localStorage에 토큰 저장
-            localStorage.setItem("access-token", accessToken)
+            localStorage.setItem("admin-access-token", accessToken)
             // localStorage에 user-info 저장 - 백엔드에서 응답 본문에 포함된 데이터 저장
-            localStorage.setItem("user-info", JSON.stringify(response.data.data))
+            localStorage.setItem("admin-info", JSON.stringify(response.data.data))
           }
 
           // 권한 조회 및 캐싱

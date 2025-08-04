@@ -182,8 +182,9 @@ export const WebSocketChatProvider = ({ children }) => {
 
     // 연결이 없으면 재연결 시도
     if (!stompClientRef.current || !stompClientRef.current.connected) {
-      const token = localStorage.getItem('access-token');
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      console.log('🔄 연결이 없어 재연결 시도...');
+      const token = localStorage.getItem('admin-access-token');
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       if (token && userInfo) {
         connectWebSocket(token, userInfo.user_index);
         // 재연결 후 구독 시도
@@ -259,8 +260,9 @@ export const WebSocketChatProvider = ({ children }) => {
 
     // 연결이 없으면 재연결 시도
     if (!stompClientRef.current || !stompClientRef.current.connected) {
-      const token = localStorage.getItem('access-token');
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      console.log('🔄 전송을 위해 재연결 시도...');
+      const token = localStorage.getItem('admin-access-token');
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       if (token && userInfo) {
         connectWebSocket(token, userInfo.user_index);
         // 재연결 후 전송 시도

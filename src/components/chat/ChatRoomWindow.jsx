@@ -83,7 +83,7 @@ function ChatRoomWindow({
 
   // 수신된 메시지 처리 함수
   const handleIncomingMessage = useCallback((receivedMessage) => {
-        const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     if (receivedMessage.user_id === userInfo.id) {
@@ -537,7 +537,23 @@ function ChatRoomWindow({
   // ===============================메세지 보내기=======================================
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      const generateRoomName = (participants) => {
+        if (participants.length === 2) {
+          // 1:1 채팅 - adminData에서 이름 사용
+          if (roomData.adminData) {
+            return `${roomData.adminData.name}님과의 채팅`;
+          }
+          // 기존 방의 경우 UUID 사용 (임시)
+          const otherUser = participants.find(p => p !== userInfo.id);
+          return `${otherUser}님과의 채팅`;
+        } else if (participants.length > 2) {
+          // 단체 채팅
+          const otherUsers = participants.filter(p => p !== userInfo.id);
+          return `${otherUsers.join(', ')}님과의 채팅`;
+        }
+        return '채팅방';
+      };
 
       try {
         // 현재 room_index 확인 (roomId state 우선 사용)
@@ -1510,7 +1526,7 @@ function ChatRoomWindow({
 
             {messages.map((message, index) => {
               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
-              const userInfo = JSON.parse(localStorage.getItem('user-info'));
+              const userInfo = JSON.parse(localStorage.getItem('admin-info'));
               // 메시지 발신자 ID와 현재 사용자 ID를 정확히 비교
               const messageSenderId = String(message.sender?.id || '');
               const currentUserId = String(userInfo?.id || '');
