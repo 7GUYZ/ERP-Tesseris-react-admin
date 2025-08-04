@@ -59,22 +59,18 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   
   // 채팅방 목록 새로고침 함수
   const refreshChatRooms = async () => {
-    console.log("🔍 ChatMainWindow - refreshChatRooms 호출됨");
     setLoading(true);
     const userInfo = JSON.parse(localStorage.getItem('user-info'));
     if (userInfo?.id) {
       try {
         const response = await SearchRoom(userInfo.id);
-        console.log("🔍 ChatMainWindow - SearchRoom 응답:", response);
         
         if (response?.data?.data) {
           setChatRooms(response.data.data);
-          console.log("🔍 ChatMainWindow - 채팅방 목록 업데이트:", response.data.data);
         } else {
           setChatRooms([]);
         }
       } catch (error) {
-        console.error("🔍 ChatMainWindow - SearchRoom 오류:", error);
         setChatRooms([]);
       } finally {
         setLoading(false);
@@ -304,8 +300,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   }, [currentPosition]);
 
   const handleRoomClick = (room) => {
-    console.log("🔍 ChatMainWindow - handleRoomClick 호출:", room);
-    
     // 기존 채팅방 클릭 시
     const roomData = {
       id: room.room_index,
@@ -319,7 +313,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
       isGroupChat: room.participants && room.participants.length > 2  // 그룹 채팅 여부 추가
     };
     
-    console.log("🔍 ChatMainWindow - 기존 방 roomData:", roomData);
     onRoomSelect(roomData);
   };
 
@@ -338,15 +331,8 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         timestamp: null,
       };
       
-      console.log("🔍 CheckRoom 호출:", checkRoomData);
-      
       try {
         const checkResponse = await CheckRoom(checkRoomData);
-        
-        console.log("🔍 CheckRoom 응답:", checkResponse);
-        console.log("🔍 CheckRoom status:", checkResponse?.status);
-        console.log("🔍 CheckRoom resultCode:", checkResponse?.data?.resultCode);
-        console.log("🔍 CheckRoom data:", checkResponse?.data?.data);
         
         // 성공 응답이고 data가 존재하는 경우 (기존 방 발견)
         if (checkResponse?.data?.resultCode === 200 && 
@@ -355,18 +341,9 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
           // 기존 1:1 채팅방이 존재하는 경우
           const existingRoom = checkResponse.data.data;
           
-          console.log("🔍 기존 방 발견:", existingRoom);
-          console.log("🔍 existingRoom 전체 구조:", JSON.stringify(existingRoom, null, 2));
-          console.log("🔍 existingRoom.id:", existingRoom.id);
-          console.log("🔍 existingRoom.room_index:", existingRoom.room_index);
-          console.log("🔍 existingRoom.name:", existingRoom.name);
-          
           // 백엔드에서 반환하는 Map의 키들을 확인하고 안전하게 접근
           const roomId = existingRoom.id || existingRoom.room_index || existingRoom.roomindex;
           const roomName = existingRoom.name || existingRoom.roomname || `${admin.name}와의 채팅방`;
-          
-          console.log("🔍 추출된 roomId:", roomId);
-          console.log("🔍 추출된 roomName:", roomName);
           
           const roomData = {
             id: roomId,
@@ -380,16 +357,10 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             participants: [admin.userId, userInfo.id]  // participants 정보 추가
           };
           
-          console.log("🔍 기존 방 roomData:", roomData);
-          console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
-          console.log("🔍 isExisting:", roomData.isExisting);
-          
           // 기존 채팅방에 입장
           onRoomSelect(roomData);
         } else {
-          console.log("🔍 새로운 방 생성");
-          
-                     // 새로운 1:1 채팅방 생성
+          // 새로운 1:1 채팅방 생성
            const roomData = {
              name: `${admin.name}와의 채팅방`,
              adminData: admin,
@@ -401,16 +372,10 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
              participants: [admin.userId, userInfo.id]  // participants 정보 추가
            };
           
-          console.log("🔍 새로운 방 roomData:", roomData);
-          console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
-          console.log("🔍 isExisting:", roomData.isExisting);
-          
           onRoomSelect(roomData);
         }
       } catch (checkError) {
-        console.log("🔍 CheckRoom 오류:", checkError);
-        
-                 // 확인 실패 시 새로운 채팅방 생성으로 진행
+        // 확인 실패 시 새로운 채팅방 생성으로 진행
          const roomData = {
            name: `${admin.name}와의 채팅방`,
            adminData: admin,
@@ -422,14 +387,10 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
            participants: [admin.userId, userInfo.id]  // participants 정보 추가
          };
         
-        console.log("🔍 오류 시 새로운 방 roomData:", roomData);
-        console.log("🔍 isExistingRoom:", roomData.isExistingRoom);
-        console.log("🔍 isExisting:", roomData.isExisting);
-        
         onRoomSelect(roomData);
       }
     } catch (error) {
-      console.log("🔍 handleAdminClick 오류:", error);
+      // 에러 처리
     }
   };
 
@@ -505,9 +466,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
     
     // 그룹 채팅인 경우
     const roomName = generateRoomName(participants, null, adminList, userInfo.id, true);
-    
-    console.log("🔍 그룹 채팅방 생성 - participants:", participants);
-    console.log("🔍 그룹 채팅방 이름:", roomName);
 
     try {
       // 1:1 채팅과 동일한 방식으로 그룹 채팅방 생성
@@ -523,13 +481,11 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         isGroupChat: true
       };
 
-      console.log("🔍 그룹 채팅방 roomData:", roomData);
-      
       onRoomSelect(roomData);
       setShowAdminSelection(false);
       setSelectedAdmins(new Set());
     } catch (error) {
-      console.error('그룹 채팅방 생성 실패:', error);
+      // 에러 처리
     }
   };
 

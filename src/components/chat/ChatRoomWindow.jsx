@@ -34,9 +34,9 @@ function ChatRoomWindow({
     y: Math.max(0, window.innerHeight * 0.1)
   });
   const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected } = useWebSocket();
-  const [size, setSize] = useState(currentSize || {
-    width: Math.min(400, window.innerWidth * 0.9),
-    height: Math.min(600, window.innerHeight * 0.8)
+  const [size, setSize] = useState(currentSize || { 
+    width: Math.min(400, window.innerWidth * 0.9), 
+    height: Math.min(600, window.innerHeight * 0.8) 
   });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -83,18 +83,18 @@ function ChatRoomWindow({
 
   // 수신된 메시지 처리 함수
   const handleIncomingMessage = useCallback((receivedMessage) => {
-    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        const userInfo = JSON.parse(localStorage.getItem('user-info'));
 
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     if (receivedMessage.user_id === userInfo.id) {
       const currentMessages = messagesRef.current;
       // 같은 내용의 로컬 메시지 찾기
       const localMessageIndex = currentMessages.findIndex(msg =>
-        msg.isLocal &&
-        msg.text === receivedMessage.message &&
-        msg.sender.id === userInfo.id
-      );
-
+                msg.isLocal && 
+                msg.text === receivedMessage.message && 
+                msg.sender.id === userInfo.id
+              );
+              
       if (localMessageIndex !== -1) {
         // 로컬 메시지를 서버 메시지로 교체 (정렬하지 않음)
         setMessages(prev => {
@@ -102,15 +102,15 @@ function ChatRoomWindow({
           const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
 
           updatedMessages[localMessageIndex] = {
-            id: `server_${Date.now()}_${Math.random()}`,
-            text: receivedMessage.message,
+                id: `server_${Date.now()}_${Math.random()}`,
+                text: receivedMessage.message,
             sender: {
               id: receivedMessage.user_id,
               name: senderName
             },
-            timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                timestamp: receivedMessage.timestamp || new Date().toISOString(),
             messageindex: receivedMessage.messageindex || null,
-            isLocal: false
+                isLocal: false
           };
 
           messagesRef.current = updatedMessages;
@@ -370,8 +370,8 @@ function ChatRoomWindow({
             messagesContainer.scrollTop = scrollTop + heightDifference;
           }
         }, 100);
-      }
-    } catch (error) {
+        }
+      } catch (error) {
     } finally {
       setIsLoadingMore(false);
     }
@@ -381,15 +381,6 @@ function ChatRoomWindow({
   useEffect(() => {
     if (!roomDataWithoutRefresh) return;
 
-    console.log("🔍 ChatRoomWindow useEffect - roomDataWithoutRefresh:", roomDataWithoutRefresh);
-    console.log("🔍 roomDataWithoutRefresh 전체 구조:", JSON.stringify(roomDataWithoutRefresh, null, 2));
-    console.log("🔍 roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
-    console.log("🔍 roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
-    console.log("🔍 roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
-    console.log("🔍 roomDataWithoutRefresh.isExisting:", roomDataWithoutRefresh.isExisting);
-    console.log("🔍 roomDataWithoutRefresh.isExistingRoom:", roomDataWithoutRefresh.isExistingRoom);
-    console.log("🔍 roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
-
     // 중첩된 구조에서 id 필드에 안전하게 접근
     const hasRoomIndex = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
     const existingRoomId = roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id; // roomDataWithoutRefresh.id를 직접 사용
@@ -398,20 +389,12 @@ function ChatRoomWindow({
       roomDataWithoutRefresh.isExisting ||
       !!(roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.roomData?.room_index);
 
-    console.log("🔍 hasRoomIndex:", hasRoomIndex);
-    console.log("🔍 existingRoomId:", existingRoomId);
-    console.log("🔍 isExisting:", isExisting);
-    console.log("🔍 current roomId:", roomId);
-
     // 이전 구독 해제 (roomId가 있고 새 방과 다른 경우)
     if (roomId && roomId !== existingRoomId) {
-      console.log("🔍 이전 구독 해제:", roomId);
       unsubscribeFromRoomRef.current(roomId);
     }
 
     if (isExisting && existingRoomId) {
-      console.log("🔍 기존 방 입장:", existingRoomId);
-
       // 기존 방 입장
       setRoomId(existingRoomId);
 
@@ -425,18 +408,12 @@ function ChatRoomWindow({
       // 기존 메시지 불러오기
       const loadExistingMessages = async () => {
         try {
-          console.log("🔍 ChatList 호출:", existingRoomId, userInfo.id);
           const response = await ChatList(existingRoomId, userInfo.id, 0, 25); // 최근 25개 메시지
-
-          console.log("🔍 ChatList 응답:", response);
 
           if (response.data && response.data.resultCode === 200 && response.data.data) {
             const chatData = response.data.data;
             const existingMessages = chatData.messages || chatData; // 새로운 구조 또는 기존 구조 지원
             const adminData = chatData.adminList || []; // 관리자 정보
-
-            console.log("🔍 기존 메시지 수:", existingMessages.length);
-            console.log("🔍 관리자 데이터:", adminData);
 
             // 관리자 정보를 상태에 저장
             setAdminList(adminData);
@@ -487,7 +464,6 @@ function ChatRoomWindow({
               };
             });
 
-            console.log("🔍 포맷된 메시지 수:", formattedMessages.length);
             // 기존 메시지를 정렬하여 설정
             const sortedMessages = sortMessages(formattedMessages);
             setMessages(sortedMessages);
@@ -497,11 +473,9 @@ function ChatRoomWindow({
             setTimeout(() => {
               messagesEndRef.current?.scrollIntoView({ behavior: 'instant' });
             }, 100);
-          } else {
-            console.log("🔍 ChatList 응답이 유효하지 않음:", response);
           }
         } catch (error) {
-          console.log("🔍 ChatList 오류:", error);
+          // 에러 처리
         }
       };
 
@@ -512,7 +486,6 @@ function ChatRoomWindow({
       const subscribeSuccess = subscribeToRoomRef.current(existingRoomId, (receivedMessage) => {
         // 서버에서 room_index가 반환된 경우 (새 방 생성 응답)
         if (receivedMessage.room_index && !roomId) {
-          console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
           setRoomId(receivedMessage.room_index);
 
           // 새로 생성된 방에 대한 구독 설정
@@ -526,15 +499,7 @@ function ChatRoomWindow({
         // 일반 메시지 처리
         handleIncomingMessage(receivedMessage);
       });
-
-      if (subscribeSuccess) {
-        console.log("🔍 기존 방 구독 성공");
-      } else {
-        console.log("🔍 기존 방 구독 실패");
-      }
     } else {
-      console.log("🔍 새로운 방 생성");
-
       // 새로운 방 생성 시 - 기존 구독들 모두 해제
       if (roomId) {
         unsubscribeFromRoomRef.current(roomId);
@@ -544,7 +509,6 @@ function ChatRoomWindow({
       const subscribeSuccess = subscribeToRoomRef.current("admin", (receivedMessage) => {
         // 서버에서 room_index가 반환된 경우 (새 방 생성 응답)
         if (receivedMessage.room_index && !roomId) {
-          console.log("🔍 새 방 생성 응답 받음 - room_index:", receivedMessage.room_index);
           setRoomId(receivedMessage.room_index);
 
           // 새로 생성된 방에 대한 구독 설정
@@ -558,12 +522,6 @@ function ChatRoomWindow({
         // 일반 메시지 처리
         handleIncomingMessage(receivedMessage);
       });
-
-      if (subscribeSuccess) {
-        console.log("🔍 새 방 생성 구독 성공");
-      } else {
-        console.log("🔍 새 방 생성 구독 실패");
-      }
     }
   }, [open, roomDataWithoutRefresh?.id, roomDataWithoutRefresh?.adminData?.userIndex, roomDataWithoutRefresh?.isExistingRoom, roomDataWithoutRefresh?.isExisting]);
 
@@ -587,19 +545,9 @@ function ChatRoomWindow({
         const currentRoomIndex = roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
 
-        console.log("🔍 handleSendMessage - roomId:", roomId);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.id:", roomDataWithoutRefresh.id);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomData?.id:", roomDataWithoutRefresh.roomData?.id);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.room_index:", roomDataWithoutRefresh.room_index);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomindex:", roomDataWithoutRefresh.roomindex);
-        console.log("🔍 handleSendMessage - currentRoomIndex:", currentRoomIndex);
-        console.log("🔍 handleSendMessage - hasValidRoomIndex:", hasValidRoomIndex);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.adminData:", roomDataWithoutRefresh.adminData);
-        console.log("🔍 handleSendMessage - roomDataWithoutRefresh.roomData:", roomDataWithoutRefresh.roomData);
-
         if (hasValidRoomIndex) {
-          // 기존 방인 경우
-
+        // 기존 방인 경우
+          
           const messageData = {
             room_index: currentRoomIndex,
             room_name: roomDataWithoutRefresh.name,
@@ -608,7 +556,7 @@ function ChatRoomWindow({
             participants: [], // 기존 방의 경우 참가자 정보는 서버에서 처리
             timestamp: null,
           };
-
+          
           // WebSocket으로 메시지 전송 (DB 저장 포함)
           sendMessage(currentRoomIndex, messageData);
 
@@ -625,7 +573,7 @@ function ChatRoomWindow({
 
           // 로컬 메시지 추가
           addMessage(localMessage);
-
+          
         } else {
           // 새로운 방인 경우 (첫 메시지로 방 생성)
 
@@ -640,11 +588,11 @@ function ChatRoomWindow({
             messageData = {
               room_index: null,
               room_name: generateRoomName(participants, null, adminList, userInfo.id, true),
-              user_id: userInfo.id,
-              message: newMessage,
+            user_id: userInfo.id,
+            message: newMessage,
               participants: participants, // 참가자 목록 사용
-              timestamp: null,
-            };
+            timestamp: null,
+          };
           } else {
             // 1:1 채팅인 경우
             // participants에서 상대방 ID 찾기
@@ -652,7 +600,6 @@ function ChatRoomWindow({
             const otherUserId = participants.find(id => id !== userInfo.id);
 
             if (!otherUserId) {
-              console.error("🔍 1:1 채팅에서 상대방 ID를 찾을 수 없습니다:", roomDataWithoutRefresh);
               return;
             }
 
@@ -669,8 +616,6 @@ function ChatRoomWindow({
               timestamp: null,
             };
           }
-
-          console.log("🔍 새로운 방 생성 - messageData:", messageData);
 
           // WebSocket으로 메시지 전송 (방 생성 및 DB 저장 포함)
           sendMessage("admin", messageData);
@@ -689,16 +634,16 @@ function ChatRoomWindow({
           // 로컬 메시지 추가
           addMessage(localMessage);
         }
-
+        
         // 입력 필드 초기화
         setNewMessage('');
         setIsTyping(false);
-
+        
         // 입력 필드에 포커스 유지
         setTimeout(() => {
           inputRef.current?.focus();
         }, 100);
-
+        
       } catch (error) {
         // 에러 발생 시에도 로컬 메시지는 추가
         const errorMessage = {
@@ -714,7 +659,7 @@ function ChatRoomWindow({
         addMessage(errorMessage);
         setNewMessage('');
         setIsTyping(false);
-
+        
         // 에러 발생 시에도 포커스 유지
         setTimeout(() => {
           inputRef.current?.focus();
@@ -927,7 +872,7 @@ function ChatRoomWindow({
       const lastMessage = messages[messages.length - 1];
       // 로컬 메시지, 서버 메시지, 또는 에러 메시지인 경우 스크롤
       if (lastMessage.isLocal || lastMessage.id.startsWith('server_') || lastMessage.error) {
-        scrollToBottom();
+    scrollToBottom();
       }
     }
   }, [messages]);
@@ -971,13 +916,13 @@ function ChatRoomWindow({
     if (roomId) {
       unsubscribeFromRoom(roomId);
     }
-
+    
     setMessages([]);
     setRoomId(null);
     setCurrentPage(0);
     setHasMoreMessages(true);
     setIsLoadingMore(false);
-
+    
     onBack();
   };
 
@@ -986,13 +931,13 @@ function ChatRoomWindow({
     if (roomId) {
       unsubscribeFromRoom(roomId);
     }
-
+    
     setMessages([]);
     setRoomId(null);
     setCurrentPage(0);
     setHasMoreMessages(true);
     setIsLoadingMore(false);
-
+    
     onClose();
   };
 
@@ -1233,8 +1178,8 @@ function ChatRoomWindow({
           </IconButton>
           <DragIndicator />
           <Box>
-            <Typography variant="subtitle1" sx={{
-              fontSize: '1rem',
+            <Typography variant="subtitle1" sx={{ 
+              fontSize: '1rem', 
               lineHeight: 1.2,
               // 반응형 채팅방 이름
               '@media (max-width: 768px)': {
@@ -1283,21 +1228,21 @@ function ChatRoomWindow({
         </Box>
 
         <Box className="no-drag" sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            size="small"
+            <IconButton
+              size="small"
             onClick={handleMoreOptionsClick}
             data-more-options="button"
-            sx={{
+              sx={{
               color: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.8)' : 'white',
-              mr: 0.5,
+                mr: 0.5,
               backgroundColor: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              '&:hover': {
+                '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              }
-            }}
-          >
+                }
+              }}
+            >
             <MoreVert />
-          </IconButton>
+            </IconButton>
           <IconButton
             size="small"
             onClick={() => setIsMinimized(!isMinimized)}
@@ -1591,7 +1536,7 @@ function ChatRoomWindow({
                         width: '100%'
                       }}
                     >
-                      {!isMyMessage && (
+                        {!isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, flex: 1 }}>
                           <Typography variant="caption" sx={{ color: '#666', ml: 1, mb: 0.5 }}>
                             {message.sender?.name && message.sender.name !== message.sender.id ? message.sender.name : 'Unknown'}
@@ -1640,36 +1585,36 @@ function ChatRoomWindow({
                       )}
                       {isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0, flex: 1 }}>
-                          <Paper
-                            sx={{
-                              p: 1.5,
-                              maxWidth: 280,
+                        <Paper
+                          sx={{
+                            p: 1.5,
+                            maxWidth: 280,
                               backgroundColor: '#1976d2',
                               color: 'white',
                               borderRadius: '18px 18px 4px 18px',
-                              boxShadow: 1,
+                            boxShadow: 1,
                               border: 'none',
-                              // 반응형 메시지 버블
-                              '@media (max-width: 768px)': {
-                                maxWidth: '85%',
-                                p: 1,
-                              },
-                              '@media (max-width: 480px)': {
-                                maxWidth: '90%',
-                                p: 0.75,
-                              }
-                            }}
-                          >
-                            <Typography variant="body2">
-                              {message.text}
-                            </Typography>
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                display: 'block',
-                                mt: 0.5,
-                                opacity: 0.7,
-                                fontSize: '0.6rem',
+                            // 반응형 메시지 버블
+                            '@media (max-width: 768px)': {
+                              maxWidth: '85%',
+                              p: 1,
+                            },
+                            '@media (max-width: 480px)': {
+                              maxWidth: '90%',
+                              p: 0.75,
+                            }
+                          }}
+                        >
+                          <Typography variant="body2">
+                            {message.text}
+                          </Typography>
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              mt: 0.5,
+                              opacity: 0.7,
+                              fontSize: '0.6rem',
                                 textAlign: 'right'
                               }}
                             >
@@ -1678,9 +1623,9 @@ function ChatRoomWindow({
                                 minute: '2-digit',
                                 hour12: true
                               }) : ''}
-                            </Typography>
-                          </Paper>
-                        </Box>
+                          </Typography>
+                        </Paper>
+                      </Box>
                       )}
                     </Box>
                   )}

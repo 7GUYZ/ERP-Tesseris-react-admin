@@ -6,7 +6,6 @@ const adminlist = async () => {
         const response = await GetAdminList();
         return response.data.data;
     } catch (error) {
-        console.error('Error fetching admin list:', error);
         throw error;
     }
 }
@@ -16,7 +15,6 @@ const saveSendMessage = async (messageData) => {
         const response = await SaveSendMessage(messageData);
         return response.data.data.data;
     } catch (error) {
-        console.error('Error saving message:', error);
         throw error;
     }
 }

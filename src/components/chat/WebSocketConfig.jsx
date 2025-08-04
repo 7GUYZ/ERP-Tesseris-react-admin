@@ -90,7 +90,6 @@ export const WebSocketChatProvider = ({ children }) => {
       };
 
       stompClient.onStompError = (frame) => {
-        console.error('❌ WebSocket STOMP 오류:', frame);
         setIsConnected(false);
         stompClientRef.current = null;
       };
@@ -170,9 +169,6 @@ export const WebSocketChatProvider = ({ children }) => {
           onMessageReceived(messageData);
         });
 
-        // 구독 정보 로그 출력
-        console.log(`🔔 WebSocket 구독 생성: /queue/${roomId}, id=${subscription.id}, session=${stompClientRef.current.sessionId}`);
-
         // 구독 정보 저장
         subscriptionsRef.current.set(roomId, subscription);
         setCurrentRoomId(roomId);
@@ -205,7 +201,6 @@ export const WebSocketChatProvider = ({ children }) => {
     const subscription = subscriptionsRef.current.get(roomId);
     if (subscription) {
       try {
-        console.log(`🔔 WebSocket 구독 해제: /queue/${roomId}, id=${subscription.id}, session=${stompClientRef.current?.sessionId}`);
         subscription.unsubscribe();
         subscriptionsRef.current.delete(roomId);
         

@@ -144,7 +144,7 @@ const MemberAssetSearchTable = ({
         return result;
       }
     },
-    { field: "unit", headerName: "단위", width: 80, minWidth: 80, flex: 1, align: 'center', headerAlign: 'center' },
+    
     {
       field: "usedValue",
       headerName: "사용 금액",
@@ -463,7 +463,7 @@ const MemberAssetSearchTable = ({
   }
 
   return (
-    <div className="member-asset-search-table-container" style={{ 
+    <div style={{ 
       width: '100%', 
       overflow: 'auto',
       borderRadius: '12px',
