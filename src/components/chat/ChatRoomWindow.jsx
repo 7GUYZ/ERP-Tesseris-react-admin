@@ -925,7 +925,7 @@ function ChatRoomWindow({
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 파일 업로드 로직을 여기에 구현
+      
     }
   };
 
@@ -1342,6 +1342,14 @@ function ChatRoomWindow({
                          } else if (roomDataWithoutRefresh.adminData?.userId) {
                            // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
                            currentParticipants = [userInfo.id, roomDataWithoutRefresh.adminData.userId];
+                           console.log("🔍 1:1 채팅방 참가자 설정:", currentParticipants);
+                         } else if (roomDataWithoutRefresh.adminData?.userIndex) {
+                           // userIndex로도 상대방 찾기
+                           const otherUser = adminList.find(admin => admin.userIndex === roomDataWithoutRefresh.adminData.userIndex);
+                           if (otherUser) {
+                             currentParticipants = [userInfo.id, otherUser.userId];
+                             console.log("🔍 userIndex로 찾은 1:1 채팅방 참가자:", currentParticipants);
+                           }
                          } else if (adminList && adminList.length > 0) {
                            // adminList에서 상대방 찾기 (1:1 채팅방)
                            const otherUser = adminList.find(admin => admin.userId !== userInfo.id);
@@ -1360,10 +1368,49 @@ function ChatRoomWindow({
                        console.log("🔍 초대하기 - 전체 관리자 목록:", adminList.map(a => ({ name: a.name, userId: a.userId })));
                        
                        // 본인과 이미 방에 있는 사람들을 제외한 관리자 목록
-                       const filteredAdminList = adminList.filter(admin => 
-                         admin.userId !== userInfo.id && 
-                         !currentParticipants.includes(admin.userId)
-                       );
+                       const filteredAdminList = adminList.filter(admin => {
+                         // 본인 제외
+                         if (admin.userId === userInfo.id) {
+                           return false;
+                         }
+                         
+                         // 현재 방에 있는 참가자들 제외
+                         if (currentParticipants && currentParticipants.includes(admin.userId)) {
+                           return false;
+                         }
+                         
+                         // roomParticipants 상태에도 있는지 확인
+                         if (roomParticipants && roomParticipants.includes(admin.userId)) {
+                           return false;
+                         }
+                         
+                         // 1:1 채팅방인 경우 상대방 제외
+                         if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.userId === admin.userId) {
+                           return false;
+                         }
+                         
+                         // 1:1 채팅방인 경우 상대방의 userIndex도 확인
+                         if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.userIndex === admin.userIndex) {
+                           return false;
+                         }
+                         
+                         // 1:1 채팅방인 경우 상대방의 이름도 확인
+                         if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.name === admin.name) {
+                           return false;
+                         }
+                         
+                         // 채팅방 이름에서 상대방 이름 추출하여 필터링
+                         if (roomDataWithoutRefresh.name) {
+                           const roomName = roomDataWithoutRefresh.name;
+                           // "김수고와의 채팅방" 형태에서 "김수고" 추출
+                           const nameMatch = roomName.match(/^(.+?)와의 채팅방$/);
+                           if (nameMatch && nameMatch[1] === admin.name) {
+                             return false;
+                           }
+                         }
+                         
+                         return true;
+                       });
                        
                        console.log("🔍 초대하기 - 필터링된 관리자 목록:", filteredAdminList.map(a => ({ name: a.name, userId: a.userId })));
 

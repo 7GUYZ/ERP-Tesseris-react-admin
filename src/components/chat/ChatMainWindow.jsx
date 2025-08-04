@@ -96,7 +96,19 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('admin-info'));
         console.log("관리자 목록 원본 데이터:", data);
-        const filteredData = data.filter(admin => admin.userId !== userInfo?.id);
+        const filteredData = data.filter(admin => {
+          // 본인 제외
+          if (admin.userId === userInfo?.id) {
+            return false;
+          }
+          
+          // userIndex가 있는 경우에도 확인
+          if (admin.userIndex === userInfo?.user_index) {
+            return false;
+          }
+          
+          return true;
+        });
         setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
