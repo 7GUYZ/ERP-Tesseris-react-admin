@@ -34,7 +34,7 @@ const MemberAssetDetailsForm = () => {
 
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true)
   const [selectedRows, setSelectedRows] = useState(new Set())
   const [allSelectedRows, setAllSelectedRows] = useState(new Map()) // 페이지별 선택 항목 저장
   const [options, setOptions] = useState({

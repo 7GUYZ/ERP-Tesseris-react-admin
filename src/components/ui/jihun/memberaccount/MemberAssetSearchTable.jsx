@@ -396,10 +396,10 @@ const MemberAssetSearchTable = ({
               backgroundColor: 'white',
               borderRadius: '12px'
             },
-                         '& .MuiDataGrid-virtualScroller': {
-               overflow: 'hidden !important',
-               maxHeight: '500px !important',
-               minHeight: '500px !important',
+            '& .MuiDataGrid-virtualScroller': {
+              overflow: 'auto !important',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
@@ -417,7 +417,7 @@ const MemberAssetSearchTable = ({
               }
             },
             '& .MuiDataGrid-main': {
-              overflow: 'hidden !important',
+              overflow: 'auto !important',
               maxHeight: '500px !important',
               minHeight: '500px !important',
               width: '100% !important',
@@ -425,7 +425,7 @@ const MemberAssetSearchTable = ({
               boxSizing: 'border-box !important'
             },
             '& .MuiDataGrid-virtualScrollerContent': {
-              overflow: 'hidden !important',
+              overflow: 'visible !important',
               width: '100% !important',
               maxWidth: '100% !important'
             },
