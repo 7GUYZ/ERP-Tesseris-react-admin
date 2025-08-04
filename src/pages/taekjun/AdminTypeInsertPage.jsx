@@ -258,7 +258,7 @@ const AdminTypeInsertPage = () => {
                             aria-expanded={expandedRow === index}
                         >
                             <div className="admin-type-info">
-                                <span className="admin-type-order">{index + 1}</span>
+                                <span className="admin-type-order">{index}</span>
                                 <span className="admin-type-name">
                                     {editMode === adminType.adminTypeIndex ? (
                                         <input
@@ -328,7 +328,7 @@ const AdminTypeInsertPage = () => {
                                             onChange={(e) => handleEditInputChange('newOrder', e.target.value)}
                                             className="admin-type-order-select"
                                         >
-                                            {Array.from({ length: adminTypes.length }, (_, i) => i + 1).map(num => (
+                                            {Array.from({ length: adminTypes.length - 1 }, (_, i) => i + 1).map(num => (
                                                 <option key={num} value={num}>
                                                     {num}번 위치로 이동
                                                 </option>
