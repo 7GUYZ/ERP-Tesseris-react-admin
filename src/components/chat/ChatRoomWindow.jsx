@@ -12,6 +12,7 @@ import {
 import { useWebSocket } from './WebSocketConfig';
 import { ChatList, LeaveRoom, UserInvitation } from '../../api/auth/JihunAuth';
 import { generateRoomName } from '../../utils/roomNameUtils';
+import { useToast } from '../../context/jungeun/ToastContext';
 
 
 function ChatRoomWindow({
@@ -24,6 +25,7 @@ function ChatRoomWindow({
   currentSize,
   currentPosition
 }) {
+  const { showToast } = useToast();
   // roomData에서 refreshChatRooms 함수 추출
   const { refreshChatRooms, ...roomDataWithoutRefresh } = roomData || {};
   const [roomId, setRoomId] = useState(null);  // 생성된 방 ID 저장
@@ -308,7 +310,7 @@ function ChatRoomWindow({
 
     setIsLoadingMore(true);
     try {
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       const nextPage = currentPage + 1;
 
       const response = await ChatList(roomId, userInfo.id, nextPage, 25);
@@ -403,7 +405,7 @@ function ChatRoomWindow({
       setHasMoreMessages(true);
       setIsLoadingMore(false);
 
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
       // 기존 메시지 불러오기
       const loadExistingMessages = async () => {
@@ -425,7 +427,7 @@ function ChatRoomWindow({
               setRoomParticipants(chatData.roomParticipants);
             } else {
               // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
-              const userInfo = JSON.parse(localStorage.getItem('user-info'));
+              const userInfo = JSON.parse(localStorage.getItem('admin-info'));
               const participants = [];
               
               // 본인 추가
@@ -1011,12 +1013,12 @@ function ChatRoomWindow({
 
   const handleInviteUsers = async () => {
     if (selectedInviteAdmins.size === 0) {
-      alert('초대할 사용자를 선택해주세요.');
+      showToast("warning", '초대할 사용자를 선택해주세요.');
       return;
     }
 
     const selectedAdminList = adminList.filter(admin => selectedInviteAdmins.has(admin.userIndex));
-    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+    const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
     try {
       // 백엔드 API 호출 - UserInvitation 사용
@@ -1027,7 +1029,7 @@ function ChatRoomWindow({
 
       // 응답 상태 코드 확인 (200이면 성공)
       if (response.status === 200) {
-        alert('사용자 초대가 완료되었습니다.');
+        showToast("success", '사용자 초대가 완료되었습니다.');
         setShowInviteSelection(false);
         setSelectedInviteAdmins(new Set());
 
@@ -1036,11 +1038,11 @@ function ChatRoomWindow({
           await refreshChatRooms();
         }
       } else {
-        alert('사용자 초대에 실패했습니다.');
+        showToast("error", '사용자 초대에 실패했습니다.');
       }
     } catch (error) {
       console.error('사용자 초대 오류:', error);
-      alert('사용자 초대 중 오류가 발생했습니다.');
+      showToast("error", '사용자 초대 중 오류가 발생했습니다.');
     }
   };
 
@@ -1065,7 +1067,7 @@ function ChatRoomWindow({
         // 채팅방 나가기 기능 구현
         try {
           // 현재 사용자 ID 가져오기 (localStorage에서)
-          const userInfo = JSON.parse(localStorage.getItem('user-info'));
+          const userInfo = JSON.parse(localStorage.getItem('admin-info'));
           const userId = userInfo?.id;
 
           if (!userId) {
@@ -1090,10 +1092,10 @@ function ChatRoomWindow({
                 // 채팅방 목록으로 돌아가기
                 onBack();
               } else {
-                alert('채팅방 나가기에 실패했습니다.');
+                showToast("error", '채팅방 나가기에 실패했습니다.');
               }
             } catch (error) {
-              alert('채팅방 나가기 중 오류가 발생했습니다.');
+              showToast("error", '채팅방 나가기 중 오류가 발생했습니다.');
             }
           } else {
             return;
@@ -1212,7 +1214,7 @@ function ChatRoomWindow({
               }
             }}>
               {(() => {
-                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                const userInfo = JSON.parse(localStorage.getItem('admin-info'));
                 const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
 
                 // 1:1 채팅인 경우
@@ -1325,7 +1327,7 @@ function ChatRoomWindow({
 
                   <List sx={{ py: 0 }}>
                                          {(() => {
-                       const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
                        // 현재 방의 참가자 목록 가져오기 - 더 안정적인 로직
                        let currentParticipants = [];
                        

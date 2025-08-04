@@ -60,7 +60,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   // 채팅방 목록 새로고침 함수
   const refreshChatRooms = async () => {
     setLoading(true);
-    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+    const userInfo = JSON.parse(localStorage.getItem('admin-info'));
     if (userInfo?.id) {
       try {
         const response = await SearchRoom(userInfo.id);
@@ -320,7 +320,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   // 관리자 클릭 시 채팅방 생성 또는 기존 채팅방 입장
   const handleAdminClick = async (admin) => {
     try {
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       
       // 1:1 채팅방 존재 여부 확인
       const checkRoomData = {
@@ -455,7 +455,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
     }
 
     const selectedAdminList = adminList.filter(admin => selectedAdmins.has(admin.userIndex));
-    const userInfo = JSON.parse(localStorage.getItem('user-info'));
+    const userInfo = JSON.parse(localStorage.getItem('admin-info'));
     
     // 선택된 관리자들의 userId를 participants 배열에 담기
     const participants = selectedAdminList.map(admin => admin.userId);
@@ -920,7 +920,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
                             .filter(room => {
                               // 채팅방 이름 생성 함수
                               const generateDisplayName = (room) => {
-                                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                                const userInfo = JSON.parse(localStorage.getItem('admin-info'));
                                 return generateRoomName(room.participants, null, adminList, userInfo.id, room.participants && room.participants.length > 2);
                               };
                               
@@ -930,7 +930,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
                             .map((room, index) => {
                               // 채팅방 이름 생성 함수
                               const generateDisplayName = (room) => {
-                                const userInfo = JSON.parse(localStorage.getItem('user-info'));
+                                const userInfo = JSON.parse(localStorage.getItem('admin-info'));
                                 return generateRoomName(room.participants, null, adminList, userInfo.id, room.participants && room.participants.length > 2);
                               };
                               
