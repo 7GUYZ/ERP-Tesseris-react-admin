@@ -15,13 +15,24 @@ const MainLayout = () => {
           <div className="dashboard-content">
             <div className="content-area">
               <Outlet />
-              {/* 실시간 채팅 컴포넌트 추가덕 */}
-              <WebSocketChatProvider>
-              <RealTimeChat /> 
-              </WebSocketChatProvider>
             </div>
           </div>
         </main>
+      </div>
+      
+      {/* 실시간 채팅 컴포넌트를 content-area 밖으로 이동 */}
+      <div style={{ 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        width: '100%', 
+        height: '100%', 
+        pointerEvents: 'none',
+        zIndex: 1000 
+      }}>
+        <WebSocketChatProvider>
+          <RealTimeChat /> 
+        </WebSocketChatProvider>
       </div>
     </div>
   );

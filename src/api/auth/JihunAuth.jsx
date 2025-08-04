@@ -32,6 +32,12 @@ export const LeaveRoom = (room, userid) => api.put(`/adminchat/${room}/leave/${u
 export const UserInvitation = (roomId, invitationData) => api.post(`/adminchat/${roomId}/invitation`, invitationData);
 // 메시지 삭제
 export const DeleteMessage = (roomId, messageIndex) => api.delete(`/adminchat/${roomId}/${messageIndex}`);
+// 파일 업로드
+export const UploadFiles = (formData) => api.post("/adminchat/upload-files", formData, {
+  headers: {
+    'Content-Type': 'multipart/form-data'
+  }
+});
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {

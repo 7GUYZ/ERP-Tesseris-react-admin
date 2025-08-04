@@ -86,7 +86,6 @@ export const WebSocketChatProvider = ({ children }) => {
 
         // 연결 성공 후 기존 구독 복구
         if (subscriptionsRef.current.size > 0) {
-          console.log('🔄 기존 구독 복구 중...');
           subscriptionsRef.current.forEach((subscription, roomId) => {
             // 구독은 이미 저장되어 있으므로 별도 처리 불필요
           });
@@ -137,8 +136,6 @@ export const WebSocketChatProvider = ({ children }) => {
 
   // 채팅방 구독 함수
   const subscribeToRoom = (roomId, onMessageReceived) => {
-    console.log('🔍 구독 시도:', { roomId, onMessageReceived: !!onMessageReceived });
-    
     // roomId 유효성 검사
     if (!roomId || roomId === 'undefined' || roomId === 'null' || roomId === '') {
       console.warn('❌ 유효하지 않은 roomId:', roomId);
@@ -147,11 +144,8 @@ export const WebSocketChatProvider = ({ children }) => {
 
     // 이미 구독 중인지 확인
     if (subscriptionsRef.current.has(roomId)) {
-      console.log('✅ 이미 구독 중:', roomId);
       return true; // 이미 구독 중이면 성공으로 반환
     }
-
-    console.log('🔄 새로운 구독 생성 시도:', roomId);
 
     // 연결 대기 함수
     const waitForConnection = () => {
@@ -163,13 +157,11 @@ export const WebSocketChatProvider = ({ children }) => {
           attempts++;
 
           if (stompClientRef.current && stompClientRef.current.connected) {
-            console.log('✅ WebSocket 연결 확인됨, 구독 준비 완료');
             resolve(true);
           } else if (attempts >= maxAttempts) {
             console.error('❌ 구독 연결 대기 시간 초과');
             reject(new Error('연결 대기 시간 초과'));
           } else {
-            console.log(`⏳ 구독 연결 대기 중... (${attempts}/${maxAttempts})`);
             setTimeout(checkConnection, 500);
           }
         };
@@ -180,14 +172,15 @@ export const WebSocketChatProvider = ({ children }) => {
 
     const performSubscription = async () => {
       try {
+        console.log('🔍 구독 연결 대기 중...');
         // 연결 대기
         await waitForConnection();
+        console.log('✅ 구독 연결 대기 완료');
 
-        console.log('📡 구독 생성 중:', `/queue/${roomId}`);
-
+        console.log('🔍 구독 생성 시도:', `/queue/${roomId}`);
         // 새로운 구독 생성 (기존 구독 해제 없이)
         const subscription = stompClientRef.current.subscribe(`/queue/${roomId}`, (message) => {
-          console.log('📨 구독 메시지 수신:', { roomId, messageBody: message.body });
+          console.log('📨 WebSocket 메시지 수신:', message.body);
           const messageData = JSON.parse(message.body);
           onMessageReceived(messageData);
         });
@@ -195,8 +188,8 @@ export const WebSocketChatProvider = ({ children }) => {
         // 구독 정보 저장
         subscriptionsRef.current.set(roomId, subscription);
         setCurrentRoomId(roomId);
+        console.log('✅ 구독 생성 성공:', roomId);
 
-        console.log('✅ 구독 생성 완료:', roomId);
         return true;
 
       } catch (error) {
@@ -225,8 +218,6 @@ export const WebSocketChatProvider = ({ children }) => {
 
   // 채팅방 구독 해제 함수
   const unsubscribeFromRoom = (roomId) => {
-    console.log('🔌 구독 해제 시도:', roomId);
-    
     const subscription = subscriptionsRef.current.get(roomId);
     if (subscription) {
       try {
@@ -237,15 +228,11 @@ export const WebSocketChatProvider = ({ children }) => {
         if (currentRoomId === roomId) {
           setCurrentRoomId(null);
         }
-        
-        console.log('✅ 구독 해제 완료:', roomId);
       } catch (error) {
         console.error('❌ 구독 해제 실패:', error);
         // 에러가 발생해도 Map에서 제거
         subscriptionsRef.current.delete(roomId);
       }
-    } else {
-      console.log('⚠️ 해제할 구독이 없음:', roomId);
     }
   };
 

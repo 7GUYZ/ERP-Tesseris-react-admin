@@ -55,7 +55,7 @@ function RealTimeChat() {
   };
 
   return (
-    <>
+    <div style={{ pointerEvents: 'auto' }}>
       <RealTimeChatButton
         onClick={handleChatButtonClick}
         unreadCount={0}
@@ -72,17 +72,17 @@ function RealTimeChat() {
         currentPosition={windowPosition}
       />
 
-              <ChatRoomWindow
-          open={currentView === 'room'}
-          onClose={handleRoomClose}
-          onBack={handleBackToMain}
-          roomData={selectedRoom}
-          onSizeChange={handleSizeChange}
-          onPositionChange={handlePositionChange}
-          currentSize={windowSize}
-          currentPosition={windowPosition}
-        />
-    </>
+      <ChatRoomWindow
+        open={currentView === 'room'}
+        onClose={handleRoomClose}
+        onBack={handleBackToMain}
+        roomData={selectedRoom}
+        onSizeChange={handleSizeChange}
+        onPositionChange={handlePositionChange}
+        currentSize={windowSize}
+        currentPosition={windowPosition}
+      />
+    </div>
   );
 }
 
