@@ -397,13 +397,6 @@ const MainNavi = () => {
             type: "link",
             href: "/withdrawllist",
           },
-          {
-            id: "withdrawal-management",
-            programIndex: 16,
-            label: "출금 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
-          },
         ],
       },
       {

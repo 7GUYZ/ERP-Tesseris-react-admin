@@ -434,15 +434,6 @@ function AdminList() {
             {/* 두 번째 행: 관리자 등급, 등록일 시작, 등록일 종료 */}
             <div className="store-filter-row">
               <div className="store-filter-field">
-                <label className="store-filter-label">관리자 등급</label>
-                <input
-                  className="store-filter-input"
-                  value={filter.adminRankName}
-                  onChange={(e) => setFilter({ ...filter, adminRankName: e.target.value })}
-                  placeholder="관리자 등급을 입력하세요"
-                />
-              </div>
-              <div className="store-filter-field">
                 <label className="store-filter-label">등록일 시작</label>
                 <input
                   className="store-filter-input"

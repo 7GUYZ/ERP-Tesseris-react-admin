@@ -53,7 +53,24 @@ const listColumns = [
   { field: 'userBankNumber', headerName: '계좌번호', width: 100 },
   { field: 'chargeAmount', headerName: '충전 금액', width: 100 },
   { field: 'transactionName', headerName: '거래명', width: 100 },
-  { field: 'chargeDate', headerName: '충전일', width: 100 },
+  { 
+    field: 'chargeDate', 
+    headerName: '충전일', 
+    width: 120,
+    renderCell: (params) => {
+      if (!params.value) return '';
+      
+      // 배열 형태 [2025, 8, 4]를 "2025/08/04" 형식으로 변환
+      if (Array.isArray(params.value) && params.value.length === 3) {
+        const year = params.value[0];
+        const month = String(params.value[1]).padStart(2, '0');
+        const day = String(params.value[2]).padStart(2, '0');
+        return `${year}/${month}/${day}`;
+      }
+      
+      return params.value;
+    }
+  },
   { field: 'cmValue', headerName: 'CM', width: 100 },
 ];
 
