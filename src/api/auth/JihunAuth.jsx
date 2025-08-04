@@ -2,6 +2,7 @@ import { api } from "../Http"
 
 // 회원 자산 내역
 export const memberaccountSearch = (data) => api.post("/memberaccount/search", data);
+export const memberaccountGetAll = (page = 0, size = 25) => api.get(`/memberaccount?page=${page}&size=${size}`);
 export const memberaccountLookupRoles = () => api.get("/memberaccount/lookup/roles");
 export const memberaccountLookupTransactionTypes = () => api.get("/memberaccount/lookup/transaction-types");
 
