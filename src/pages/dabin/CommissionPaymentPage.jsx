@@ -196,7 +196,7 @@ const CommissionPaymentPage = () => {
       {/* 제목과 버튼들을 같은 줄에 배치 */}
       <Box className="dabin-page-layout-titleRow">
         <Typography variant="h4" className="dabin-page-layout-title">
-          수당 내역
+          수당 지급 내역
         </Typography>
         <Box className="dabin-page-layout-buttonGroup">
           <CommissionPaymentExcelDownloadButton data={commissionData} selectedRows={selectedRows} />
