@@ -14,7 +14,13 @@ export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdeta
 // 엑셀 다운로드 API
 export const excelDownloadMemberAccount = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberaccount?page=${page}&size=${size}`);
 export const excelDownloadMemberAssetDetails = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberassetdetails?page=${page}&size=${size}`);
-
+// ============================================================================
+// 채팅방 관리자 목록 호출
+export const GetAdminList = () => api.get("/adminchat/adminlist");
+// 채팅 및 방생성
+export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
+// 채팅방 목록 조회
+export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
@@ -23,7 +29,7 @@ export function setupInterceptors() {
     (config) => {
       const excludePaths = ["/auth/login", "/auth/signUp"];
       if (!excludePaths.includes(config.url)) {
-        const accessToken = localStorage.getItem("access-token");
+        const accessToken = localStorage.getItem("admin-access-token");
         if (accessToken) {
           config.headers.Authorization = accessToken.startsWith("Bearer ")
             ? accessToken
@@ -58,7 +64,7 @@ export function setupInterceptors() {
           console.log("새 accessToken:", accessToken);
 
           // accessToken 저장 및 재시도
-          localStorage.setItem("access-token", `Bearer ${accessToken}`);
+          localStorage.setItem("admin-access-token", `Bearer ${accessToken}`);
           config.headers.Authorization = `Bearer ${accessToken}`;
           return api(config); // 원래 요청 재전송
 
@@ -66,8 +72,8 @@ export function setupInterceptors() {
           console.warn("refreshToken 만료 또는 서버 오류:", e.message);
 
           // 로그인 만료 처리 (전역 이벤트로 Toast 발생)
-          localStorage.removeItem("access-token");
-          localStorage.removeItem("user-info");
+          localStorage.removeItem("admin-access-token");
+          localStorage.removeItem("admin-info");
           window.dispatchEvent(
             new CustomEvent("show-toast", {
               detail: {
@@ -83,7 +89,7 @@ export function setupInterceptors() {
           }, 4000);
 
           return Promise.reject(e);
-          
+
         }
       }
 

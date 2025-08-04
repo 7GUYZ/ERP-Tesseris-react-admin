@@ -48,7 +48,7 @@ const loadKakaoAddressScript = () => {
 // 관리자 user_index 추출
 const getAdminUserIndex = () => {
   try {
-    const userInfo = localStorage.getItem('user-info');
+    const userInfo = localStorage.getItem('admin-info');
     const userData = userInfo ? JSON.parse(userInfo) : null;
     return userData?.user_index;
   } catch {
@@ -90,7 +90,7 @@ const UserListPage = () => {
   // 권한 체크 함수
   const checkButtonPermission = async (action) => {
     try {
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       const userIndex = userInfo?.user_index;
       
       const response = await permissionCheckApi.checkPermission(14, action); // programIndex: 14 (회원 리스트)

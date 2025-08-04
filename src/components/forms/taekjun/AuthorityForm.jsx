@@ -24,24 +24,14 @@ const AuthorityForm = ({ adminTypes, selectedAdminType, onSubmit, onCancel, load
 
   // 권한 추가 후 기존 권한 목록 새로고침
   useEffect(() => {
-    if (selectedAdminType) {
-      fetchExistingAuthorities(selectedAdminType);
-    }
-  }, [selectedAdminType]);
-
-  const fetchMenus = async () => {
-    try {
-      const response = await permissionApi.getMenu();
-      const data = response.data || response;
-      if (Array.isArray(data) && data.length > 0) {
-        setMenus(data);
-        // 처음에는 모든 메뉴가 접혀있음
-        const collapsedState = {};
-        data.forEach(menu => {
-          collapsedState[menu.menuIndex] = false;
-        });
-        setExpandedMenus(collapsedState);
-      }
+    if (editingAuthority) {
+      // 로컬스토리지에서 user_index 가져오기
+      const userInfo = localStorage.getItem('admin-info');
+      let userIndex = '';
+      if (userInfo) {
+        try {
+          const parsedUserInfo = JSON.parse(userInfo);
+          userIndex = parsedUserInfo.user_index || '';
         } catch (error) {
       console.error("메뉴 조회 실패:", error);
         }
