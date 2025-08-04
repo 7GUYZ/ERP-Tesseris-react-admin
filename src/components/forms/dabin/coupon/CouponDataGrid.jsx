@@ -163,12 +163,17 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         
         console.log("couponPrice valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponPrice value:", value, "type:", typeof value);
@@ -219,12 +224,17 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         
         console.log("couponLimit valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponLimit value:", value, "type:", typeof value);
@@ -258,19 +268,6 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
     },
 
     { field: "couponName", headerName: "쿠폰명", width: 150, align: 'center', headerAlign: 'center' },
-    { 
-      field: "storeName", 
-      headerName: "발급 가맹점", 
-      width: 200, 
-      align: 'center', 
-      headerAlign: 'center',
-      valueFormatter: (params) => {
-        if (!params) {
-          return "가맹점명 없음";
-        }
-        return params.value || "가맹점명 없음";
-      }
-    },
     { field: "couponIssuanceStatus", headerName: "쿠폰 발행 상태", width: 120, align: 'center', headerAlign: 'center' },
     { 
       field: "couponIssuanceTime", 
@@ -287,12 +284,17 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         
         console.log("couponIssuanceTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponIssuanceTime value:", value, "type:", typeof value);
@@ -359,12 +361,17 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         
         console.log("couponProvidedTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponProvidedTime value:", value, "type:", typeof value);
@@ -427,12 +434,17 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
         
         console.log("couponLimitTime valueFormatter - params:", params);
         
-        // params가 직접 값인 경우 처리
+        // params가 직접 값인지 확인
         let value;
-        if (typeof params === 'object' && params !== null && !Array.isArray(params)) {
+        if (typeof params === 'object' && params !== null && params.value !== undefined) {
           value = params.value;
         } else {
           value = params; // params가 직접 값인 경우
+        }
+        
+        // 중첩된 value 속성이 있는지 확인 (안전하게)
+        if (value && typeof value === 'object' && value.value !== undefined) {
+          value = value.value;
         }
         
         console.log("couponLimitTime value:", value, "type:", typeof value);

@@ -96,7 +96,7 @@ export const WebSocketProvider = ({ children }) => {
           if (result.ok) {
             const newToken = result.headers.get('Authorization')?.replace('Bearer ', '');
             if (newToken) {
-              localStorage.setItem('access-token', `Bearer ${newToken}`);
+              localStorage.setItem('admin-access-token', `Bearer ${newToken}`);
               console.log('토큰 갱신 성공, WebSocket 재연결...');
               
               // 새로운 토큰으로 재연결
@@ -111,8 +111,8 @@ export const WebSocketProvider = ({ children }) => {
         }
         
         // 토큰 갱신 실패 시 로그인 페이지로 이동
-        localStorage.removeItem('access-token');
-        localStorage.removeItem('user-info');
+        localStorage.removeItem('admin-access-token');
+        localStorage.removeItem('admin-info');
         window.location.href = '/';
       }
     };
@@ -154,8 +154,8 @@ export const WebSocketProvider = ({ children }) => {
   const forceReconnect = () => {
     console.log('🔄 수동 재연결 시도...');
     disconnectWebSocket();
-    const userInfo = JSON.parse(localStorage.getItem('user-info'));
-    const token = localStorage.getItem('access-token');
+    const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+    const token = localStorage.getItem('admin-access-token');
     if (userInfo && token) {
       console.log('🔄 재연결 정보:', { userIndex: userInfo.user_index, hasToken: !!token });
               setTimeout(() => {

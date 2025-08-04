@@ -7,7 +7,7 @@ export function setupInterceptors() {
     (config) => {
       const excludePaths = ["/auth/login", "/auth/signUp"];
       if (!excludePaths.includes(config.url)) {
-        const accessToken = localStorage.getItem("access-token");
+        const accessToken = localStorage.getItem("admin-access-token");
         if (accessToken) {
           config.headers.Authorization = accessToken.startsWith("Bearer ")
             ? accessToken
@@ -42,7 +42,7 @@ export function setupInterceptors() {
           console.log("새 accessToken:", accessToken);
 
           // accessToken 저장 및 재시도
-          localStorage.setItem("access-token", `Bearer ${accessToken}`);
+          localStorage.setItem("admin-access-token", `Bearer ${accessToken}`);
           config.headers.Authorization = `Bearer ${accessToken}`;
           return api(config); // 원래 요청 재전송
 
@@ -50,8 +50,8 @@ export function setupInterceptors() {
           console.warn("refreshToken 만료 또는 서버 오류:", e.message);
 
           // 로그인 만료 처리 (전역 이벤트로 Toast 발생)
-          localStorage.removeItem("access-token");
-          localStorage.removeItem("user-info");
+          localStorage.removeItem("admin-access-token");
+          localStorage.removeItem("admin-info");
           window.dispatchEvent(
             new CustomEvent("show-toast", {
               detail: {

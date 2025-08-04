@@ -2,6 +2,7 @@ import { api } from "../Http"
 
 // 회원 자산 내역
 export const memberaccountSearch = (data) => api.post("/memberaccount/search", data);
+export const memberaccountGetAll = (page = 0, size = 25) => api.get(`/memberaccount?page=${page}&size=${size}`);
 export const memberaccountLookupRoles = () => api.get("/memberaccount/lookup/roles");
 export const memberaccountLookupTransactionTypes = () => api.get("/memberaccount/lookup/transaction-types");
 
@@ -21,6 +22,14 @@ export const GetAdminList = () => api.get("/adminchat/adminlist");
 export const SaveSendMessage = (messageData) => api.post("/adminchat/sendmessage", messageData);
 // 채팅방 목록 조회
 export const SearchRoom = (userid) => api.get(`/adminchat/${userid}`);
+// 1:1 채팅방 존재 여부 확인
+export const CheckRoom = (messageData) => api.post("/adminchat/checkroom", messageData);
+// 채팅방 메시지 목록 조회
+export const ChatList = (room, userid, page = 0, size = 25) => api.get(`/adminchat/${room}/chatlist/${userid}?page=${page}&size=${size}`);
+// 채팅방 나가기
+export const LeaveRoom = (room, userid) => api.put(`/adminchat/${room}/leave/${userid}`);
+// 사용자 초대
+export const UserInvitation = (roomId, invitationData) => api.post(`/adminchat/${roomId}/invitation`, invitationData);
 // ============================================================================
 // Interceptor 등록 함수로 분리
 export function setupInterceptors() {
@@ -29,7 +38,7 @@ export function setupInterceptors() {
     (config) => {
       const excludePaths = ["/auth/login", "/auth/signUp"];
       if (!excludePaths.includes(config.url)) {
-        const accessToken = localStorage.getItem("access-token");
+        const accessToken = localStorage.getItem("admin-access-token");
         if (accessToken) {
           config.headers.Authorization = accessToken.startsWith("Bearer ")
             ? accessToken
@@ -64,7 +73,7 @@ export function setupInterceptors() {
           console.log("새 accessToken:", accessToken);
 
           // accessToken 저장 및 재시도
-          localStorage.setItem("access-token", `Bearer ${accessToken}`);
+          localStorage.setItem("admin-access-token", `Bearer ${accessToken}`);
           config.headers.Authorization = `Bearer ${accessToken}`;
           return api(config); // 원래 요청 재전송
 
@@ -72,8 +81,8 @@ export function setupInterceptors() {
           console.warn("refreshToken 만료 또는 서버 오류:", e.message);
 
           // 로그인 만료 처리 (전역 이벤트로 Toast 발생)
-          localStorage.removeItem("access-token");
-          localStorage.removeItem("user-info");
+          localStorage.removeItem("admin-access-token");
+          localStorage.removeItem("admin-info");
           window.dispatchEvent(
             new CustomEvent("show-toast", {
               detail: {

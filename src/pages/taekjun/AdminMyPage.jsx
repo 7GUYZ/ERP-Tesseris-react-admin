@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { adminMyPageApi } from '../../api/auth/TaekjunAuth';
-import usePermissionStore from '../../store/taekjun/PermissionStore';
-import useAuthorityMapping from '../../hooks/useAuthorityMapping';
 import '../../styles/taekjun/AdminMyPage.css';
 
 // 카카오 주소 API 스크립트 추가
@@ -30,7 +27,7 @@ const AdminMyPage = () => {
 
   // 로그인된 사용자 정보에서 userIndex 가져오기
   const getUserIndex = () => {
-    const userInfo = localStorage.getItem('user-info');
+    const userInfo = localStorage.getItem('admin-info');
     if (userInfo) {
       try {
         const parsedUserInfo = JSON.parse(userInfo);

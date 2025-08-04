@@ -202,21 +202,6 @@ const CommissionPaymentPage = () => {
           <CommissionPaymentExcelDownloadButton data={commissionData} selectedRows={selectedRows} />
           <Button
             variant="contained"
-            color="success"
-            onClick={() => {
-              if (!canUpdate) {
-                showToast("error", "지급 권한이 없습니다.");
-                return;
-              }
-              // TODO: 지급 처리 로직 추가
-            }}
-            disabled={!canUpdate || selectedRows.size === 0}
-            sx={{ height: 40, mr: 1 }}
-          >
-            지급
-          </Button>
-          <Button
-            variant="contained"
             color="primary"
             onClick={() => {
               handleSearch(currentForm)

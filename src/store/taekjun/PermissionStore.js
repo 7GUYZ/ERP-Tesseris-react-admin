@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 
 const usePermissionStore = create((set, get) => ({
   permissions: [],
@@ -8,10 +9,42 @@ const usePermissionStore = create((set, get) => ({
   
   setCurrentPermission: (permission) => set({ currentPermission: permission }),
   
-  hasPermission: (menuIndex, programIndex) => {
-    const { permissions } = get();
+  // 권한 체크 함수
+  checkPermission: async (programIndex, action = null) => {
+    try {
+      const response = await permissionCheckApi.checkPermission(programIndex, action);
+      if (response.data) {
+        const permission = response.data;
+        set({ currentPermission: permission });
+        return permission;
+      }
+      return null;
+    } catch (error) {
+      console.error('권한 체크 실패:', error);
+      return null;
+    }
+  },
+
+  hasPermission: (programIndex, permissionType) => {
+    const { currentPermission, permissions } = get();
+    
+    // currentPermission이 있으면 사용
+    if (currentPermission) {
+      switch (permissionType) {
+        case 'insert':
+          return currentPermission.hasInsertAuthority;
+        case 'update':
+          return currentPermission.hasUpdateAuthority;
+        case 'delete':
+          return currentPermission.hasDeleteAuthority;
+        default:
+          return 1; // 기본적으로 조회 권한은 있다고 가정
+      }
+    }
+    
+    // 기존 로직 유지 (하위 호환성)
     return permissions.some(
-      (perm) => perm.menuIndex === menuIndex && perm.programIndex === programIndex
+      (perm) => perm.programIndex === programIndex
     );
   },
   

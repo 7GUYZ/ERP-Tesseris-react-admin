@@ -14,7 +14,7 @@ function App() {
 
   useEffect(() => {
     setupInterceptors(navigate);
-    const tokens = localStorage.getItem("access-token");
+    const tokens = localStorage.getItem("admin-access-token");
     if (tokens) {
       useAuthStore.getState().zu_login();
     }
@@ -33,8 +33,8 @@ function AppContent() {
   const { connectWebSocket } = useWebSocket();
 
   useEffect(() => {
-    const userInfo = localStorage.getItem("user-info");
-    const token = localStorage.getItem("access-token");
+    const userInfo = localStorage.getItem("admin-info");
+    const token = localStorage.getItem("admin-access-token");
     
     if (userInfo && token) {
       const parsedUserInfo = JSON.parse(userInfo);

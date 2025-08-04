@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import Toast from '../../components/ui/jungeun/Toast';
+import ConfirmCancelModal from './ConfirmCancelModal';
 import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/AdvertisementDetailPage.css';
@@ -42,6 +43,7 @@ const AdvertisementDetailPage = () => {
     const [toastMessage, setToastMessage] = useState('');
     const [toastType, setToastType] = useState('info');
     const [showToast1, setShowToast1] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
 
     const showToastMessage = (message, type = 'info') => {
         setToastMessage(message);
@@ -71,7 +73,7 @@ const AdvertisementDetailPage = () => {
                 setAd(adData);
             }
         } catch (error) {
-            alert('팝업 정보를 불러오는데 실패했습니다.');
+            showToastMessage('팝업 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -89,23 +91,33 @@ const AdvertisementDetailPage = () => {
         navigate(`/advertisement/edit/${advertisementIndex}`);
     };
 
-    const handleDeleteClick = async () => {
+    const handleDeleteClick = () => {
         if (!canDelete) {
             showToast1("error", "삭제 권한이 없습니다.");
             return;
         }
-        if (!window.confirm('정말로 이 팝업을 삭제하시겠습니까?')) return;
+        setShowConfirmModal(true);
+    };
+
+    const confirmDelete = async () => {
+        setShowConfirmModal(false);
         try {
             const response = await deleteAdvertisement(advertisementIndex);
             if (response.data.success) {
-                alert('팝업을 삭제하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('팝업을 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '팝업 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '팝업 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
-            alert('팝업 삭제 중 오류가 발생했습니다.');
+            showToastMessage('팝업 삭제 중 오류가 발생했습니다.', 'error');
         }
+    };
+
+    const cancelDelete = () => {
+        setShowConfirmModal(false);
     };
 
     if (loading) return <div className="loading">로딩 중...</div>;
@@ -177,6 +189,15 @@ const AdvertisementDetailPage = () => {
                     type={toastType}
                     message={toastMessage}
                     onClose={closeToast}
+                />
+            )}
+            
+            {/* Confirm Modal */}
+            {showConfirmModal && (
+                <ConfirmCancelModal
+                    message="정말로 이 팝업을 삭제하시겠습니까?"
+                    onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
                 />
             )}
         </div>
