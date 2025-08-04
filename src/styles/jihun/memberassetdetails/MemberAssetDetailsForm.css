@@ -4,7 +4,9 @@
 }
 
 .member-asset-details-container {
-  max-width: 1200px;
+  width: 1600px;
+  min-width: 1600px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -205,6 +207,10 @@
   overflow: hidden;
   border: 1px solid lightgray;
   height: 500px;
+}
+
+.member-asset-details-results-section {
+  margin-top: 24px;
 }
 
 .member-asset-details-error {

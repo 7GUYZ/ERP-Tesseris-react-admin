@@ -41,6 +41,8 @@ function RealTimeChat() {
     setCurrentView('room');
   };
 
+
+
   const handleBackToMain = () => {
     setCurrentView('main');
     setSelectedRoom(null);
@@ -70,16 +72,16 @@ function RealTimeChat() {
         currentPosition={windowPosition}
       />
 
-      <ChatRoomWindow
-        open={currentView === 'room'}
-        onClose={handleRoomClose}
-        onBack={handleBackToMain}
-        roomData={selectedRoom}
-        onSizeChange={handleSizeChange}
-        onPositionChange={handlePositionChange}
-        currentSize={windowSize}
-        currentPosition={windowPosition}
-      />
+              <ChatRoomWindow
+          open={currentView === 'room'}
+          onClose={handleRoomClose}
+          onBack={handleBackToMain}
+          roomData={selectedRoom}
+          onSizeChange={handleSizeChange}
+          onPositionChange={handlePositionChange}
+          currentSize={windowSize}
+          currentPosition={windowPosition}
+        />
     </>
   );
 }
