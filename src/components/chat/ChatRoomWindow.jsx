@@ -64,6 +64,10 @@ function ChatRoomWindow({
   const [selectedInviteAdmins, setSelectedInviteAdmins] = useState(new Set());
   const [expandedInviteGroups, setExpandedInviteGroups] = useState(new Set());
 
+  // 파일 업로드 관련 상태
+  const [selectedFiles, setSelectedFiles] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+
   const chatRef = useRef(null);
   const messagesEndRef = useRef(null);
   const messagesTopRef = useRef(null); // 무한스크롤용 상단 ref
@@ -923,9 +927,64 @@ function ChatRoomWindow({
   };
 
   const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length > 0) {
+      // 파일 크기 제한 (예: 10MB)
+      const maxFileSize = 10 * 1024 * 1024; // 10MB
+      const validFiles = files.filter(file => {
+        if (file.size > maxFileSize) {
+          showToast("error", `${file.name} 파일이 너무 큽니다. (최대 10MB)`);
+          return false;
+        }
+        return true;
+      });
+
+      if (validFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+        showToast("success", `${validFiles.length}개 파일이 선택되었습니다.`);
+      }
       
+      // input 초기화 (같은 파일을 다시 선택할 수 있도록)
+      e.target.value = '';
+    }
+  };
+
+  // 선택된 파일 제거
+  const handleRemoveFile = (index) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // 파일 업로드 처리
+  const handleUploadFiles = async () => {
+    if (selectedFiles.length === 0) {
+      showToast("warning", "업로드할 파일을 선택해주세요.");
+      return;
+    }
+
+    setIsUploading(true);
+    
+    try {
+      // TODO: 실제 파일 업로드 API 호출
+      // const formData = new FormData();
+      // selectedFiles.forEach(file => {
+      //   formData.append('files', file);
+      // });
+      // formData.append('roomId', roomId);
+      // formData.append('userId', userInfo.id);
+      
+      // const response = await uploadFiles(formData);
+      
+      // 임시로 성공 메시지 표시
+      showToast("success", `${selectedFiles.length}개 파일이 업로드되었습니다.`);
+      
+      // 선택된 파일 초기화
+      setSelectedFiles([]);
+      
+    } catch (error) {
+      console.error('파일 업로드 오류:', error);
+      showToast("error", "파일 업로드 중 오류가 발생했습니다.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -1713,6 +1772,45 @@ function ChatRoomWindow({
             <div ref={messagesEndRef} />
           </Box>
 
+          {/* 선택된 파일 목록 */}
+          {selectedFiles.length > 0 && (
+            <Box sx={{ p: 1, borderTop: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
+              <Typography variant="caption" sx={{ color: '#666', mb: 1, display: 'block' }}>
+                선택된 파일 ({selectedFiles.length}개)
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                {selectedFiles.map((file, index) => (
+                  <Chip
+                    key={index}
+                    label={`${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`}
+                    onDelete={() => handleRemoveFile(index)}
+                    size="small"
+                    sx={{ maxWidth: '200px' }}
+                  />
+                ))}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={handleUploadFiles}
+                  disabled={isUploading}
+                  sx={{ flex: 1 }}
+                >
+                  {isUploading ? '업로드 중...' : '파일 업로드 하기'}
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={() => setSelectedFiles([])}
+                  disabled={isUploading}
+                >
+                  모두 취소
+                </Button>
+              </Box>
+            </Box>
+          )}
+
           {/* 메시지 입력 */}
           <Box
             className="no-drag"
@@ -1830,6 +1928,7 @@ function ChatRoomWindow({
             <input
               type="file"
               id="file-upload"
+              multiple
               style={{ display: 'none' }}
               onChange={handleFileUpload}
             />
@@ -2030,7 +2129,6 @@ function ChatRoomWindow({
           </MenuItem>
         ))}
       </Menu>
-
 
     </Paper>
   );
