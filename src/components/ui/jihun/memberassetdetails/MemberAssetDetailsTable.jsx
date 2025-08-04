@@ -112,7 +112,18 @@ const MemberAssetDetailsTable = ({
       flex: 1,
       sortable: false,
       align: 'center',
-      headerAlign: 'center'
+      headerAlign: 'center',
+      renderCell: (params) => (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          height: '100%',
+          width: '100%'
+        }}>
+          {params.value}
+        </div>
+      )
     },
     { field: "email", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
@@ -146,36 +157,6 @@ const MemberAssetDetailsTable = ({
         
         const result = isNaN(numValue) ? "0" : numValue.toLocaleString();
         return result;
-      }
-    },
-    {
-      field: "cmpHeld",
-      headerName: "보유 CMP",
-      width: 120,
-      minWidth: 120,
-      flex: 1,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (params) => {
-        const value = params.value !== undefined ? params.value : params;
-        if (value == null || value === '') return "0";
-        const numValue = typeof value === 'string' ? parseInt(value) : value;
-        return isNaN(numValue) ? "0" : numValue.toLocaleString();
-      }
-    },
-    {
-      field: "cashHeld",
-      headerName: "보유 Cash",
-      width: 120,
-      minWidth: 120,
-      flex: 1,
-      align: 'center',
-      headerAlign: 'center',
-      valueFormatter: (params) => {
-        const value = params.value !== undefined ? params.value : params;
-        if (value == null || value === '') return "0";
-        const numValue = typeof value === 'string' ? parseInt(value) : value;
-        return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
     { field: "registrationDate", headerName: "등록일", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }

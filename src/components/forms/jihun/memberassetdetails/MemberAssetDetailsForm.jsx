@@ -49,6 +49,9 @@ const MemberAssetDetailsForm = () => {
   const [pageSize, setPageSize] = useState(25)
   const [totalCount, setTotalCount] = useState(0)
 
+  // 🆕 검색 모드 상태 추가
+  const [isSearchMode, setIsSearchMode] = useState(false)
+
   // 권한 체크
   useEffect(() => {
     const checkPermission = async () => {
@@ -108,7 +111,6 @@ const MemberAssetDetailsForm = () => {
       }
       
       if (response.data && response.data.content) {
-        console.log("API 응답 데이터:", response.data.content[0]); // 첫 번째 데이터 로그
         const transformedData = response.data.content.map((item, index) => {
           // CM 값 변환 로직 개선
           let cmHeld = 0;
@@ -121,8 +123,9 @@ const MemberAssetDetailsForm = () => {
           }
           const emailValue = item.userEmail || item.userId || item.email || "";
           const emailDisplay = emailValue ? emailValue.split('@')[0] : "";
+          
           return {
-            id: item.userIndex ? `user-${item.userIndex}` : `row-${page}-${index}`,
+            id: `row-${(page * size) + index + 1}`, // 🆕 페이지 기반 고유 키
             email: emailDisplay,
             name: item.userName || "",
             phone: item.userPhone || "",
@@ -132,9 +135,32 @@ const MemberAssetDetailsForm = () => {
             cmpHeld: item.userCmpCurrent ? (typeof item.userCmpCurrent === 'string' ? parseInt(item.userCmpCurrent) : item.userCmpCurrent) || 0 : 0,
             cashHeld: item.userCashCurrent ? (typeof item.userCashCurrent === 'string' ? parseInt(item.userCashCurrent) : item.userCashCurrent) || 0 : 0,
             registrationDate: item.userCreateTime ? 
-                new Date(item.userCreateTime).toISOString().split('T')[0] : "",
-            uniqueKey: item.userIndex || `row-${index}`,
-            rowNumber: (page * size) + index + 1, // 전체 순번 (페이지별로 연속)
+                (() => {
+                  try {
+                    // 🆕 배열 형태로 전달되는 경우 처리
+                    if (Array.isArray(item.userCreateTime)) {
+                      const [year, month, day] = item.userCreateTime;
+                      // 월은 0부터 시작하므로 -1, 일은 그대로 사용
+                      const date = new Date(year, month - 1, day);
+                      if (isNaN(date.getTime())) {
+                        return "";
+                      }
+                      return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식
+                    } else {
+                      // 기존 로직 (문자열이나 Date 객체)
+                      const date = new Date(item.userCreateTime);
+                      if (isNaN(date.getTime())) {
+                        return "";
+                      }
+                      return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식
+                    }
+                  } catch (error) {
+                    console.warn('날짜 변환 오류:', error);
+                    return "";
+                  }
+                })() : "",
+            uniqueKey: `row-${(page * size) + index + 1}`, // 🆕 페이지 기반 고유 키
+            rowNumber: (page * size) + index + 1, // 🆕 페이지 기반 순번으로 수정
             userIndex: item.userIndex || "", // 지급/회수 시 사용할 실제 ID
             usersId: item.userId || "",
             userEmail: item.userEmail || "",
@@ -148,31 +174,12 @@ const MemberAssetDetailsForm = () => {
             userCashCurrent: item.userCashCurrent || 0
           };
         });
-        
-        // userIndex 기준으로 중복 제거
-        const uniqueMap = new Map();
-        transformedData.forEach(row => {
-          const key = row.userIndex || row.id;
-          if (!uniqueMap.has(key)) {
-            uniqueMap.set(key, row);
-          }
-        });
-        const uniqueRows = Array.from(uniqueMap.values());
-        setSearchResults(uniqueRows)
-        let totalElements = response.data.totalElements || response.data.total || 0
-        
-        // 백엔드에서 totalElements를 제공하지 않는 경우, 현재 페이지가 마지막 페이지인지 확인
-        if (totalElements === 0 && transformedData.length > 0) {
-          // 현재 페이지의 데이터가 요청한 크기보다 적으면 마지막 페이지로 간주
-          if (transformedData.length < size) {
-            totalElements = (page * size) + transformedData.length
-          } else {
-            // 더 많은 데이터가 있을 수 있으므로 임시로 큰 값 설정
-            totalElements = (page + 1) * size + 100
-          }
-        }
-        
-        setTotalCount(totalElements)
+         
+         // 🆕 모든 데이터를 그대로 표시 (이미 index + 1로 설정됨)
+         setSearchResults(transformedData)
+         
+         // 🆕 백엔드에서 받은 실제 totalElements 사용
+         setTotalCount(response.data.totalElements || 0)
       } else {
         setSearchResults([])
         setTotalCount(0)
@@ -185,10 +192,95 @@ const MemberAssetDetailsForm = () => {
     }
   }, [formData])
 
-  // 초기 데이터 로딩 함수
-  const loadInitialData = useCallback(async () => {
-    await loadDataWithPagination(0, pageSize)
-  }, [loadDataWithPagination, pageSize])
+  // 🆕 초기 데이터 로딩 함수 (검색 조건 없이)
+  const loadInitialData = useCallback(async (page, size) => {
+    try {
+      setLoading(true)
+      
+      // 검색 조건 없이 전체 데이터 조회
+      const response = await ajgMemberAssetDetails(page, size)
+      
+      if (response.data && response.data.content) {
+        const transformedData = response.data.content.map((item, index) => {
+          // CM 값 변환 로직 개선
+          let cmHeld = 0;
+          if (item.userCmCurrent !== null && item.userCmCurrent !== undefined) {
+            if (typeof item.userCmCurrent === 'string') {
+              cmHeld = parseInt(item.userCmCurrent) || 0;
+            } else if (typeof item.userCmCurrent === 'number') {
+              cmHeld = item.userCmCurrent;
+            }
+          }
+          const emailValue = item.userEmail || item.userId || item.email || "";
+          const emailDisplay = emailValue ? emailValue.split('@')[0] : "";
+          
+          return {
+            id: `row-${(page * size) + index + 1}`, // 🆕 페이지 기반 고유 키
+            email: emailDisplay,
+            name: item.userName || "",
+            phone: item.userPhone || "",
+            grade: item.userRoleKorNm || "",
+            franchiseName: item.storeName || "",
+            cmHeld: cmHeld,
+            cmpHeld: item.userCmpCurrent ? (typeof item.userCmpCurrent === 'string' ? parseInt(item.userCmpCurrent) : item.userCmpCurrent) || 0 : 0,
+            cashHeld: item.userCashCurrent ? (typeof item.userCashCurrent === 'string' ? parseInt(item.userCashCurrent) : item.userCashCurrent) || 0 : 0,
+            registrationDate: item.userCreateTime ? 
+                (() => {
+                  try {
+                    // 🆕 배열 형태로 전달되는 경우 처리
+                    if (Array.isArray(item.userCreateTime)) {
+                      const [year, month, day] = item.userCreateTime;
+                      // 월은 0부터 시작하므로 -1, 일은 그대로 사용
+                      const date = new Date(year, month - 1, day);
+                      if (isNaN(date.getTime())) {
+                        return "";
+                      }
+                      return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식
+                    } else {
+                      // 기존 로직 (문자열이나 Date 객체)
+                      const date = new Date(item.userCreateTime);
+                      if (isNaN(date.getTime())) {
+                        return "";
+                      }
+                      return date.toISOString().split('T')[0]; // yyyy-MM-dd 형식
+                    }
+                  } catch (error) {
+                    console.warn('날짜 변환 오류:', error);
+                    return "";
+                  }
+                })() : "",
+            uniqueKey: `row-${(page * size) + index + 1}`, // 🆕 페이지 기반 고유 키
+            rowNumber: (page * size) + index + 1, // 🆕 페이지 기반 순번으로 수정
+            userIndex: item.userIndex || "", // 지급/회수 시 사용할 실제 ID
+            usersId: item.userId || "",
+            userEmail: item.userEmail || "",
+            userId: item.userId || "",
+            userRoleKorNm: item.userRoleKorNm || "",
+            userName: item.userName || "",
+            userPhone: item.userPhone || "",
+            storeName: item.storeName || "",
+            userCmCurrent: item.userCmCurrent || 0,
+            userCmpCurrent: item.userCmpCurrent || 0,
+            userCashCurrent: item.userCashCurrent || 0
+          };
+                 });
+         
+         // 🆕 모든 데이터를 그대로 표시 (이미 index + 1로 설정됨)
+         setSearchResults(transformedData)
+         
+         // 🆕 백엔드에서 받은 실제 totalElements 사용
+         setTotalCount(response.data.totalElements || 0)
+      } else {
+        setSearchResults([])
+        setTotalCount(0)
+      }
+    } catch (error) {
+      setSearchResults([])
+      setTotalCount(0)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
   
   useEffect(() => {
     const loadOptions = async () => {
@@ -199,8 +291,8 @@ const MemberAssetDetailsForm = () => {
           grades: gradesRes.data?.data || []
         })
         
-        // 초기 데이터 로딩
-        await loadInitialData()
+        // 🆕 초기 데이터 로딩 (검색 조건 없이)
+        await loadInitialData(0, pageSize)
       } catch (error) {
         // 기본 등급 옵션 설정
         setOptions({
@@ -211,13 +303,13 @@ const MemberAssetDetailsForm = () => {
             { index: 4, name: "정회원" }
           ]
         })
-        await loadInitialData()
+        await loadInitialData(0, pageSize)
       } finally {
         setLoading(false)
       }
     }
     loadOptions()
-  }, [loadInitialData]) // loadInitialData 변경 시 자동으로 다시 로드
+  }, [loadInitialData, pageSize]) // 🆕 formData 의존성 제거
 
   // 폼 입력 변경 핸들러 (성능 최적화)
   const handleInputChange = (e) => {
@@ -227,21 +319,34 @@ const MemberAssetDetailsForm = () => {
 
   const [error, setError] = useState(null);
 
+  // 🆕 검색 전용 함수 (조회 버튼 클릭 시에만 실행)
   const handleSearch = useCallback(async () => {
     try {
       setLoading(true)
+      setError(null) // 에러 초기화
+      
       // 검색 시 첫 페이지로 리셋
       setCurrentPage(0)
       setSelectedRows(new Set()) // 검색 시 선택된 행들 초기화
       setAllSelectedRows(new Map()) // 전체 선택 맵도 초기화
       
-      await loadDataWithPagination(0, pageSize, formData)
+      // 검색 조건이 있는 경우에만 검색 API 호출
+      const hasSearchCriteria = formData.id || formData.name || formData.phone || formData.grade
+      
+      if (hasSearchCriteria) {
+        setIsSearchMode(true) // 🆕 검색 모드로 설정
+        await loadDataWithPagination(0, pageSize, formData)
+      } else {
+        // 검색 조건이 없으면 초기 데이터 로드
+        setIsSearchMode(false) // 🆕 초기 모드로 설정
+        await loadInitialData(0, pageSize)
+      }
     } catch (error) {
       setError("검색 중 오류가 발생했습니다.")
     } finally {
       setLoading(false)
     }
-  }, [loadDataWithPagination, pageSize, formData])
+  }, [loadDataWithPagination, loadInitialData, pageSize, formData])
 
   // 선택된 행들 처리 핸들러
   const handleSelectionChange = (newSelection) => {
@@ -254,36 +359,65 @@ const MemberAssetDetailsForm = () => {
     const newAllSelectedRows = new Map(allSelectedRows);
     
     if (safeSelection.size > 0) {
-      // 현재 페이지에서 선택된 행들의 데이터 저장
-      const selectedData = searchResults.filter((row, index) => safeSelection.has(index));
+      // 🆕 ID 기반으로 선택된 행들의 데이터 저장
+      const selectedData = searchResults.filter((row, index) => {
+        // row.id가 'row-1', 'row-2' 형태이므로 이를 기반으로 필터링
+        return safeSelection.has(row.id);
+      });
       newAllSelectedRows.set(pageKey, selectedData);
+      console.log(`페이지 ${currentPage}에서 ${selectedData.length}개 항목 선택됨`);
     } else {
       // 선택이 해제되면 해당 페이지 데이터 삭제
       newAllSelectedRows.delete(pageKey);
+      console.log(`페이지 ${currentPage} 선택 해제됨`);
     }
     
     setAllSelectedRows(newAllSelectedRows);
+    console.log('전체 선택된 항목들:', Array.from(newAllSelectedRows.entries()));
   }
 
-  // 서버 사이드 페이징 핸들러
+  // 🆕 서버 사이드 페이징 핸들러 (검색 모드에 따라 다른 함수 사용)
   const handlePageChange = useCallback(async (newPage) => {
     setCurrentPage(newPage)
-    await loadDataWithPagination(newPage, pageSize, formData)
-  }, [loadDataWithPagination, pageSize, formData])
+    
+    if (isSearchMode) {
+      // 검색 모드일 때는 검색 조건과 함께 페이징
+      await loadDataWithPagination(newPage, pageSize, formData)
+    } else {
+      // 초기 모드일 때는 검색 조건 없이 페이징
+      await loadInitialData(newPage, pageSize)
+    }
+  }, [loadDataWithPagination, loadInitialData, pageSize, formData, isSearchMode])
 
+  // 🆕 페이지 크기 변경 핸들러 (검색 모드에 따라 다른 함수 사용)
   const handlePageSizeChange = useCallback(async (newPageSize) => {
     setPageSize(newPageSize)
     setCurrentPage(0) // 페이지 크기 변경 시 첫 페이지로 리셋
-    await loadDataWithPagination(0, newPageSize, formData)
-  }, [loadDataWithPagination, formData])
+    
+    if (isSearchMode) {
+      // 검색 모드일 때는 검색 조건과 함께 페이징
+      await loadDataWithPagination(0, newPageSize, formData)
+    } else {
+      // 초기 모드일 때는 검색 조건 없이 페이징
+      await loadInitialData(0, newPageSize)
+    }
+  }, [loadDataWithPagination, loadInitialData, formData, isSearchMode])
 
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = useCallback(async () => {
     try {
-      if (selectedRows.size > 0) {
-        const selectedIds = Array.from(selectedRows);
-        const selectedData = selectedIds.map(id => searchResults.find(row => row.id === id)).filter(Boolean);
-        const excelData = selectedData.map((row, index) => ({
+      // 🆕 모든 페이지에서 선택된 항목들을 합쳐서 확인
+      const allSelectedData = [];
+      allSelectedRows.forEach((selectedData) => {
+        allSelectedData.push(...selectedData);
+      });
+      
+      console.log('엑셀 다운로드 - allSelectedRows:', allSelectedRows);
+      console.log('엑셀 다운로드 - allSelectedData.length:', allSelectedData.length);
+      
+      if (allSelectedData.length > 0) {
+        // 🆕 모든 페이지에서 선택된 항목들 엑셀 다운로드
+        const excelData = allSelectedData.map((row, index) => ({
           'No.': index + 1,
           '사용자번호': row.userIndex || '',
           '사용자ID': row.userEmail || row.userId || row.usersId || '',
@@ -295,22 +429,28 @@ const MemberAssetDetailsForm = () => {
           'CMP현재잔액': row.userCmpCurrent || 0,
           '현금현재잔액': row.userCashCurrent || 0
         }));
+        console.log('선택된 항목들 엑셀 다운로드:', excelData.length, '개');
         downloadExcel(excelData, '회원자산현황_선택항목', '회원자산현황', true, showToast);
+        
+        // 🆕 엑셀 다운로드 후 선택된 항목들 초기화
+        setSelectedRows(new Set());
+        setAllSelectedRows(new Map());
+        console.log('엑셀 다운로드 후 선택된 항목들 초기화 완료');
       } else {
+        console.log('선택된 항목이 없어서 전체 다운로드 실행');
         setLoading(true);
         
-        // 🆕 새로운 엑셀 다운로드 API 사용
-        const countResponse = await excelDownloadMemberAssetDetails(0, 1);
-        const totalCount = countResponse.data.totalElements || 0;
+        // 🆕 초기 조회와 동일한 API 사용하여 전체 데이터 다운로드
+        const maxRecords = 30000;
         
-        if (totalCount <= 50000) {
-          const response = await excelDownloadMemberAssetDetails(0, totalCount);
+        if (maxRecords <= 50000) {
+          const response = await ajgMemberAssetDetails(0, maxRecords);
           const data = response.data;
           if (data.content) {
             const allData = data.content.map((item, index) => ({
               'No.': index + 1,
               '사용자번호': item.userIndex || '',
-              '사용자ID': item.usersId || '',
+              '사용자ID': item.userEmail || item.userId || '',
               '사용자역할': item.userRoleKorNm || '',
               '사용자이름': item.userName || '',
               '사용자전화번호': item.userPhone || '',
@@ -323,17 +463,17 @@ const MemberAssetDetailsForm = () => {
           }
         } else {
           const chunkSize = 50000;
-          const totalChunks = Math.ceil(totalCount / chunkSize);
+          const totalChunks = Math.ceil(maxRecords / chunkSize);
           let allData = [];
           
           for (let i = 0; i < totalChunks; i++) {
-            const chunkResponse = await excelDownloadMemberAssetDetails(i, chunkSize);
+            const chunkResponse = await ajgMemberAssetDetails(i, chunkSize);
             const chunkData = chunkResponse.data;
             if (chunkData.content) {
               const chunkExcelData = chunkData.content.map((item, index) => ({
                 'No.': allData.length + index + 1,
                 '사용자번호': item.userIndex || '',
-                '사용자ID': item.usersId || '',
+                '사용자ID': item.userEmail || item.userId || '',
                 '사용자역할': item.userRoleKorNm || '',
                 '사용자이름': item.userName || '',
                 '사용자전화번호': item.userPhone || '',
@@ -350,12 +490,12 @@ const MemberAssetDetailsForm = () => {
         }
         setLoading(false);
       }
-          } catch (error) {
-        console.error('엑셀 다운로드 오류:', error);
-        showToast("error", '엑셀 다운로드 중 오류가 발생했습니다.');
-        setLoading(false);
-      }
-  }, [selectedRows, searchResults, showToast]);
+    } catch (error) {
+      console.error('엑셀 다운로드 오류:', error);
+      showToast("error", '엑셀 다운로드 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
+  }, [allSelectedRows, showToast]);
 
   // 지급 및 회수 핸들러
   const handlePaymentAndCollection = () => {
