@@ -62,21 +62,33 @@
 .login-input-icon {
   position: absolute;
   left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 18px;
   color: rgba(34, 46, 60, 0.6);
   transition: color 0.3s ease;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 .login-input-icon.error {
   color: #ff6b6b;
+  position: absolute;
+  left: 16px;
+  top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
 }
 
 /* 입력 필드 */
 .login-input-field {
   width: 100%;
-  padding: 16px 16px 16px 50px;
+  padding: 16px 50px 16px 50px;
   font-size: 16px;
   border: 2px solid rgba(34, 46, 60, 0.2);
   border-radius: 12px;
@@ -85,6 +97,8 @@
   outline: none;
   background-color: #fff;
   color: #222e3c;
+  height: 56px;
+  line-height: 24px;
 }
 
 .login-input-field:focus {
