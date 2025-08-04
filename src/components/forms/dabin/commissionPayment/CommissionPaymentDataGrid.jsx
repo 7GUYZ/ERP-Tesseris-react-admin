@@ -40,11 +40,11 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
 
   const columns = [
     { field: "lineNo", headerName: "No", width: 40, align: 'center', headerAlign: 'center' },
-    { field: "userIndex", headerName: "userIndex", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "userId", headerName: "아이디", width: 120, align: 'left', headerAlign: 'center' },
-    { field: "userName", headerName: "이름", width: 120, align: 'left', headerAlign: 'center' },
-    { field: "userPhone", headerName: "핸드폰 번호", width: 130, align: 'center', headerAlign: 'center' },
-    { field: "transactionName", headerName: "거래명", width: 130, align: 'left', headerAlign: 'center' },
+    { field: "userIndex", headerName: "충전 회원 인덱스", width: 130, align: 'left', headerAlign: 'center' },
+    { field: "userId", headerName: "충전 회원 이메일", width: 200, align: 'left', headerAlign: 'center' },
+    { field: "userName", headerName: "충전 회원 이름", width: 120, align: 'left', headerAlign: 'center' },
+    { field: "userPhone", headerName: "충전 회원 번호", width: 130, align: 'center', headerAlign: 'center' },
+    { field: "transactionName", headerName: "거래명", width: 180, align: 'left', headerAlign: 'center' },
     { field: "advanceMsg", headerName: "승인여부", width: 100, align: 'center', headerAlign: 'center' },
     { field: "chargeTime", headerName: "충전 시간", width: 200, align: 'center', headerAlign: 'center',
       valueFormatter: (params) => {
@@ -98,14 +98,13 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
     { field: "cmValue", headerName: "충전CM", width: 100, align: 'right', headerAlign: 'center' },
     { field: "cashValue", headerName: "결제금액", width: 120, align: 'right', headerAlign: 'center' },
     { field: "regularCashValue", headerName: "수당지급", width: 130, align: 'right', headerAlign: 'center' },
-    { field: "suggestionUserId", headerName: "추천인 아이디", width: 320, align: 'left', headerAlign: 'center' },
+    { field: "suggestionUserId", headerName: "추천인 아이디", width: 200, align: 'left', headerAlign: 'center' },
     { field: "suggestionUserName", headerName: "추천인 이름", width: 120, align: 'left', headerAlign: 'center' },
     { field: "suggestionUserPhone", headerName: "추천인 연락처", width: 140, align: 'center', headerAlign: 'center' },
-    { field: "userRoleKorNm", headerName: "등급", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "userBankNumber", headerName: "계좌번호", width: 150, align: 'left', headerAlign: 'center' },
-    { field: "userBankName", headerName: "은행", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "userBankHolder", headerName: "예금주", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "paymentStatus", headerName: "지급여부", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "userRoleKorNm", headerName: "추천인 등급", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "userBankNumber", headerName: "추천인 계좌번호", width: 150, align: 'left', headerAlign: 'center' },
+    { field: "userBankName", headerName: "추천인 은행", width: 100, align: 'left', headerAlign: 'center' },
+    { field: "userBankHolder", headerName: "추천인 예금주", width: 100, align: 'left', headerAlign: 'center' },
   ]
 
   return (

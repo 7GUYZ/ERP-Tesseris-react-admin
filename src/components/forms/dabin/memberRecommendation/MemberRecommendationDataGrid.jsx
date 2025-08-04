@@ -29,8 +29,8 @@ const MemberRecommendationDataGrid = ({ data, onSelectionChange }) => {
   const columns = [
     {
       field: "suggestionUserId",
-      headerName: "추천인 아이디",
-      width: 150,
+      headerName: "추천인 이메일",
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
@@ -57,14 +57,14 @@ const MemberRecommendationDataGrid = ({ data, onSelectionChange }) => {
     },
     {
       field: "recommendationUserId",
-      headerName: "아이디",
-      width: 150,
+      headerName: "가입자 이메일",
+      width: 200,
       align: 'center',
       headerAlign: 'center',
     },
     {
       field: "recommendationUserName",
-      headerName: "이름",
+      headerName: "가입자 이름",
       width: 120,
       align: 'center',
       headerAlign: 'center',

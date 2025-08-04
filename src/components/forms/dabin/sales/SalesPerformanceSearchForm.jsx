@@ -42,14 +42,14 @@ const SalesPerformanceSearchForm = ({ onSearch, businessGrades, storeRequestStat
         {/* 1줄: 사업자 정보 */}
         <div className="dabin-page-layout-search-row">
           <div className="dabin-page-layout-search-field">
-            <label className="dabin-page-layout-search-label">사업자 ID</label>
+            <label className="dabin-page-layout-search-label">사업자 이메일</label>
             <input
               type="text"
               name="businessUserId"
               value={form.businessUserId}
               onChange={handleChange}
               className="dabin-page-layout-search-input"
-              placeholder="사업자 ID를 입력하세요"
+              placeholder="사업자 이메일을 입력하세요"
             />
           </div>
           <div className="dabin-page-layout-search-field">
@@ -97,14 +97,14 @@ const SalesPerformanceSearchForm = ({ onSearch, businessGrades, storeRequestStat
         {/* 2줄: 가맹점 정보 */}
         <div className="dabin-page-layout-search-row">
           <div className="dabin-page-layout-search-field">
-            <label className="dabin-page-layout-search-label">가맹점 ID</label>
+            <label className="dabin-page-layout-search-label">가맹점 이메일</label>
             <input
               type="text"
               name="storeUserId"
               value={form.storeUserId}
               onChange={handleChange}
               className="dabin-page-layout-search-input"
-              placeholder="가맹점 ID를 입력하세요"
+              placeholder="가맹점 이메일을 입력하세요"
             />
           </div>
           <div className="dabin-page-layout-search-field">

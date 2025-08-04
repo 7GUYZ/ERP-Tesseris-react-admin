@@ -110,14 +110,14 @@ const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange, o
             )}
           </div>
           <div className="dabin-page-layout-search-field">
-            <label className="dabin-page-layout-search-label">추천인 아이디</label>
+            <label className="dabin-page-layout-search-label">추천인 이메일</label>
             <input
               type="text"
               name="suggestionUserId"
               value={formData.suggestionUserId}
               onChange={handleChange("suggestionUserId")}
               className="dabin-page-layout-search-input"
-              placeholder="추천인 아이디를 입력하세요"
+              placeholder="추천인 이메일을 입력하세요"
             />
           </div>
           <div className="dabin-page-layout-search-field">

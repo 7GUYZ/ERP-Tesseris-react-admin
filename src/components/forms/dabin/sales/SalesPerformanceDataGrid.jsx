@@ -20,12 +20,12 @@ const SalesPerformanceDataGrid = ({ data, onSelectionChange }) => {
 
 
   const columns = [
-    { field: "businessUserId", headerName: "사업자 ID", width: 120, align: 'center', headerAlign: 'center' },
+    { field: "businessUserId", headerName: "사업자 이메일", width: 200, align: 'center', headerAlign: 'center' },
     { field: "businessGradeName", headerName: "사업자 등급", width: 120, align: 'center', headerAlign: 'center' },
     { field: "businessAreaName", headerName: "사업자 담당구역", width: 150, align: 'center', headerAlign: 'center' },
     { field: "businessUserName", headerName: "사업자 이름", width: 120, align: 'center', headerAlign: 'center' },
     { field: "businessManDistributionFlag", headerName: "사업자 상태", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "storeUserId", headerName: "가맹점 ID", width: 120, align: 'center', headerAlign: 'center' },
+    { field: "storeUserId", headerName: "가맹점 이메일", width: 200, align: 'center', headerAlign: 'center' },
     { field: "storeName", headerName: "가맹점 명", width: 150, align: 'center', headerAlign: 'center' },
     { field: "storeRequestStatusName", headerName: "가맹점 승인 여부", width: 150, align: 'center', headerAlign: 'center' },
     { field: "storeTransactionStatus", headerName: "가맹점 상태", width: 120, align: 'center', headerAlign: 'center' },

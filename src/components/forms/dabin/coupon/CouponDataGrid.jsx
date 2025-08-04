@@ -49,7 +49,7 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
 
   const columns = [
     { field: "issuanceUserRole", headerName: "발행자 등급", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "issuanceUser", headerName: "발행자 ID", width: 120, align: 'center', headerAlign: 'center' },
+    { field: "issuanceUser", headerName: "발행자 이메일", width: 200, align: 'center', headerAlign: 'center' },
     { 
       field: "couponPrice", 
       headerName: "쿠폰 가격", 
@@ -246,7 +246,7 @@ const CouponDataGrid = ({ data, onSelectionChange }) => {
     },
 
     { field: "providedUserRole", headerName: "지급자 등급", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "providedUser", headerName: "지급자 ID", width: 120, align: 'center', headerAlign: 'center' },
+    { field: "providedUser", headerName: "지급자 이메일", width: 200, align: 'center', headerAlign: 'center' },
     { field: "couponProvidedStatus", headerName: "쿠폰 지급 상태", width: 120, align: 'center', headerAlign: 'center' },
     { 
       field: "couponProvidedTime", 
