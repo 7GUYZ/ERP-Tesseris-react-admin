@@ -180,6 +180,13 @@ const MainNavi = () => {
             type: "link",
             href: "/MonthlyCmLimit",
           },
+          {
+            id: "admin_type",
+            programIndex: 40,
+            label: "직급 설정",
+            type: "link",
+            href: "/admin-type-insert",
+          },
         ],
       },
       {
@@ -389,13 +396,6 @@ const MainNavi = () => {
             label: "출금 조회",
             type: "link",
             href: "/withdrawllist",
-          },
-          {
-            id: "withdrawal-management",
-            programIndex: 16,
-            label: "출금 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
           },
         ],
       },

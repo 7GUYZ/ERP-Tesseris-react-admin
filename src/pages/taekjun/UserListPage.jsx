@@ -14,7 +14,15 @@ const columns = [
   { field: 'name', headerName: '이름', width: 120, sortable: true },
   { field: 'phone', headerName: '핸드폰 번호', width: 140, sortable: true },
   { field: 'userRole', headerName: '등급', width: 100, sortable: true },
-  { field: 'cmBalance', headerName: '보유 CM', width: 120, sortable: true, type: 'number' },
+  { 
+    field: 'cmBalance', 
+    headerName: '보유 CM', 
+    width: 120, 
+    sortable: true, 
+    type: 'number',
+    headerAlign: 'left',
+    align: 'left'
+  },
   { field: 'registrationDate', headerName: '등록일', width: 120, sortable: true },
   { field: 'recommenderEmail', headerName: '추천인 아이디', width: 150, sortable: true },
   { field: 'recommenderName', headerName: '추천인 이름', width: 120, sortable: true },
@@ -114,14 +122,14 @@ const UserListPage = () => {
     const initializePermissions = async () => {
       try {
         const response = await permissionCheckApi.checkPermission(14); // programIndex: 14 (회원 리스트)
-        
+      
         if (response.data) {
-          setButtonPermissions({
+      setButtonPermissions({
             canEdit: response.data.hasUpdateAuthority === 1,
             canDelete: response.data.hasDeleteAuthority === 1,
             canAdd: response.data.hasInsertAuthority === 1
-          });
-          
+      });
+      
           console.log('회원 리스트 버튼 권한 체크 결과:', response.data);
         }
       } catch (error) {
@@ -423,20 +431,20 @@ const UserListPage = () => {
           <button className="user-list-action-btn" onClick={handleSearch}>
             조회
           </button>
-          <button 
-            className="user-list-action-btn" 
-            onClick={() => {
+            <button 
+              className="user-list-action-btn" 
+              onClick={() => {
               if (!buttonPermissions.canEdit) {
                 alert('수정 권한이 없습니다.');
                 return;
               }
-              if (selectedRows.size > 0) {
-                handleEditUser(rows.find(u => u.id === Array.from(selectedRows)[0]));
-              }
-            }}
-          >
-            수정
-          </button>
+                if (selectedRows.size > 0) {
+                  handleEditUser(rows.find(u => u.id === Array.from(selectedRows)[0]));
+                }
+              }}
+            >
+              수정
+            </button>
         </div>
       </div>
 

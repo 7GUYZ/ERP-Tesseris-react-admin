@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getAdvertisement, deleteAdvertisement, getPresignedUrl } from '../../api/auth/DabinAuth';
 import Toast from '../../components/ui/jungeun/Toast';
-import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
+import ConfirmCancelModal from './ConfirmCancelModal';
 import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/AdvertisementDetailPage.css';
@@ -73,7 +73,7 @@ const AdvertisementDetailPage = () => {
                 setAd(adData);
             }
         } catch (error) {
-            alert('팝업 정보를 불러오는데 실패했습니다.');
+            showToastMessage('팝업 정보를 불러오는데 실패했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -104,14 +104,20 @@ const AdvertisementDetailPage = () => {
         try {
             const response = await deleteAdvertisement(advertisementIndex);
             if (response.data.success) {
-                alert('팝업을 삭제하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('팝업을 삭제하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '팝업 삭제에 실패했습니다.');
+                showToastMessage(response.data.message || '팝업 삭제에 실패했습니다.', 'error');
             }
         } catch (error) {
-            alert('팝업 삭제 중 오류가 발생했습니다.');
+            showToastMessage('팝업 삭제 중 오류가 발생했습니다.', 'error');
         }
+    };
+
+    const cancelDelete = () => {
+        setShowConfirmModal(false);
     };
 
     if (loading) return <div className="loading">로딩 중...</div>;
@@ -188,9 +194,10 @@ const AdvertisementDetailPage = () => {
             
             {/* Confirm Modal */}
             {showConfirmModal && (
-                <ConfirmModal
-                    message="정말로 이 광고를 삭제하시겠습니까?"
+                <ConfirmCancelModal
+                    message="정말로 이 팝업을 삭제하시겠습니까?"
                     onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
                 />
             )}
         </div>
