@@ -38,6 +38,26 @@ const BusinessManOrgChart = () => {
     }
   };
 
+  // 하위직원수 계산 함수 (재귀적으로 모든 후손 계산)
+  const calculateSubordinateCount = (businessManId, allData) => {
+    // 직속 부하들을 찾음
+    const directSubordinates = allData.filter(item => item.bossUserIndex === businessManId);
+    
+    // 직속 부하가 없으면 0 반환
+    if (directSubordinates.length === 0) {
+      return 0;
+    }
+    
+    // 직속 부하 수 + 각 직속 부하의 모든 하위직원 수를 재귀적으로 계산
+    let totalCount = directSubordinates.length;
+    
+    directSubordinates.forEach(subordinate => {
+      totalCount += calculateSubordinateCount(subordinate.businessManId, allData);
+    });
+    
+    return totalCount;
+  };
+
   // 백엔드 데이터를 GoJS TreeModel 형태로 변환
   const transformDataForOrgChart = (apiData) => {
     if (!Array.isArray(apiData)) {
@@ -56,6 +76,10 @@ const BusinessManOrgChart = () => {
         '기본': '#f8f9fa'     // 매우 연한 회색
       };
 
+      // 하위직원수 계산 (재귀적으로 모든 후손 포함)
+      const subordinateCount = calculateSubordinateCount(item.businessManId, apiData);
+      console.log(`👥 ${item.businessManName}(${item.businessManId})의 하위직원수: ${subordinateCount}명`);
+
       const transformedItem = {
         // GoJS TreeModel 필수 속성
         key: item.businessManId,                     // user_index로 얻은 users_id
@@ -65,9 +89,10 @@ const BusinessManOrgChart = () => {
         name: item.businessManName || '이름없음',    // users 테이블에서 얻은 name
         userId: item.businessManId || '미지정',      // 사업자 ID
         
-        // 상세 정보
+        // 상세 정보 (모달로 전달할 정보)
         grade: item.businessGradeName || '미지정',   // business_grade 테이블에서 얻은 business_grade_name
         area: item.businessAreaName || '미지정',     // business_area 테이블에서 얻은 business_area_name
+        subordinateCount: subordinateCount,          // 하위직원수 (계산된 값)
         
         // 개인 실적
         currentTotalStore: item.currentTotalStore || 0,  // 본인 담당 가맹점 수
