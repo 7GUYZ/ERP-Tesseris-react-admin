@@ -25,13 +25,31 @@ const PermissionManagement = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [password, setPassword] = useState('');
   const [pendingAction, setPendingAction] = useState(null);
+  
+  // 모달 새로고침을 위한 key
+  const [modalKey, setModalKey] = useState(0);
+  
+  // 권한 수정 모달 상태
+  const [showEditModal, setShowEditModal] = useState(false);
 
   // userIndex를 localStorage에서 가져오기
   const getUserIndex = () => {
-    // user_index 키에서 직접 가져오기
+    // admin-info에서 먼저 가져오기 (이미지에서 user_index가 여기에 있음)
+    try {
+      const adminInfo = localStorage.getItem('admin-info');
+      if (adminInfo) {
+        const parsedAdminInfo = JSON.parse(adminInfo);
+        if (parsedAdminInfo.user_index) {
+          return parseInt(parsedAdminInfo.user_index);
+        }
+      }
+    } catch (error) {
+      console.error('Error parsing admin-info:', error);
+    }
+    
+    // fallback: user_index 키에서 직접 가져오기
     const userIndexValue = localStorage.getItem('user_index');
     if (userIndexValue) {
-      console.log('Found user_index in localStorage:', userIndexValue);
       return parseInt(userIndexValue);
     }
     
@@ -39,9 +57,8 @@ const PermissionManagement = () => {
     try {
       const userInfo = localStorage.getItem('user-info');
       if (userInfo) {
-        const parsedUserInfo = JSON.parse(userInfo);
-        console.log('user-info from localStorage:', parsedUserInfo);
-        return parsedUserInfo.userIndex || parsedUserInfo.user_index || null;
+              const parsedUserInfo = JSON.parse(userInfo);
+      return parsedUserInfo.userIndex || parsedUserInfo.user_index || parsedUserInfo.id || null;
       }
     } catch (error) {
       console.error('Error parsing user-info:', error);
@@ -52,19 +69,15 @@ const PermissionManagement = () => {
     for (const key of possibleKeys) {
       const value = localStorage.getItem(key);
       if (value) {
-        console.log(`Found userIndex in localStorage with key '${key}':`, value);
         return parseInt(value);
       }
     }
-    console.log('No userIndex found in localStorage');
     return null;
   };
   
   const userIndex = getUserIndex();
   
-  // 디버깅용 로그
-  console.log('localStorage user_index:', localStorage.getItem('user_index'));
-  console.log('parsed userIndex:', userIndex);
+
   
   // 권한 체크 훅 사용
   const { checkPermission, hasPermission } = usePermissionStore();
@@ -176,21 +189,27 @@ const PermissionManagement = () => {
   const insertAuthority = async (formData) => {
     setLoading(true);
     try {
-      // 모든 권한을 1로 설정
-      const authorityData = {
-        adminTypeIndex: formData.adminTypeIndex,
-        programIndex: formData.programIndex,
-        insertAuthority: 1,
-        deleteAuthority: 1,
-        updateAuthority: 1
-      };
+      // 모든 권한을 1로 설정하고 userIndex와 password 포함
+              const authorityData = {
+          adminTypeIndex: formData.adminTypeIndex,
+          programIndex: formData.programIndex,
+          insertAuthority: 1,
+          deleteAuthority: 1,
+          updateAuthority: 1,
+          userIndex: parseInt(userIndex),
+          password: password
+        };
       
       const response = await permissionApi.insertAuthority(authorityData);
       
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 추가되었습니다.', severity: 'success' });
         setShowForm(false);
-        fetchAuthorities(selectedAdminType);
+        
+        // 권한 목록 즉시 새로고침
+        if (selectedAdminType) {
+          await fetchAuthorities(selectedAdminType);
+        }
         
         // 권한 갱신 (현재 사용자와 관련된 경우)
         try {
@@ -198,6 +217,13 @@ const PermissionManagement = () => {
         } catch (error) {
           console.error("권한 갱신 실패:", error);
         }
+        
+        // 모달 새로고침 - 잠시 후 다시 열기
+        setTimeout(() => {
+          setOpenDialog(true);
+          // AuthorityForm에서 기존 권한 목록 새로고침을 위해 key 변경
+          setModalKey(prev => prev + 1);
+        }, 100);
       } else {
         setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
       }
@@ -213,7 +239,7 @@ const PermissionManagement = () => {
   const insertMultipleAuthorities = async (authoritiesList) => {
     setLoading(true);
     try {
-      console.log('일괄 추가 시작:', authoritiesList);
+  
       
       // 모든 권한을 1로 설정한 데이터 준비
       const authoritiesData = authoritiesList.map(authority => ({
@@ -244,7 +270,7 @@ const PermissionManagement = () => {
       });
       setShowForm(false);
       
-      // 권한 목록 새로고침
+      // 권한 목록 즉시 새로고침
       if (selectedAdminType) {
         await fetchAuthorities(selectedAdminType);
       }
@@ -255,6 +281,13 @@ const PermissionManagement = () => {
       } catch (error) {
         console.error("권한 갱신 실패:", error);
       }
+      
+      // 모달 새로고침 - 잠시 후 다시 열기
+      setTimeout(() => {
+        setOpenDialog(true);
+        // AuthorityForm에서 기존 권한 목록 새로고침을 위해 key 변경
+        setModalKey(prev => prev + 1);
+      }, 100);
     } catch (error) {
       console.error("일괄 추가 에러:", error);
       console.error("에러 상세:", error.response?.data);
@@ -280,7 +313,11 @@ const PermissionManagement = () => {
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 업데이트되었습니다.', severity: 'success' });
         setShowForm(false);
-        fetchAuthorities(selectedAdminType);
+        
+        // 권한 목록 즉시 새로고침
+        if (selectedAdminType) {
+          await fetchAuthorities(selectedAdminType);
+        }
         
         // 권한 갱신 (현재 사용자와 관련된 경우)
         try {
@@ -303,11 +340,22 @@ const PermissionManagement = () => {
   const deleteAuthority = async (authorityTypeIndex) => {
     setLoading(true);
     try {
-      const response = await permissionApi.deleteAuthority(authorityTypeIndex);
+      // userIndex와 password를 포함하여 삭제 요청
+              const deleteData = {
+          authorityTypeIndex: authorityTypeIndex,
+          userIndex: parseInt(userIndex),
+          password: password
+        };
+      
+      const response = await permissionApi.deleteAuthority(deleteData);
       
       if (response.status === 200 || response.statusText === 'OK') {
         setSnackbar({ open: true, message: '권한이 성공적으로 삭제되었습니다.', severity: 'success' });
-        fetchAuthorities(selectedAdminType);
+        
+        // 권한 목록 즉시 새로고침
+        if (selectedAdminType) {
+          await fetchAuthorities(selectedAdminType);
+        }
         
         // 권한 갱신 (현재 사용자와 관련된 경우)
         try {
@@ -350,9 +398,20 @@ const PermissionManagement = () => {
       return;
     }
 
-    setPendingAction('edit');
-    setEditingAuthority(authority);
-    setShowPasswordModal(true);
+    // 권한 수정을 위한 임시 데이터 생성
+    const editData = {
+      authorityTypeIndex: authority.authorityTypeIndex,
+      adminTypeIndex: authority.adminTypeIndex,
+      programIndex: authority.programIndex,
+      insertAuthority: authority.insertAuthority,
+      deleteAuthority: authority.deleteAuthority,
+      updateAuthority: authority.updateAuthority,
+      programName: authority.programName,
+      adminTypeName: authority.adminTypeName
+    };
+    
+    setEditingAuthority(editData);
+    setShowEditModal(true);
   };
 
   // 비밀번호 확인 후 권한 수정 처리
@@ -366,43 +425,102 @@ const PermissionManagement = () => {
     try {
       if (pendingAction === 'save') {
         // 일괄 수정
-        const authoritiesToUpdate = Object.values(authorityChanges).map(change => ({
-          authorityTypeIndex: change.authorityTypeIndex,
-          insertAuthority: change.insertAuthority,
-          deleteAuthority: change.deleteAuthority,
-          updateAuthority: change.updateAuthority
-        }));
+        const authoritiesToUpdate = Object.values(authorityChanges).map(change => {
+          // 원본 권한 데이터 찾기
+          const originalAuthority = authorities.find(auth => auth.authorityTypeIndex === change.authorityTypeIndex);
+          
+          return {
+            authorityTypeIndex: change.authorityTypeIndex,
+            insertAuthority: change.insertAuthority !== undefined ? change.insertAuthority : originalAuthority.insertAuthority,
+            deleteAuthority: change.deleteAuthority !== undefined ? change.deleteAuthority : originalAuthority.deleteAuthority,
+            updateAuthority: change.updateAuthority !== undefined ? change.updateAuthority : originalAuthority.updateAuthority
+          };
+        });
 
-        console.log('보내는 데이터:', {
+
+
+        const response = await permissionApi.bulkUpdateAuthorities({
           authorities: authoritiesToUpdate,
-          userIndex: userIndex,
+          userIndex: parseInt(userIndex),
           password: password
         });
 
-        await permissionApi.bulkUpdateAuthorities({
-          authorities: authoritiesToUpdate,
-          userIndex: userIndex,
-          password: password
-        });
 
-        setSnackbar({ 
-          open: true, 
-          message: `${authoritiesToUpdate.length}개의 권한이 성공적으로 수정되었습니다.`, 
-          severity: 'success' 
-        });
-
-        // 변경사항 초기화
-        setAuthorityChanges({});
         
-        // 권한 목록 새로고침
-        if (selectedAdminType) {
-          await fetchAuthorities(selectedAdminType);
+        if (response.status === 200 || response.statusText === 'OK' || response.data) {
+          setSnackbar({ 
+            open: true, 
+            message: `${authoritiesToUpdate.length}개의 권한이 성공적으로 수정되었습니다.`, 
+            severity: 'success' 
+          });
+
+          // 변경사항 초기화
+          setAuthorityChanges({});
+          
+          // 권한 목록 즉시 새로고침
+          if (selectedAdminType) {
+            await fetchAuthorities(selectedAdminType);
+          }
+        } else {
+          setSnackbar({ open: true, message: '권한 수정에 실패했습니다.', severity: 'error' });
+        }
+              } else if (pendingAction === 'edit') {
+        // 개별 권한 수정
+        if (editingAuthority) {
+
+          
+          const updateData = {
+            adminTypeIndex: editingAuthority.adminTypeIndex,
+            programIndex: editingAuthority.programIndex,
+            insertAuthority: editingAuthority.insertAuthority,
+            deleteAuthority: editingAuthority.deleteAuthority,
+            updateAuthority: editingAuthority.updateAuthority,
+            userIndex: parseInt(userIndex),
+            password: password
+          };
+          
+          
+          
+          const response = await permissionApi.updateAuthority(updateData);
+          
+          if (response.status === 200 || response.statusText === 'OK') {
+            setSnackbar({ open: true, message: '권한이 성공적으로 수정되었습니다.', severity: 'success' });
+            
+            // 권한 목록 새로고침
+            if (selectedAdminType) {
+              await fetchAuthorities(selectedAdminType);
+            }
+          } else {
+            setSnackbar({ open: true, message: '권한 수정에 실패했습니다.', severity: 'error' });
+          }
+        }
+              } else if (pendingAction === 'delete') {
+        // 개별 권한 삭제
+        if (editingAuthority && editingAuthority.authorityTypeIndex) {
+          const deleteData = {
+            authorityTypeIndex: editingAuthority.authorityTypeIndex,
+            userIndex: parseInt(userIndex),
+            password: password
+          };
+          
+          const response = await permissionApi.deleteAuthority(deleteData);
+          
+          if (response.status === 200 || response.statusText === 'OK') {
+            setSnackbar({ open: true, message: '권한이 성공적으로 삭제되었습니다.', severity: 'success' });
+            
+            // 권한 목록 즉시 새로고침
+            if (selectedAdminType) {
+              await fetchAuthorities(selectedAdminType);
+            }
+          } else {
+            setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
+          }
         }
       } else if (pendingAction === 'bulkInsert') {
         // 일괄 추가 - AuthorityForm에서 전달받은 데이터 사용
         const formData = window.lastBulkInsertData; // 임시 저장된 데이터 사용
         
-        console.log('일괄 추가 데이터:', formData);
+
         
         await insertMultipleAuthorities(formData.authorities);
       }
@@ -422,6 +540,7 @@ const PermissionManagement = () => {
       setShowPasswordModal(false);
       setPassword('');
       setPendingAction(null);
+      setEditingAuthority(null);
     }
   };
 
@@ -442,7 +561,9 @@ const PermissionManagement = () => {
     }
 
     if (window.confirm('이 권한을 삭제하시겠습니까?')) {
-      deleteAuthority(authorityTypeIndex);
+      setPendingAction('delete');
+      setEditingAuthority({ authorityTypeIndex: authorityTypeIndex });
+      setShowPasswordModal(true);
     }
   };
 
@@ -557,8 +678,12 @@ const PermissionManagement = () => {
     const newValue = checked ? 1 : 0;
     const originalValue = authority[permissionType];
     
+
+    
     setAuthorityChanges(prev => {
       const currentChanges = prev[authorityTypeIndex] || {};
+      
+
       
       // 원래 값과 같으면 변경사항에서 제거
       if (newValue === originalValue) {
@@ -566,7 +691,8 @@ const PermissionManagement = () => {
         delete updatedChanges[permissionType];
         
         // 해당 권한의 모든 변경사항이 제거되면 전체에서도 제거
-        if (Object.keys(updatedChanges).length === 0) {
+        if (Object.keys(updatedChanges).length === 0 || 
+            (Object.keys(updatedChanges).length === 1 && updatedChanges.authorityTypeIndex !== undefined)) {
           const newChanges = { ...prev };
           delete newChanges[authorityTypeIndex];
           return newChanges;
@@ -787,12 +913,13 @@ const PermissionManagement = () => {
 
               return (
                 <div key={menu.menuIndex} className="permission-menu-group">
-                  <div className="permission-menu-header">
+                  <div 
+                    className="permission-menu-header"
+                    onClick={() => handleMenuClick(menu.menuIndex)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <div className="permission-menu-header-left">
-                      <span 
-                        className="permission-menu-arrow"
-                        onClick={() => handleMenuClick(menu.menuIndex)}
-                      >
+                      <span className="permission-menu-arrow">
                         {isSelected ? '▼' : '▶'}
                       </span>
                       <span className="permission-menu-name">{menu.menuName}</span>
@@ -893,6 +1020,7 @@ const PermissionManagement = () => {
             </div>
             <div className="permission-admin-contents">
               <AuthorityForm
+                key={modalKey}
                 adminTypes={adminTypes}
                 selectedAdminType={selectedAdminType}
                 onSubmit={handleSubmitAuthority}

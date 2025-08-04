@@ -1,10 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useRef } from "react"
 
-const InputField = ({ type, placeholder, value, onChange, required, icon, error }) => {
+const InputField = ({ type, placeholder, value, onChange, required, icon, error, errorMessage }) => {
   const [showPassword, setShowPassword] = useState(false)
   const [inputType, setInputType] = useState(type)
+  const inputRef = useRef(null)
+  const iconRef = useRef(null)
 
   const focusStyles = {
     borderColor: error ? "#ff6b6b" : "#3b7ddd",
@@ -13,22 +15,37 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
     transform: "translateY(-2px)",
   }
 
+  // 에러 상태에 따른 기본 스타일
+  const getDefaultStyles = () => ({
+    borderColor: error ? "#ff6b6b" : "rgba(34, 46, 60, 0.2)",
+    backgroundColor: error ? "rgba(255, 107, 107, 0.05)" : "#ffffff",
+    boxShadow: "none",
+    transform: "none"
+  })
+
+  // 에러 상태 변경 시 스타일 업데이트
+  useEffect(() => {
+    if (inputRef.current) {
+      const defaultStyles = getDefaultStyles()
+      Object.assign(inputRef.current.style, defaultStyles)
+    }
+    if (iconRef.current) {
+      iconRef.current.style.color = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)"
+    }
+  }, [error])
+
   const handleFocus = (e) => {
     Object.assign(e.target.style, focusStyles)
-    const icon = e.target.parentElement.querySelector(".login-input-icon")
-    if (icon) {
-      icon.style.color = error ? "#ff6b6b" : "#3b7ddd"
+    if (iconRef.current) {
+      iconRef.current.style.color = error ? "#ff6b6b" : "#3b7ddd"
     }
   }
 
   const handleBlur = (e) => {
-    e.target.style.borderColor = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.2)"
-    e.target.style.backgroundColor = error ? "rgba(255, 107, 107, 0.05)" : "#ffffff"
-    e.target.style.boxShadow = "none"
-    e.target.style.transform = "none"
-    const icon = e.target.parentElement.querySelector(".login-input-icon")
-    if (icon) {
-      icon.style.color = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)"
+    const defaultStyles = getDefaultStyles()
+    Object.assign(e.target.style, defaultStyles)
+    if (iconRef.current) {
+      iconRef.current.style.color = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)"
     }
   }
 
@@ -71,12 +88,13 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
   }
 
   return (
-    <div className={`login-input-field-container${error ? ' error' : ''}`}>
-      <div className={`login-input-icon${error ? ' error' : ''}`}>
+    <div className={`login-input-field-container${error ? ' login-input-error' : ''}`}>
+      <div ref={iconRef} className={`login-input-icon${error ? ' login-input-icon-error' : ''}`}>
         {getIcon()}
       </div>
       <input
-        className={`login-input-field${error ? ' error' : ''}`}
+        ref={inputRef}
+        className={`login-input-field${error ? ' login-input-field-error' : ''}`}
         type={inputType}
         placeholder={placeholder}
         value={value}
@@ -88,37 +106,56 @@ const InputField = ({ type, placeholder, value, onChange, required, icon, error 
       {type === "password" && (
         <button
           type="button"
-          className="password-toggle-btn"
+          className="login-password-toggle-btn"
           onClick={togglePasswordVisibility}
           style={{
             position: "absolute",
-            right: "16px",
+            right: "12px",
             top: "50%",
             transform: "translateY(-50%)",
             background: "none",
             border: "none",
             cursor: "pointer",
-            color: "rgba(34, 46, 60, 0.6)",
-            padding: "4px",
+            color: error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)",
+            padding: "0",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             transition: "color 0.3s ease",
-            zIndex: 2
+            zIndex: 3,
+            width: "20px",
+            height: "20px",
+            pointerEvents: "auto"
           }}
           onMouseEnter={(e) => {
-            e.target.style.color = "#3b7ddd"
+            e.target.style.color = error ? "#ff6b6b" : "#3b7ddd"
           }}
           onMouseLeave={(e) => {
-            e.target.style.color = "rgba(34, 46, 60, 0.6)"
+            e.target.style.color = error ? "#ff6b6b" : "rgba(34, 46, 60, 0.6)"
           }}
         >
           {getPasswordToggleIcon()}
         </button>
       )}
+      {errorMessage && (
+        <div className="login-input-error-message" style={{
+          color: "#ff6b6b",
+          fontSize: "12px",
+          marginTop: "4px",
+          marginLeft: "4px",
+          display: "flex",
+          alignItems: "center",
+          gap: "4px"
+        }}>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+          </svg>
+          {errorMessage}
+        </div>
+      )}
       <style>
         {`
-          input::placeholder {
+          .login-input-field::placeholder {
             color: ${error ? "rgba(255, 107, 107, 0.7)" : "rgba(34, 46, 60, 0.5)"};
           }
         `}
