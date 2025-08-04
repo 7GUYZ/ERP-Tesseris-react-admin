@@ -1,8 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
 import { adminMyPageApi } from '../../api/auth/TaekjunAuth';
-import usePermissionStore from '../../store/taekjun/PermissionStore';
-import useAuthorityMapping from '../../hooks/useAuthorityMapping';
 import '../../styles/taekjun/AdminMyPage.css';
 
 // 카카오 주소 API 스크립트 추가

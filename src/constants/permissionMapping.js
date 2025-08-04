@@ -5,10 +5,10 @@ export const MENU_PERMISSION_MAPPING = {
   '/user-admin-list': { menuIndex: 1, programIndex: 1, name: '회원관리' },
   
   // 권한관리
-  '/permissionmanagement': { menuIndex: 1, programIndex: 2, name: '권한관리' },
+  '/permissionmanagement': { menuIndex: 1, programIndex: 8, name: '권한관리' },
   
   // 사업자관리
-  '/businessman-admin-list': { menuIndex: 2, programIndex: 1, name: '사업자관리' },
+  '/businessman-admin-list': { menuIndex: 2, programIndex: 17, name: '사업자관리' },
   
   // 공지사항
   '/notice/list': { menuIndex: 3, programIndex: 1, name: '공지사항' },
@@ -72,7 +72,10 @@ export const MENU_PERMISSION_MAPPING = {
   '/sales-performance': { menuIndex: 17, programIndex: 1, name: '매출실적' },
   
   // 수수료 지급
-  '/commission-payment': { menuIndex: 18, programIndex: 1, name: '수수료지급' }
+  '/commission-payment': { menuIndex: 18, programIndex: 1, name: '수수료지급' },
+
+  // 권한 타입 관리
+  '/admin-type-insert': { menuIndex: 1, programIndex: 40, name: '권한 타입 관리' }
 };
 
 // URL 패턴 매칭 함수
