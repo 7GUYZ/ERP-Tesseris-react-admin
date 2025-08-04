@@ -15,6 +15,22 @@ const AuthorityForm = ({ adminTypes, selectedAdminType, onSubmit, onCancel, load
     fetchMenus();
   }, []);
 
+  // 메뉴 조회
+  const fetchMenus = async () => {
+    try {
+      const response = await permissionApi.getMenu();
+      const data = response.data || response;
+      if (Array.isArray(data) && data.length > 0) {
+        setMenus(data);
+      } else {
+        setMenus([]);
+      }
+    } catch (error) {
+      console.error("메뉴 조회 실패:", error);
+      setMenus([]);
+    }
+  };
+
   // 관리자 타입이 변경될 때 기존 권한 조회
   useEffect(() => {
     if (selectedAdminType) {
@@ -24,18 +40,18 @@ const AuthorityForm = ({ adminTypes, selectedAdminType, onSubmit, onCancel, load
 
   // 권한 추가 후 기존 권한 목록 새로고침
   useEffect(() => {
-    if (editingAuthority) {
-      // 로컬스토리지에서 user_index 가져오기
-      const userInfo = localStorage.getItem('admin-info');
-      let userIndex = '';
-      if (userInfo) {
-        try {
-          const parsedUserInfo = JSON.parse(userInfo);
-          userIndex = parsedUserInfo.user_index || '';
-        } catch (error) {
-      console.error("메뉴 조회 실패:", error);
-        }
-  };
+    // 로컬스토리지에서 user_index 가져오기
+    const userInfo = localStorage.getItem('admin-info');
+    let userIndex = '';
+    if (userInfo) {
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        userIndex = parsedUserInfo.user_index || '';
+      } catch (error) {
+        console.error("메뉴 조회 실패:", error);
+      }
+    }
+  }, []);
 
   // 기존 권한 조회
   const fetchExistingAuthorities = async (adminTypeIndex) => {
