@@ -6,6 +6,7 @@ import BusinessmanListPage from '../pages/taekjun/BusinessmanListPage';
 import PermissionManagement from '../pages/taekjun/PermissionManagement';
 import AdminMyPage from '../pages/taekjun/AdminMyPage';
 import Dashboard from '../pages/taekjun/Dashboard';
+import AdminTypeInsertPage from '../pages/taekjun/AdminTypeInsertPage';
 
 function TaekjunRoute() {
   return (
@@ -18,6 +19,7 @@ function TaekjunRoute() {
         <Route path="/permissionmanagement" element={<PermissionManagement />} />
         <Route path="/adminmypage" element={<AdminMyPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin-type-insert" element={<AdminTypeInsertPage />} />
       </Route>
     </>
   );

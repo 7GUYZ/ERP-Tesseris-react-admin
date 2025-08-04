@@ -180,6 +180,13 @@ const MainNavi = () => {
             type: "link",
             href: "/MonthlyCmLimit",
           },
+          {
+            id: "admin_type",
+            programIndex: 40,
+            label: "직급 설정",
+            type: "link",
+            href: "/admin-type-insert",
+          },
         ],
       },
       {

@@ -3,7 +3,7 @@ import { api } from "../Http";
 
 // 관리자 쿠폰 관리
 export const getCouponIssuanceStatus = (params) => {
-    const accessToken = localStorage.getItem("access-token");
+    const accessToken = localStorage.getItem("admin-access-token");
     return api.get("/coupons/status/issuance", {
       headers: {
         Authorization: accessToken
@@ -11,7 +11,7 @@ export const getCouponIssuanceStatus = (params) => {
     });
   };
   export const getCouponProvidedStatus = (params) => {
-    const accessToken = localStorage.getItem("access-token");
+    const accessToken = localStorage.getItem("admin-access-token");
     return api.get("/coupons/status/provided", {
       headers: {
         Authorization: accessToken
@@ -19,7 +19,7 @@ export const getCouponIssuanceStatus = (params) => {
     });
   };
 export const searchCoupons = (params) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.post("/coupons/search", params, {
     headers: {
       Authorization: accessToken
@@ -31,7 +31,7 @@ export const searchCoupons = (params) => {
 
 // 영업실적 관련 API
 export const getBusinessGradeList = () => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get("/sales-performance/grade", {
     headers: {
       Authorization: accessToken
@@ -40,7 +40,7 @@ export const getBusinessGradeList = () => {
 };
 
 export const getStoreRequestStatusList = () => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get("/sales-performance/store-request-status", {
     headers: {
       Authorization: accessToken
@@ -49,7 +49,7 @@ export const getStoreRequestStatusList = () => {
 };
 
 export const searchSalesPerformance = (params) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.post("/sales-performance/search", params, {
     headers: {
       Authorization: accessToken
@@ -59,7 +59,7 @@ export const searchSalesPerformance = (params) => {
 
 // 회원 추천현황 관련 API
 export const getUserRoles = () => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get("/member-recommendation/user-roles", {
     headers: {
       Authorization: accessToken
@@ -68,7 +68,7 @@ export const getUserRoles = () => {
 };
 
 export const searchMemberRecommendations = (params) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.post("/member-recommendation/search", params, {
     headers: {
       Authorization: accessToken
@@ -78,7 +78,7 @@ export const searchMemberRecommendations = (params) => {
 
 // 수당 지급 내역 관련 API
 export const searchCommissionPayments = (params) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   console.log("=== API 요청 상세 ===");
   console.log("API 요청 파라미터:", params);
       console.log("추천인 등급 값:", params.userRoleIndex);
@@ -99,7 +99,7 @@ export const searchCommissionPayments = (params) => {
 
 // 광고 관리 관련 API
 export const getAdvertisementList = () => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get("/dabin/advertisement/list", {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
@@ -108,7 +108,7 @@ export const getAdvertisementList = () => {
 };
 
 export const getAdvertisement = (advertisementIndex) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get(`/dabin/advertisement/${advertisementIndex}`, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
@@ -117,7 +117,7 @@ export const getAdvertisement = (advertisementIndex) => {
 };
 
 export const createAdvertisement = (formData) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.post("/dabin/advertisement/create", formData, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
@@ -128,7 +128,7 @@ export const createAdvertisement = (formData) => {
 };
 
 export const updateAdvertisement = (advertisementIndex, formData) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.put(`/dabin/advertisement/${advertisementIndex}`, formData, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
@@ -138,7 +138,7 @@ export const updateAdvertisement = (advertisementIndex, formData) => {
 };
 
 export const deleteAdvertisement = (advertisementIndex) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.delete(`/dabin/advertisement/${advertisementIndex}`, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
@@ -148,7 +148,7 @@ export const deleteAdvertisement = (advertisementIndex) => {
 
 // presigned URL 받아오기
 export const getPresignedUrl = async (fileKey) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   try {
     const response = await api.get(`/store/images/presigned`, {
       params: { fileKey },
@@ -165,7 +165,7 @@ export const getPresignedUrl = async (fileKey) => {
 
 // 배너 관리 관련 API
 export const getBannerList = () => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get("/dabin/banner/list", {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
@@ -174,7 +174,7 @@ export const getBannerList = () => {
 };
 
 export const getBanner = (bannerIndex) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.get(`/dabin/banner/${bannerIndex}`, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`
@@ -183,7 +183,7 @@ export const getBanner = (bannerIndex) => {
 };
 
 export const createBanner = (formData) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.post("/dabin/banner/create", formData, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
@@ -193,7 +193,7 @@ export const createBanner = (formData) => {
 };
 
 export const updateBanner = (bannerIndex, formData) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.put(`/dabin/banner/${bannerIndex}`, formData, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`,
@@ -203,7 +203,7 @@ export const updateBanner = (bannerIndex, formData) => {
 };
 
 export const deleteBanner = (bannerIndex) => {
-  const accessToken = localStorage.getItem("access-token");
+  const accessToken = localStorage.getItem("admin-access-token");
   return api.delete(`/dabin/banner/${bannerIndex}`, {
     headers: {
       Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}`

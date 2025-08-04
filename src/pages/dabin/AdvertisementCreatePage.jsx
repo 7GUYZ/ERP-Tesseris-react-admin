@@ -52,7 +52,7 @@ const AdvertisementCreatePage = () => {
         if (advertisementUrl && advertisementUrl !== 'https://') {
             const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-/]))?/;
             if (!urlRegex.test(advertisementUrl)) {
-                alert('팝업주소를 다시한번 확인하세요.');
+                showToastMessage('팝업주소를 다시한번 확인하세요.', 'error');
                 return;
             }
         }
@@ -69,14 +69,16 @@ const AdvertisementCreatePage = () => {
             const response = await createAdvertisement(formData);
 
             if (response.data.success) {
-                alert('팝업을 등록하였습니다.');
-                navigate('/advertisement/list');
+                showToastMessage('팝업을 등록하였습니다.', 'success');
+                setTimeout(() => {
+                    navigate('/advertisement/list');
+                }, 1500);
             } else {
-                alert(response.data.message || '팝업 등록에 실패했습니다.');
+                showToastMessage(response.data.message || '팝업 등록에 실패했습니다.', 'error');
             }
         } catch (error) {
             console.error('팝업 등록 오류:', error);
-            alert('팝업 등록 중 오류가 발생했습니다.');
+            showToastMessage('팝업 등록 중 오류가 발생했습니다.', 'error');
         } finally {
             setLoading(false);
         }
@@ -98,14 +100,6 @@ const AdvertisementCreatePage = () => {
             {/* Header */}
             <div className="ad-create-flex-between ad-create-mb10">
                 <p className="ad-create-font-20 ad-create-bold">팝업 등록</p>
-                <div>
-                    <button
-                        type="button"
-                        className="ad-create-cancel-button"
-                        onClick={handleListClick}>
-                        목록
-                    </button>
-                </div>
             </div>
 
             {/* Card */}
