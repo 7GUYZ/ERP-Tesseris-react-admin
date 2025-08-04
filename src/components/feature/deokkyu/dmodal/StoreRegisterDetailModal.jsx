@@ -261,7 +261,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
         console.log('🔄 승인 처리 시작 - storeId:', storeId);
         
         // 현재 로그인한 사용자 정보 가져오기
-        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
         const approvedBy = userInfo.username || userInfo.user_name || '관리자';
         
         // 승인 데이터 구성 (store_request_status_index = 2)
@@ -315,7 +315,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
         console.log('🔄 거절 처리 시작 - storeId:', storeId);
         
         // 현재 로그인한 사용자 정보 가져오기
-        const userInfo = JSON.parse(localStorage.getItem('user-info') || '{}');
+        const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
         const approvedBy = userInfo.username || userInfo.user_name || '관리자';
         
         // 거절 데이터 구성 (store_request_status_index = 3)

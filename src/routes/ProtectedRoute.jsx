@@ -13,8 +13,8 @@ function ProtectedRoute() {
 
   useEffect(() => {
     // 로컬스토리지의 토큰과 Zustand 상태 확인
-    const token = localStorage.getItem("access-token");
-    const userInfo = localStorage.getItem("user-info");
+    const token = localStorage.getItem("admin-access-token");
+    const userInfo = localStorage.getItem("admin-info");
     
     console.log("🔒 Admin ProtectedRoute 체크:", {
       token: !!token,

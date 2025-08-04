@@ -14,8 +14,8 @@ const Header = () => {
             const response = await logout();
             if (response.data.status === "success") {
                 useAuthStore.getState().zu_logout();
-                localStorage.removeItem("access-token");
-                localStorage.removeItem("user-info");
+                localStorage.removeItem("admin-access-token");
+                localStorage.removeItem("admin-info");
                 // 권한 캐시 클리어
                 clearAuthorityCache();
                 // 홈으로 이동

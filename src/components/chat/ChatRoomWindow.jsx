@@ -66,7 +66,7 @@ function ChatRoomWindow({
         const existingRoomId = hasRoomIndex;
         setRoomId(existingRoomId);
         
-        const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
         const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
           console.log('기존 방에서 새 메시지 수신:', receivedMessage);
           console.log('receivedMessage.user_id:', receivedMessage.user_id);
@@ -158,7 +158,7 @@ function ChatRoomWindow({
   // ===============================메세지 보내기=======================================
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       const generateRoomName = (participants) => {
         if (participants.length === 2) {
           // 1:1 채팅 - adminData에서 이름 사용
@@ -727,7 +727,7 @@ function ChatRoomWindow({
           >
             {messages.map((message, index) => {
               const safeKey = message.id || `room_msg_${index}_${message.timestamp || Date.now()}`;
-              const userInfo = JSON.parse(localStorage.getItem('user-info'));
+              const userInfo = JSON.parse(localStorage.getItem('admin-info'));
               const isMyMessage = String(message.sender?.id) === String(userInfo?.id);
 
               return (
