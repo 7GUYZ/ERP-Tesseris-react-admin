@@ -225,13 +225,6 @@ const MainNavi = () => {
             href: "/member-recommendation"
           },
           {
-            id: "member-payment-history",
-            programIndex: 34,
-            label: "정회원 결제내역",
-            type: "list",
-            action: () => console.log("본인 지급 내역 클릭"),
-          },
-          {
             id: "commision-history",
             programIndex: 35,
             label: "수당 지급 내역",

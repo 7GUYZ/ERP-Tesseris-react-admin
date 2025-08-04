@@ -239,6 +239,9 @@ const MemberAssetDetailsTable = ({
             borderRadius: '12px',
             backgroundColor: 'white',
             boxShadow: 'none',
+            width: '100%',
+            minWidth: 'auto',
+            overflow: 'hidden',
             // 모든 포커스, 아웃라인, 테두리 완전 제거
             '& *': {
               '&:focus': {
@@ -253,21 +256,27 @@ const MemberAssetDetailsTable = ({
               }
             },
             '& .MuiDataGrid-root': {
-              border: "none",
+              border: "none !important",
               backgroundColor: 'white',
               borderRadius: '12px',
-              boxShadow: 'none',
+              boxShadow: 'none !important',
+              outline: 'none !important',
               '& *:focus': {
                 outline: 'none !important',
                 border: 'none !important',
                 boxShadow: 'none !important',
               }
             },
+            '& .MuiDataGrid-columnsContainer': {
+              border: 'none !important',
+              outline: 'none !important',
+            },
             '& .MuiDataGrid-cell': {
-              borderBottom: 'none',
-              borderRight: 'none',
-              borderLeft: 'none',
-              borderTop: 'none',
+              borderBottom: 'none !important',
+              borderRight: 'none !important',
+              borderLeft: 'none !important',
+              borderTop: 'none !important',
+              outline: 'none !important',
               padding: '8px 12px',
               fontSize: '14px',
               height: '44px',
@@ -293,8 +302,11 @@ const MemberAssetDetailsTable = ({
               }
             },
             '& .MuiDataGrid-row': {
-              borderBottom: 'none',
-              borderTop: 'none',
+              borderBottom: 'none !important',
+              borderTop: 'none !important',
+              borderLeft: 'none !important',
+              borderRight: 'none !important',
+              outline: 'none !important',
               backgroundColor: 'white',
               '&:nth-of-type(even)': {
                 backgroundColor: '#f8fafc',
@@ -304,8 +316,11 @@ const MemberAssetDetailsTable = ({
               }
             },
             '& .MuiDataGrid-columnHeaders': {
-              borderBottom: 'none',
-              borderTop: 'none',
+              borderBottom: 'none !important',
+              borderTop: 'none !important',
+              borderLeft: 'none !important',
+              borderRight: 'none !important',
+              outline: 'none !important',
               borderRadius: '12px 12px 0 0',
               background: 'white',
               color: 'black',
@@ -314,6 +329,10 @@ const MemberAssetDetailsTable = ({
               '& .MuiDataGrid-columnHeader': {
                 outline: 'none !important',
                 border: 'none !important',
+                borderBottom: 'none !important',
+                borderTop: 'none !important',
+                borderLeft: 'none !important',
+                borderRight: 'none !important',
                 minWidth: '70px !important',
                 '&:focus': {
                   outline: 'none !important',
@@ -335,7 +354,11 @@ const MemberAssetDetailsTable = ({
             },
 
             '& .MuiDataGrid-footerContainer': {
-              borderTop: 'none',
+              borderTop: 'none !important',
+              borderBottom: 'none !important',
+              borderLeft: 'none !important',
+              borderRight: 'none !important',
+              outline: 'none !important',
               borderRadius: '0 0 12px 12px',
               backgroundColor: '#f8fafc',
               minHeight: '52px'
@@ -435,7 +458,8 @@ const MemberAssetDetailsTable = ({
       overflow: 'hidden',
       borderRadius: '12px',
       boxShadow: 'none',
-      height: '500px'
+      height: '500px',
+      minWidth: 'auto'
     }}>
       {renderDataGrid()}
     </div>

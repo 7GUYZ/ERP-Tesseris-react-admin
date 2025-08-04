@@ -562,7 +562,7 @@ function ChatRoomWindow({
         // roomId를 안전하게 추출 (중첩된 구조 고려)
         const currentRoomIndex = roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== 0;
-
+        
         if (hasValidRoomIndex) {
         // 기존 방인 경우
           
