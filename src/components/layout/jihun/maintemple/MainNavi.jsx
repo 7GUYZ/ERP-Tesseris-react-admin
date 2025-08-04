@@ -21,7 +21,6 @@ import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
 import { refreshAuthority } from "../../../../utils/authorityUtils";
 
-
 const MainNavi = () => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -39,7 +38,7 @@ const MainNavi = () => {
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("user-info"));
       const storedAuthority = localStorage.getItem("user-authority");
-      
+
       if (storedAuthority) {
         // 캐시된 권한 정보 사용
         setAuthorityList(JSON.parse(storedAuthority));
@@ -51,7 +50,10 @@ const MainNavi = () => {
           console.log("API 권한 조회:", response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
-            localStorage.setItem("user-authority", JSON.stringify(response.data.data));
+            localStorage.setItem(
+              "user-authority",
+              JSON.stringify(response.data.data)
+            );
           }
         } catch (error) {
           console.log("권한 조회 실패 : ", error);
@@ -91,7 +93,7 @@ const MainNavi = () => {
       window.removeEventListener("authority-updated", handleAuthorityUpdate);
     };
   }, [showToast]);
-  
+
   // eslint-disable-next-line no-unused-vars
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -214,7 +216,7 @@ const MainNavi = () => {
             programIndex: 31,
             label: "회원 추천 현황",
             type: "link",
-            href: "/member-recommendation"
+            href: "/member-recommendation",
           },
           {
             id: "member-payment-history",
@@ -258,7 +260,7 @@ const MainNavi = () => {
             programIndex: 17,
             label: "사업자 회원 리스트",
             type: "link",
-            href: "/businessman-admin-list"
+            href: "/businessman-admin-list",
           },
           {
             id: "business-commission-history",
@@ -266,13 +268,6 @@ const MainNavi = () => {
             label: "사업자 수당 내역",
             type: "link",
             href: "/businessallowance",
-          },
-          {
-            id: "commission-setting",
-            programIndex: 36,
-            label: "직급별 수당 설정",
-            type: "list",
-            action: () => console.log("사업자 승인 클릭"),
           },
         ],
       },
@@ -419,7 +414,7 @@ const MainNavi = () => {
         label: "알림 관리",
         icon: Bell,
         type: "link",
-        href: "/alert"
+        href: "/alert",
       },
     ],
 
@@ -605,8 +600,10 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-      {/* 권한에 따라 메뉴 필터링 */}
-      {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
+        {/* 권한에 따라 메뉴 필터링 */}
+        {filterMenuByAuthority(menuConfig.items, authorityList).map(
+          renderMenuItem
+        )}
       </nav>
     </div>
   );
