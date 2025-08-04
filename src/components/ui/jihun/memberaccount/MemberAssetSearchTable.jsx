@@ -144,7 +144,7 @@ const MemberAssetSearchTable = ({
         return result;
       }
     },
-    { field: "unit", headerName: "단위", width: 80, minWidth: 80, flex: 1, align: 'center', headerAlign: 'center' },
+    
     {
       field: "usedValue",
       headerName: "사용 금액",
@@ -237,12 +237,13 @@ const MemberAssetSearchTable = ({
           }}
           loading={loading}
           autoHeight={false}
-          height={400}
-          maxHeight={400}
+          height={500}
+          maxHeight={500}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
+          pagination={true}
           getRowId={(row) => {
             if (row && typeof row.id !== 'undefined') {
               return row.id;
@@ -274,13 +275,14 @@ const MemberAssetSearchTable = ({
                 boxShadow: 'none !important',
               }
             },
-            '& .MuiDataGrid-root': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important',
-              border: "none",
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: 'none',
+                         '& .MuiDataGrid-root': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important',
+               border: "none",
+               backgroundColor: 'white',
+               borderRadius: '12px',
+               boxShadow: 'none',
               '& *:focus': {
                 outline: 'none !important',
                 border: 'none !important',
@@ -374,9 +376,10 @@ const MemberAssetSearchTable = ({
               backgroundColor: 'white',
               borderRadius: '12px'
             },
-            '& .MuiDataGrid-virtualScroller': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important',
+                         '& .MuiDataGrid-virtualScroller': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
@@ -393,12 +396,32 @@ const MemberAssetSearchTable = ({
                 backgroundColor: '#f1f5f9'
               }
             },
-            '& .MuiDataGrid-main': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important'
-            },
+                         '& .MuiDataGrid-main': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important'
+             },
             '& .MuiDataGrid-virtualScrollerContent': {
               overflow: 'auto !important'
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderTop: '1px solid #e0e0e0',
+              backgroundColor: '#fafafa',
+              padding: '8px 16px'
+            },
+            '& .MuiDataGrid-paginationPanel': {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%'
+            },
+            '& .MuiTablePagination-root': {
+              color: '#666',
+              fontSize: '14px'
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              margin: 0,
+              fontSize: '14px'
             }
           }}
         />
@@ -465,11 +488,13 @@ const MemberAssetSearchTable = ({
   return (
     <div className="member-asset-search-table-container" style={{ 
       width: '100%', 
-      overflow: 'auto',
+      overflow: 'visible',
       borderRadius: '12px',
       boxShadow: 'none',
-      height: '500px',
-      maxHeight: '500px'
+      height: 'auto',
+      minHeight: '500px',
+      background: 'white',
+      border: '1px solid lightgray'
     }}>
       {renderDataGrid()}
     </div>
