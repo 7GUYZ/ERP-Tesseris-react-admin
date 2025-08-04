@@ -1,5 +1,5 @@
 .monthly-cm-limit {
-    padding: 32px;
+    padding: 40px;
     flex: 1;
     display: flex;
     justify-content: center;
@@ -9,22 +9,22 @@
   
   .setting-card {
     background: white;
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     overflow: hidden;
-    border: 1px solid #e9ecef;
+    border: 1px solid #dee2e6;
     width: 100%;
-    max-width: 700px;
-    margin-top: 40px;
+    max-width: 800px;
+    margin-top: 20px;
   }
   
   .card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start;
-    padding: 32px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid #e9ecef;
+    align-items: center;
+    padding: 24px 32px;
+    background: #ffffff;
+    border-bottom: 1px solid #dee2e6;
   }
   
   .header-content {
@@ -32,17 +32,17 @@
   }
   
   .setting-title {
-    font-size: 24px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0 0 4px 0;
   }
   
   .setting-description {
-    font-size: 14px;
+    font-size: 13px;
     color: #6c757d;
     margin: 0;
-    line-height: 1.5;
+    line-height: 1.4;
   }
   
   .header-actions {
@@ -53,22 +53,20 @@
   .edit-btn {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    gap: 6px;
+    background: #007bff;
     color: white;
     border: none;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 16px rgba(74, 144, 226, 0.25);
+    transition: all 0.2s ease;
   }
   
   .edit-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 24px rgba(74, 144, 226, 0.35);
+    background: #0056b3;
   }
   
   .edit-actions {
@@ -79,43 +77,39 @@
   .save-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: linear-gradient(135deg, #28a745 0%, #20923a 100%);
+    gap: 4px;
+    background: #28a745;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(40, 167, 69, 0.25);
+    transition: all 0.2s ease;
   }
   
   .save-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(40, 167, 69, 0.35);
+    background: #1e7e34;
   }
   
   .cancel-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    gap: 4px;
+    background: #6c757d;
     color: white;
     border: none;
-    padding: 10px 20px;
-    border-radius: 10px;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 12px rgba(220, 53, 69, 0.25);
+    transition: all 0.2s ease;
   }
   
   .cancel-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.35);
+    background: #545b62;
   }
   
   .btn-icon {
@@ -123,7 +117,7 @@
   }
   
   .card-content {
-    padding: 40px 32px;
+    padding: 32px;
   }
   
   .value-display {
@@ -132,9 +126,9 @@
   }
   
   .value-label {
-    font-size: 16px;
+    font-size: 14px;
     color: #6c757d;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
     font-weight: 500;
   }
   
@@ -142,75 +136,72 @@
     display: flex;
     align-items: baseline;
     justify-content: center;
-    gap: 8px;
+    gap: 6px;
   }
   
   .amount-number {
-    font-size: 48px;
-    font-weight: 800;
-    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 36px;
+    font-weight: 700;
+    color: #495057;
     line-height: 1;
   }
   
   .amount-unit {
-    font-size: 24px;
+    font-size: 18px;
     color: #6c757d;
-    font-weight: 600;
+    font-weight: 500;
   }
   
   .edit-section {
     display: flex;
     flex-direction: column;
-    gap: 32px;
+    gap: 24px;
   }
   
   .value-input-container {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px;
     margin-top: 8px;
   }
   
   .value-input {
-    font-size: 36px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 600;
     text-align: center;
-    border: 3px solid #e9ecef;
-    border-radius: 16px;
-    padding: 16px 24px;
-    background: #f8f9fa;
-    color: #2c3e50;
-    transition: all 0.3s ease;
-    width: 300px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    padding: 12px 16px;
+    background: #ffffff;
+    color: #495057;
+    transition: all 0.2s ease;
+    width: 250px;
   }
   
   .value-input:focus {
     outline: none;
-    border-color: #4a90e2;
+    border-color: #007bff;
     background: white;
-    box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   }
   
   .input-unit {
-    font-size: 20px;
+    font-size: 16px;
     color: #6c757d;
-    font-weight: 600;
+    font-weight: 500;
   }
   
   .amount-buttons {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
   
   .amount-buttons-label {
-    font-size: 14px;
+    font-size: 13px;
     color: #6c757d;
-    font-weight: 600;
+    font-weight: 500;
     text-align: center;
   }
   
@@ -218,7 +209,7 @@
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
     align-items: center;
     max-width: 100%;
@@ -226,48 +217,43 @@
   }
   
   .amount-btn {
-    padding: 6px 10px;
-    min-width: 60px;
+    padding: 6px 12px;
+    min-width: 70px;
     font-size: 12px;
-    border-radius: 8px;
-    border: 2px solid #e9ecef;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 6px;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
     color: #495057;
-    border-radius: 10px;
-    font-size: 13px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     text-align: center;
   }
   
   .amount-btn:hover {
-    border-color: #4a90e2;
-    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
-    color: #1976d2;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(74, 144, 226, 0.2);
+    border-color: #007bff;
+    background: #f8f9fa;
+    color: #007bff;
   }
   
   .amount-btn:active {
-    transform: translateY(0);
-    box-shadow: 0 2px 8px rgba(74, 144, 226, 0.3);
+    background: #e9ecef;
   }
   
   @media (max-width: 768px) {
     .monthly-cm-limit {
-      padding: 16px;
+      padding: 20px;
     }
   
     .setting-card {
-      border-radius: 16px;
-      margin-top: 20px;
+      border-radius: 8px;
+      margin-top: 10px;
     }
   
     .card-header {
       flex-direction: column;
-      gap: 20px;
-      padding: 24px 20px;
+      gap: 16px;
+      padding: 20px;
     }
   
     .header-actions {
@@ -276,25 +262,25 @@
     }
   
     .card-content {
-      padding: 32px 20px;
+      padding: 24px 20px;
     }
   
     .amount-number {
-      font-size: 36px;
+      font-size: 28px;
     }
   
     .amount-unit {
-      font-size: 18px;
+      font-size: 16px;
     }
   
     .value-input {
-      font-size: 28px;
-      width: 250px;
-      padding: 12px 20px;
+      font-size: 24px;
+      width: 200px;
+      padding: 10px 14px;
     }
   
     .setting-title {
-      font-size: 20px;
+      font-size: 18px;
       text-align: center;
     }
   
@@ -303,17 +289,18 @@
     }
   
     .amount-buttons-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 8px;
+      flex-wrap: wrap;
+      gap: 6px;
     }
   
     .amount-btn {
-      padding: 10px 12px;
-      font-size: 12px;
+      padding: 8px 10px;
+      font-size: 11px;
+      min-width: 60px;
     }
   
     .edit-section {
-      gap: 24px;
+      gap: 20px;
     }
   }
   
