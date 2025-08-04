@@ -235,10 +235,10 @@ const MemberAssetSearchTable = ({
               }
             }
           }}
-          loading={loading}
-          autoHeight={false}
-          height={400}
-          maxHeight={400}
+                     loading={loading}
+           autoHeight={false}
+           height={500}
+           maxHeight={500}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
@@ -274,13 +274,14 @@ const MemberAssetSearchTable = ({
                 boxShadow: 'none !important',
               }
             },
-            '& .MuiDataGrid-root': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important',
-              border: "none",
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: 'none',
+                         '& .MuiDataGrid-root': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important',
+               border: "none",
+               backgroundColor: 'white',
+               borderRadius: '12px',
+               boxShadow: 'none',
               '& *:focus': {
                 outline: 'none !important',
                 border: 'none !important',
@@ -374,9 +375,10 @@ const MemberAssetSearchTable = ({
               backgroundColor: 'white',
               borderRadius: '12px'
             },
-            '& .MuiDataGrid-virtualScroller': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important',
+                         '& .MuiDataGrid-virtualScroller': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
@@ -393,10 +395,11 @@ const MemberAssetSearchTable = ({
                 backgroundColor: '#f1f5f9'
               }
             },
-            '& .MuiDataGrid-main': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important'
-            },
+                         '& .MuiDataGrid-main': {
+               overflow: 'auto !important',
+               maxHeight: '500px !important',
+               minHeight: '500px !important'
+             },
             '& .MuiDataGrid-virtualScrollerContent': {
               overflow: 'auto !important'
             }
@@ -463,13 +466,16 @@ const MemberAssetSearchTable = ({
   }
 
   return (
-    <div style={{ 
+    <div className="member-asset-search-table-container" style={{ 
       width: '100%', 
       overflow: 'auto',
       borderRadius: '12px',
       boxShadow: 'none',
       height: '500px',
-      maxHeight: '500px'
+      minHeight: '500px',
+      maxHeight: '500px',
+      background: 'white',
+      border: '1px solid lightgray'
     }}>
       {renderDataGrid()}
     </div>

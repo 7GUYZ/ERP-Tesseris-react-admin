@@ -480,7 +480,7 @@ const MemberAssetSearchForm = () => {
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-table-container">
+      <div>
         <MemberAssetSearchTable 
           data={searchResults} 
           onSelectionChange={handleSelectionChange}
