@@ -95,7 +95,7 @@ const AdvertisementEditPage = () => {
             formData.append('advertisementUrl', advertisementUrl);
 
             // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
+            const accessToken = localStorage.getItem("admin-access-token");
             const response = await api.put(`/dabin/advertisement/${advertisementIndex}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',

@@ -28,7 +28,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
     // 컴포넌트 마운트 시 WebSocket 연결
     useEffect(() => {
       const token = localStorage.getItem('access-token');
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
       if (token && userInfo) {
         connectWebSocket(token, userInfo.user_index);
@@ -63,9 +63,9 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
       setLoading(true);
       adminlist().then((data) => {
         // 본인 제외하기
-        const userInfo = JSON.parse(localStorage.getItem('user-info'));
+        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
         console.log("관리자 목록 원본 데이터:", data);
-        const filteredData = data.filter(admin => admin.userIndex !== userInfo?.user_index);
+        const filteredData = data.filter(admin => admin.userId !== userInfo?.id);
         console.log("필터링된 관리자 목록:", filteredData);
         setAdminList(filteredData);
         setLoading(false);
@@ -80,7 +80,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
   React.useEffect(() => {
     if (open && activeTab === 1) {  // 채팅방 설정 탭일 때만 호출
       setLoading(true);
-      const userInfo = JSON.parse(localStorage.getItem('user-info'));
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       if (userInfo?.id) {
         SearchRoom(userInfo.id).then((response) => {
           if (response?.data?.data) {

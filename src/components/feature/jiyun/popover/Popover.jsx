@@ -20,7 +20,7 @@ const Popover = () => {
         setError(null);
         
         // 토큰 체크 추가
-        const token = localStorage.getItem("access-token");
+        const token = localStorage.getItem("admin-access-token");
         if (!token) {
           setNotifications([]);
           setLoading(false);
@@ -28,7 +28,7 @@ const Popover = () => {
         }
         
         // localStorage에서 user_index 가져오기
-        const userInfo = JSON.parse(localStorage.getItem("user-info"));
+        const userInfo = JSON.parse(localStorage.getItem("admin-info"));
         const userIndex = userInfo?.user_index;
 
         if (!userIndex) {
