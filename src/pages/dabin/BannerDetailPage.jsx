@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
 import Toast from '../../components/ui/jungeun/Toast';
-import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
+import ConfirmCancelModal from './ConfirmCancelModal';
 import { permissionCheckApi } from '../../api/auth/TaekjunAuth';
 import { useToast } from '../../context/jungeun/ToastContext';
 import '../../styles/dabin/BannerDetailPage.css';
@@ -118,6 +118,10 @@ const BannerDetailPage = () => {
         }
     };
 
+    const cancelDelete = () => {
+        setShowConfirmModal(false);
+    };
+
     if (loading) return <div className="loading">로딩 중...</div>;
     if (!banner) return <div>배너 정보를 찾을 수 없습니다.</div>;
 
@@ -205,9 +209,10 @@ const BannerDetailPage = () => {
             
             {/* Confirm Modal */}
             {showConfirmModal && (
-                <ConfirmModal
+                <ConfirmCancelModal
                     message="정말로 이 배너를 삭제하시겠습니까?"
                     onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
                 />
             )}
         </div>

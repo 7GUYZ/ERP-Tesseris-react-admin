@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getBanner, updateBanner, deleteBanner, getPresignedUrl } from '../../api/auth/DabinAuth';
 import { api } from '../../api/Http';
 import Toast from '../../components/ui/jungeun/Toast';
-import ConfirmModal from '../../components/ui/jungeun/ConfirmModal';
+import ConfirmCancelModal from './ConfirmCancelModal';
 import '../../styles/dabin/BannerEditPage.css';
 
 const BannerEditPage = () => {
@@ -80,12 +80,13 @@ const BannerEditPage = () => {
 
         try {
             const formData = new FormData();
+            // 새로운 파일이 선택된 경우에만 file 파트 추가
             if (selectedFile) {
                 formData.append('file', selectedFile);
             }
 
             // S3 업로드 API 호출 (StoreImageRegisterPage와 동일한 방식)
-            const accessToken = localStorage.getItem("access-token");
+            const accessToken = localStorage.getItem("admin-access-token");
             const response = await api.put(`/dabin/banner/${bannerIndex}`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
@@ -137,8 +138,12 @@ const BannerEditPage = () => {
         }
     };
 
+    const cancelDelete = () => {
+        setShowConfirmModal(false);
+    };
+
     const handleListClick = () => {
-        navigate('/banner/list');
+        navigate(`/banner/detail/${bannerIndex}`);
     };
 
     if (initialLoading) {
@@ -232,9 +237,10 @@ const BannerEditPage = () => {
             
             {/* Confirm Modal */}
             {showConfirmModal && (
-                <ConfirmModal
+                <ConfirmCancelModal
                     message="정말로 이 배너를 삭제하시겠습니까?"
                     onConfirm={confirmDelete}
+                    onCancel={cancelDelete}
                 />
             )}
         </div>
