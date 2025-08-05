@@ -134,6 +134,9 @@ export const businessmanListApi = {
   // 사업자 지역 목록 조회
   getBusinessAreas: () => api.get('businessmanlist/business-areas'),
   
+  // 은행 목록 조회
+  getBanks: () => api.get('businessmanlist/banks'),
+  
   // 사업자 등록
   createBusinessman: (createData) => api.post('businessmanlist/create', createData),
   
