@@ -130,20 +130,20 @@ const Dashboard = () => {
             ) : stats ? (
                 <div className="dashboard-content-jtj">
                     {/* 상세 통계 섹션 */}
-                    <section className="dashboard-section">
-                        <h2 className="section-title">상세 통계</h2>
-                        <div className="dashboard-detail-grid">
-                            <div className="detail-card">
+                    <section className="dashboard-section-jtj">
+                        <h2 className="section-title-jtj">상세 통계</h2>
+                        <div className="dashboard-detail-grid-jtj">
+                            <div className="detail-card-jtj">
                                 <h3>TS 현황</h3>
-                                <div className="detail-item">
+                                <div className="detail-item-jtj">
                                     <span>충전 TS:</span>
                                     <span>{formatNumber(stats?.chargedCmTotal || 0)}</span>
                                 </div>
-                                <div className="detail-item">
+                                <div className="detail-item-jtj">
                                     <span>지급 TS:</span>
                                     <span>{formatNumber(stats?.companyPaidCmTotal || 0)}</span>
                                 </div>
-                                <div className="detail-item">
+                                <div className="detail-item-jtj">
                                     <span>회수 TS:</span>
                                     <span>{formatNumber(stats?.companyCollectedCmTotal || 0)}</span>
                                 </div>
@@ -171,7 +171,7 @@ const Dashboard = () => {
                                     <span>사업자 수수료:</span>
                                     <span>{formatNumber(stats?.businessCmCommissionTotal || 0)}</span>
                                 </div>
-                                <div className="detail-item">
+                                <div className="detail-item-jtj">
                                     <span>본사 TS Cash:</span>
                                     <span>{formatNumber(stats?.companyCmCashTotal || 0)}</span>
                                 </div>

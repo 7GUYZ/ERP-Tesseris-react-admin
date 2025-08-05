@@ -50,6 +50,10 @@ const QnaResponseRateModal = ({ isOpen, onClose, qnaData }) => {
                             <span className="stat-label">전체 QnA</span>
                             <span className="stat-value">{qnaTotal.toLocaleString()}건</span>
                         </div>
+                        <div className="stat-item highlight">
+                            <span className="stat-label">답변률</span>
+                            <span className="stat-value rate">{responseRate}%</span>
+                        </div>
                         <div className="stat-item">
                             <span className="stat-label">답변 완료</span>
                             <span className="stat-value answered">{qnaAnswered.toLocaleString()}건</span>
@@ -57,10 +61,6 @@ const QnaResponseRateModal = ({ isOpen, onClose, qnaData }) => {
                         <div className="stat-item">
                             <span className="stat-label">미답변</span>
                             <span className="stat-value unanswered">{qnaUnanswered.toLocaleString()}건</span>
-                        </div>
-                        <div className="stat-item highlight">
-                            <span className="stat-label">답변률</span>
-                            <span className="stat-value rate">{responseRate}%</span>
                         </div>
                     </div>
 
