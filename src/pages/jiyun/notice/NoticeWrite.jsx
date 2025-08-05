@@ -6,7 +6,6 @@ import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeWrite() {
   const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -16,15 +15,12 @@ export default function NoticeWrite() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     try {
       await noticeInsert(form);
       showToast("success", "공지사항이 등록되었습니다.");
       navigate("/notice/list");
     } catch {
       showToast("error", "등록 실패");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -35,16 +31,7 @@ export default function NoticeWrite() {
   return (
     <div className="notice-write-page">
       <div className="notice-page-header">
-        <h1 className="notice-title">공지사항 등록</h1>
-        <div className="notice-header-actions">
-          <button 
-            className="notice-write-btn notice-write-btn-primary" 
-            onClick={handleSubmit}
-            disabled={loading}
-          >
-            {loading ? '저장 중...' : '저장'}
-          </button>
-        </div>
+        <h1 className="notice-page-title">공지사항 등록</h1>
       </div>
       <form className="notice-write-form" onSubmit={handleSubmit}>
         <div className="notice-write-form-group">
@@ -79,21 +66,21 @@ export default function NoticeWrite() {
           />
         </div>
 
-        <div className="notice-write-form-actions">
-          <button
-            type="button"
-            className="notice-write-btn notice-write-btn-secondary"
-            onClick={handleCancel}
-          >
-            취소
-          </button>
-          <button
-            type="submit"
-            className="notice-write-btn notice-write-btn-primary"
-          >
-            등록
-          </button>
-        </div>
+                 <div className="notice-write-form-actions">
+           <button
+             type="button"
+             className="notice-update-btn notice-update-btn-secondary"
+             onClick={handleCancel}
+           >
+             취소
+           </button>
+           <button
+             type="submit"
+             className="notice-update-btn notice-update-btn-primary"
+           >
+             등록
+           </button>
+         </div>
       </form>
     </div>
   );

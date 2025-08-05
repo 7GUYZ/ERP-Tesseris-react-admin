@@ -17,7 +17,6 @@ export default function NoticeUpdate() {
   const [isPwModalOpen, setIsPwModalOpen] = useState(false);
   const [canUpdate, setCanUpdate] = useState(false);
   const [canDelete, setCanDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -91,23 +90,24 @@ export default function NoticeUpdate() {
 
   // PwModal에서 확인 시 호출되는 콜백
   const handlePwConfirm = async (password) => {
-    setLoading(true);
-    try {
-      if (modalType === "update") {
+    if (modalType === "update") {
+      try {
         await noticeUpdate({ ...form, noticeIndex, password });
         showToast("success", "공지사항이 수정되었습니다.");
         setIsPwModalOpen(false);
         navigate("/notice/list");
-      } else if (modalType === "delete") {
+      } catch {
+        showToast("error", "비밀번호가 일치하지 않습니다.");
+      }
+    } else if (modalType === "delete") {
+      try {
         await noticeDelete({ noticeIndex, password });
         showToast("success", "공지사항이 삭제되었습니다.");
         setIsPwModalOpen(false);
         navigate("/notice/list");
+      } catch {
+        showToast("error", "비밀번호가 일치하지 않습니다.");
       }
-    } catch {
-      showToast("error", "비밀번호가 일치하지 않습니다.");
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -121,19 +121,7 @@ export default function NoticeUpdate() {
 
   return (
     <div className="notice-update-page">
-      <div className="notice-page-header">
-        <h1 className="notice-title">공지사항 수정</h1>
-                 <div className="notice-header-actions">
-           <button 
-             className="notice-update-btn notice-update-btn-primary" 
-             onClick={handleUpdateClick}
-             disabled={!canUpdate}
-             style={!canUpdate ? { opacity: 0.5, cursor: "not-allowed" } : {}}
-           >
-             수정
-           </button>
-         </div>
-      </div>
+      <h1 className="notice-page-title">공지사항 수정</h1>
       <form className="notice-update-form" onSubmit={handleUpdateClick}>
         <div className="notice-update-form-group">
           <label htmlFor="noticeTitle">

@@ -64,7 +64,7 @@ export default function NoticeList() {
   if (loading)
     return (
       <div className="notice-list-page">
-        <h1>공지사항 목록</h1>
+        <h1 className="notice-page-title">공지사항 목록</h1>
         <p>로딩 중...</p>
       </div>
     );
@@ -79,10 +79,10 @@ export default function NoticeList() {
   return (
     <div className="notice-list-page">
       <div className="notice-page-header">
-        <h1 className="notice-title">공지사항 목록</h1>
+        <h1 className="notice-page-title">공지사항 목록</h1>
         <div className="notice-header-actions">
-          <button 
-            className="notice-list-btn-n notice-list-btn-primary" 
+          <button
+            className="notice-update-btn notice-update-btn-primary"
             onClick={() => {
               if (!canInsert) {
                 showToast("error", "등록 권한이 없습니다.");
@@ -97,7 +97,6 @@ export default function NoticeList() {
           </button>
         </div>
       </div>
-
       <div className="notice-list-table-wrapper">
         <table className="notice-list-table">
           <thead>
