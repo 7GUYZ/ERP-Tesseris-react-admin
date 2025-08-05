@@ -161,13 +161,6 @@ const AdvertisementEditPage = () => {
 
     return (
         <div className="ad-edit-page">
-            {/* Breadcrumb */}
-            <ul className="ad-edit-breadcrumb">
-                <li>배너 및 팝업 관리</li>
-                <li>팝업 관리</li>
-                <li>팝업 수정</li>
-            </ul>
-
             {/* Header */}
             <div className="ad-edit-flex-between ad-edit-mb10">
                 <p className="ad-edit-font-20 ad-edit-bold">팝업 수정</p>
