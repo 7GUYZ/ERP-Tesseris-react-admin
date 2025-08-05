@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import MemberAssetSearchTable from "../../../ui/jihun/memberaccount/MemberAssetSearchTable.jsx"
 import {
   memberaccountSearch,
+  memberaccountGetAll,
   memberaccountLookupRoles,
   memberaccountLookupTransactionTypes,
   excelDownloadMemberAccount
@@ -32,7 +33,7 @@ const MemberAssetSearchForm = () => {
 
   const [searchResults, setSearchResults] = useState([])
   const [loading, setLoading] = useState(false)
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false)
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true)
   const [selectedRows, setSelectedRows] = useState(new Set())
   const [allSelectedRows, setAllSelectedRows] = useState(new Map())
   const [options, setOptions] = useState({
@@ -151,16 +152,42 @@ const MemberAssetSearchForm = () => {
     }
   }, [extractEmailId, pageSize, formData])
 
-  // 초기 데이터 로딩 함수 (서버 사이드 페이징 사용)
+  // 초기 데이터 로딩 함수 (전체 조회 API 사용)
   const loadInitialData = useCallback(async () => {
     try {
-      // 서버 사이드 페이징을 위해 performSearch 함수 사용
-      await performSearch(0, pageSize)
+      setLoading(true)
+      const response = await memberaccountGetAll(0, pageSize)
+      
+      if (response.data && response.data.content) {
+        let transformedData = response.data.content.map(item => ({
+          fromGrade: item.eventTriggerUserRole || "알 수 없음",
+          fromId: extractEmailId(item.eventTriggerUserEmail) || "",
+          toGrade: item.eventPartyUserRole || "알 수 없음",
+          toId: extractEmailId(item.eventPartyUserEmail) || "",
+          toName: item.eventPartyUserName || "",
+          transactionType: item.transactionTypeName || "",
+          amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+          unit: "원",
+          usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+          couponUsedValue: item.userCouponValue ? item.userCouponValue.toString() : "0",
+          reason: item.userCmLogReason || "",
+          occurredDate: item.userCmLogCreateTime ?
+            new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
+        }))
+
+        setSearchResults(transformedData)
+        setTotalCount(response.data.totalElements || 0)
+      } else {
+        setSearchResults([])
+        setTotalCount(0)
+      }
     } catch (error) {
       setSearchResults([])
       setTotalCount(0)
+    } finally {
+      setLoading(false)
     }
-  }, [performSearch, pageSize])
+  }, [extractEmailId, pageSize])
 
   // 기존 검색 핸들러 (첫 페이지 검색용)
   const handleSearch = useCallback(() => {
@@ -197,17 +224,91 @@ const MemberAssetSearchForm = () => {
   // 페이지 변경 핸들러
   const handlePageChange = useCallback((newPage) => {
     setCurrentPage(newPage)
-    // 새로운 페이지로 검색 실행
-    performSearch(newPage, pageSize, formData)
-  }, [performSearch, pageSize, formData])
+    // 새로운 페이지로 검색 실행 (검색 조건이 있으면 검색 API, 없으면 전체 조회 API)
+    if (Object.values(formData).some(value => value && value !== "")) {
+      performSearch(newPage, pageSize, formData)
+    } else {
+      // 검색 조건이 없으면 전체 조회 API 사용
+      const loadPageData = async () => {
+        try {
+          setLoading(true)
+          const response = await memberaccountGetAll(newPage, pageSize)
+          
+          if (response.data && response.data.content) {
+            let transformedData = response.data.content.map(item => ({
+              fromGrade: item.eventTriggerUserRole || "알 수 없음",
+              fromId: extractEmailId(item.eventTriggerUserEmail) || "",
+              toGrade: item.eventPartyUserRole || "알 수 없음",
+              toId: extractEmailId(item.eventPartyUserEmail) || "",
+              toName: item.eventPartyUserName || "",
+              transactionType: item.transactionTypeName || "",
+              amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+              unit: "원",
+              usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+              couponUsedValue: item.userCouponValue ? item.userCouponValue.toString() : "0",
+              reason: item.userCmLogReason || "",
+              occurredDate: item.userCmLogCreateTime ?
+                new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
+            }))
+
+            setSearchResults(transformedData)
+            setTotalCount(response.data.totalElements || 0)
+          }
+        } catch (error) {
+          setSearchResults([])
+          setTotalCount(0)
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadPageData()
+    }
+  }, [performSearch, pageSize, formData, extractEmailId])
 
   // 페이지 크기 변경 핸들러
   const handlePageSizeChange = useCallback((newPageSize) => {
     setPageSize(newPageSize)
     setCurrentPage(0) // 페이지 크기 변경 시 첫 페이지로 이동
-    // 새로운 페이지 크기로 검색 실행 (명시적으로 newPageSize 전달)
-    performSearch(0, newPageSize, formData)
-  }, [performSearch, formData])
+    // 새로운 페이지 크기로 검색 실행 (검색 조건이 있으면 검색 API, 없으면 전체 조회 API)
+    if (Object.values(formData).some(value => value && value !== "")) {
+      performSearch(0, newPageSize, formData)
+    } else {
+      // 검색 조건이 없으면 전체 조회 API 사용
+      const loadPageData = async () => {
+        try {
+          setLoading(true)
+          const response = await memberaccountGetAll(0, newPageSize)
+          
+          if (response.data && response.data.content) {
+            let transformedData = response.data.content.map(item => ({
+              fromGrade: item.eventTriggerUserRole || "알 수 없음",
+              fromId: extractEmailId(item.eventTriggerUserEmail) || "",
+              toGrade: item.eventPartyUserRole || "알 수 없음",
+              toId: extractEmailId(item.eventPartyUserEmail) || "",
+              toName: item.eventPartyUserName || "",
+              transactionType: item.transactionTypeName || "",
+              amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+              unit: "원",
+              usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
+              couponUsedValue: item.userCouponValue ? item.userCouponValue.toString() : "0",
+              reason: item.userCmLogReason || "",
+              occurredDate: item.userCmLogCreateTime ?
+                new Date(item.userCmLogCreateTime).toISOString().split('T')[0] : ""
+            }))
+
+            setSearchResults(transformedData)
+            setTotalCount(response.data.totalElements || 0)
+          }
+        } catch (error) {
+          setSearchResults([])
+          setTotalCount(0)
+        } finally {
+          setLoading(false)
+        }
+      }
+      loadPageData()
+    }
+  }, [performSearch, formData, extractEmailId])
 
   // 엑셀 다운로드 핸들러
   const handleExcelDownload = useCallback(async () => {
@@ -227,7 +328,7 @@ const MemberAssetSearchForm = () => {
           'TO ID': row.toId || '',
           'TO 이름': row.toName || '',
           '거래유형': row.transactionType || '',
-          '거래금액': row.amount || '0',
+          'TS': row.amount || '0',
           '단위': row.unit || '원',
           '사용금액': row.usedValue || '0',
           '쿠폰사용금액': row.couponUsedValue || '0',
@@ -249,7 +350,7 @@ const MemberAssetSearchForm = () => {
             const allData = data.content.map((item, index) => ({
               'No.': index + 1,
               '거래번호': item.userCmLogIndex || '',
-              '거래금액': item.userCmLogValue || 0,
+              'TS': item.userCmLogValue || 0,
               '거래사유': item.userCmLogReason || '',
               '거래시간': item.userCmLogCreateTime || '',
               '쿠폰금액': item.userCouponValue || 0,
@@ -274,7 +375,7 @@ const MemberAssetSearchForm = () => {
               const chunkExcelData = chunkData.content.map((item, index) => ({
                 'No.': allData.length + index + 1,
                 '거래번호': item.userCmLogIndex || '',
-                '거래금액': item.userCmLogValue || 0,
+                'TS': item.userCmLogValue || 0,
                 '거래사유': item.userCmLogReason || '',
                 '거래시간': item.userCmLogCreateTime || '',
                 '쿠폰금액': item.userCouponValue || 0,
@@ -480,7 +581,7 @@ const MemberAssetSearchForm = () => {
       )}
 
       {/* 결과 테이블 섹션 */}
-      <div className="member-asset-search-table-container">
+      <div>
         <MemberAssetSearchTable 
           data={searchResults} 
           onSelectionChange={handleSelectionChange}

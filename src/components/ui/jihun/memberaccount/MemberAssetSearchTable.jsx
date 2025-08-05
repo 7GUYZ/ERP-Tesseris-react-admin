@@ -59,6 +59,7 @@ const MemberAssetSearchTable = ({
       headerName: "",
       width: 50,
       minWidth: 50,
+      maxWidth: 50,
       sortable: false,
       align: 'center',
       headerAlign: 'center',
@@ -106,25 +107,27 @@ const MemberAssetSearchTable = ({
     { 
       field: "id", 
       headerName: "순번", 
-      width: 80, 
-      minWidth: 80, 
-      flex: 1,
+      width: 60, 
+      minWidth: 60, 
+      maxWidth: 60,
+      flex: 0,
       sortable: false,
       align: 'center',
       headerAlign: 'center',
       renderCell: (params) => (currentPage * pageSize) + params.row.id + 1
     },
-    { field: "fromGrade", headerName: "FROM 등급", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "fromId", headerName: "FROM ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toGrade", headerName: "TO 등급", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toId", headerName: "TO ID", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "toName", headerName: "TO 이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "transactionType", headerName: "거래 유형", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "fromGrade", headerName: "FROM 등급", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "fromId", headerName: "FROM ID", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "toGrade", headerName: "TO 등급", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "toId", headerName: "TO ID", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "toName", headerName: "TO 이름", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "transactionType", headerName: "거래 유형", width: 120, minWidth: 100, maxWidth: 140, flex: 1, align: 'center', headerAlign: 'center' },
     {
       field: "amount",
       headerName: "금액",
-      width: 100,
-      minWidth: 100,
+      width: 80,
+      minWidth: 70,
+      maxWidth: 100,
       flex: 1,
       align: 'center',
       headerAlign: 'center',
@@ -144,12 +147,13 @@ const MemberAssetSearchTable = ({
         return result;
       }
     },
-    { field: "unit", headerName: "단위", width: 80, minWidth: 80, flex: 1, align: 'center', headerAlign: 'center' },
+    
     {
       field: "usedValue",
       headerName: "사용 금액",
-      width: 120,
-      minWidth: 120,
+      width: 100,
+      minWidth: 80,
+      maxWidth: 120,
       flex: 1,
       align: 'center',
       headerAlign: 'center',
@@ -163,8 +167,9 @@ const MemberAssetSearchTable = ({
     {
       field: "couponUsedValue",
       headerName: "쿠폰 사용 금액",
-      width: 150,
-      minWidth: 150,
+      width: 120,
+      minWidth: 100,
+      maxWidth: 140,
       flex: 1,
       align: 'center',
       headerAlign: 'center',
@@ -175,8 +180,8 @@ const MemberAssetSearchTable = ({
         return isNaN(numValue) ? "0" : numValue.toLocaleString();
       }
     },
-    { field: "reason", headerName: "사유", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "occurredDate", headerName: "발생일", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' }
+    { field: "reason", headerName: "사유", width: 120, minWidth: 100, maxWidth: 150, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "occurredDate", headerName: "발생일", width: 100, minWidth: 80, maxWidth: 120, flex: 1, align: 'center', headerAlign: 'center' }
   ];
 
 
@@ -237,12 +242,13 @@ const MemberAssetSearchTable = ({
           }}
           loading={loading}
           autoHeight={false}
-          height={400}
-          maxHeight={400}
+          height={500}
+          maxHeight={500}
           disableColumnMenu
           disableColumnFilter
           disableColumnSelector
           disableDensitySelector
+          pagination={true}
           getRowId={(row) => {
             if (row && typeof row.id !== 'undefined') {
               return row.id;
@@ -261,6 +267,10 @@ const MemberAssetSearchTable = ({
             borderRadius: '12px',
             backgroundColor: 'white',
             boxShadow: 'none',
+            width: '100%',
+            overflow: 'hidden',
+            maxWidth: '100%',
+            boxSizing: 'border-box',
             // 모든 포커스, 아웃라인, 테두리 완전 제거
             '& *': {
               '&:focus': {
@@ -275,16 +285,58 @@ const MemberAssetSearchTable = ({
               }
             },
             '& .MuiDataGrid-root': {
-              overflow: 'auto !important',
-              maxHeight: '400px !important',
+              overflow: 'hidden !important',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
               border: "none",
               backgroundColor: 'white',
               borderRadius: '12px',
               boxShadow: 'none',
+              width: '100% !important',
+              maxWidth: '100% !important',
+              boxSizing: 'border-box !important',
               '& *:focus': {
                 outline: 'none !important',
                 border: 'none !important',
                 boxShadow: 'none !important',
+              }
+            },
+            '& .MuiDataGrid-columnsContainer': {
+              overflow: 'hidden !important',
+              width: '100% !important',
+              maxWidth: '100% !important',
+            },
+            '& .MuiDataGrid-columnHeaders': {
+              overflow: 'hidden !important',
+              width: '100% !important',
+              maxWidth: '100% !important',
+              borderBottom: 'none',
+              borderTop: 'none',
+              borderRadius: '12px 12px 0 0',
+              background: 'white',
+              color: 'black',
+              fontWeight: 'bold',
+              fontSize: '14px',
+              '& .MuiDataGrid-columnHeader': {
+                outline: 'none !important',
+                border: 'none !important',
+                minWidth: '70px !important',
+                '&:focus': {
+                  outline: 'none !important',
+                  border: 'none !important',
+                },
+                '&:focus-visible': {
+                  outline: 'none !important',
+                  border: 'none !important',
+                }
+              },
+              '& .MuiDataGrid-columnHeaderTitle': {
+                color: 'black !important',
+                fontWeight: 'bold !important',
+                fontSize: '14px !important'
+              },
+              '& .MuiDataGrid-columnHeaderTitleContainer': {
+                color: 'black !important'
               }
             },
             '& .MuiDataGrid-cell': {
@@ -327,36 +379,6 @@ const MemberAssetSearchTable = ({
                 backgroundColor: '#dbeafe !important',
               }
             },
-            '& .MuiDataGrid-columnHeaders': {
-              borderBottom: 'none',
-              borderTop: 'none',
-              borderRadius: '12px 12px 0 0',
-              background: 'white',
-              color: 'black',
-              fontWeight: 'bold',
-              fontSize: '14px',
-              '& .MuiDataGrid-columnHeader': {
-                outline: 'none !important',
-                border: 'none !important',
-                minWidth: '70px !important',
-                '&:focus': {
-                  outline: 'none !important',
-                  border: 'none !important',
-                },
-                '&:focus-visible': {
-                  outline: 'none !important',
-                  border: 'none !important',
-                }
-              },
-              '& .MuiDataGrid-columnHeaderTitle': {
-                color: 'black !important',
-                fontWeight: 'bold !important',
-                fontSize: '14px !important'
-              },
-              '& .MuiDataGrid-columnHeaderTitleContainer': {
-                color: 'black !important'
-              }
-            },
 
             '& .MuiDataGrid-footerContainer': {
               borderTop: 'none',
@@ -376,7 +398,8 @@ const MemberAssetSearchTable = ({
             },
             '& .MuiDataGrid-virtualScroller': {
               overflow: 'auto !important',
-              maxHeight: '400px !important',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
@@ -395,10 +418,35 @@ const MemberAssetSearchTable = ({
             },
             '& .MuiDataGrid-main': {
               overflow: 'auto !important',
-              maxHeight: '400px !important'
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
+              width: '100% !important',
+              maxWidth: '100% !important',
+              boxSizing: 'border-box !important'
             },
             '& .MuiDataGrid-virtualScrollerContent': {
-              overflow: 'auto !important'
+              overflow: 'visible !important',
+              width: '100% !important',
+              maxWidth: '100% !important'
+            },
+            '& .MuiDataGrid-footerContainer': {
+              borderTop: '1px solid #e0e0e0',
+              backgroundColor: '#fafafa',
+              padding: '8px 16px'
+            },
+            '& .MuiDataGrid-paginationPanel': {
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              width: '100%'
+            },
+            '& .MuiTablePagination-root': {
+              color: '#666',
+              fontSize: '14px'
+            },
+            '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows': {
+              margin: 0,
+              fontSize: '14px'
             }
           }}
         />
@@ -465,11 +513,13 @@ const MemberAssetSearchTable = ({
   return (
     <div className="member-asset-search-table-container" style={{ 
       width: '100%', 
-      overflow: 'auto',
+      overflow: 'hidden',
       borderRadius: '12px',
       boxShadow: 'none',
-      height: '500px',
-      maxHeight: '500px'
+      height: 'auto',
+      minHeight: '500px',
+      background: 'white',
+      border: '1px solid lightgray'
     }}>
       {renderDataGrid()}
     </div>

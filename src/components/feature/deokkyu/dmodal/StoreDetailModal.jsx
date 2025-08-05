@@ -569,7 +569,7 @@ const StoreDetailModal = ({ isOpen, onClose, storeId, initialData }) => {
                   </span>
                 </div>
                 <div className="store-detail-summary-item">
-                  <span className="store-detail-summary-label">보유 CM</span>
+                  <span className="store-detail-summary-label">보유 TS</span>
                   <span className="store-detail-summary-value currency">
                     {(displayData.totalCM || 0).toLocaleString()}원
                   </span>

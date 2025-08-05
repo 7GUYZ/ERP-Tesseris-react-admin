@@ -10,7 +10,7 @@ export const alarmTest = () =>
   api.get("/alarms/HelloAlarm")
 
 export const logout = () => 
-  api.post("/auth/logout")
+  api.post("/auth/logout", {}, { headers: { "User-Type": "admin" } })
 
 // Interceptor 등록 함수로 분리
 export function setupInterceptors(navigate) {
@@ -44,7 +44,7 @@ export function setupInterceptors(navigate) {
         config._retry = true;
 
         try {
-          const result = await api.post("/auth/refresh");
+          const result = await api.post("/auth/refresh", {}, { headers: { "User-Type": "admin" } });
           const { success, data: accessToken } = result.data;
 
           if (!success || !accessToken) {
@@ -92,8 +92,8 @@ export function setupInterceptors(navigate) {
 }
 
 
-// 월 CM 한도 설정
-// 월 CM 한도 조회 ( 첫 화면 )
+// 월 TS 한도 설정
+// 월 TS 한도 조회 ( 첫 화면 )
 export const cmLimit = () => 
   api.get("/cmLimit")
 

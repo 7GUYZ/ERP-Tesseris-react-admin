@@ -24,8 +24,32 @@ export const permissionApi = {
   updateAuthority: (data) => api.put("/admin/permissionsettings/updateauthority", data),
 
   // 권한 삭제
-  deleteAuthority: (authorityTypeIndex) => api.post(`/admin/permissionsettings/deleteauthority`, { authorityTypeIndex })
+  deleteAuthority: (data) => api.post(`/admin/permissionsettings/deleteauthority`, data),
+
+  // 일괄 권한 추가
+  bulkInsertAuthorities: (data) => api.post("admin/permissionsettings/bulk-insert-authorities", data),
+
+  // 일괄 권한 수정
+  bulkUpdateAuthorities: (data) => api.post("admin/permissionsettings/bulk-update-authorities", data),
+
+  // 일괄 권한 삭제
+  bulkDeleteAuthorities: (data) => api.post("admin/permissionsettings/bulk-delete-authorities", data)
 }; 
+
+// 관리자 타입 관리 API
+export const adminTypeInsertApi = {
+  // 관리자 타입 목록 조회
+  getAdminTypesList: () => api.get("admin/admintypeinsert/list"),
+
+  // 관리자 타입 추가
+  insertAdminType: (data) => api.post("admin/admintypeinsert/insert", data),
+
+  // 관리자 타입 수정
+  updateAdminType: (data) => api.put("admin/admintypeinsert/update", data),
+
+  // 관리자 타입 삭제
+  deleteAdminType: (adminTypeIndex) => api.delete(`admin/admintypeinsert/delete/${adminTypeIndex}`)
+};
 
 // 어드민 마이페이지 API
 export const adminMyPageApi = {

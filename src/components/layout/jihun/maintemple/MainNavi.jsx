@@ -19,9 +19,11 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
-import { refreshAuthority, setCurrentPermissionContext } from "../../../../utils/authorityUtils";
+import {
+  refreshAuthority,
+  setCurrentPermissionContext,
+} from "../../../../utils/authorityUtils";
 import { getPermissionByPath } from "../../../../constants/permissionMapping";
-
 
 const MainNavi = () => {
   const navigate = useNavigate();
@@ -40,7 +42,7 @@ const MainNavi = () => {
     const getAuthority = async () => {
       const userInfo = JSON.parse(localStorage.getItem("admin-info"));
       const storedAuthority = localStorage.getItem("user-authority");
-      
+
       if (storedAuthority) {
         // 캐시된 권한 정보 사용
         setAuthorityList(JSON.parse(storedAuthority));
@@ -52,7 +54,10 @@ const MainNavi = () => {
           console.log("API 권한 조회:", response);
           if (response.data.resultCode === 200) {
             setAuthorityList(response.data.data);
-            localStorage.setItem("user-authority", JSON.stringify(response.data.data));
+            localStorage.setItem(
+              "user-authority",
+              JSON.stringify(response.data.data)
+            );
           }
         } catch (error) {
           console.log("권한 조회 실패 : ", error);
@@ -92,7 +97,7 @@ const MainNavi = () => {
       window.removeEventListener("authority-updated", handleAuthorityUpdate);
     };
   }, [showToast]);
-  
+
   // eslint-disable-next-line no-unused-vars
   function filterMenuByAuthority(items, authorityList) {
     const allowed = new Set(
@@ -176,9 +181,16 @@ const MainNavi = () => {
           {
             id: "monthly-cm-limit",
             programIndex: 38,
-            label: "월 CM사용한도",
+            label: "월 TS사용한도",
             type: "link",
-            href: "/MonthlyCmLimit",
+            href: "/MonthlyTsLimit",
+          },
+          {
+            id: "admin_type",
+            programIndex: 40,
+            label: "관리자 타입관리",
+            type: "link",
+            href: "/admin-type-insert",
           },
         ],
       },
@@ -215,14 +227,7 @@ const MainNavi = () => {
             programIndex: 31,
             label: "회원 추천 현황",
             type: "link",
-            href: "/member-recommendation"
-          },
-          {
-            id: "member-payment-history",
-            programIndex: 34,
-            label: "정회원 결제내역",
-            type: "list",
-            action: () => console.log("본인 지급 내역 클릭"),
+            href: "/member-recommendation",
           },
           {
             id: "commision-history",
@@ -259,7 +264,7 @@ const MainNavi = () => {
             programIndex: 17,
             label: "사업자 회원 리스트",
             type: "link",
-            href: "/businessman-admin-list"
+            href: "/businessman-admin-list",
           },
           {
             id: "business-commission-history",
@@ -267,13 +272,6 @@ const MainNavi = () => {
             label: "사업자 수당 내역",
             type: "link",
             href: "/businessallowance",
-          },
-          {
-            id: "commission-setting",
-            programIndex: 36,
-            label: "직급별 수당 설정",
-            type: "list",
-            action: () => console.log("사업자 승인 클릭"),
           },
         ],
       },
@@ -390,13 +388,6 @@ const MainNavi = () => {
             type: "link",
             href: "/withdrawllist",
           },
-          {
-            id: "withdrawal-management",
-            programIndex: 16,
-            label: "출금 관리",
-            type: "list",
-            action: () => console.log("출금 승인 클릭"),
-          },
         ],
       },
       {
@@ -420,7 +411,7 @@ const MainNavi = () => {
         label: "알림 관리",
         icon: Bell,
         type: "link",
-        href: "/alert"
+        href: "/alert",
       },
     ],
 
@@ -447,14 +438,20 @@ const MainNavi = () => {
         // 페이지 이동
         setActiveMenuId(item.id);
         setActiveSubMenuId(null);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(item.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, item.href);
-          console.log(`권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            item.href
+          );
+          console.log(
+            `권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(item.href);
         break;
       case "expand":
@@ -504,19 +501,39 @@ const MainNavi = () => {
 
     switch (subItem.type) {
       case "link":
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenu = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenu) {
+          setActiveMenuId(parentMenu.id);
+        }
         setActiveSubMenuId(subItem.id);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(subItem.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, subItem.href);
-          console.log(`서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            subItem.href
+          );
+          console.log(
+            `서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(subItem.href);
         break;
       case "list":
         // 리스트 박스 - 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForList = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForList) {
+          setActiveMenuId(parentMenuForList.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
@@ -524,6 +541,13 @@ const MainNavi = () => {
         break;
       case "action":
         // 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForAction = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForAction) {
+          setActiveMenuId(parentMenuForAction.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
@@ -622,8 +646,10 @@ const MainNavi = () => {
       </div>
 
       <nav className="sidebar-nav navigation-scrollbar">
-      {/* 권한에 따라 메뉴 필터링 */}
-      {filterMenuByAuthority(menuConfig.items, authorityList).map(renderMenuItem)}
+        {/* 권한에 따라 메뉴 필터링 */}
+        {filterMenuByAuthority(menuConfig.items, authorityList).map(
+          renderMenuItem
+        )}
       </nav>
     </div>
   );

@@ -11,7 +11,7 @@ import "../../../styles/jiyun/cmsAccessLog/CmsAccessLogPage.css";
 
 const CmsAccessLog = () => {
   const [searchParams, setSearchParams] = useState({
-    userId: "",
+    userEmail: "",
     userName: "",
     cmsAccessUserIp: "",
     adminTypeIndex: "0",
@@ -22,12 +22,12 @@ const CmsAccessLog = () => {
   const [searchResults, setSearchResults] = useState([]);
   const [adminTypes, setAdminTypes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [error, setError] = useState(null);
 
   const keys = [
-    "userId",
+    "userEmail",
     "userName", 
     "cmsAccessUserValue",
     "adminTypeName",
@@ -166,7 +166,7 @@ const CmsAccessLog = () => {
     // 데이터 변환 (순번 추가)
     const excelData = searchResults.map((row, index) => ({
       '순번': index + 1,
-      '아이디': row.userId || '',
+      '이메일': row.userEmail || '',
       '이름': row.userName || '',
       '로그': row.cmsAccessUserValue || '',
       '권한': row.adminTypeName || '',
@@ -187,7 +187,7 @@ const CmsAccessLog = () => {
     }
     return searchResults.map((item, index) => ({
       id: index,
-      userId: item?.userId || '',
+      userEmail: item?.userEmail || '',
       userName: item?.userName || '',
       cmsAccessUserValue: item?.cmsAccessUserValue || '',
       adminTypeName: item?.adminTypeName || '',
@@ -264,7 +264,7 @@ const CmsAccessLog = () => {
       headerAlign: 'center',
       renderCell: (params) => params.row.id + 1
     },
-    { field: "userId", headerName: "아이디", width: 300, minWidth: 300, flex: 0, align: 'center', headerAlign: 'center' },
+    { field: "userEmail", headerName: "이메일", width: 300, minWidth: 300, flex: 0, align: 'center', headerAlign: 'center' },
     { field: "userName", headerName: "이름", width: 100, minWidth: 100, flex: 0, align: 'center', headerAlign: 'center' },
     { 
       field: "cmsAccessUserValue", 
@@ -327,13 +327,13 @@ const CmsAccessLog = () => {
           {/* 첫 번째 행: 아이디, 이름, IP */}
           <div className="cms-accesslog-row">
             <div className="cms-accesslog-field">
-              <label className="cms-accesslog-label">아이디</label>
+              <label className="cms-accesslog-label">이메일</label>
               <input
                 className="cms-accesslog-input"
-                name="userId"
-                value={searchParams.userId}
+                name="userEmail"
+                value={searchParams.userEmail}
                 onChange={handleInputChange}
-                placeholder="검색명을 입력하세요."
+                placeholder="이메일을 입력하세요."
               />
             </div>
             <div className="cms-accesslog-field">

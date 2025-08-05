@@ -85,6 +85,14 @@ export const getAdminList = (params) => // 관리자 리스트
 export const createAdmin = (data) => // 관리자 등록
   api.post('/admin/create', data);
 
+export const getAdminDetail = (adminId) => // 관리자 상세정보 조회
+  api.get(`/admin/detail/${adminId}`);
+
+export const updateAdmin = (adminId, data) => // 관리자 정보 수정
+  api.put(`/admin/update/${adminId}`, data);
+
+  
+
 export const getCustomerAllStoreList = (params) => // 가맹점 고객현황 - 가맹점리스트
   api.get('/store/customerlist',{ params });
 
@@ -100,6 +108,9 @@ export const getAllowanceList = (params) => // 사업자 수당 내역
 
 export const getBusinessManList = () => // 사업자 조직도 - 전체 사업자 리스트
   api.get('/businessman/orgchart');
+
+export const getBusinessGrades = () => // 사업자 등급 목록 조회
+  api.get('/businessman/business-grades');
 
 
 

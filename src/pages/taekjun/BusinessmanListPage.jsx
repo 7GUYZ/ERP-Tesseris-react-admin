@@ -10,17 +10,16 @@ import '../../styles/taekjun/BusinessmanListPage.css';
 
 // DataGrid 컬럼 정의
 const columns = [
-  { field: 'userName', headerName: '이름', width: 120, sortable: true },
-  { field: 'email', headerName: '이메일', width: 200, sortable: true },
-  { field: 'userPhone', headerName: '휴대폰 번호', width: 140, sortable: true },
-  { field: 'businessGradeName', headerName: '사업자 등급', width: 120, sortable: true },
-  { field: 'businessManDistributionFlag', headerName: '배포 상태', width: 100, sortable: true },
-  { field: 'userBankName', headerName: '은행명', width: 120, sortable: true },
-  { field: 'userBankNumber', headerName: '계좌번호', width: 150, sortable: true },
-  { field: 'userBankHolder', headerName: '예금주', width: 100, sortable: true },
-  { field: 'businessAreaName', headerName: '사업 지역', width: 120, sortable: true },
-  { field: 'bossName', headerName: '상사 이름', width: 120, sortable: true },
-  { field: 'bossEmail', headerName: '상사 이메일', width: 200, sortable: true },
+  { field: 'userName', headerName: '이름', width: 120, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'email', headerName: '이메일', width: 200, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'userPhone', headerName: '휴대폰 번호', width: 140, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'businessGradeName', headerName: '사업자 등급', width: 120, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'userBankName', headerName: '은행명', width: 120, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'userBankNumber', headerName: '계좌번호', width: 150, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'userBankHolder', headerName: '예금주', width: 100, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'businessAreaName', headerName: '사업 지역', width: 120, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'bossName', headerName: '상사 이름', width: 120, sortable: true, headerAlign: 'center', align: 'center' },
+  { field: 'bossEmail', headerName: '상사 이메일', width: 200, sortable: true, headerAlign: 'center', align: 'center' },
 ];
 
 // 카카오 주소 API 스크립트 로드
@@ -50,6 +49,7 @@ const BusinessmanListPage = () => {
   // 사업자 등급/지역 상태 추가
   const [businessGrades, setBusinessGrades] = useState([]);
   const [businessAreas, setBusinessAreas] = useState([]);
+  const [banks, setBanks] = useState([]);
   // 검색 필터 name 기반으로 (서버에서 매핑 처리)
   const [searchFilters, setSearchFilters] = useState({
     email: '',
@@ -57,8 +57,7 @@ const BusinessmanListPage = () => {
     userPhone: '',
     businessGradeName: '',
     bossEmail: '',
-    businessAreaName: '',
-    businessManDistributionFlag: ''
+    businessAreaName: ''
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -75,6 +74,7 @@ const BusinessmanListPage = () => {
   const [showBossSelectModal, setShowBossSelectModal] = useState(false);
   const [bossSearchTerm, setBossSearchTerm] = useState('');
   const [filteredBossList, setFilteredBossList] = useState([]);
+  const [isSearchConditionsExpanded, setIsSearchConditionsExpanded] = useState(true);
 
   // 권한 체크 훅 사용
   const { checkPermission, hasPermission } = usePermissionStore();
@@ -94,7 +94,7 @@ const BusinessmanListPage = () => {
     };
     
     checkBusinessmanPermissions();
-  }, [checkPermission, programIndex]);
+  }, [programIndex]);
 
   // 사업자 등급 데이터 로드
   const fetchBusinessGrades = useCallback(async () => {
@@ -116,12 +116,15 @@ const BusinessmanListPage = () => {
     }
   }, []);
 
-  // 배포 상태 옵션
-  const distributionFlagOptions = [
-    { value: '', label: '상태를 선택하세요.' },
-    { value: '정상', label: '정상' },
-    { value: '정지', label: '정지' }
-  ];
+  // 은행 데이터 로드
+  const fetchBanks = useCallback(async () => {
+    try {
+      const response = await businessmanListApi.getBanks();
+      setBanks(response.data || []);
+    } catch (err) {
+      console.error('은행 목록 조회 실패:', err);
+    }
+  }, []);
 
   // 데이터 조회
   const fetchBusinessmanList = useCallback(async (filters = searchFilters) => {
@@ -155,8 +158,7 @@ const BusinessmanListPage = () => {
           id: index + 1,
           ...businessman,
           businessGradeName: businessman.businessGradeName || '-',
-          businessAreaName: businessman.businessAreaName || '-',
-          businessManDistributionFlag: businessman.businessManDistributionFlag || '-'
+          businessAreaName: businessman.businessAreaName || '-'
         }));
         
         console.log('매핑된 데이터:', mappedData);
@@ -180,7 +182,8 @@ const BusinessmanListPage = () => {
   useEffect(() => {
     fetchBusinessGrades();
     fetchBusinessAreas();
-  }, [fetchBusinessGrades, fetchBusinessAreas]);
+    fetchBanks(); // 은행 데이터도 최초 로딩
+  }, [fetchBusinessGrades, fetchBusinessAreas, fetchBanks]);
 
   // 등급과 지역 데이터가 로드된 후 사업자 목록 조회 (조회 버튼을 눌렀을 때만 검색)
   useEffect(() => {
@@ -214,12 +217,7 @@ const BusinessmanListPage = () => {
 
   // 검색 실행
   const handleSearch = async () => {
-    // 권한 체크
-    if (!hasPermission(2, 'insert')) { // 조회 권한은 insert로 가정
-      alert('조회 권한이 없습니다.');
-      return;
-    }
-
+    // 권한 체크 제거 (이미 useEffect에서 체크됨)
     try {
       setLoading(true);
       setError(null);
@@ -252,12 +250,7 @@ const BusinessmanListPage = () => {
 
   // 엑셀 다운로드
   const handleExcelDownload = async () => {
-    // 권한 체크
-    if (!hasPermission(2, 'insert')) { // 엑셀 다운로드 권한은 insert로 가정
-      alert('엑셀 다운로드 권한이 없습니다.');
-      return;
-    }
-
+    // 권한 체크 제거 (이미 useEffect에서 체크됨)
     try {
       setLoading(true);
       console.log('사업자 목록 엑셀 다운로드 시작...');
@@ -295,12 +288,7 @@ const BusinessmanListPage = () => {
 
   // 사업자 생성
   const handleCreateBusinessman = () => {
-    // 권한 체크
-    if (!hasPermission(2, 'insert')) {
-      alert('사업자 생성 권한이 없습니다.');
-      return;
-    }
-
+    // 권한 체크 제거 (이미 useEffect에서 체크됨)
     setCreateForm({
       email: '',
       password: '',
@@ -321,26 +309,24 @@ const BusinessmanListPage = () => {
 
   // 사업자 수정
   const handleEditBusinessman = (businessman) => {
-    // 권한 체크
-    if (!hasPermission(2, 'update')) {
-      alert('사업자 수정 권한이 없습니다.');
-      return;
-    }
-
+    // 권한 체크 제거 (이미 useEffect에서 체크됨)
     console.log('수정할 사업자 데이터:', businessman);
     setEditingBusinessman(businessman);
     setEditForm({
-      name: businessman.name || '',
-      phone: businessman.phone || '',
-      businessGrade: businessman.businessGrade || '',
-      businessArea: businessman.businessArea || '',
-      address: businessman.address || '',
-      detailAddress: businessman.detailAddress || '',
-      bankName: businessman.bankName || '',
-      bankNumber: businessman.bankNumber || '',
-      bankHolder: businessman.bankHolder || '',
+      email: businessman.email || '',
+      userName: businessman.userName || '',
+      userPhone: businessman.userPhone || '',
+      userBirthday: businessman.userBirthday || '',
+      userGenderIndex: businessman.userGenderIndex || '',
+      userZoneCode: businessman.userZoneCode || '',
+      userAddress: businessman.userAddress || '',
+      userDetailAddress: businessman.userDetailAddress || '',
+      userBankIndex: businessman.userBankIndex || '',
+      userBankNumber: businessman.userBankNumber || '',
+      userBankHolder: businessman.userBankHolder || '',
       bossEmail: businessman.bossEmail || '',
-      bossName: businessman.bossName || ''
+      businessGradeIndex: businessman.businessGradeIndex || '',
+      businessAreaIndex: businessman.businessAreaIndex || ''
     });
     setShowEditModal(true);
   };
@@ -367,8 +353,7 @@ const BusinessmanListPage = () => {
         bossEmail: createForm.bossEmail,
         businessManRegistrationDate: createForm.businessManRegistrationDate,
         businessGradeIndex: createForm.businessGradeIndex ? parseInt(createForm.businessGradeIndex) : null,
-        businessAreaIndex: createForm.businessAreaIndex ? parseInt(createForm.businessAreaIndex) : null,
-        businessManDistributionFlag: createForm.businessManDistributionFlag
+        businessAreaIndex: createForm.businessAreaIndex ? parseInt(createForm.businessAreaIndex) : null
       };
       
       await businessmanListApi.createBusinessman(createData);
@@ -405,8 +390,7 @@ const BusinessmanListPage = () => {
         userBankHolder: editForm.userBankHolder,
         bossEmail: editForm.bossEmail,
         businessGradeIndex: editForm.businessGradeIndex ? parseInt(editForm.businessGradeIndex) : null,
-        businessAreaIndex: editForm.businessAreaIndex ? parseInt(editForm.businessAreaIndex) : null,
-        businessManDistributionFlag: editForm.businessManDistributionFlag
+        businessAreaIndex: editForm.businessAreaIndex ? parseInt(editForm.businessAreaIndex) : null
       };
       
       await businessmanListApi.updateBusinessman(updateData);
@@ -613,12 +597,16 @@ const BusinessmanListPage = () => {
       <div className="businessman-list-page-header">
         <h1 className="businessman-list-page-title">사업자 리스트</h1>
         <div className="businessman-list-header-actions">
-          <button className="businessman-list-action-btn businessman-list-excel-btn" onClick={handleExcelDownload}>
-            엑셀
-          </button>
-          <button className="businessman-list-action-btn" onClick={handleSearch}>
-            조회
-          </button>
+          <PermissionGuard programIndex={programIndex} permissionType="insert">
+            <button className="businessman-list-action-btn businessman-list-excel-btn" onClick={handleExcelDownload}>
+              엑셀
+            </button>
+          </PermissionGuard>
+          <PermissionGuard programIndex={programIndex} permissionType="insert">
+            <button className="businessman-list-action-btn" onClick={handleSearch}>
+              조회
+            </button>
+          </PermissionGuard>
           <PermissionGuard programIndex={programIndex} permissionType="insert">
             <button className="businessman-list-action-btn" onClick={handleCreateBusinessman}>
               생성
@@ -643,95 +631,95 @@ const BusinessmanListPage = () => {
         </div>
       </div>
 
-      {/* 검색 필터 */}
-      <div className="businessman-list-search-section">
-        <div className="businessman-list-search-grid">
-          <div className="businessman-list-search-row">
-            <div className="businessman-list-search-item">
-              <label>이메일</label>
-              <input
-                type="text"
-                placeholder="이메일을 입력하세요."
-                value={searchFilters.email}
-                onChange={(e) => handleFilterChange('email', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>이름</label>
-              <input
-                type="text"
-                placeholder="이름을 입력하세요."
-                value={searchFilters.userName}
-                onChange={(e) => handleFilterChange('userName', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>휴대폰 번호</label>
-              <input
-                type="text"
-                placeholder="휴대폰 번호를 입력하세요."
-                value={searchFilters.userPhone}
-                onChange={(e) => handleFilterChange('userPhone', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-          </div>
-          <div className="businessman-list-search-row">
-            <div className="businessman-list-search-item">
-              <label>사업자 등급</label>
-              <select
-                value={searchFilters.businessGradeName}
-                onChange={e => setSearchFilters({ ...searchFilters, businessGradeName: e.target.value })}
-              >
-                <option value=''>전체 등급</option>
-                {businessGrades.map(grade => (
-                  <option key={grade.businessGradeIndex} value={grade.businessGradeName}>
-                    {grade.businessGradeName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="businessman-list-search-item">
-              <label>상사 이메일</label>
-              <input
-                type="text"
-                placeholder="상사 이메일을 입력하세요."
-                value={searchFilters.bossEmail}
-                onChange={(e) => handleFilterChange('bossEmail', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>사업 지역</label>
-              <select
-                value={searchFilters.businessAreaName}
-                onChange={e => setSearchFilters({ ...searchFilters, businessAreaName: e.target.value })}
-              >
-                <option value=''>전체 지역</option>
-                {businessAreas.map(area => (
-                  <option key={area.businessAreaIndex} value={area.businessAreaName}>
-                    {area.businessAreaName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="businessman-list-search-item">
-              <label>배포 상태</label>
-              <select
-                value={searchFilters.businessManDistributionFlag}
-                onChange={(e) => handleFilterChange('businessManDistributionFlag', e.target.value)}
-              >
-                {distributionFlagOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* 검색 조건 */}
+      <div className="search-conditions-section">
+        <div 
+          className="search-conditions-header"
+          onClick={() => setIsSearchConditionsExpanded(!isSearchConditionsExpanded)}
+        >
+          <h3>검색 조건</h3>
+          <div className="search-conditions-toggle">
+            <span>{isSearchConditionsExpanded ? '▲' : '▼'}</span>
           </div>
         </div>
+        
+        {isSearchConditionsExpanded && (
+          <div className="search-conditions-content">
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>이메일</label>
+                <input
+                  type="text"
+                  placeholder="이메일을 입력하세요"
+                  value={searchFilters.email}
+                  onChange={(e) => handleFilterChange('email', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>이름</label>
+                <input
+                  type="text"
+                  placeholder="이름을 입력하세요"
+                  value={searchFilters.userName}
+                  onChange={(e) => handleFilterChange('userName', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>휴대폰 번호</label>
+                <input
+                  type="text"
+                  placeholder="휴대폰 번호를 입력하세요"
+                  value={searchFilters.userPhone}
+                  onChange={(e) => handleFilterChange('userPhone', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </div>
+            
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>사업자 등급</label>
+                <select
+                  value={searchFilters.businessGradeName}
+                  onChange={e => setSearchFilters({ ...searchFilters, businessGradeName: e.target.value })}
+                >
+                  <option value="">사업자 등급 선택</option>
+                  {businessGrades.map(grade => (
+                    <option key={grade.businessGradeIndex} value={grade.businessGradeName}>
+                      {grade.businessGradeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="search-conditions-item">
+                <label>상사 이메일</label>
+                <input
+                  type="text"
+                  placeholder="상사 이메일을 입력하세요"
+                  value={searchFilters.bossEmail}
+                  onChange={(e) => handleFilterChange('bossEmail', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>사업 지역</label>
+                <select
+                  value={searchFilters.businessAreaName}
+                  onChange={e => setSearchFilters({ ...searchFilters, businessAreaName: e.target.value })}
+                >
+                  <option value="">사업 지역 선택</option>
+                  {businessAreas.map(area => (
+                    <option key={area.businessAreaIndex} value={area.businessAreaName}>
+                      {area.businessAreaName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 사업자 목록 DataGrid */}
@@ -881,14 +869,11 @@ const BusinessmanListPage = () => {
                       onChange={(e) => setEditForm(prev => ({ ...prev, userBankIndex: e.target.value }))}
                     >
                       <option value="">은행명을 선택하세요.</option>
-                      <option value="1">신한은행</option>
-                      <option value="2">국민은행</option>
-                      <option value="3">우리은행</option>
-                      <option value="4">하나은행</option>
-                      <option value="5">기업은행</option>
-                      <option value="6">농협은행</option>
-                      <option value="7">새마을금고</option>
-                      <option value="8">신협</option>
+                      {banks.map(bank => (
+                        <option key={bank.userBankIndex} value={bank.userBankIndex}>
+                          {bank.userBankName}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="businessman-list-form-item">
@@ -959,17 +944,6 @@ const BusinessmanListPage = () => {
                           {area.businessAreaName}
                         </option>
                       ))}
-                    </select>
-                  </div>
-                  <div className="businessman-list-form-item">
-                    <label>배포 상태</label>
-                    <select
-                      value={editForm.businessManDistributionFlag}
-                      onChange={(e) => setEditForm(prev => ({ ...prev, businessManDistributionFlag: e.target.value }))}
-                    >
-                      <option value="">상태를 선택하세요.</option>
-                      <option value="정상">정상</option>
-                      <option value="정지">정지</option>
                     </select>
                   </div>
                 </div>
@@ -1120,14 +1094,11 @@ const BusinessmanListPage = () => {
                       onChange={(e) => setCreateForm(prev => ({ ...prev, userBankIndex: e.target.value }))}
                     >
                       <option value="">은행명을 선택하세요.</option>
-                      <option value="1">신한은행</option>
-                      <option value="2">국민은행</option>
-                      <option value="3">우리은행</option>
-                      <option value="4">하나은행</option>
-                      <option value="5">기업은행</option>
-                      <option value="6">농협은행</option>
-                      <option value="7">새마을금고</option>
-                      <option value="8">신협</option>
+                      {banks.map(bank => (
+                        <option key={bank.userBankIndex} value={bank.userBankIndex}>
+                          {bank.userBankName}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="businessman-list-form-item">
@@ -1200,16 +1171,6 @@ const BusinessmanListPage = () => {
                           {area.businessAreaName}
                         </option>
                       ))}
-                    </select>
-                  </div>
-                  <div className="businessman-list-form-item">
-                    <label>배포 상태</label>
-                    <select
-                      value={createForm.businessManDistributionFlag}
-                      onChange={(e) => setCreateForm(prev => ({ ...prev, businessManDistributionFlag: e.target.value }))}
-                    >
-                      <option value="정상">정상</option>
-                      <option value="정지">정지</option>
                     </select>
                   </div>
                 </div>

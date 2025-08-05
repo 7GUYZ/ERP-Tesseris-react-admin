@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import InputField from "./LoginInputField.jsx"
 import LoginButton from "./LoginButton.jsx"
-import ErrorMessage from "../../ui/jungeun/ErrorMessage.jsx"
 import { login, menuAuthority } from "../../../api/auth/JungeunAuth.jsx"
 import { useToast } from "../../../context/jungeun/ToastContext.jsx"
 import useAuthStore from "../../../store/jungeun/AuthStore"
@@ -212,8 +211,8 @@ const LoginForm = () => {
         onChange={handleEmailChange}
         icon="id"
         error={errors.email}
+        errorMessage={errors.email}
       />
-      {errors.email && <ErrorMessage message={errors.email} />}
       <InputField
         type="password"
         placeholder="비밀번호를 입력하세요"
@@ -221,8 +220,8 @@ const LoginForm = () => {
         onChange={handlePasswordChange}
         icon="lock"
         error={errors.password}
+        errorMessage={errors.password}
       />
-      {errors.password && <ErrorMessage message={errors.password} />}
       <LoginButton type="submit" isLoading={isLoading}>
         {isLoading ? "로그인 중..." : "로그인"}
       </LoginButton>

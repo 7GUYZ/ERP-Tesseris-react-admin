@@ -4,10 +4,14 @@
 }
 
 .member-asset-details-container {
-  max-width: 1200px;
+  width: 100%;
+  min-width: auto;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 2rem;
   font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .member-asset-details-page-header {
@@ -93,10 +97,11 @@
 .member-asset-details-section {
   background: white;
   border-radius: 12px;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid lightgray;
 }
 
+/* 검색 조건 토글 헤더 */
 .member-asset-details-toggle-header {
   padding: 16px 24px;
   border-bottom: 1px solid #e2e8f0;
@@ -147,7 +152,7 @@
 }
 
 .member-asset-details-form.open {
-  max-height: 300px;
+  max-height: none;
   padding: 24px;
 }
 
@@ -204,26 +209,52 @@
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid lightgray;
-  height: 500px;
+  min-height: 500px;
+  height: auto;
+  margin-top: 24px;
+  min-width: auto;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.member-asset-details-error {
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #dc2626;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  margin-top: 16px;
+.member-asset-details-results-section {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  border: none;
+  min-height: 500px;
+  height: auto;
+}
+
+.member-asset-details-empty {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  width: 100%;
+  padding: 20px;
+}
+
+.member-asset-details-empty-text {
+  color: #6b7280;
+  font-size: 16px;
+  text-align: center;
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  max-width: 100%;
+  padding: 0 20px;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 1024px) {
-  .member-asset-details-header {
+  .member-asset-details-page-header {
     padding: 20px;
   }
 
-  .member-asset-details-title {
+  .member-asset-details-page-title {
     font-size: 20px;
   }
 }
@@ -232,25 +263,42 @@
   .member-asset-details-container {
     padding: 16px;
     gap: 16px;
+    width: 100%;
+    min-width: auto;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
-  .member-asset-details-header {
+  .member-asset-details-table-container {
+    min-width: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .member-asset-details-page-header {
     padding: 16px;
-  }
-
-  .member-asset-details-header-content {
-    flex-direction: column;
-    align-items: flex-start;
+    flex-wrap: wrap;
     gap: 12px;
   }
 
-  .member-asset-details-title {
+  .member-asset-details-page-title {
     font-size: 18px;
+    flex: 1;
+    min-width: 0;
   }
 
   .member-asset-details-actions {
-    width: 100%;
+    width: auto;
     justify-content: flex-end;
+    flex-shrink: 0;
+  }
+
+  .member-asset-details-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    min-width: 60px;
   }
 
   .member-asset-details-row {
@@ -268,24 +316,44 @@
   .member-asset-details-container {
     padding: 12px;
     gap: 12px;
+    width: 100%;
+    min-width: auto;
+    max-width: 100%;
+    overflow-x: hidden;
+    box-sizing: border-box;
   }
 
-  .member-asset-details-header {
+  .member-asset-details-table-container {
+    min-width: auto;
+    overflow-x: hidden;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .member-asset-details-page-header {
     padding: 12px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-  .member-asset-details-title {
+  .member-asset-details-page-title {
     font-size: 16px;
+    width: 100%;
   }
 
   .member-asset-details-actions {
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
   }
 
   .member-asset-details-btn {
-    width: 100%;
-    padding: 12px;
+    width: auto;
+    padding: 10px 16px;
+    font-size: 13px;
+    min-width: 60px;
   }
 
   .member-asset-details-input,
@@ -297,4 +365,14 @@
   .member-asset-details-label {
     font-size: 13px;
   }
+}
+
+.member-asset-details-error {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-top: 16px;
 } 

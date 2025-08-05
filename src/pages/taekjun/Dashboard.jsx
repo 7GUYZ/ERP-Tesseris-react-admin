@@ -1,275 +1,202 @@
 import React, { useEffect, useState } from 'react';
 import { dashboardApi } from '../../api/auth/TaekjunAuth';
+import { useNavigate } from 'react-router-dom';
 import '../../styles/taekjun/Dashboard.css';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import DashboardModal from '../../components/ui/taekjun/DashboardModal';
+
+// 숫자 포맷팅 유틸리티 함수
+const formatNumber = (value) => {
+    if (value === undefined || value === null) return '0';
+    return value.toLocaleString('ko-KR');
+};
+
+const StatCard = ({ title, value, subtitle }) => (
+    <div className="dashboard-stat-card">
+        <h3 className="stat-card-title">{title}</h3>
+        <div className="stat-card-value">{formatNumber(value)}</div>
+        {subtitle && <div className="stat-card-subtitle">{subtitle}</div>}
+    </div>
+);
+
+const NoticeItem = ({ notice }) => {
+    const navigate = useNavigate();
+    
+    const handleClick = () => {
+        navigate(`/notice/update/${notice.noticeIndex}`);
+    };
+
+    return (
+        <div className="dashboard-notice-item" onClick={handleClick} role="button" tabIndex={0}>
+            <div className="notice-content">
+                <span className="notice-title">{notice.noticeTitle}</span>
+                <span className="notice-preview">{notice.noticeDesc}</span>
+            </div>
+            <span className="notice-date">{notice.createdAt}</span>
+        </div>
+    );
+};
 
 const Dashboard = () => {
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [modalData, setModalData] = useState({
-    isOpen: false,
-    title: '',
-    data: [],
-    chartType: 'bar'
-  });
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
-  // 차트 색상 배열
-  const chartColors = [
-    '#3b7ddd', // 파란색
-    '#10b981', // 초록색
-    '#f59e0b', // 주황색
-    '#ef4444', // 빨간색
-    '#8b5cf6', // 보라색
-    '#06b6d4', // 청록색
-    '#f97316', // 주황색
-    '#ec4899', // 분홍색
-  ];
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const res = await dashboardApi.getStatistics();
+                console.log('대시보드 API 응답:', res);
+                console.log('대시보드 데이터:', res.data);
+                setStats(res.data.data || res.data);
+            } catch (err) {
+                console.error('대시보드 API 에러:', err);
+                setError('대시보드 데이터를 불러오지 못했습니다.');
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const res = await dashboardApi.getStatistics();
-        setStats(res.data.data || res.data);
-      } catch (err) {
-        setError('대시보드 데이터를 불러오지 못했습니다.');
-      } finally {
-        setLoading(false);
-      }
+    // 핵심 지표 카드 컴포넌트
+    const StatCard = ({ title, value, subtitle, color = '#3b7ddd' }) => (
+        <div className="dashboard-stat-card" style={{ borderLeft: `4px solid ${color}` }}>
+            <div className="stat-card-title">{title}</div>
+            <div className="stat-card-value">{formatNumber(value)}</div>
+            {subtitle && <div className="stat-card-subtitle">{subtitle}</div>}
+        </div>
+    );
+
+    const handleMoreNotices = () => {
+        navigate('/notice/list');
     };
-    fetchStats();
-  }, []);
 
-  // 모달 열기 함수
-  const openModal = (title, data, chartType = 'bar') => {
-    setModalData({
-      isOpen: true,
-      title,
-      data,
-      chartType
-    });
-  };
+    return (
+        <div className="dashboard-root">
+            <div className="dashboard-header">
+                <h1 className="dashboard-title">대시보드</h1>
+            </div>
 
-  // 모달 닫기 함수
-  const closeModal = () => {
-    setModalData({
-      isOpen: false,
-      title: '',
-      data: [],
-      chartType: 'bar'
-    });
-  };
+            {loading ? (
+                <div className="dashboard-loading">로딩 중...</div>
+            ) : error ? (
+                <div className="dashboard-error">{error}</div>
+            ) : stats ? (
+                <div className="dashboard-content">
+                    {/* 상세 통계 섹션 */}
+                    <section className="dashboard-section">
+                        <h2 className="section-title">상세 통계</h2>
+                        <div className="dashboard-detail-grid">
+                            <div className="detail-card">
+                                <h3>TS 현황</h3>
+                                <div className="detail-item">
+                                    <span>충전 TS:</span>
+                                    <span>{formatNumber(stats?.chargedCmTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>지급 TS:</span>
+                                    <span>{formatNumber(stats?.companyPaidCmTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>회수 TS:</span>
+                                    <span>{formatNumber(stats?.companyCollectedCmTotal || 0)}</span>
+                                </div>
+                            </div>
 
-  // 카드 클릭 핸들러
-  const handleCardClick = (groupTitle, key) => {
-    const keyName = formatKey(key);
-    const value = stats[key];
-    
-    const chartData = [
-      { name: '전체', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Total')}`] || 0 },
-      { name: '어제', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Yesterday')}`] || 0 },
-      { name: '오늘', value: stats[`${key.replace(/Total|Yesterday|Today$/, 'Today')}`] || 0 }
-    ];
+                            <div className="detail-card">
+                                <h3>사업자 현황</h3>
+                                <div className="detail-item">
+                                    <span>총 사업자:</span>
+                                    <span>{formatNumber(stats?.businessManTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>승인 가맹점:</span>
+                                    <span>{formatNumber(stats?.approvedStoreTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>대기 가맹점:</span>
+                                    <span>{formatNumber(stats?.pendingStoreTotal || 0)}</span>
+                                </div>
+                            </div>
 
-    openModal(`${groupTitle} - ${keyName}`, chartData, 'bar');
-  };
-
-  // 그룹 제목 클릭 핸들러
-  const handleGroupTitleClick = (groupTitle) => {
-    let chartData = [];
-    
-    switch (groupTitle) {
-      case 'CM 관련':
-        chartData = [
-          { name: '충전 CM', value: stats?.chargedCmTotal || 0 },
-          { name: '지급 CM', value: stats?.companyPaidCmTotal || 0 },
-          { name: '회수 CM', value: stats?.companyCollectedCmTotal || 0 },
-          { name: '선물 CM', value: stats?.giftCmTotal || 0 }
-        ];
-        break;
-      case '수수료 관련':
-        chartData = [
-          { name: '사업자 CM 수수료', value: stats?.businessCmCommissionTotal || 0 },
-          { name: '본사 CM Cash', value: stats?.companyCmCashTotal || 0 }
-        ];
-        break;
-      case '가맹점/사업자':
-        chartData = [
-          { name: '승인된 가맹점', value: stats?.approvedStoreTotal || 0 },
-          { name: '사업자', value: stats?.businessManTotal || 0 },
-          { name: '대기중인 가맹점', value: stats?.pendingStoreTotal || 0 }
-        ];
-        break;
-      case '기타':
-        chartData = [
-          { name: '출금 신청 완료', value: stats?.withdrawalCompletedTotal || 0 }
-        ];
-        break;
-      default:
-        return;
-    }
-
-    openModal(`${groupTitle} 전체 통계`, chartData, 'bar');
-  };
-
-  // key를 보기 좋게 변환
-  const formatKey = (key) => {
-    // 카멜케이스를 한글로 바꾸거나, _를 띄어쓰기로 바꿔줌
-    return key
-      .replace(/([A-Z])/g, ' $1')
-      .replace(/_/g, ' ')
-      .replace(/\bCM\b/g, 'CM')
-      .replace(/\bTotal\b/g, '전체 총량')
-      .replace(/\bYesterday\b/g, '어제 총량')
-      .replace(/\bToday\b/g, '오늘 총량')
-      .replace(/\bCommission\b/g, '수수료')
-      .replace(/\bGift\b/g, '선물')
-      .replace(/\bWithdrawal\b/g, '출금')
-      .replace(/\bBusiness\b/g, '사업자')
-      .replace(/\bCompany\b/g, '본사')
-      .replace(/\bPaid\b/g, '지급')
-      .replace(/\bCollected\b/g, '회수')
-      .replace(/\bApproved\b/g, '승인')
-      .replace(/\bPending\b/g, '대기')
-      .replace(/\bStore\b/g, '가맹점')
-      .replace(/\bMan\b/g, '사업자')
-      .replace(/\bCompleted\b/g, '완료')
-      .trim();
-  };
-
-  // 배열을 원하는 크기로 나누는 함수
-  const chunkArray = (array, size) => {
-    const chunks = [];
-    for (let i = 0; i < array.length; i += size) {
-      chunks.push(array.slice(i, i + size));
-    }
-    return chunks;
-  };
-
-  const groups = [
-    {
-      title: 'CM 관련',
-      keys: [
-        'chargedCmTotal', 'chargedCmYesterday', 'chargedCmToday',
-        'companyPaidCmTotal', 'companyPaidCmYesterday', 'companyPaidCmToday',
-        'companyCollectedCmTotal', 'companyCollectedCmYesterday', 'companyCollectedCmToday',
-        'giftCmTotal', 'giftCmYesterday', 'giftCmToday'
-      ]
-    },
-    {
-      title: '수수료 관련',
-      keys: [
-        'businessCmCommissionTotal', 'businessCmCommissionYesterday', 'businessCmCommissionToday',
-        'companyCmCashTotal', 'companyCmCashYesterday', 'companyCmCashToday'
-      ]
-    },
-    {
-      title: '가맹점/사업자',
-      keys: [
-        'approvedStoreTotal', 'approvedStoreYesterday', 'approvedStoreToday',
-        'businessManTotal', 'businessManYesterday', 'businessManToday',
-        'pendingStoreTotal'
-      ]
-    },
-    {
-      title: '기타',
-      keys: [
-        'withdrawalCompletedTotal', 'withdrawalCompletedYesterday', 'withdrawalCompletedToday'
-      ]
-    }
-  ];
-
-  return (
-    <div className="dashboard-root">
-      <div className="dashboard-title">대시보드 통계</div>
-      <div className="dashboard-container">
-        {loading ? (
-          <div style={{textAlign:'center',padding:'60px',color:'#3b7ddd'}}>로딩 중...</div>
-        ) : error ? (
-          <div style={{textAlign:'center',padding:'60px',color:'#ef4444'}}>{error}</div>
-        ) : stats ? (
-          groups.map(group => (
-            <section key={group.title} className="dashboard-group">
-              <h2 className="dashboard-group-title" onClick={() => handleGroupTitleClick(group.title)}>{group.title}</h2>
-              
-              {/* CM 관련과 수수료 관련은 3개씩, 가맹점/사업자는 2개씩, 기타는 1개씩 나누어서 렌더링 */}
-              {group.title === 'CM 관련' || group.title === '수수료 관련' ? (
-                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
-                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
-                    {chunk.map(key => (
-                      stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
-                          <div className="card-label">{formatKey(key)}</div>
-                          <div className="card-value">
-                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
-                          </div>
+                            <div className="detail-card">
+                                <h3>수수료 현황</h3>
+                                <div className="detail-item">
+                                    <span>사업자 수수료:</span>
+                                    <span>{formatNumber(stats?.businessCmCommissionTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>본사 TS Cash:</span>
+                                    <span>{formatNumber(stats?.companyCmCashTotal || 0)}</span>
+                                </div>
+                                <div className="detail-item">
+                                    <span>출금 완료:</span>
+                                    <span>{formatNumber(stats?.withdrawalCompletedTotal || 0)}</span>
+                                </div>
+                            </div>
                         </div>
-                      )
-                    ))}
-                  </div>
-                ))
-              ) : group.title === '가맹점/사업자' ? (
-                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
-                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
-                    {chunk.map(key => (
-                      stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
-                          <div className="card-label">{formatKey(key)}</div>
-                          <div className="card-value">
-                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
-                          </div>
+                    </section>
+
+                    <section className="dashboard-section">
+                        <h2 className="section-title">핵심 지표</h2>
+                        <div className="dashboard-stats-grid">
+                            <StatCard
+                                title="총 회원수"
+                                value={stats?.userTotal || 0}
+                                color="#10b981"
+                            />
+                            <StatCard
+                                title="오늘 신규 가입"
+                                value={stats?.userToday || 0}
+                                color="#f59e0b"
+                            />
                         </div>
-                      )
-                    ))}
-                  </div>
-                ))
-              ) : group.title === '기타' ? (
-                chunkArray(group.keys, 3).map((chunk, chunkIndex) => (
-                  <div key={chunkIndex} className="dashboard-grid" style={{ marginBottom: chunkIndex < chunkArray(group.keys, 3).length - 1 ? '16px' : '0' }}>
-                    {chunk.map(key => (
-                      stats && stats[key] !== undefined && (
-                        <div className="dashboard-card" key={key} onClick={() => handleCardClick(group.title, key)}>
-                          <div className="card-label">{formatKey(key)}</div>
-                          <div className="card-value">
-                            {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
-                          </div>
+                    </section>
+
+                    <section className="dashboard-section">
+                        <h2 className="section-title">QnA 현황</h2>
+                        <div className="dashboard-stats-grid">
+                            <StatCard
+                                title="전체 QnA"
+                                value={stats?.qnaTotal || 0}
+                            />
+                            <StatCard
+                                title="답변 완료"
+                                value={stats?.qnaAnswered || 0}
+                            />
+                            <StatCard
+                                title="미답변"
+                                value={stats?.qnaUnanswered || 0}
+                            />
                         </div>
-                      )
-                    ))}
-                  </div>
-                ))
-              ) : (
-                /* 기본 렌더링 (사용되지 않음) */
-                <div className="dashboard-grid">
-                  {group.keys.map(key => (
-                    stats && stats[key] !== undefined && (
-                      <div className="dashboard-card" key={key}>
-                        <div className="card-label">{formatKey(key)}</div>
-                        <div className="card-value">
-                          {typeof stats[key] === 'number' ? stats[key].toLocaleString() : String(stats[key])}
+                    </section>
+
+                    <section className="dashboard-section">
+                        <div className="dashboard-section-header">
+                            <h2 className="section-title">최근 공지사항</h2>
+                            <button 
+                                className="dashboard-more-btn"
+                                onClick={handleMoreNotices}
+                            >
+                                더보기
+                            </button>
                         </div>
-                      </div>
-                    )
-                  ))}
+                        <div className="dashboard-notice-list">
+                            {stats?.recentNotices && stats.recentNotices.length > 0 ? (
+                                stats.recentNotices.map(notice => (
+                                    <NoticeItem key={notice.noticeIndex} notice={notice} />
+                                ))
+                            ) : (
+                                <div className="dashboard-notice-empty">최근 공지사항이 없습니다.</div>
+                            )}
+                        </div>
+                    </section>
                 </div>
-              )}
-              
-            </section>
-          ))
-        ) : null}
-      </div>
-      <DashboardModal
-        isOpen={modalData.isOpen}
-        onClose={closeModal}
-        title={modalData.title}
-        data={modalData.data}
-        chartType={modalData.chartType}
-      />
-    </div>
-  );
+            ) : null}
+        </div>
+    );
 };
 
 export default Dashboard; 

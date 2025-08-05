@@ -555,140 +555,6 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
           </div>
         </div>
 
-        {/* 매장 정보 섹션 */}
-        <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#495057', borderBottom: '2px solid #e9ecef', paddingBottom: '8px' }}>
-            🏪 매장 정보
-          </h3>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              <span className="detail-modal-field-icon">📏</span>
-              매장 규모
-            </div>
-            <div className="detail-modal-field-value">
-              {editMode ? (
-                <input
-                  type="text"
-                  value={displayData.storeSize || ''}
-                  onChange={(e) => handleFieldChange('storeSize', e.target.value)}
-                  placeholder="예: 30평"
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                displayData.storeSize || '-'
-              )}
-            </div>
-          </div>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              <span className="detail-modal-field-icon">👥</span>
-              직원 수
-            </div>
-            <div className="detail-modal-field-value">
-              {editMode ? (
-                <input
-                  type="number"
-                  value={displayData.employeeCount || ''}
-                  onChange={(e) => handleFieldChange('employeeCount', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                (displayData.employeeCount || 0) + '명'
-              )}
-            </div>
-          </div>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              <span className="detail-modal-field-icon">🚗</span>
-              주차 공간
-            </div>
-            <div className="detail-modal-field-value">
-              {editMode ? (
-                <input
-                  type="number"
-                  value={displayData.parkingSpaces || ''}
-                  onChange={(e) => handleFieldChange('parkingSpaces', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                (displayData.parkingSpaces || 0) + '대'
-              )}
-            </div>
-          </div>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              <span className="detail-modal-field-icon">📅</span>
-              예상 개업일
-            </div>
-            <div className="detail-modal-field-value">
-              {editMode ? (
-                <input
-                  type="date"
-                  value={displayData.expectedOpenDate || ''}
-                  onChange={(e) => handleFieldChange('expectedOpenDate', e.target.value)}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                />
-              ) : (
-                displayData.expectedOpenDate ? new Date(displayData.expectedOpenDate).toLocaleDateString('ko-KR') : '-'
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* 배달 서비스 섹션 */}
-        <div style={{ marginBottom: '24px' }}>
-          <h3 style={{ marginBottom: '16px', color: '#495057', borderBottom: '2px solid #e9ecef', paddingBottom: '8px' }}>
-            🚚 배달 서비스
-          </h3>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              <span className="detail-modal-field-icon">✅</span>
-              배달 서비스 제공
-            </div>
-            <div className="detail-modal-field-value">
-              {editMode ? (
-                <select
-                  value={displayData.hasDelivery ? 'true' : 'false'}
-                  onChange={(e) => handleFieldChange('hasDelivery', e.target.value === 'true')}
-                  style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                >
-                  <option value="false">제공 안함</option>
-                  <option value="true">제공함</option>
-                </select>
-              ) : (
-                displayData.hasDelivery ? '제공함' : '제공 안함'
-              )}
-            </div>
-          </div>
-
-          {displayData.hasDelivery && (
-            <div className="detail-modal-field">
-              <div className="detail-modal-field-label">
-                <span className="detail-modal-field-icon">📍</span>
-                배달 반경
-              </div>
-              <div className="detail-modal-field-value">
-                {editMode ? (
-                  <input
-                    type="text"
-                    value={displayData.deliveryRadius || ''}
-                    onChange={(e) => handleFieldChange('deliveryRadius', e.target.value)}
-                    placeholder="예: 3km"
-                    style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
-                  />
-                ) : (
-                  displayData.deliveryRadius || '-'
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* 재정 정보 섹션 */}
         <div style={{ marginBottom: '24px' }}>
           <h3 style={{ marginBottom: '16px', color: '#495057', borderBottom: '2px solid #e9ecef', paddingBottom: '8px' }}>
@@ -769,7 +635,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
           <div className="detail-modal-field">
             <div className="detail-modal-field-label">
               <span className="detail-modal-field-icon">💎</span>
-              보유 CM
+              보유 TS
             </div>
             <div className="detail-modal-field-value currency">
               {(displayData.totalCM || 0).toLocaleString()}원
