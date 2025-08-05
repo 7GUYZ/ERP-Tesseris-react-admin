@@ -179,22 +179,17 @@ export const ChatWebSocketProvider = ({ children }) => {
     // roomId를 안전하게 추출 (객체인 경우 처리)
     let extractedRoomId = roomId;
     
-    // admin 구독은 특별 처리 (새 방 생성 응답을 받기 위한 것)
-    if (extractedRoomId === 'admin') {
-      extractedRoomId = 'admin';
-    } else {
-      // roomId가 객체인 경우 room_index 필드 추출
-      if (extractedRoomId && typeof extractedRoomId === 'object') {
-        extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
-      }
-      
-      // 문자열로 변환하고 숫자만 추출
-      extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
-      
-      if (!extractedRoomId) {
-        console.error('❌ 유효하지 않은 roomId:', roomId);
-        return false;
-      }
+    // roomId가 객체인 경우 room_index 필드 추출
+    if (extractedRoomId && typeof extractedRoomId === 'object') {
+      extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
+    }
+    
+    // 문자열로 변환하고 숫자만 추출
+    extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    
+    if (!extractedRoomId) {
+      console.error('❌ 유효하지 않은 roomId:', roomId);
+      return false;
     }
 
     // 이미 구독 중인지 확인
@@ -204,8 +199,8 @@ export const ChatWebSocketProvider = ({ children }) => {
     }
 
     try {
-      // admin 구독은 특별한 경로 사용
-      const subscriptionPath = extractedRoomId === 'admin' ? '/queue/admin' : `/queue/${extractedRoomId}`;
+      // DB에서 생성되는 room_index로 직접 구독
+      const subscriptionPath = `/queue/${extractedRoomId}`;
       console.log(`📡 구독 시도: ${subscriptionPath} (원본 roomId: ${roomId}, 추출된 roomId: ${extractedRoomId})`);
       
       const subscription = stompClient.subscribe(subscriptionPath, (message) => {
@@ -276,7 +271,30 @@ export const ChatWebSocketProvider = ({ children }) => {
       extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
     }
     
-    // 문자열로 변환하고 숫자만 추출
+    // 새로운 방 생성인지 확인 (room_index가 null이거나 "admin"인 경우)
+    const isNewRoomCreation = !extractedRoomId || 
+                             extractedRoomId === 'admin' || 
+                             extractedRoomId === 'null' || 
+                             (messageData && messageData.room_index === null);
+    
+    if (isNewRoomCreation) {
+      // 새로운 방 생성인 경우 "admin" 사용
+      console.log('📤 새 방 생성 메시지 전송 (admin 사용):', { roomId, messageData });
+      try {
+        stompClient.publish({
+          destination: `/app/adminchat.sendMessage/admin`,
+          body: JSON.stringify(messageData)
+        });
+        console.log('✅ 새 방 생성 메시지 전송 완료');
+        return true;
+      } catch (error) {
+        console.error('❌ 새 방 생성 메시지 전송 실패:', error);
+        return false;
+      }
+    }
+    
+    // 기존 방인 경우 숫자만 추출
+    console.log('📤 채팅 메시지 전송:', extractedRoomId);
     extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
     
     if (!extractedRoomId) {

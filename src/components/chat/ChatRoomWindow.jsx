@@ -39,6 +39,41 @@ function ChatRoomWindow({
     y: Math.max(0, window.innerHeight * 0.1)
   });
   const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected, deleteMessage, stompClient, connectWebSocket } = useChatWebSocket();
+
+  // roomId 추출 유틸리티 함수 (강화된 버전)
+  const extractNumericRoomId = useCallback((roomIdValue) => {
+    if (!roomIdValue) return null;
+
+    let extracted = roomIdValue;
+
+    // 1. JSON 문자열인 경우 파싱
+    if (typeof extracted === 'string' && extracted.includes('{') && extracted.includes('}')) {
+      try {
+        const parsed = JSON.parse(extracted);
+        // 우선순위: room_index > id > roomId > roomid
+        extracted = parsed.room_index || parsed.id || parsed.roomId || parsed.roomid;
+        console.log('🔍 JSON 파싱 결과:', { original: roomIdValue, parsed, extracted });
+      } catch (e) {
+        console.warn('⚠️ JSON 파싱 실패:', extracted, e);
+      }
+    }
+
+    // 2. 객체인 경우 필드 추출
+    if (typeof extracted === 'object' && extracted !== null) {
+      extracted = extracted.room_index || extracted.id || extracted.roomId || extracted.roomid;
+    }
+
+    // 3. 'admin' 특별 처리
+    if (String(extracted).toLowerCase() === 'admin') {
+      return 'admin';
+    }
+    
+    // 4. 숫자만 추출
+    const numericOnly = String(extracted || '').replace(/[^0-9]/g, '');
+    console.log('🔍 최종 추출 결과:', { original: roomIdValue, extracted, numericOnly });
+    
+    return numericOnly || null;
+  }, []);
   const [size, setSize] = useState(currentSize || {
     width: Math.min(400, window.innerWidth * 0.9),
     height: Math.min(600, window.innerHeight * 0.8)
@@ -260,6 +295,62 @@ function ChatRoomWindow({
       receivedUserIdType: typeof receivedMessage.user_id
     });
 
+    // 새 방 생성 응답 처리
+    if (receivedMessage.type === 'chat' && receivedMessage.room_index && !roomId) {
+      console.log('🆕 새 방 생성 응답 감지:', receivedMessage.room_index);
+      console.log('📋 전체 응답 구조:', JSON.stringify(receivedMessage, null, 2));
+      console.log('🔍 응답 타입:', typeof receivedMessage.room_index);
+      console.log('🔍 room_index 값:', receivedMessage.room_index);
+      
+      // room_index를 안전하게 추출
+      let extractedRoomIndex = receivedMessage.room_index;
+      
+      // 객체나 JSON 형태인 경우 처리
+      if (typeof extractedRoomIndex === 'object') {
+        console.log('📦 room_index가 객체입니다:', extractedRoomIndex);
+        extractedRoomIndex = extractedRoomIndex.room_index || extractedRoomIndex.id || extractedRoomIndex.roomId;
+        console.log('📦 추출된 room_index:', extractedRoomIndex);
+      }
+      
+      // 문자열로 변환
+      extractedRoomIndex = String(extractedRoomIndex || '');
+      console.log('📝 최종 room_index:', extractedRoomIndex);
+      
+      if (!extractedRoomIndex || extractedRoomIndex === 'null' || extractedRoomIndex === 'undefined') {
+        console.error('❌ 유효하지 않은 room_index:', receivedMessage.room_index);
+        return;
+      }
+      
+      setRoomId(extractedRoomIndex);
+      
+      // 새 방 생성 시 구독을 room_index로 변경
+      console.log('🔄 구독을 room_index로 변경:', extractedRoomIndex);
+      
+      // 기존 "admin" 구독 해제
+      console.log('🔌 기존 admin 구독 해제 시도');
+      unsubscribeFromRoom("admin");
+      
+      // 새로운 room_index로 구독
+      console.log('📡 새로운 room_index로 구독 시도:', extractedRoomIndex);
+      const subscribeSuccess = subscribeToRoom(extractedRoomIndex, (newRoomMessage) => {
+        console.log('📨 새 방 메시지 수신:', newRoomMessage);
+        // 무한 재귀 방지: 이미 처리된 메시지는 다시 처리하지 않음
+        if (newRoomMessage.type === 'chat' && newRoomMessage.room_index && !roomId) {
+          console.log('⚠️ 이미 처리된 새 방 생성 응답이므로 무시');
+          return;
+        }
+        handleIncomingMessage(newRoomMessage);
+      });
+      
+      if (subscribeSuccess) {
+        console.log('✅ 새 방 구독 성공:', extractedRoomIndex);
+      } else {
+        console.error('❌ 새 방 구독 실패:', extractedRoomIndex);
+      }
+      
+      console.log('✅ 새 방 room_index 저장 및 구독 변경 완료:', extractedRoomIndex);
+    }
+
     // 메시지 삭제 이벤트 처리
     if (receivedMessage.type === 'DELETE_MESSAGE') {
       const messageIndex = receivedMessage.messageIndex;
@@ -390,43 +481,119 @@ function ChatRoomWindow({
     }
   }, [open, roomDataWithoutRefresh]);
 
+  // 방 입장 시 join 메시지 전송 함수
+  const sendJoinMessage = () => {
+    if (stompClient && stompClient.connected && roomId) {
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      if (userInfo) {
+        // room_index를 안전하게 추출
+        let roomIndex = roomId;
+        
+        // room_index가 객체인 경우 처리
+        if (roomIndex && typeof roomIndex === 'object') {
+          roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
+        }
+        
+        // 문자열로 변환하고 숫자만 추출
+        roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
+        
+        if (!roomIndex) {
+          console.error('❌ 유효하지 않은 room_index:', roomId);
+          return;
+        }
+        
+        // 기존 방 입장 시에는 입장 알림 없이 조용히 입장
+        stompClient.publish({
+          destination: `/app/adminchat.joinRoom/${roomIndex}`,
+          body: JSON.stringify({
+            type: 'JOIN',
+            user_id: userInfo.id,
+            room_index: roomIndex,
+            timestamp: new Date().toISOString()
+          })
+        });
+        console.log('🚪 채팅방 조용히 입장 (알림 없음):', roomIndex);
+      }
+    }
+  };
+
+  // 명시적 입장 알림 전송 (초대된 사용자가 방에 입장할 때)
+  const sendEnterMessage = () => {
+    if (stompClient && stompClient.connected && roomId) {
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      if (userInfo) {
+        // room_index를 안전하게 추출
+        let roomIndex = roomId;
+        
+        // room_index가 객체인 경우 처리
+        if (roomIndex && typeof roomIndex === 'object') {
+          roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
+        }
+        
+        // 문자열로 변환하고 숫자만 추출
+        roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
+        
+        if (!roomIndex) {
+          console.error('❌ 유효하지 않은 room_index:', roomId);
+          return;
+        }
+        
+        // 명시적 입장 알림 전송
+        stompClient.publish({
+          destination: `/app/adminchat.enterRoom/${roomIndex}`,
+          body: JSON.stringify({
+            type: 'ENTER',
+            user_id: userInfo.id,
+            room_index: roomIndex,
+            timestamp: new Date().toISOString()
+          })
+        });
+        console.log('🚪 채팅방 명시적 입장 알림 전송:', roomIndex);
+      }
+    }
+  };
+
+  // 명시적 퇴장 알림 전송 (사용자가 방에서 나가기 요청할 때)
+  const sendLeaveMessage = () => {
+    if (stompClient && stompClient.connected && roomId) {
+      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+      if (userInfo) {
+        // room_index를 안전하게 추출
+        let roomIndex = roomId;
+        
+        // room_index가 객체인 경우 처리
+        if (roomIndex && typeof roomIndex === 'object') {
+          roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
+        }
+        
+        // 문자열로 변환하고 숫자만 추출
+        roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
+        
+        if (!roomIndex) {
+          console.error('❌ 유효하지 않은 room_index:', roomId);
+          return;
+        }
+        
+        // 명시적 퇴장 알림 전송
+        stompClient.publish({
+          destination: `/app/adminchat.leaveRoom/${roomIndex}`,
+          body: JSON.stringify({
+            type: 'LEAVE',
+            user_id: userInfo.id,
+            room_index: roomIndex,
+            timestamp: new Date().toISOString()
+          })
+        });
+        console.log('🚪 채팅방 명시적 퇴장 알림 전송:', roomIndex);
+      }
+    }
+  };
+
   // 채팅방이 열릴 때 join 메시지 전송
   useEffect(() => {
     if (open && roomDataWithoutRefresh && roomDataWithoutRefresh.room_index && sendMessageRef.current) {
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       if (userInfo) {
-        // join 메시지 전송 - 별도 함수로 처리
-        const sendJoinMessage = () => {
-          if (stompClient && stompClient.connected) {
-            // room_index를 안전하게 추출
-            let roomIndex = roomDataWithoutRefresh.room_index;
-            
-            // room_index가 객체인 경우 처리
-            if (roomIndex && typeof roomIndex === 'object') {
-              roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
-            }
-            
-            // 문자열로 변환하고 숫자만 추출
-            roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
-            
-            if (!roomIndex) {
-              console.error('❌ 유효하지 않은 room_index:', roomDataWithoutRefresh.room_index);
-              return;
-            }
-            
-            stompClient.publish({
-              destination: `/app/adminchat.joinRoom/${roomIndex}`,
-              body: JSON.stringify({
-                type: 'JOIN',
-                user_id: userInfo.id,
-                room_index: roomIndex,
-                timestamp: new Date().toISOString()
-              })
-            });
-            console.log('🚪 채팅방 입장 메시지 전송:', roomIndex);
-          }
-        };
-        
         // 연결 대기 후 전송
         setTimeout(sendJoinMessage, 1000);
       }
@@ -584,7 +751,21 @@ function ChatRoomWindow({
     if (isExisting && existingRoomId) {
       // 기존 방 입장
       console.log(`🚪 기존 방 입장: ${existingRoomId}`);
-        setRoomId(existingRoomId);
+      
+      // roomId를 숫자로 추출하여 설정
+      let numericRoomId = existingRoomId;
+      if (typeof numericRoomId === 'object') {
+        numericRoomId = numericRoomId.room_index || numericRoomId.id;
+      }
+      numericRoomId = String(numericRoomId || '').replace(/[^0-9]/g, '');
+      
+      if (numericRoomId) {
+        setRoomId(numericRoomId);
+        console.log(`✅ 숫자 roomId 설정: ${numericRoomId}`);
+      } else {
+        console.error('❌ 유효하지 않은 roomId:', existingRoomId);
+        return;
+      }
 
         // 페이지 상태 초기화
         setCurrentPage(0);
@@ -673,72 +854,115 @@ function ChatRoomWindow({
 
         loadExistingMessages();
 
-          // 기존 방에 대한 구독 설정 (기존 구독 강제 해제 후)
-      console.log('🔍 기존 방 구독 시도:', existingRoomId);
-      
-      // 기존 구독이 있으면 강제 해제
-      if (roomId && roomId !== existingRoomId) {
-        console.log(`🔌 방 변경으로 인한 기존 구독 강제 해제: ${roomId}`);
-        unsubscribeFromRoom(roomId);
-      }
-      
-      const subscribeSuccess = subscribeToRoom(existingRoomId, (receivedMessage) => {
-        console.log('📨 기존 방 메시지 수신:', receivedMessage);
-        console.log('🔍 메시지 타입 확인:', receivedMessage.type || '일반 메시지');
-        
-        // 서버에서 room_index가 반환된 경우 (새 방 생성 응답)
-        if (receivedMessage.room_index && !roomId) {
-          setRoomId(receivedMessage.room_index);
-          return;
-        }
-
-        // 일반 메시지 처리
-        handleIncomingMessage(receivedMessage);
-      });
-      
-      console.log('🔍 기존 방 구독 결과:', subscribeSuccess);
-      
-      // 방 입장 알림 전송 제거 - 사용자가 명시적으로 방에 들어왔을 때만 전송
-      } else {
-      // 새로운 방 생성 시 - 기존 구독들 모두 해제
-      if (roomId) {
-        console.log(`🔌 새 방 생성을 위해 기존 구독 해제: ${roomId}`);
-        unsubscribeFromRoom(roomId);
-      }
-
-      // 새로운 방 생성 시 - admin 구독으로 서버 응답 대기
-      console.log('🔍 새 방 생성을 위한 admin 구독 시도');
-        const subscribeSuccess = subscribeToRoom("admin", (receivedMessage) => {
-        console.log('📨 admin 구독 메시지 수신:', receivedMessage);
-
-        // 새 방 생성 응답 처리
-        if (receivedMessage.type === 'new_room_created' && receivedMessage.room_index && !roomId) {
-          console.log(`🆕 새 방 생성됨: ${receivedMessage.room_index}`);
-            setRoomId(receivedMessage.room_index);
-
-          // 새로 생성된 방에 대한 구독 설정
-          const newRoomSubscribeSuccess = subscribeToRoom(receivedMessage.room_index, (newRoomMessage) => {
-            console.log('📨 새 방 메시지 수신:', newRoomMessage);
-            handleIncomingMessage(newRoomMessage);
-          });
+          // 기존 방인 경우 - 백엔드에서 방 입장 처리
+          console.log('🔍 기존 방 입장 처리');
           
-          if (newRoomSubscribeSuccess) {
-            console.log('✅ 새 방 구독 성공');
+          // existingRoomId를 숫자로 추출 (최적화된 함수 사용)
+          const numericExistingRoomId = extractNumericRoomId(existingRoomId);
+          if (!numericExistingRoomId) {
+            console.error('❌ 유효하지 않은 existingRoomId:', existingRoomId);
+            return;
           }
           
-          // admin 구독 해제 (더 이상 필요 없음)
-          unsubscribeFromRoom("admin");
-          return;
-        }
-
-        // 일반 메시지 처리 (새 방 생성 응답이 아닌 경우)
-        if (receivedMessage.type !== 'new_room_created') {
-          handleIncomingMessage(receivedMessage);
-        }
-      });
-      
-      console.log('🔍 admin 구독 결과:', subscribeSuccess);
+          // 백엔드에 방 입장 요청 (방 존재 확인 + 구독 설정 + 기존 메시지 전송)
+          if (userInfo && stompClient && stompClient.connected) {
+            stompClient.publish({
+              destination: `/app/adminchat.joinRoom/${numericExistingRoomId}`,
+              body: JSON.stringify({
+                type: 'JOIN',
+                user_id: userInfo.id,
+                timestamp: new Date().toISOString()
+              })
+            });
+            console.log('🚪 기존 방 입장 요청 전송:', numericExistingRoomId);
+          }
+          
+          // 해당 방에 구독 설정 (백엔드 응답을 받기 위해)
+          const subscribeSuccess = subscribeToRoom(numericExistingRoomId, (receivedMessage) => {
+            console.log('📨 기존 방 응답 수신:', receivedMessage);
+            
+            // roomid를 안전하게 추출 (강화된 함수 사용)
+            const extractedRoomId = extractNumericRoomId(
+              receivedMessage.roomid || receivedMessage.room_index || receivedMessage.roomId || receivedMessage.roomld || receivedMessage.message
+            );
+            
+            console.log('🔍 roomid 추출 결과:', {
+              original: receivedMessage.roomid,
+              extracted: extractedRoomId,
+              messageKeys: Object.keys(receivedMessage || {})
+            });
+            
+            // 입장 성공 응답 처리
+            if (receivedMessage.type === 'join_success') {
+              console.log('✅ 방 입장 성공');
+              
+              // 추출된 roomId로 방 ID 설정 (이미 숫자로 추출됨)
+              if (extractedRoomId) {
+                setRoomId(extractedRoomId);
+                console.log(`✅ 방 ID 설정: ${extractedRoomId}`);
+              } else {
+                console.error('❌ roomId를 찾을 수 없음 (추출 실패)');
+              }
+              
+              // 기존 메시지 로드
+              if (receivedMessage.existingMessages && Array.isArray(receivedMessage.existingMessages)) {
+                console.log('📚 기존 메시지 로드:', receivedMessage.existingMessages.length + '개');
+                
+                // 기존 메시지를 UI에 추가
+                receivedMessage.existingMessages.forEach(msg => {
+                  handleIncomingMessage(msg);
+                });
+              }
+              
+              // 입장 알림 메시지 처리
+              if (receivedMessage.message) {
+                const systemMessage = {
+                  type: 'system',
+                  message: receivedMessage.message,
+                  timestamp: receivedMessage.timestamp
+                };
+                handleIncomingMessage(systemMessage);
+              }
+              } else if (receivedMessage.type === 'error') {
+    console.error('❌ 방 입장 실패:', receivedMessage.message);
+    
+    // 오류 메시지에서 roomid 추출 시도 (이미 숫자로 추출됨)
+    if (extractedRoomId) {
+      setRoomId(extractedRoomId);
+      console.log(`✅ 오류 응답에서 방 ID 설정: ${extractedRoomId}`);
+      } else {
+      // 오류가 발생해도 기본값으로 설정
+      setRoomId("1");
+      console.log(`✅ 오류 발생으로 기본 방 ID 설정: 1`);
     }
+    
+    // 오류 토스트 메시지 제거 (사용자 경험 개선)
+    // showToast("error", receivedMessage.message);
+  } else {
+              // 일반 메시지 처리
+              handleIncomingMessage(receivedMessage);
+            }
+          });
+          
+          console.log('🔍 기존 방 구독 결과:', subscribeSuccess);
+          
+        } else {
+          // 새로운 방 생성 시 - 첫 메시지 전송 시 백엔드에서 방 생성
+          console.log('🆕 새 방 생성 대기 중...');
+          
+          // 새 방 생성 시 "admin"으로 구독하여 응답을 받음
+          console.log('📡 admin으로 구독하여 새 방 생성 응답 대기');
+          const adminSubscribeSuccess = subscribeToRoom("admin", (receivedMessage) => {
+            console.log('📨 admin 응답 수신:', receivedMessage);
+            handleIncomingMessage(receivedMessage);
+          });
+          
+          if (adminSubscribeSuccess) {
+            console.log('✅ admin 구독 성공');
+          } else {
+            console.error('❌ admin 구독 실패');
+          }
+        }
   }, [open, roomDataWithoutRefresh?.id, roomDataWithoutRefresh?.adminData?.userIndex, roomDataWithoutRefresh?.isExistingRoom, roomDataWithoutRefresh?.isExisting]);
 
   // 컴포넌트 언마운트 시 구독 해제 (자동 leave 메시지 제거)
@@ -814,18 +1038,9 @@ function ChatRoomWindow({
       };
 
       try {
-        // 현재 room_index 확인 (roomId state 우선 사용)
-        // roomId를 안전하게 추출 (중첩된 구조 고려)
-        let currentRoomIndex = roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex;
-        
-        // roomId가 객체인 경우 room_index 필드 추출
-        if (currentRoomIndex && typeof currentRoomIndex === 'object') {
-          currentRoomIndex = currentRoomIndex.room_index || currentRoomIndex.id;
-        }
-        
-        // 문자열로 변환
-        currentRoomIndex = String(currentRoomIndex || '');
-        const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== 'undefined' && currentRoomIndex !== 'null' && currentRoomIndex !== '0';
+        // 현재 room_index 확인 (roomId state 우선 사용) - 최적화된 함수 사용
+        const currentRoomIndex = extractNumericRoomId(roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex);
+        const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== '0';
 
         if (hasValidRoomIndex) {
           // 기존 방인 경우
@@ -833,7 +1048,7 @@ function ChatRoomWindow({
             room_index: currentRoomIndex,
             room_name: roomDataWithoutRefresh.name,
             user_id: userInfo.id,
-            message: newMessage,
+            message: messageText,
             participants: [], // 기존 방의 경우 참가자 정보는 서버에서 처리
             timestamp: null,
             tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
@@ -841,7 +1056,7 @@ function ChatRoomWindow({
           
           console.log('📤 기존 방 메시지 전송:', messageData);
           
-          // WebSocket으로 메시지 전송 (DB 저장 포함)
+          // WebSocket으로 메시지 전송 (DB 저장 포함) - 숫자 roomId 사용
           const sendResult = sendMessage(currentRoomIndex, messageData);
           if (!sendResult) {
             // 전송 실패 시 로컬 메시지 제거
@@ -854,58 +1069,102 @@ function ChatRoomWindow({
           // 새로운 방인 경우 (첫 메시지로 방 생성)
           console.log('🆕 새로운 채팅방 생성 시도...');
 
-          // 그룹 채팅인지 1:1 채팅인지 확인
-          const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
-          const isGroupChat = roomDataWithoutRefresh.isGroupChat || participants.length > 2;
-
-          let messageData;
-
-          if (isGroupChat) {
-            // 그룹 채팅인 경우
-            messageData = {
-            room_index: null,
-              room_name: generateRoomName(participants, null, adminList, userInfo.id, true),
-            user_id: userInfo.id,
-            message: newMessage,
-              participants: participants, // 참가자 목록 사용
-            timestamp: null,
-              tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
-            };
-          } else {
-            // 1:1 채팅인 경우
-            // participants에서 상대방 ID 찾기
+          // 현재 roomId 상태 확인 (첫 메시지 이후 받은 room_index가 있는지)
+          const currentRoomId = roomId;
+          
+          if (currentRoomId) {
+            // 첫 메시지 이후 - 받은 room_index 사용
+            console.log('✅ 받은 room_index 사용:', currentRoomId);
+            
             const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
             const otherUserId = participants.find(id => id !== userInfo.id);
-
+            
             if (!otherUserId) {
               return;
             }
-
-            // 상대방 이름 찾기
+            
             const otherUser = adminList.find(admin => admin.userId === otherUserId);
             const roomName = otherUser ? `${otherUser.name}와의 채팅방` : generateRoomName([otherUserId, userInfo.id], null, adminList, userInfo.id, false);
-
-            messageData = {
-              room_index: null,
+            
+            const messageData = {
+              room_index: currentRoomId, // 받은 room_index 사용
               room_name: roomName,
               user_id: userInfo.id,
-              message: newMessage,
+              message: messageText,
               participants: [otherUserId, userInfo.id],
               timestamp: null,
-              tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
+              tempMessageIndex: tempMessageIndex
             };
-          }
-
-          console.log('📤 첫 메시지 전송:', messageData);
-
-          // WebSocket으로 메시지 전송 (방 생성 및 DB 저장 포함)
-          const sendResult = sendMessage("admin", messageData);
-          if (!sendResult) {
-            // 전송 실패 시 로컬 메시지 제거
-            setMessages(prev => prev.filter(msg => msg.id !== messageId));
-            showToast("error", "메시지 전송에 실패했습니다. 연결을 확인해주세요.");
+            
+            console.log('📤 기존 방 메시지 전송 (받은 room_index 사용):', messageData);
+            
+            // 받은 room_index로 메시지 전송
+            const sendResult = sendMessage(currentRoomId, messageData);
+            if (!sendResult) {
+              setMessages(prev => prev.filter(msg => msg.id !== messageId));
+              showToast("error", "메시지 전송에 실패했습니다. 연결을 확인해주세요.");
+            } else {
+              console.log('✅ 기존 방 메시지 전송 요청 완료 (받은 room_index 사용)');
+            }
           } else {
-            console.log('✅ 첫 메시지 전송 요청 완료');
+            // 첫 메시지 - null로 보내서 백엔드에서 방 생성
+            console.log('🆕 첫 메시지 - room_index null로 전송');
+            
+            // 그룹 채팅인지 1:1 채팅인지 확인
+            const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+            const isGroupChat = roomDataWithoutRefresh.isGroupChat || participants.length > 2;
+
+            let messageData;
+
+            if (isGroupChat) {
+              // 그룹 채팅인 경우
+              messageData = {
+                room_index: null, // null로 설정하여 백엔드에서 새 방 생성
+                room_name: generateRoomName(participants, null, adminList, userInfo.id, true),
+                user_id: userInfo.id,
+                message: messageText,
+                participants: participants, // 참가자 목록 사용
+                timestamp: null,
+                tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
+              };
+            } else {
+              // 1:1 채팅인 경우
+              // participants에서 상대방 ID 찾기
+              const participants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+              const otherUserId = participants.find(id => id !== userInfo.id);
+
+              if (!otherUserId) {
+                return;
+              }
+
+              // 상대방 이름 찾기
+              const otherUser = adminList.find(admin => admin.userId === otherUserId);
+              const roomName = otherUser ? `${otherUser.name}와의 채팅방` : generateRoomName([otherUserId, userInfo.id], null, adminList, userInfo.id, false);
+
+              messageData = {
+                room_index: null, // null로 설정하여 백엔드에서 새 방 생성
+                room_name: roomName,
+                user_id: userInfo.id,
+                message: messageText,
+                participants: [otherUserId, userInfo.id],
+                timestamp: null,
+                tempMessageIndex: tempMessageIndex // 임시 messageindex 전송
+              };
+            }
+
+            console.log('📤 새 방 생성 메시지 전송 (첫 메시지):', messageData);
+
+            // 새로운 방 생성 시 - room_index가 null이므로 백엔드에서 자동 생성
+            const sendResult = sendMessage("admin", messageData);
+            if (!sendResult) {
+              setMessages(prev => prev.filter(msg => msg.id !== messageId));
+              showToast("error", "메시지 전송에 실패했습니다. 연결을 확인해주세요.");
+            } else {
+              console.log('✅ 첫 메시지 전송 요청 완료');
+              
+              // 백엔드에서 방 생성 후 해당 room_index로 응답을 보낼 예정
+              // 프론트에서는 단순히 응답을 기다리면 됨
+            }
           }
         }
 
@@ -1244,7 +1503,7 @@ function ChatRoomWindow({
     }
   };
 
-  // 채팅방 나가기 시 구독 해제
+  // 채팅방 나가기 시 구독 해제 (퇴장 알림 없음)
   const handleBack = () => {
     if (roomId) {
       // roomId를 안전하게 추출
@@ -1259,23 +1518,9 @@ function ChatRoomWindow({
       extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
       
       if (extractedRoomId) {
-        // 서버에 leave 메시지 전송
-        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-        if (userInfo && stompClient && stompClient.connected) {
-          stompClient.publish({
-            destination: `/app/adminchat.leaveRoom/${extractedRoomId}`,
-            body: JSON.stringify({
-              type: 'LEAVE',
-              user_id: userInfo.id,
-              room_index: extractedRoomId,
-              timestamp: new Date().toISOString()
-            })
-          });
-          console.log('🚪 채팅방 퇴장 메시지 전송:', extractedRoomId);
-        }
-        
-        // 구독 해제
+        // 퇴장 알림 없이 구독만 해제 (명시적 퇴장 요청이 아니므로)
         unsubscribeFromRoom(extractedRoomId);
+        console.log('🚪 채팅방 구독 해제 (퇴장 알림 없음):', extractedRoomId);
       }
     }
 
@@ -1288,7 +1533,7 @@ function ChatRoomWindow({
     onBack();
   };
 
-  // 채팅방 닫기 시에도 구독 해제
+  // 채팅방 닫기 시에도 구독 해제 (퇴장 알림 없음)
   const handleClose = () => {
     if (roomId) {
       // roomId를 안전하게 추출
@@ -1303,23 +1548,9 @@ function ChatRoomWindow({
       extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
       
       if (extractedRoomId) {
-        // 서버에 leave 메시지 전송
-        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-        if (userInfo && stompClient && stompClient.connected) {
-          stompClient.publish({
-            destination: `/app/adminchat.leaveRoom/${extractedRoomId}`,
-            body: JSON.stringify({
-              type: 'LEAVE',
-              user_id: userInfo.id,
-              room_index: extractedRoomId,
-              timestamp: new Date().toISOString()
-            })
-          });
-          console.log('🚪 채팅방 퇴장 메시지 전송:', extractedRoomId);
-        }
-        
-        // 구독 해제
+        // 퇴장 알림 없이 구독만 해제 (명시적 퇴장 요청이 아니므로)
         unsubscribeFromRoom(extractedRoomId);
+        console.log('🚪 채팅방 구독 해제 (퇴장 알림 없음):', extractedRoomId);
       }
     }
 
@@ -1406,6 +1637,12 @@ function ChatRoomWindow({
         setShowInviteSelection(false);
         setSelectedInviteAdmins(new Set());
 
+        // 초대된 사용자들에게 명시적 입장 알림 전송
+        selectedAdminList.forEach(admin => {
+          console.log('📨 초대된 사용자에게 입장 알림 전송:', admin.name);
+          // 실제로는 초대된 사용자가 방에 입장할 때 알림이 발생하도록 구현
+        });
+
         // 채팅방 목록 새로고침
         if (refreshChatRooms) {
           await refreshChatRooms();
@@ -1450,6 +1687,9 @@ function ChatRoomWindow({
           // 백엔드 API 호출
           if (window.confirm('채팅방을 나가시겠습니까?')) {
             try {
+              // 명시적 퇴장 알림 전송
+              sendLeaveMessage();
+              
               const response = await LeaveRoom(roomId, userId);
               
               // 응답 코드가 200이거나 성공적인 경우
