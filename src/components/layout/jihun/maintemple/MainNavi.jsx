@@ -188,7 +188,7 @@ const MainNavi = () => {
           {
             id: "admin_type",
             programIndex: 40,
-            label: "직급 설정",
+            label: "관리자 타입관리",
             type: "link",
             href: "/admin-type-insert",
           },
@@ -228,13 +228,6 @@ const MainNavi = () => {
             label: "회원 추천 현황",
             type: "link",
             href: "/member-recommendation",
-          },
-          {
-            id: "member-payment-history",
-            programIndex: 34,
-            label: "정회원 결제내역",
-            type: "list",
-            action: () => console.log("본인 지급 내역 클릭"),
           },
           {
             id: "commision-history",
