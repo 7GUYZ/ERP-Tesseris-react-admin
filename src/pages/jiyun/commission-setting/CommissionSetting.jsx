@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
 import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import {
   getCommissionSetting,
   setCommissionSetting,
   pwCheck,
@@ -18,11 +25,17 @@ export default function CommissionSetting() {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const { showToast } = useToast();
 
+  // 차트 색상 정의
+  const COLORS = [
+    "#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8",
+    "#82CA9D", "#FFC658", "#FF6B6B", "#4ECDC4", "#45B7D1"
+  ];
+
   // 권한 체크
   useEffect(() => {
     const checkPermission = async () => {
       try {
-        const response = await permissionCheckApi.checkPermission(9); // programIndex: 9 (중개수수료율 설정)
+        const response = await permissionCheckApi.checkPermission(9); 
         if (response.data) {
           setCanEdit(response.data.hasUpdateAuthority === 1);
           console.log(
@@ -78,7 +91,6 @@ export default function CommissionSetting() {
     try {
       const response = await pwCheck(password);
       if (response.data.success) {
-        // 비밀번호 확인 성공 - 실제 저장 로직 실행
         const payload = setting.map((item) => ({
           ...item,
           businessGradeRate: Number(item.businessGradeRate) / 10,
@@ -116,6 +128,21 @@ export default function CommissionSetting() {
   const isSumValid = departmentValue === gradeSum;
   const isChanged = JSON.stringify(originalSetting) !== JSON.stringify(setting);
 
+  // 전체 비율 도넛 차트용 데이터
+  const pieChartData = [
+    { name: "회사", value: companyRate, color: COLORS[0] },
+    { name: "사업부", value: departmentValue, color: COLORS[1] }
+  ];
+
+  // 직급별 도넛 차트용 데이터
+  const gradePieChartData = setting
+    .filter((s) => s.businessGradeIndex >= 2 && s.businessGradeIndex <= 11)
+    .map((grade, index) => ({
+      name: grade.businessGradeName,
+      value: Number(grade.businessGradeRate) || 0,
+      color: COLORS[index % COLORS.length]
+    }));
+
   if (loading) return <div>로딩중...</div>;
 
   return (
@@ -136,7 +163,8 @@ export default function CommissionSetting() {
         {error && <div className="error">{error}</div>}
 
         <div className="commission-container">
-          <div className="total-ratio">
+          {/* 1. 전체 비율 설정 */}
+          <div className="commission-section">
             <h2>전체 비율 설정</h2>
             <div className="ratio-row">
               <label>회사</label>
@@ -167,7 +195,47 @@ export default function CommissionSetting() {
             <div className="ratio-total">= 100 %</div>
           </div>
 
-          <div className="grade-ratio">
+          {/* 2. 전체 비율 차트 */}
+          <div className="commission-section">
+            <h2>전체 비율 분포</h2>
+            <div className="pie-chart-container">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={pieChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {pieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, '비율']}
+                    labelFormatter={(label) => `${label}`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pie-chart-legend">
+                {pieChartData.map((entry, index) => (
+                  <div key={index} className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: entry.color }}
+                    ></div>
+                    <span>{entry.name}: {entry.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 3. 직급별 설정 */}
+          <div className="commission-section">
             <h2>직급별 설정 (사업부)</h2>
             <div className="grade-list">
               {setting
@@ -206,6 +274,45 @@ export default function CommissionSetting() {
             </div>
             <div className={`grade-sum ${isSumValid ? "" : "invalid"}`}>
               총: {gradeSum}%
+            </div>
+          </div>
+
+          {/* 4. 직급별 차트 */}
+          <div className="commission-section">
+            <h2>직급별 비율 분포</h2>
+            <div className="pie-chart-container">
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={gradePieChartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {gradePieChartData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                    formatter={(value) => [`${value}%`, '비율']}
+                    labelFormatter={(label) => `${label}`}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="pie-chart-legend">
+                {gradePieChartData.map((entry, index) => (
+                  <div key={index} className="legend-item">
+                    <div 
+                      className="legend-color" 
+                      style={{ backgroundColor: entry.color }}
+                    ></div>
+                    <span>{entry.name}: {entry.value}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
