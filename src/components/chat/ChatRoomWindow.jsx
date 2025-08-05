@@ -521,7 +521,7 @@ function ChatRoomWindow({
 
     // 메시지 삭제 이벤트 처리
     if (receivedMessage.type === 'DELETE_MESSAGE') {
-      const messageIndex = receivedMessage.messageIndex;
+      const messageIndex = receivedMessage.messageindex;
       console.log('삭제 이벤트 수신:', { messageIndex, receivedMessage });
       
       setMessages(prev => prev.map(msg => 
@@ -844,6 +844,7 @@ function ChatRoomWindow({
               },
               timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
               messageindex: msg.messageindex || null,
+              active: msg.active !== undefined ? msg.active : true, // DB의 active 상태를 그대로 사용
               isLocal: false,
               files: msg.files || null
             };
@@ -1098,7 +1099,7 @@ function ChatRoomWindow({
                         },
                         timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
                         messageindex: msg.messageindex || null,
-                        active: msg.files && msg.files.length > 0 ? true : (msg.active !== undefined ? msg.active : true), // 파일이 있으면 항상 active: true
+                        active: msg.active !== undefined ? msg.active : true, // DB의 active 상태를 그대로 사용
                 isLocal: false,
                 files: msg.files || null
               };
@@ -2075,8 +2076,13 @@ function ChatRoomWindow({
         isLocal: selectedMessage.isLocal
       });
 
-      // 삭제 확인
-      if (!window.confirm("이 메시지를 삭제하시겠습니까?")) {
+      // 삭제 확인 - 파일이 포함된 메시지인지 확인
+      const hasFiles = selectedMessage.files && selectedMessage.files.length > 0;
+      const confirmMessage = hasFiles 
+        ? "이 메시지와 첨부된 파일을 모두 삭제하시겠습니까?" 
+        : "이 메시지를 삭제하시겠습니까?";
+      
+      if (!window.confirm(confirmMessage)) {
         return;
       }
 
@@ -2115,7 +2121,11 @@ function ChatRoomWindow({
       const deleteSuccess = await deleteMessage(currentRoomId, messageIndex);
       
       if (deleteSuccess) {
-        showToast("success", "메시지가 삭제되었습니다.");
+        const hasFiles = selectedMessage.files && selectedMessage.files.length > 0;
+        const successMessage = hasFiles 
+          ? "메시지와 첨부된 파일이 삭제되었습니다." 
+          : "메시지가 삭제되었습니다.";
+        showToast("success", successMessage);
       } else {
         // 삭제 실패 시 원래 상태로 복원
         setMessages(prev => prev.map(msg => 
@@ -2659,14 +2669,7 @@ function ChatRoomWindow({
     }
     
     const isDeletedMessage = message.type !== 'system' && 
-                            !hasFiles && // 파일이 있으면 삭제된 것으로 처리하지 않음
                             (message.active === false || message.active === 0 || message.active === null || message.active === undefined);
-    
-    // 파일이 있는 메시지는 강제로 active: true로 설정
-    if (hasFiles) {
-      message.active = true;
-      console.log('✅ 파일 메시지 active 강제 설정:', message.active);
-    }
               const canDelete = isMyMessage && !isDeletedMessage;
 
               // 삭제된 메시지는 "삭제된 메시지"로 표시하거나 완전히 숨김
@@ -2743,7 +2746,7 @@ function ChatRoomWindow({
                           )}
                           
                           {/* 파일 첨부 표시 */}
-                          {message.files && message.files.length > 0 && !isDeletedMessage && (
+                          {message.files && message.files.length > 0 && (
                             <Box sx={{ mt: 1 }}>
                               {message.files.map((file, fileIndex) => {
                                 const isImage = file.type && file.type.startsWith('image/');
@@ -2756,15 +2759,21 @@ function ChatRoomWindow({
                                       display: 'flex',
                                       alignItems: 'center',
                                       p: 1,
-                                      backgroundColor: '#f5f5f5',
+                                      backgroundColor: isDeletedMessage ? '#f0f0f0' : '#f5f5f5',
                                       borderRadius: 1,
                                       mb: 0.5,
-                                      cursor: 'pointer',
+                                      cursor: isDeletedMessage ? 'default' : 'pointer',
+                                      opacity: isDeletedMessage ? 0.6 : 1,
                                       '&:hover': {
-                                        backgroundColor: '#e0e0e0'
+                                        backgroundColor: isDeletedMessage ? '#f0f0f0' : '#e0e0e0'
                                       }
                                     }}
                                     onClick={() => {
+                                      // 삭제된 메시지의 파일은 클릭 불가
+                                      if (isDeletedMessage) {
+                                        return;
+                                      }
+                                      
                                       if (file.url) {
                                         if (isImage) {
                                           // 이미지는 새 탭에서 열기
@@ -2781,6 +2790,11 @@ function ChatRoomWindow({
                                         }
                                       }
                                     }}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      // 파일이 포함된 메시지 전체를 선택하여 삭제 메뉴 표시
+                                      handleMessageContextMenu(e, message);
+                                    }}
                                   >
                                     {isImage ? (
                                       // 이미지 미리보기
@@ -2795,14 +2809,22 @@ function ChatRoomWindow({
                                             objectFit: 'cover',
                                             borderRadius: 1,
                                             mr: 1,
-                                            border: '1px solid #ddd'
+                                            border: '1px solid #ddd',
+                                            opacity: isDeletedMessage ? 0.6 : 1
                                           }}
                                         />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                          <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            fontWeight: 'bold', 
+                                            display: 'block',
+                                            color: isDeletedMessage ? '#999' : 'inherit'
+                                          }}>
                                             {file.name}
                                           </Typography>
-                                          <Typography variant="caption" sx={{ color: '#666', fontSize: '0.6rem' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            color: isDeletedMessage ? '#999' : '#666', 
+                                            fontSize: '0.6rem' 
+                                          }}>
                                             {fileSize} KB
                                           </Typography>
                                         </Box>
@@ -2810,12 +2832,23 @@ function ChatRoomWindow({
                                     ) : (
                                       // 일반 파일 아이콘
                                       <>
-                                        <AttachFile sx={{ fontSize: 16, mr: 1, color: '#666' }} />
+                                        <AttachFile sx={{ 
+                                          fontSize: 16, 
+                                          mr: 1, 
+                                          color: isDeletedMessage ? '#999' : '#666' 
+                                        }} />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                          <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            fontWeight: 'bold', 
+                                            display: 'block',
+                                            color: isDeletedMessage ? '#999' : 'inherit'
+                                          }}>
                                             {file.name}
                                           </Typography>
-                                          <Typography variant="caption" sx={{ color: '#666', fontSize: '0.6rem' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            color: isDeletedMessage ? '#999' : '#666', 
+                                            fontSize: '0.6rem' 
+                                          }}>
                                             {fileSize} KB
                                           </Typography>
                                         </Box>
@@ -2886,7 +2919,7 @@ function ChatRoomWindow({
                           )}
                           
                           {/* 파일 첨부 표시 */}
-                          {message.files && message.files.length > 0 && !isDeletedMessage && (
+                          {message.files && message.files.length > 0 && (
                             <Box sx={{ mt: 1 }}>
                               {message.files.map((file, fileIndex) => {
                                 const isImage = file.type && file.type.startsWith('image/');
@@ -2899,15 +2932,17 @@ function ChatRoomWindow({
                                       display: 'flex',
                                       alignItems: 'center',
                                       p: 1,
-                                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                                      backgroundColor: isDeletedMessage ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.1)',
                                       borderRadius: 1,
                                       mb: 0.5,
-                                      cursor: 'pointer',
+                                      cursor: isDeletedMessage ? 'default' : 'pointer',
+                                      opacity: isDeletedMessage ? 0.6 : 1,
                                       '&:hover': {
-                                        backgroundColor: 'rgba(255, 255, 255, 0.2)'
+                                        backgroundColor: isDeletedMessage ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.2)'
                                       }
                                     }}
                                     onClick={() => {
+                                      if (isDeletedMessage) { return; } // 삭제된 메시지의 파일은 클릭 불가
                                       if (file.url) {
                                         if (isImage) {
                                           // 이미지는 새 탭에서 열기
@@ -2924,6 +2959,11 @@ function ChatRoomWindow({
                                         }
                                       }
                                     }}
+                                    onContextMenu={(e) => {
+                                      e.preventDefault();
+                                      // 파일이 포함된 메시지 전체를 선택하여 삭제 메뉴 표시
+                                      handleMessageContextMenu(e, message);
+                                    }}
                                   >
                                     {isImage ? (
                                       // 이미지 미리보기
@@ -2938,14 +2978,22 @@ function ChatRoomWindow({
                                             objectFit: 'cover',
                                             borderRadius: 1,
                                             mr: 1,
-                                            border: '1px solid rgba(255, 255, 255, 0.3)'
+                                            border: isDeletedMessage ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(255, 255, 255, 0.3)',
+                                            opacity: isDeletedMessage ? 0.6 : 1
                                           }}
                                         />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                          <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', color: 'white' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            fontWeight: 'bold', 
+                                            display: 'block', 
+                                            color: isDeletedMessage ? 'rgba(255, 255, 255, 0.5)' : 'white' 
+                                          }}>
                                             {file.name}
                                           </Typography>
-                                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.6rem' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            color: isDeletedMessage ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.7)', 
+                                            fontSize: '0.6rem' 
+                                          }}>
                                             {fileSize} KB
                                           </Typography>
                                         </Box>
@@ -2953,12 +3001,23 @@ function ChatRoomWindow({
                                     ) : (
                                       // 일반 파일 아이콘
                                       <>
-                                        <AttachFile sx={{ fontSize: 16, mr: 1, color: 'rgba(255, 255, 255, 0.8)' }} />
+                                        <AttachFile sx={{ 
+                                          fontSize: 16, 
+                                          mr: 1, 
+                                          color: isDeletedMessage ? 'rgba(255, 255, 255, 0.5)' : 'rgba(255, 255, 255, 0.8)' 
+                                        }} />
                                         <Box sx={{ flex: 1, minWidth: 0 }}>
-                                          <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', color: 'white' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            fontWeight: 'bold', 
+                                            display: 'block', 
+                                            color: isDeletedMessage ? 'rgba(255, 255, 255, 0.5)' : 'white' 
+                                          }}>
                                             {file.name}
                                           </Typography>
-                                          <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.6rem' }}>
+                                          <Typography variant="caption" sx={{ 
+                                            color: isDeletedMessage ? 'rgba(255, 255, 255, 0.4)' : 'rgba(255, 255, 255, 0.7)', 
+                                            fontSize: '0.6rem' 
+                                          }}>
                                             {fileSize} KB
                                           </Typography>
                                         </Box>
