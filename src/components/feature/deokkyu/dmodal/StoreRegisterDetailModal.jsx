@@ -635,7 +635,7 @@ const StoreRegisterDetailModal = ({ isOpen, onClose, storeId, initialData }) => 
           <div className="detail-modal-field">
             <div className="detail-modal-field-label">
               <span className="detail-modal-field-icon">💎</span>
-              보유 CM
+              보유 TS
             </div>
             <div className="detail-modal-field-value currency">
               {(displayData.totalCM || 0).toLocaleString()}원

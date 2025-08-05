@@ -21,7 +21,7 @@ const columns = [
   { field: 'storeUserId', headerName: '가맹점 ID', width: 120 },
   { field: 'storeUserName', headerName: '회원 이름', width: 100 },
   { field: 'temporaryStoreMasterDistributionTime', headerName: '수당분배시간', width: 120 },
-  { field: 'temporaryStoreCmValue', headerName: '중개수수료 CM', width: 120 },
+  { field: 'temporaryStoreCmValue', headerName: '중개수수료 TS', width: 120 },
   { field: 'temporaryStoreCashValue', headerName: '중개수수료 Cash', width: 120 },
   { field: 'temporaryStoreTotalValue', headerName: '중개수수료 합계', width: 120 },
 ];

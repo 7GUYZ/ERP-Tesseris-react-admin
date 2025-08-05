@@ -28,7 +28,7 @@ const columns = [
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
   { field: 'storeTransactionStatus', headerName: '거래 상태', width: 100 },
   { field: 'userCmpInit', headerName: '초기지급 CMP', width: 100 },
-  { field: 'totalCM', headerName: '보유 CM', width: 100 },
+  { field: 'totalCM', headerName: '보유 TS', width: 100 },
   { field: 'storeSubscriptionFeeValue', headerName: '충전금액', width: 120 },
   { field: 'franchiseFee', headerName: '가맹비', width: 120 },
   { field: 'storeSubscriptionFeeCommissionCheck', headerName: '분배여부', width: 120 },
