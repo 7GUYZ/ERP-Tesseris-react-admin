@@ -20,14 +20,17 @@ export default function NoticeList() {
         const response = await permissionCheckApi.checkPermission(25); // programIndex: 25 (공지사항 관리)
         if (response.data) {
           setCanInsert(response.data.hasInsertAuthority === 1);
-          console.log('공지사항 등록 권한 체크 결과:', response.data.hasInsertAuthority);
+          console.log(
+            "공지사항 등록 권한 체크 결과:",
+            response.data.hasInsertAuthority
+          );
         }
       } catch (error) {
-        console.error('권한 체크 실패:', error);
+        console.error("권한 체크 실패:", error);
         setCanInsert(false);
       }
     };
-    
+
     checkPermission();
   }, []);
 
@@ -61,7 +64,7 @@ export default function NoticeList() {
   if (loading)
     return (
       <div className="notice-list-page">
-        <h1>공지사항 목록</h1>
+        <h1 className="notice-page-title">공지사항 목록</h1>
         <p>로딩 중...</p>
       </div>
     );
@@ -75,23 +78,24 @@ export default function NoticeList() {
 
   return (
     <div className="notice-list-page">
-      <div className="notice-list-breadcrumb">고객센터 관리 &gt; 공지사항 관리</div>
-      <h1>공지사항 목록</h1>
-      <div className="notice-list-top-bar">
-        <button
-          className="notice-list-btn-n notice-list-btn-primary"
-          onClick={() => {
-            if (!canInsert) {
-              showToast("error", "등록 권한이 없습니다.");
-              return;
-            }
-            navigate("/notice/write");
-          }}
-          disabled={!canInsert}
-          style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        >
-          공지사항 등록
-        </button>
+      <div className="notice-page-header">
+        <h1 className="notice-page-title">공지사항 목록</h1>
+        <div className="notice-header-actions">
+          <button
+            className="notice-update-btn notice-update-btn-primary"
+            onClick={() => {
+              if (!canInsert) {
+                showToast("error", "등록 권한이 없습니다.");
+                return;
+              }
+              navigate("/notice/write");
+            }}
+            disabled={!canInsert}
+            style={!canInsert ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
+            등록
+          </button>
+        </div>
       </div>
       <div className="notice-list-table-wrapper">
         <table className="notice-list-table">

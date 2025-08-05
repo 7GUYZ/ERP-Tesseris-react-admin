@@ -19,7 +19,10 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
-import { refreshAuthority, setCurrentPermissionContext } from "../../../../utils/authorityUtils";
+import {
+  refreshAuthority,
+  setCurrentPermissionContext,
+} from "../../../../utils/authorityUtils";
 import { getPermissionByPath } from "../../../../constants/permissionMapping";
 
 const MainNavi = () => {
@@ -178,9 +181,9 @@ const MainNavi = () => {
           {
             id: "monthly-cm-limit",
             programIndex: 38,
-            label: "월 CM사용한도",
+            label: "월 TS사용한도",
             type: "link",
-            href: "/MonthlyCmLimit",
+            href: "/MonthlyTsLimit",
           },
           {
             id: "admin_type",
@@ -442,14 +445,20 @@ const MainNavi = () => {
         // 페이지 이동
         setActiveMenuId(item.id);
         setActiveSubMenuId(null);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(item.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, item.href);
-          console.log(`권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            item.href
+          );
+          console.log(
+            `권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(item.href);
         break;
       case "expand":
@@ -499,19 +508,39 @@ const MainNavi = () => {
 
     switch (subItem.type) {
       case "link":
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenu = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenu) {
+          setActiveMenuId(parentMenu.id);
+        }
         setActiveSubMenuId(subItem.id);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(subItem.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, subItem.href);
-          console.log(`서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            subItem.href
+          );
+          console.log(
+            `서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(subItem.href);
         break;
       case "list":
         // 리스트 박스 - 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForList = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForList) {
+          setActiveMenuId(parentMenuForList.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
@@ -519,6 +548,13 @@ const MainNavi = () => {
         break;
       case "action":
         // 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForAction = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForAction) {
+          setActiveMenuId(parentMenuForAction.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();

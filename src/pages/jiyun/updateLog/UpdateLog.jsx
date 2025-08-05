@@ -17,7 +17,7 @@ const UpdateLog = () => {
 
   const [searchResults, setSearchResults] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [error, setError] = useState(null);
 

@@ -47,29 +47,29 @@ const PasswordModal = ({ isOpen, onConfirm, onCancel }) => {
   };
 
   return (
-    <div className="cmlimit-password-modal-overlay">
+    <div className="tslimit-password-modal-overlay">
       {loading && <LoadingSpinner fullScreen />}
-      <div className="cmlimit-password-modal">
+      <div className="tslimit-password-modal">
         <form onSubmit={handleConfirm}>
-          <div className="cmlimit-password-modal-header">
+          <div className="tslimit-password-modal-header">
             <h3>비밀번호 확인</h3>
           </div>
-          <div className="cmlimit-password-modal-body">
+          <div className="tslimit-password-modal-body">
             {/* 부제목 제거 */}
             <input
               type="password"
-              className="cmlimit-password-input"
+              className="tslimit-password-input"
               placeholder="비밀번호를 입력하세요"
               value={password}
               onChange={e => setPassword(e.target.value)}
               autoFocus
             />
           </div>
-          <div className="cmlimit-password-modal-footer center">
-            <button type="submit" className="cmlimit-password-modal-btn confirm" disabled={!password}>
+          <div className="tslimit-password-modal-footer center">
+            <button type="submit" className="tslimit-password-modal-btn confirm" disabled={!password}>
               확인
             </button>
-            <button type="button" className="cmlimit-password-modal-btn cancel" onClick={handleCancel}>
+            <button type="button" className="tslimit-password-modal-btn cancel" onClick={handleCancel}>
               취소
             </button>
           </div>
