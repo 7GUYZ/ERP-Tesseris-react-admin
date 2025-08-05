@@ -10,53 +10,55 @@
   --chart-color-6: #06b6d4; /* 청록색 */
 }
 
-html, body, #root, .dashboard-root {
+/* 기본 스타일 리셋 */
+html, body, #root {
   background: #fff !important;
   min-height: 100vh;
-  overflow-x: auto !important; /* 가로 스크롤 허용 */
-  overflow-y: auto !important; /* 세로 스크롤 허용 */
+  overflow-x: auto !important;
+  overflow-y: auto !important;
 }
 
 /* 대시보드 루트 */
 .dashboard-root-jtj {
-    padding: 24px;
-    background-color: #f8fafc;
-    min-height: 100vh;
+  padding: 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'Pretendard Variable', Pretendard, sans-serif;
 }
 
 /* 대시보드 헤더 */
 .dashboard-header-jtj {
-    margin-bottom: 32px;
+  margin-bottom: 32px;
 }
 
 .dashboard-title-jtj {
-    font-size: 2.5rem;
-    font-weight: 700;
-    color: #222e3c;
-    margin: 0 0 8px 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0 0 8px 0;
 }
 
 .dashboard-subtitle-jtj {
-    font-size: 16px;
-    color: #64748b;
-    margin: 0;
+  font-size: 16px;
+  color: #64748b;
+  margin: 0;
 }
 
 /* 로딩 및 에러 상태 */
 .dashboard-loading-jtj,
 .dashboard-error-jtj {
-    text-align: center;
-    padding: 60px;
-    font-size: 18px;
-    font-weight: 500;
+  text-align: center;
+  padding: 60px;
+  font-size: 18px;
+  font-weight: 500;
 }
 
 .dashboard-loading-jtj {
-    color: #3b7ddd;
+  color: #3b7ddd;
 }
 
 .dashboard-error-jtj {
-    color: #ef4444;
+  color: #ef4444;
 }
 
 /* 대시보드 콘텐츠 */
@@ -66,318 +68,340 @@ html, body, #root, .dashboard-root {
   gap: 32px;
 }
 
-/* 섹션 */
+/* 섹션 공통 스타일 */
 .dashboard-section-jtj {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    margin-bottom: 24px;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 24px;
 }
 
 .section-title-jtj {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #222e3c;
-    margin: 0 0 24px 0;
-    padding-bottom: 12px;
-    border-bottom: 2px solid #fff;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #222e3c;
+  margin: 0 0 24px 0;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 /* 핵심 지표 그리드 */
 .dashboard-stats-grid-jtj {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
 }
 
 /* 통계 카드 */
 .dashboard-stat-card-jtj {
-    background: white;
-    border-radius: 8px;
-    padding: 20px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    border: 1px solid #e2e8f0;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .dashboard-stat-card-jtj:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .stat-card-title-jtj {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #6b7280;
-    margin-bottom: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #6b7280;
+  margin-bottom: 8px;
 }
 
 .stat-card-value-jtj {
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: #222e3c;
-    margin-bottom: 4px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222e3c;
+  margin-bottom: 4px;
 }
 
 .stat-card-subtitle-jtj {
-    font-size: 14px;
-    color: #64748b;
-}
-
-/* 공지사항 섹션 */
-.dashboard-section-header-jtj {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.dashboard-more-btn-jtj {
-    background: none;
-    border: none;
-    color: #4b5563;
-    font-size: 14px;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.dashboard-more-btn-jtj:hover {
-    background: #f3f4f6;
-    color: #1f2937;
-}
-
-.dashboard-notice-list-jtj {
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-notice-item-jtj {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 16px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.dashboard-notice-item-jtj:hover {
-    background-color: #f9fafb;
-}
-
-.notice-content-jtj {
-    flex: 1;
-    margin-right: 16px;
-    overflow: hidden;
-}
-
-.notice-title-jtj {
-    display: block;
-    font-size: 14px;
-    font-weight: 500;
-    color: #1f2937;
-    margin-bottom: 4px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.notice-preview-jtj {
-    display: block;
-    font-size: 13px;
-    color: #6b7280;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.notice-date-jtj {
-    flex-shrink: 0;
-    color: #6b7280;
-    font-size: 12px;
-}
-
-.dashboard-notice-empty-jtj {
-    text-align: center;
-    color: #6b7280;
-    padding: 24px;
-    font-size: 14px;
+  font-size: 14px;
+  color: #64748b;
 }
 
 /* 상세 통계 그리드 */
 .dashboard-detail-grid-jtj {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 /* 상세 카드 */
 .detail-card-jtj {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  transition: box-shadow 0.2s ease;
+}
+
+.detail-card-jtj:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .detail-card-jtj h3 {
-    font-size: 14px;
-    font-weight: 600;
-    color: #1e293b;
-    margin: 0 0 16px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 16px 0;
 }
 
 .detail-item-jtj {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .detail-item-jtj:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .detail-item-jtj span:first-child {
-    font-size: 12px;
-    color: #64748b;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .detail-item-jtj span:last-child {
-    font-size: 12px;
-    font-weight: 600;
-    color: #1e293b;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* 공지사항 섹션 */
+.dashboard-section-header-jtj {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.dashboard-more-btn-jtj {
+  background: none;
+  border: none;
+  color: #4b5563;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.dashboard-more-btn-jtj:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+.dashboard-notice-list-jtj {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-notice-item-jtj {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.dashboard-notice-item-jtj:hover {
+  background-color: #f9fafb;
+}
+
+.notice-content-jtj {
+  flex: 1;
+  margin-right: 16px;
+  overflow: hidden;
+}
+
+.notice-title-jtj {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notice-preview-jtj {
+  display: block;
+  font-size: 13px;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notice-date-jtj {
+  flex-shrink: 0;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.dashboard-notice-empty-jtj {
+  text-align: center;
+  color: #6b7280;
+  padding: 24px;
+  font-size: 14px;
 }
 
 /* QnA 요약 정보 */
 .dashboard-qna-summary-jtj {
-    margin-top: 20px;
-    padding: 16px;
-    background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
-    border-radius: 8px;
-    border: none;
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  border-radius: 8px;
+  border: none;
 }
 
 .qna-summary-item-jtj {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .qna-summary-item-jtj:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .qna-summary-item-jtj.clickable {
-    cursor: pointer;
-    padding: 12px;
-    border-radius: 6px;
-    transition: all 0.2s ease;
-    position: relative;
-    background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  position: relative;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .qna-summary-item-jtj.clickable:hover {
-    background-color: rgba(255, 255, 255, 0.2);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .qna-summary-item-jtj.clickable:active {
-    transform: translateY(0);
+  transform: translateY(0);
 }
 
 .qna-click-hint-jtj {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.8);
-    font-style: italic;
-    margin-left: 8px;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+  margin-left: 8px;
 }
 
 .qna-label-jtj {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 500;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
 }
 
 .qna-value-jtj {
-    font-size: 14px;
-    font-weight: 600;
-    color: white;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
 }
 
 /* 권한 없음 상태 */
 .dashboard-no-permission-jtj {
-    text-align: center;
-    padding: 40px 20px;
-    background: #f8fafc;
-    border-radius: 8px;
-    border: 2px dashed #cbd5e1;
+  text-align: center;
+  padding: 40px 20px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #cbd5e1;
 }
 
 .no-permission-icon-jtj {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.6;
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
 }
 
 .dashboard-no-permission-jtj p {
-    margin: 8px 0;
-    color: #64748b;
-    font-size: 16px;
+  margin: 8px 0;
+  color: #64748b;
+  font-size: 16px;
 }
 
 .no-permission-desc-jtj {
-    font-size: 14px !important;
-    color: #94a3b8 !important;
-    margin-top: 8px !important;
+  font-size: 14px !important;
+  color: #94a3b8 !important;
+  margin-top: 8px !important;
 }
 
 /* 사용자 정보 */
 .dashboard-user-info-jtj {
-    background: #f8fafc;
-    border-radius: 8px;
-    padding: 16px;
-    border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
 }
 
 .user-info-item-jtj {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .user-info-item-jtj:last-child {
-    border-bottom: none;
+  border-bottom: none;
 }
 
 .user-info-label-jtj {
-    font-size: 14px;
-    color: #64748b;
-    font-weight: 500;
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .user-info-value-jtj {
-    font-size: 14px;
-    font-weight: 600;
-    color: #222e3c;
+  font-size: 14px;
+  font-weight: 600;
+  color: #222e3c;
 }
 
 /* 반응형 디자인 */
 @media (max-width: 768px) {
-    .dashboard-stats-grid-jtj {
-        grid-template-columns: 1fr;
-    }
+  .dashboard-root-jtj {
+    padding: 16px;
+  }
+  
+  .dashboard-title-jtj {
+    font-size: 2rem;
+  }
+  
+  .dashboard-stats-grid-jtj {
+    grid-template-columns: 1fr;
+  }
 
-    .dashboard-detail-grid-jtj {
-        grid-template-columns: 1fr;
-    }
+  .dashboard-detail-grid-jtj {
+    grid-template-columns: 1fr;
+  }
+  
+  .dashboard-section-jtj {
+    padding: 16px;
+  }
+  
+  .section-title-jtj {
+    font-size: 1.125rem;
+  }
 } 
