@@ -30,10 +30,9 @@ export default function NoticeWrite() {
 
   return (
     <div className="notice-write-page">
-      <div className="notice-write-breadcrumb">
-        고객센터 관리 &gt; 공지사항 관리 &gt; 공지사항 등록
+      <div className="notice-page-header">
+        <h1 className="notice-page-title">공지사항 등록</h1>
       </div>
-      <h1>공지사항 등록</h1>
       <form className="notice-write-form" onSubmit={handleSubmit}>
         <div className="notice-write-form-group">
           <label htmlFor="noticeTitle">
@@ -67,18 +66,21 @@ export default function NoticeWrite() {
           />
         </div>
 
-        <div className="notice-write-form-actions">
-          <button
-            type="button"
-            className="notice-write-btn notice-write-btn-secondary"
-            onClick={handleCancel}
-          >
-            취소
-          </button>
-          <button type="submit" className="notice-write-btn notice-write-btn-primary">
-            등록
-          </button>
-        </div>
+                 <div className="notice-write-form-actions">
+           <button
+             type="button"
+             className="notice-update-btn notice-update-btn-secondary"
+             onClick={handleCancel}
+           >
+             취소
+           </button>
+           <button
+             type="submit"
+             className="notice-update-btn notice-update-btn-primary"
+           >
+             등록
+           </button>
+         </div>
       </form>
     </div>
   );

@@ -7,7 +7,7 @@ import dayjs from 'dayjs';
 
 import '../../../styles/deokkyu/common.css';
 import '../../../styles/deokkyu/BusinessManAllowanceDetails.css'; 
-import { getAllowanceList, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
+import { getAllowanceList, getBusinessGrades, setupInterceptors } from '../../../api/auth/DeokkyuAuth';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
@@ -20,8 +20,8 @@ const columns = [
   { field: 'storeName', headerName: '가맹점 명', width: 160 },
   { field: 'storeUserId', headerName: '가맹점 ID', width: 120 },
   { field: 'storeUserName', headerName: '회원 이름', width: 100 },
-  { field: 'temporaryStoreMasterDistributionTime', headerName: '분배시간', width: 120 },
-  { field: 'temporaryStoreCmValue', headerName: '중개수수료 CM', width: 120 },
+  { field: 'temporaryStoreMasterDistributionTime', headerName: '수당분배시간', width: 120 },
+  { field: 'temporaryStoreCmValue', headerName: '중개수수료 TS', width: 120 },
   { field: 'temporaryStoreCashValue', headerName: '중개수수료 Cash', width: 120 },
   { field: 'temporaryStoreTotalValue', headerName: '중개수수료 합계', width: 120 },
 ];
@@ -31,6 +31,7 @@ function BusinessManAllowanceDetails() {
   const [rows, setRows] = useState([]);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [isFilterOpen, setIsFilterOpen] = useState(true);
+  const [businessGrades, setBusinessGrades] = useState([]);
   const [filter, setFilter] = useState({
     businessUserId: '',
     businessUserName: '',
@@ -43,6 +44,18 @@ function BusinessManAllowanceDetails() {
     temporaryStoreMasterDistributionTimeStart: null,
     temporaryStoreMasterDistributionTimeEnd: null,
   });
+
+  const fetchBusinessGrades = async () => {
+    try {
+      const response = await getBusinessGrades();
+      setBusinessGrades(response.data || []);
+      console.log('사업자 등급 조회 완료:', response.data);
+    } catch (error) {
+      console.error('사업자 등급 조회 실패:', error);
+      // 실패시 기본값으로 설정
+      setBusinessGrades([]);
+    }
+  };
 
   const fetchAllowance = async (params = {}) => {
     try {
@@ -86,6 +99,9 @@ function BusinessManAllowanceDetails() {
   useEffect(() => {
     // 인터셉터 설정 (인증 토큰 자동 추가)
     setupInterceptors();
+    
+    // 사업자 등급 목록 로딩
+    fetchBusinessGrades();
     
     // 데이터 로딩
     fetchAllowance({});
@@ -196,9 +212,11 @@ function BusinessManAllowanceDetails() {
                   onChange={(e) => setFilter({ ...filter, businessGradeName: e.target.value })}
                 >
                   <option value="전체">전체</option>
-                  <option value="A등급">A등급</option>
-                  <option value="B등급">B등급</option>
-                  <option value="C등급">C등급</option>
+                  {businessGrades.map((grade) => (
+                    <option key={grade.businessGradeIndex} value={grade.businessGradeName}>
+                      {grade.businessGradeName}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="deokkyu-filter-field">
@@ -255,7 +273,7 @@ function BusinessManAllowanceDetails() {
             {/* 세 번째 행: 분배시간 시작, 분배시간 종료 */}
             <div className="deokkyu-filter-row">
               <div className="deokkyu-filter-field">
-                <label className="deokkyu-filter-label">분배시간 시작</label>
+                <label className="deokkyu-filter-label">수당분배시간 시작</label>
                 <input
                   className="deokkyu-filter-input"
                   type="date"
@@ -264,7 +282,7 @@ function BusinessManAllowanceDetails() {
                 />
               </div>
               <div className="deokkyu-filter-field">
-                <label className="deokkyu-filter-label">분배시간 종료</label>
+                <label className="deokkyu-filter-label">수당분배시간 종료</label>
                 <input
                   className="deokkyu-filter-input"
                   type="date"

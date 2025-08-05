@@ -9,57 +9,77 @@ import {
 import useNotificationStore from "../../../store/jiyun/NotificationStore";
 import LoadingSpinner from "../../../components/ui/jungeun/LoadingSpinner";
 
-// 알림 설정을 정적으로 생성하는 함수 (백엔드 API 호출 없이)
-const createAlertSettingsFromAuthority = (authorityList) => {
-  if (!authorityList || !Array.isArray(authorityList)) {
-    return [];
-  }
+    // 알림 설정을 동적으로 생성하는 함수 (백엔드에서 설정 조회)
+  const createAlertSettingsFromAuthority = async (authorityList, userIndex) => {
+    if (!authorityList || !Array.isArray(authorityList)) {
+      return [];
+    }
 
-  // 매핑 가능한 권한만 필터링
-  const mappableAuthorities = authorityList.filter(auth => {
-    const { programIndex } = auth;
-    return [8, 10, 38, 9, 25, 26, 33].includes(programIndex);
-  });
+    const alertSettings = [];
 
-  if (mappableAuthorities.length === 0) {
-    return [];
-  }
-
-  // 알림 타입 매핑 객체
-  const alarmTypeMapping = {
-    8: { alarmTypesId: 1, label: "권한 변경 알림" },
-    10: { alarmTypesId: 2, label: "관리자 추가/삭제 알림" },
-    38: { alarmTypesId: 3, label: "월 CM 한도 변경 알림" },
-    9: { alarmTypesId: 4, label: "중개수수료율 변경 알림" },
-    25: { alarmTypesId: 5, label: "공지사항 등록 알림" },
-    26: { alarmTypesId: 6, label: "신규 Q&A 문의 알림" },
-    33: { alarmTypesId: 8, label: "신규 가맹점 신청 알림" }
-  };
-
-  // 권한에 따라 기본 설정 생성 (모든 설정을 ON으로 초기화)
-  return mappableAuthorities.map(auth => {
-    const { programIndex, menuIndex } = auth;
-    const mapping = alarmTypeMapping[programIndex];
-    
-    if (!mapping) return null;
-
-    return {
-      key: mapping.alarmTypesId,
-      label: mapping.label,
-      active: 0, // 기본값: ON (알림 활성화)
-      programIndex: programIndex,
-      menuIndex: menuIndex,
-      alarmTypesId: mapping.alarmTypesId,
+    // 알림 타입 매핑 객체 (성능 최적화)
+    const alarmTypeMapping = {
+      8: { alarmTypesId: 1, label: "권한 변경 알림" },
+      10: { alarmTypesId: 2, label: "관리자 추가/삭제 알림" },
+      38: { alarmTypesId: 3, label: "월 TS 한도 변경 알림" },
+      9: { alarmTypesId: 4, label: "중개수수료율 변경 알림" },
+      25: { alarmTypesId: 5, label: "공지사항 등록 알림" },
+      26: { alarmTypesId: 6, label: "신규 Q&A 문의 알림" },
+      33: { alarmTypesId: 8, label: "신규 가맹점 신청 알림" }
     };
-  }).filter(result => result !== null);
-};
+
+    // 매핑 가능한 권한만 필터링
+    const mappableAuthorities = authorityList.filter(auth => {
+      return alarmTypeMapping[auth.programIndex];
+    });
+
+    // 모든 알림 설정을 병렬로 조회
+    const settingPromises = mappableAuthorities.map(async (auth) => {
+      const { programIndex, menuIndex } = auth;
+      const mapping = alarmTypeMapping[programIndex];
+      
+      try {
+        const response = await getUserAlarmSetting(userIndex, mapping.alarmTypesId);
+        const settingData = response.data;
+        
+        let active = 0; // 기본값: ON (알림 활성화)
+        if (settingData.hasSetting) {
+          active = settingData.isActive;
+        }
+        
+        return {
+          key: mapping.alarmTypesId,
+          label: mapping.label,
+          active: active,
+          programIndex: programIndex,
+          menuIndex: menuIndex,
+          alarmTypesId: mapping.alarmTypesId,
+        };
+      } catch (error) {
+        console.error(`알림 설정 조회 실패 - ${mapping.label}:`, error);
+        
+        return {
+          key: mapping.alarmTypesId,
+          label: mapping.label,
+          active: 0, // 기본값: ON (알림 활성화)
+          programIndex: programIndex,
+          menuIndex: menuIndex,
+          alarmTypesId: mapping.alarmTypesId,
+        };
+      }
+    });
+
+    // 병렬로 모든 설정 조회
+    const settings = await Promise.all(settingPromises);
+    alertSettings.push(...settings);
+
+    return alertSettings;
+  };
 
 export default function AlertPage() {
   const [settings, setSettings] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [pageError, setPageError] = useState(null);
-  const [notificationsLoaded, setNotificationsLoaded] = useState(false);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [settingsExpanded, setSettingsExpanded] = useState(false);
 
   // 전역 상태에서 알림 데이터 가져오기
@@ -78,8 +98,8 @@ export default function AlertPage() {
       try {
         setPageLoading(true);
         setPageError(null);
-        
-        // 사용자 정보 미리 가져오기
+
+        // 사용자 정보 가져오기
         const userInfo = JSON.parse(localStorage.getItem("admin-info"));
         const userIndex = userInfo?.user_index;
 
@@ -87,7 +107,7 @@ export default function AlertPage() {
           throw new Error("사용자 정보를 찾을 수 없습니다.");
         }
 
-        // 1. 권한 조회와 알림 내역을 병렬로 실행
+        // 1. 권한 조회와 알림 내역을 병렬로 로드
         const [authorityResponse, alarmResponse] = await Promise.all([
           menuAuthority(adminTypeIndex),
           getMyAlarmHistory(userIndex)
@@ -105,12 +125,13 @@ export default function AlertPage() {
           setNotifications([]);
         }
 
-        // 3. 권한 기반 알림 설정 즉시 생성 (API 호출 없이)
+        // 3. 권한 기반 알림 설정 로드
         const authorityList = authorityResponse.data.data;
-        const alertSettings = createAlertSettingsFromAuthority(authorityList);
+        const alertSettings = await createAlertSettingsFromAuthority(
+          authorityList,
+          userIndex
+        );
         setSettings(alertSettings);
-        setSettingsLoaded(true);
-        setNotificationsLoaded(true);
 
       } catch (error) {
         console.error("페이지 데이터 로드 실패:", error);
@@ -153,35 +174,19 @@ export default function AlertPage() {
       // 새로운 상태 계산 (0=ON, 1=OFF)
       const newActive = currentSetting.active === 0 ? 1 : 0;
 
-      // 즉시 UI 업데이트 (사용자 경험 개선)
-      setSettings((prev) =>
-        prev.map((item) =>
-          item.key === key ? { ...item, active: newActive } : item
-        )
-      );
+      // 백엔드에 업데이트 요청
+      const response = await updateUserAlarmSetting(userIndex, key, newActive);
 
-      // 백엔드에 업데이트 요청 (백그라운드에서 실행)
-      try {
-        const response = await updateUserAlarmSetting(userIndex, key, newActive);
-        if (!response.data.success) {
-          // 실패 시 원래 상태로 되돌리기
-          setSettings((prev) =>
-            prev.map((item) =>
-              item.key === key ? { ...item, active: currentSetting.active } : item
-            )
-          );
-        }
-      } catch (error) {
-        console.error("알림 설정 업데이트 실패:", error);
-        // 실패 시 원래 상태로 되돌리기
+      if (response.data.success) {
+        // 성공 시 로컬 상태 업데이트
         setSettings((prev) =>
           prev.map((item) =>
-            item.key === key ? { ...item, active: currentSetting.active } : item
+            item.key === key ? { ...item, active: newActive } : item
           )
         );
       }
     } catch (error) {
-      console.error("알림 설정 변경 중 오류:", error);
+      // 에러 처리 (콘솔 로그 제거)
     }
   };
 
