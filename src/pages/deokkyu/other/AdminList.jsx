@@ -15,7 +15,6 @@ import { useToast } from '../../../context/jungeun/ToastContext';
 import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel, downloadSelectedExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 import usePermissionStore from '../../../store/taekjun/PermissionStore';
-import PermissionGuard from '../../../components/common/PermissionGuard';
 import { getProgramIndexByPath, PROGRAM_INDEXES } from '../../../constants/programIndexes';
 
 function AdminList() {
@@ -514,7 +513,13 @@ function AdminList() {
       <Box className="deokkyu-container">
         <div className="deokkyu-page-title">관리자 리스트</div>
         <div className="deokkyu-actions">
-          <PermissionGuard programIndex={programIndex} permissionType="insert">
+          {(() => {
+            const insertPermission = hasPermission(programIndex, 'insert');
+            // 임시: "대표" 권한은 모든 권한을 가지도록 처리
+            const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
+            const isAdmin = userInfo.admin_type_name === '대표';
+            return insertPermission || isAdmin;
+          })() && (
             <button 
               className="taekjun-btn admin create"
               onClick={handleCreateAdmin}
@@ -522,7 +527,7 @@ function AdminList() {
             >
               등록
             </button>
-          </PermissionGuard>
+          )}
             <button 
               className="deokkyu-btn excel" 
               onClick={handleSelectedExcelDownload}
@@ -840,7 +845,12 @@ function AdminList() {
               </div>
             </div>
             <div className="admin-create-modal-actions">
-              <PermissionGuard programIndex={programIndex} permissionType="insert">
+              {(() => {
+                const insertPermission = hasPermission(programIndex, 'insert');
+                const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
+                const isAdmin = userInfo.admin_type_name === '대표';
+                return insertPermission || isAdmin;
+              })() && (
                 <button 
                   className="admin-create-modal-btn primary"
                   onClick={handleCreateAdminSave}
@@ -848,7 +858,7 @@ function AdminList() {
                 >
                   {loading ? '등록 중...' : '등록'}
                 </button>
-              </PermissionGuard>
+              )}
               <button 
                 className="admin-create-modal-btn secondary"
                 onClick={() => setShowCreateModal(false)}
@@ -1023,7 +1033,12 @@ function AdminList() {
             <div className="admin-create-modal-actions">
               {isEditMode ? (
                 <>
-                  <PermissionGuard programIndex={programIndex} permissionType="update">
+                  {(() => {
+                    const updatePermission = hasPermission(programIndex, 'update');
+                    const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
+                    const isAdmin = userInfo.admin_type_name === '대표';
+                    return updatePermission || isAdmin;
+                  })() && (
                     <button 
                       className="admin-create-modal-btn primary"
                       onClick={handleSaveDetailEdit}
@@ -1031,7 +1046,7 @@ function AdminList() {
                     >
                       {loading ? '저장 중...' : '저장'}
                     </button>
-                  </PermissionGuard>
+                  )}
                   <button 
                     className="admin-create-modal-btn secondary"
                     onClick={handleCancelEdit}
@@ -1042,14 +1057,19 @@ function AdminList() {
                 </>
               ) : (
                 <>
-                  <PermissionGuard programIndex={programIndex} permissionType="update">
+                  {(() => {
+                    const updatePermission = hasPermission(programIndex, 'update');
+                    const userInfo = JSON.parse(localStorage.getItem('admin-info') || '{}');
+                    const isAdmin = userInfo.admin_type_name === '대표';
+                    return updatePermission || isAdmin;
+                  })() && (
                     <button 
                       className="admin-create-modal-btn primary"
                       onClick={handleEditFromDetail}
                     >
                       수정
                     </button>
-                  </PermissionGuard>
+                  )}
                   <button 
                     className="admin-create-modal-btn secondary"
                     onClick={() => {

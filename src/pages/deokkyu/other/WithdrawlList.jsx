@@ -49,13 +49,6 @@ const generateWeekRows = () => {
 };
 
 const listColumns = [
-  { field: 'userId', headerName: 'ID', width: 120 },
-  { field: 'userName', headerName: '이름', width: 100 },
-  { field: 'userPhone', headerName: '핸드폰 번호', width: 160 },
-  { field: 'userBankName', headerName: '은행 이름', width: 160 },
-  { field: 'userBankNumber', headerName: '계좌번호', width: 100 },
-  { field: 'chargeAmount', headerName: '충전 금액', width: 100 },
-  { field: 'transactionName', headerName: '거래명', width: 100 },
   { 
     field: 'chargeDate', 
     headerName: '충전일', 
@@ -75,6 +68,13 @@ const listColumns = [
     }
   },
   { field: 'cmValue', headerName: 'TS', width: 100 },
+  { field: 'userId', headerName: 'ID', width: 120 },
+  { field: 'userName', headerName: '이름', width: 100 },
+  { field: 'userPhone', headerName: '핸드폰 번호', width: 160 },
+  { field: 'userBankName', headerName: '은행 이름', width: 160 },
+  { field: 'userBankNumber', headerName: '계좌번호', width: 100 },
+  { field: 'chargeAmount', headerName: '충전 금액', width: 100 },
+  { field: 'transactionName', headerName: '거래명', width: 100 },
 ];
 
 const dateColumns = [
