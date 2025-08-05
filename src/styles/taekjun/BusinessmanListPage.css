@@ -1,7 +1,7 @@
 /* 사업자 목록 페이지 스타일 */
 .businessman-list-page {
   padding: 24px;
-  background: #F4F6FA;
+  background: transparent;
   min-height: 100vh;
   font-family: 'Pretendard Variable', Pretendard, sans-serif;
 }

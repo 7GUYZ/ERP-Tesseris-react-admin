@@ -10,6 +10,19 @@
   background-color: white;
 }
 
+.commission-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+.commission-ontent-area {
+  padding: 24px;
+  background: #fff;
+  min-height: 100vh;
+  font-family: "Pretendard", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
 .commission-header {
   display: flex;
   align-items: center;

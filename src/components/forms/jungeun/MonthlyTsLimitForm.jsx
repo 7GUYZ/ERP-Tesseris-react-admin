@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { cmLimit, cmLimitSave } from "../../../api/auth/JungeunAuth"
+import { cmLimit, cmLimitSave,  } from "../../../api/auth/JungeunAuth"
 import { permissionCheckApi } from "../../../api/auth/TaekjunAuth"
-import "../../../styles/jungeun/monthlyCmLimit.css";
+import "../../../styles/jungeun/monthlyTsLimit.css";
 import LoadingSpinner from "../../ui/jungeun/LoadingSpinner"
 import ConfirmModal from "../../ui/jungeun/ConfirmModal"
 import PasswordModal from "../../ui/jungeun/PasswordModal"
@@ -15,7 +15,7 @@ const formatNumber = (num) => {
   return Number(num).toLocaleString();
 };
 
-const MonthlyCmLimitForm = () => {
+const MonthlyTsLimitForm = () => {
   const [monthlyLimit, setMonthlyLimit] = useState(0);
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(monthlyLimit);
@@ -31,10 +31,10 @@ const MonthlyCmLimitForm = () => {
   // 권한 체크 함수
   const checkEditPermission = async () => {
     try {
-      const response = await permissionCheckApi.checkPermission(38); // programIndex: 38 (월 CM사용한도)
+      const response = await permissionCheckApi.checkPermission(38); // programIndex: 38 (월 TS사용한도)
       if (response.data) {
         setCanEdit(response.data.hasUpdateAuthority === 1);
-        console.log('월 CM사용한도 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+        console.log('월 TS사용한도 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
       }
     } catch (error) {
       console.error('권한 체크 실패:', error);
@@ -43,13 +43,13 @@ const MonthlyCmLimitForm = () => {
   };
 
   useEffect(() => {
-    const getCmLimit = async () => {
+    const getTsLimit = async () => {
       setLoading(true);
       try {
         const response = await cmLimit();
         setMonthlyLimit(response.data.data.settingValue);
       } catch (error) {
-        setModalMessage('월 CM 한도를 불러오지 못했습니다.');
+        setModalMessage('월 TS 한도를 불러오지 못했습니다.');
         setModalType("fetch");
         setModalOpen(true);
       } finally {
@@ -58,7 +58,7 @@ const MonthlyCmLimitForm = () => {
     };
     
     // 권한 체크와 데이터 로드 동시에 실행
-    getCmLimit();
+    getTsLimit();
     checkEditPermission();
   }, []);
 
@@ -102,7 +102,7 @@ const MonthlyCmLimitForm = () => {
   ];
 
   return (
-    <div className="monthly-cm-limit">
+    <div className="monthly-ts-limit">
       {loading && <LoadingSpinner fullScreen />}
       {modalOpen && (
         <ConfirmModal
@@ -130,14 +130,14 @@ const MonthlyCmLimitForm = () => {
                 // 화면 새로고침 대신 상태 직접 업데이트
                 setMonthlyLimit(tempValue);
                 setIsEditing(false);
-                showToast("success", "월 CM 한도가 성공적으로 수정되었습니다.");
+                showToast("success", "월 TS 한도가 성공적으로 수정되었습니다.");
               } else {
-                setModalMessage('월 CM 한도 수정 실패');
+                setModalMessage('월 TS 한도 수정 실패');
                 setModalType("save");
                 setModalOpen(true);
               }
             } catch (error) {
-              setModalMessage('월 CM 한도 수정 실패');
+              setModalMessage('월 TS 한도 수정 실패');
               setModalType("save");
               setModalOpen(true);
             } finally {
@@ -153,8 +153,8 @@ const MonthlyCmLimitForm = () => {
       <div className="setting-card">
         <div className="card-header">
           <div className="header-content">
-            <h2 className="setting-title">월 CM 사용한도</h2>
-            <p className="setting-description">매월 사용 가능한 CM 한도를 설정합니다</p>
+            <h2 className="setting-title">월 TS 사용한도</h2>
+            <p className="setting-description">매월 사용 가능한 TS 한도를 설정합니다</p>
           </div>
           <div className="header-actions">
             {!isEditing ? (
@@ -174,7 +174,7 @@ const MonthlyCmLimitForm = () => {
 
         <div className="card-content">
           <div className="value-display">
-            <div className="value-label">현재 월 CM 한도</div>
+            <div className="value-label">현재 월 TS 한도</div>
             {!isEditing ? (
               <div className="value-amount">
                 <span className="amount-number">{formatNumber(monthlyLimit)}</span>
@@ -221,4 +221,4 @@ const MonthlyCmLimitForm = () => {
   );
 };
 
-export default MonthlyCmLimitForm;
+export default MonthlyTsLimitForm;

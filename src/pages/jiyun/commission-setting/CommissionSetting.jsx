@@ -25,14 +25,17 @@ export default function CommissionSetting() {
         const response = await permissionCheckApi.checkPermission(9); // programIndex: 9 (중개수수료율 설정)
         if (response.data) {
           setCanEdit(response.data.hasUpdateAuthority === 1);
-          console.log('중개수수료율 설정 수정 권한 체크 결과:', response.data.hasUpdateAuthority);
+          console.log(
+            "중개수수료율 설정 수정 권한 체크 결과:",
+            response.data.hasUpdateAuthority
+          );
         }
       } catch (error) {
-        console.error('권한 체크 실패:', error);
+        console.error("권한 체크 실패:", error);
         setCanEdit(false);
       }
     };
-    
+
     checkPermission();
   }, []);
 
@@ -80,14 +83,16 @@ export default function CommissionSetting() {
           ...item,
           businessGradeRate: Number(item.businessGradeRate) / 10,
         }));
-        
+
         await setCommissionSetting(payload);
         showToast("success", "수수료율 설정 변경 완료");
         setOriginalSetting(setting);
         setShowPasswordModal(false); // 모달 닫기
         return true; // 성공 시 true 반환
       } else {
-        throw new Error(response.data.message || "비밀번호가 일치하지 않습니다.");
+        throw new Error(
+          response.data.message || "비밀번호가 일치하지 않습니다."
+        );
       }
     } catch (error) {
       throw new Error(error.message || "비밀번호 확인에 실패했습니다.");
@@ -114,99 +119,105 @@ export default function CommissionSetting() {
   if (loading) return <div>로딩중...</div>;
 
   return (
-    <form className="commission-form" onSubmit={handleSave}>
-      <div className="commission-header">
-        <h1>중개 수수료율 설정</h1>
-        <button
-          className="save-button"
-          type="submit"
-          disabled={!isSumValid || !isChanged || !canEdit}
-          style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-        >
-          저장
-        </button>
-      </div>
-
-      {error && <div className="error">{error}</div>}
-
-      <div className="commission-container">
-        <div className="total-ratio">
-          <h2>전체 비율 설정</h2>
-          <div className="ratio-row">
-            <label>회사</label>
-            <input
-              className="commission-input"
-              type="number"
-              value={companyRate}
-              disabled={!canEdit}
-              style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-              onChange={(e) => {
-                const realIdx = setting.findIndex(
-                  (s) => s.businessGradeIndex === 1
-                );
-                handleChange(realIdx, "businessGradeRate", e.target.value);
-              }}
-            />
-            <span>%</span>
-          </div>
-          <div className="ratio-row">
-            <label>사업부</label>
-            <input
-              className="commission-input"
-              value={departmentValue}
-              readOnly
-            />
-            <span>%</span>
-          </div>
-          <div className="ratio-total">= 100 %</div>
+    <div className="commission-ontent-area">
+      <form className="commission-form" onSubmit={handleSave}>
+        <div className="commission-header">
+          <h1 className="commission-title">중개 수수료율 설정</h1>
+          <button
+            className="save-button"
+            type="submit"
+            disabled={!isSumValid || !isChanged || !canEdit}
+            style={!canEdit ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
+            저장
+          </button>
         </div>
 
-        <div className="grade-ratio">
-          <h2>직급별 설정 (사업부)</h2>
-          <div className="grade-list">
-            {setting
-              .filter(
-                (s) => s.businessGradeIndex >= 2 && s.businessGradeIndex <= 11
-              )
-              .map((grade, idx) => {
-                const realIdx = setting.findIndex(
-                  (s) => s.businessGradeIndex === grade.businessGradeIndex
-                );
-                return (
-                  <div className="grade-row" key={grade.businessGradeIndex}>
-                    <label>{`${idx + 1}. ${grade.businessGradeName}`}</label>
-                    <input
-                      className="commission-input"
-                      type="number"
-                      value={grade.businessGradeRate}
-                      disabled={!canEdit}
-                      style={!canEdit ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                      onChange={(e) =>
-                        handleChange(
-                          realIdx,
-                          "businessGradeRate",
-                          e.target.value
-                        )
-                      }
-                    />
-                    <span>%</span>
-                  </div>
-                );
-              })}
+        {error && <div className="error">{error}</div>}
+
+        <div className="commission-container">
+          <div className="total-ratio">
+            <h2>전체 비율 설정</h2>
+            <div className="ratio-row">
+              <label>회사</label>
+              <input
+                className="commission-input"
+                type="number"
+                value={companyRate}
+                disabled={!canEdit}
+                style={!canEdit ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+                onChange={(e) => {
+                  const realIdx = setting.findIndex(
+                    (s) => s.businessGradeIndex === 1
+                  );
+                  handleChange(realIdx, "businessGradeRate", e.target.value);
+                }}
+              />
+              <span>%</span>
+            </div>
+            <div className="ratio-row">
+              <label>사업부</label>
+              <input
+                className="commission-input"
+                value={departmentValue}
+                readOnly
+              />
+              <span>%</span>
+            </div>
+            <div className="ratio-total">= 100 %</div>
           </div>
-          <div className={`grade-sum ${isSumValid ? "" : "invalid"}`}>
-            총: {gradeSum}%
+
+          <div className="grade-ratio">
+            <h2>직급별 설정 (사업부)</h2>
+            <div className="grade-list">
+              {setting
+                .filter(
+                  (s) => s.businessGradeIndex >= 2 && s.businessGradeIndex <= 11
+                )
+                .map((grade, idx) => {
+                  const realIdx = setting.findIndex(
+                    (s) => s.businessGradeIndex === grade.businessGradeIndex
+                  );
+                  return (
+                    <div className="grade-row" key={grade.businessGradeIndex}>
+                      <label>{`${idx + 1}. ${grade.businessGradeName}`}</label>
+                      <input
+                        className="commission-input"
+                        type="number"
+                        value={grade.businessGradeRate}
+                        disabled={!canEdit}
+                        style={
+                          !canEdit
+                            ? { opacity: 0.5, cursor: "not-allowed" }
+                            : {}
+                        }
+                        onChange={(e) =>
+                          handleChange(
+                            realIdx,
+                            "businessGradeRate",
+                            e.target.value
+                          )
+                        }
+                      />
+                      <span>%</span>
+                    </div>
+                  );
+                })}
+            </div>
+            <div className={`grade-sum ${isSumValid ? "" : "invalid"}`}>
+              총: {gradeSum}%
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* PwModal 컴포넌트 사용 */}
-      <PwModal
-        isOpen={showPasswordModal}
-        onClose={handlePasswordCancel}
-        onConfirm={handlePasswordConfirm}
-        title="수수료율 설정 변경"
-      />
-    </form>
+        {/* PwModal 컴포넌트 사용 */}
+        <PwModal
+          isOpen={showPasswordModal}
+          onClose={handlePasswordCancel}
+          onConfirm={handlePasswordConfirm}
+          title="수수료율 설정 변경"
+        />
+      </form>
+    </div>
   );
 }

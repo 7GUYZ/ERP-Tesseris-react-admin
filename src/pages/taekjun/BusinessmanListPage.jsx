@@ -74,6 +74,7 @@ const BusinessmanListPage = () => {
   const [showBossSelectModal, setShowBossSelectModal] = useState(false);
   const [bossSearchTerm, setBossSearchTerm] = useState('');
   const [filteredBossList, setFilteredBossList] = useState([]);
+  const [isSearchConditionsExpanded, setIsSearchConditionsExpanded] = useState(true);
 
   // 권한 체크 훅 사용
   const { checkPermission, hasPermission } = usePermissionStore();
@@ -630,82 +631,95 @@ const BusinessmanListPage = () => {
         </div>
       </div>
 
-      {/* 검색 필터 */}
-      <div className="businessman-list-search-section">
-        <div className="businessman-list-search-grid">
-          <div className="businessman-list-search-row">
-            <div className="businessman-list-search-item">
-              <label>이메일</label>
-              <input
-                type="text"
-                placeholder="이메일을 입력하세요."
-                value={searchFilters.email}
-                onChange={(e) => handleFilterChange('email', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>이름</label>
-              <input
-                type="text"
-                placeholder="이름을 입력하세요."
-                value={searchFilters.userName}
-                onChange={(e) => handleFilterChange('userName', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>휴대폰 번호</label>
-              <input
-                type="text"
-                placeholder="휴대폰 번호를 입력하세요."
-                value={searchFilters.userPhone}
-                onChange={(e) => handleFilterChange('userPhone', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-          </div>
-          <div className="businessman-list-search-row">
-            <div className="businessman-list-search-item">
-              <label>사업자 등급</label>
-              <select
-                value={searchFilters.businessGradeName}
-                onChange={e => setSearchFilters({ ...searchFilters, businessGradeName: e.target.value })}
-              >
-                <option value=''>전체 등급</option>
-                {businessGrades.map(grade => (
-                  <option key={grade.businessGradeIndex} value={grade.businessGradeName}>
-                    {grade.businessGradeName}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="businessman-list-search-item">
-              <label>상사 이메일</label>
-              <input
-                type="text"
-                placeholder="상사 이메일을 입력하세요."
-                value={searchFilters.bossEmail}
-                onChange={(e) => handleFilterChange('bossEmail', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="businessman-list-search-item">
-              <label>사업 지역</label>
-              <select
-                value={searchFilters.businessAreaName}
-                onChange={e => setSearchFilters({ ...searchFilters, businessAreaName: e.target.value })}
-              >
-                <option value=''>전체 지역</option>
-                {businessAreas.map(area => (
-                  <option key={area.businessAreaIndex} value={area.businessAreaName}>
-                    {area.businessAreaName}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* 검색 조건 */}
+      <div className="search-conditions-section">
+        <div 
+          className="search-conditions-header"
+          onClick={() => setIsSearchConditionsExpanded(!isSearchConditionsExpanded)}
+        >
+          <h3>검색 조건</h3>
+          <div className="search-conditions-toggle">
+            <span>{isSearchConditionsExpanded ? '▲' : '▼'}</span>
           </div>
         </div>
+        
+        {isSearchConditionsExpanded && (
+          <div className="search-conditions-content">
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>이메일</label>
+                <input
+                  type="text"
+                  placeholder="이메일을 입력하세요"
+                  value={searchFilters.email}
+                  onChange={(e) => handleFilterChange('email', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>이름</label>
+                <input
+                  type="text"
+                  placeholder="이름을 입력하세요"
+                  value={searchFilters.userName}
+                  onChange={(e) => handleFilterChange('userName', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>휴대폰 번호</label>
+                <input
+                  type="text"
+                  placeholder="휴대폰 번호를 입력하세요"
+                  value={searchFilters.userPhone}
+                  onChange={(e) => handleFilterChange('userPhone', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+            </div>
+            
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>사업자 등급</label>
+                <select
+                  value={searchFilters.businessGradeName}
+                  onChange={e => setSearchFilters({ ...searchFilters, businessGradeName: e.target.value })}
+                >
+                  <option value="">사업자 등급 선택</option>
+                  {businessGrades.map(grade => (
+                    <option key={grade.businessGradeIndex} value={grade.businessGradeName}>
+                      {grade.businessGradeName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="search-conditions-item">
+                <label>상사 이메일</label>
+                <input
+                  type="text"
+                  placeholder="상사 이메일을 입력하세요"
+                  value={searchFilters.bossEmail}
+                  onChange={(e) => handleFilterChange('bossEmail', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>사업 지역</label>
+                <select
+                  value={searchFilters.businessAreaName}
+                  onChange={e => setSearchFilters({ ...searchFilters, businessAreaName: e.target.value })}
+                >
+                  <option value="">사업 지역 선택</option>
+                  {businessAreas.map(area => (
+                    <option key={area.businessAreaIndex} value={area.businessAreaName}>
+                      {area.businessAreaName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 사업자 목록 DataGrid */}

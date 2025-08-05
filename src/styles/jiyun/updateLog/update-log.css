@@ -2,7 +2,6 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  background-color: #f8fafc;
   min-height: 100vh;
 }
 
@@ -11,15 +10,17 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  padding: 0;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #F4F6FA;
+  margin: 0 0 24px 0; /* 왼쪽 정렬 */
+  max-width: none; /* 최대 너비 제거 */
 }
 
 .update-log-page-title {
-  margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1e293b;
-  line-height: 1.2;
+  color: #222E3C;
+  margin: 0;
 }
 
 .update-log-actions {

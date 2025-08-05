@@ -2,8 +2,7 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   min-height: 100vh;
 }
 
@@ -12,19 +11,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  padding: 0;
-  background: none;
-  border-radius: 0;
-  box-shadow: none;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #F4F6FA;
+  margin: 0 0 24px 0; /* 왼쪽 정렬 */
+  max-width: none; /* 최대 너비 제거 */
 }
 
 .cms-accesslog-page-title {
-  margin: 0;
   font-size: 28px;
   font-weight: 700;
-  color: #1e293b;
-  line-height: 1.2;
+  color: #222E3C;
+  margin: 0;
 }
 
 .cms-accesslog-actions {
@@ -224,35 +222,33 @@
   background: #f8f9fa;
 }
 
-
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
   .cms-accesslog-container {
     padding: 16px;
   }
-  
+
   .cms-accesslog-page-header {
     flex-direction: column;
     gap: 16px;
     align-items: flex-start;
     padding: 16px 20px;
   }
-  
+
   .cms-accesslog-actions {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .cms-accesslog-row {
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .cms-accesslog-form.open {
     padding: 20px;
   }
-  
+
   .cms-accesslog-btn {
     flex: 1;
     min-width: auto;
@@ -263,26 +259,27 @@
   .cms-accesslog-container {
     padding: 12px;
   }
-  
+
   .cms-accesslog-page-title {
     font-size: 20px;
   }
-  
+
   .cms-accesslog-form.open {
     padding: 16px;
   }
-  
+
   .cms-accesslog-input,
   .cms-accesslog-select {
     height: 40px;
     font-size: 14px;
   }
-} s-accesslog-form.open {
-    padding: 16px;
-  }
-  
-  .cms-accesslog-input,
-  .cms-accesslog-select {
-    height: 40px;
-    font-size: 14px;
-  }
+}
+s-accesslog-form.open {
+  padding: 16px;
+}
+
+.cms-accesslog-input,
+.cms-accesslog-select {
+  height: 40px;
+  font-size: 14px;
+}

@@ -11,18 +11,21 @@ import NoRowsOverlay from '../../../components/ui/deokkyu/NoRowsOverlay';
 import { downloadExcel } from '../../../components/feature/jihun/common/ExcelCommon';
 
 
-// 주차별 날짜 데이터 생성 (현재 날짜의 직전 주부터 1년치)
+// 주차별 날짜 데이터 생성 (현재 날짜 기준으로 과거 1년치)
 const generateWeekRows = () => {
   const rows = [];
   const today = new Date();
   
-  // 현재 날짜의 직전 주 월요일부터 시작
-  const lastWeekMonday = new Date(today);
-  lastWeekMonday.setDate(today.getDate() - today.getDay() - 7); // 직전 주 월요일
+  // 현재 주의 월요일 계산 (일요일인 경우 고려)
+  const currentWeekMonday = new Date(today);
+  const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+  const daysToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // 일요일이면 -6, 다른 날은 1-dayOfWeek
+  currentWeekMonday.setDate(today.getDate() + daysToMonday);
   
+  // 과거 52주 생성 (최신 주가 맨 위에 오도록)
   for (let i = 0; i < 52; i++) {
-    const weekStart = new Date(lastWeekMonday);
-    weekStart.setDate(lastWeekMonday.getDate() + (i * 7));
+    const weekStart = new Date(currentWeekMonday);
+    weekStart.setDate(currentWeekMonday.getDate() - (i * 7)); // 과거로 이동
     
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 6);
@@ -46,13 +49,6 @@ const generateWeekRows = () => {
 };
 
 const listColumns = [
-  { field: 'userId', headerName: 'ID', width: 120 },
-  { field: 'userName', headerName: '이름', width: 100 },
-  { field: 'userPhone', headerName: '핸드폰 번호', width: 160 },
-  { field: 'userBankName', headerName: '은행 이름', width: 160 },
-  { field: 'userBankNumber', headerName: '계좌번호', width: 100 },
-  { field: 'chargeAmount', headerName: '충전 금액', width: 100 },
-  { field: 'transactionName', headerName: '거래명', width: 100 },
   { 
     field: 'chargeDate', 
     headerName: '충전일', 
@@ -71,7 +67,14 @@ const listColumns = [
       return params.value;
     }
   },
-  { field: 'cmValue', headerName: 'CM', width: 100 },
+  { field: 'cmValue', headerName: 'TS', width: 100 },
+  { field: 'userId', headerName: 'ID', width: 120 },
+  { field: 'userName', headerName: '이름', width: 100 },
+  { field: 'userPhone', headerName: '핸드폰 번호', width: 160 },
+  { field: 'userBankName', headerName: '은행 이름', width: 160 },
+  { field: 'userBankNumber', headerName: '계좌번호', width: 100 },
+  { field: 'chargeAmount', headerName: '충전 금액', width: 100 },
+  { field: 'transactionName', headerName: '거래명', width: 100 },
 ];
 
 const dateColumns = [

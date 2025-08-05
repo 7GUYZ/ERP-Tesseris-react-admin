@@ -109,6 +109,9 @@ export const getAllowanceList = (params) => // 사업자 수당 내역
 export const getBusinessManList = () => // 사업자 조직도 - 전체 사업자 리스트
   api.get('/businessman/orgchart');
 
+export const getBusinessGrades = () => // 사업자 등급 목록 조회
+  api.get('/businessman/business-grades');
+
 
 
   

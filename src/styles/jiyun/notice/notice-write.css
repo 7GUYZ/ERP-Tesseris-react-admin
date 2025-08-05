@@ -4,16 +4,17 @@
   min-height: 100vh;
 }
 
+.notice-page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+
 .notice-write-breadcrumb {
   font-size: 14px;
   color: #6b7280;
   margin-bottom: 8px;
-}
-
-.notice-write-page h1 {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
 }
 
 .notice-write-form {
@@ -42,8 +43,8 @@
 
 .notice-write-form .notice-write-input,
 .notice-write-form .notice-write-textarea {
-  width: 100%;
-  padding: 10px 1px;
+  width: 96%;
+  padding: 12px 20px;
   font-size: 14px;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -59,7 +60,7 @@
 .notice-write-form .notice-write-input:focus,
 .notice-write-form .notice-write-textarea:focus {
   outline: none;
-  border-color: #387ddd;
+  border-color: #6b7280;
   background-color: #fff;
 }
 
@@ -68,6 +69,7 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 24px;
+  width: 99%;
 }
 
 .notice-write-btn {
