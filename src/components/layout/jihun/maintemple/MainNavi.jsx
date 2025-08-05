@@ -188,7 +188,7 @@ const MainNavi = () => {
           {
             id: "admin_type",
             programIndex: 40,
-            label: "직급 설정",
+            label: "관리자 타입관리",
             type: "link",
             href: "/admin-type-insert",
           },

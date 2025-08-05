@@ -13,24 +13,23 @@ import {
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
 import { SearchRoom, CheckRoom } from '../../api/auth/JihunAuth';
-import { useWebSocket } from './WebSocketConfig';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 import { generateRoomName } from '../../utils/roomNameUtils';
 
 
 function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
-  const { subscribeToRoom, connectWebSocket } = useWebSocket();
+  const { connectWebSocket, subscribeToRoom } = useChatWebSocket();
   
-  // WebSocket 연결 설정
+  // WebSocket 연결 설정 (무한 루프 방지)
   useEffect(() => {
     if (open) {
-      const token = localStorage.getItem('access-token');
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
-      if (token && userInfo) {
-        connectWebSocket(token, userInfo.user_index);
+      if (userInfo) {
+        connectWebSocket(userInfo);
       }
     }
-  }, [open, connectWebSocket]); // connectWebSocket 의존성 다시 추가
+  }, [open]); // connectWebSocket 의존성 제거
   // ============================================================================
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -487,7 +486,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         adminData: selectedAdminList,
         adminList: adminList,
         participants: participants, // 참가자 목록 추가
-        subscribeToRoom: subscribeToRoom,
+                 subscribeToRoom: subscribeToRoom,
         refreshChatRooms: refreshChatRooms,
         isExistingRoom: false,
         isExisting: false,

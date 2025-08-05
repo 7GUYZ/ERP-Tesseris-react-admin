@@ -425,8 +425,8 @@ const MemberAssetDetailsForm = () => {
           '사용자이름': row.userName || '',
           '사용자전화번호': row.userPhone || '',
           '가맹점명': row.storeName || '',
-          'CM현재잔액': row.userCmCurrent || 0,
-          'CMP현재잔액': row.userCmpCurrent || 0,
+                        'TS현재잔액': row.userCmCurrent || 0,
+              'CMP현재잔액': row.userCmpCurrent || 0,
           '현금현재잔액': row.userCashCurrent || 0
         }));
         console.log('선택된 항목들 엑셀 다운로드:', excelData.length, '개');
@@ -455,7 +455,7 @@ const MemberAssetDetailsForm = () => {
               '사용자이름': item.userName || '',
               '사용자전화번호': item.userPhone || '',
               '가맹점명': item.storeName || '',
-              'CM현재잔액': item.userCmCurrent || 0,
+              'TS현재잔액': item.userCmCurrent || 0,
               'CMP현재잔액': item.userCmpCurrent || 0,
               '현금현재잔액': item.userCashCurrent || 0
             }));
@@ -478,8 +478,8 @@ const MemberAssetDetailsForm = () => {
                 '사용자이름': item.userName || '',
                 '사용자전화번호': item.userPhone || '',
                 '가맹점명': item.storeName || '',
-                'CM현재잔액': item.userCmCurrent || 0,
-                'CMP현재잔액': item.userCmpCurrent || 0,
+                              'TS현재잔액': item.userCmCurrent || 0,
+              'CMP현재잔액': item.userCmpCurrent || 0,
                 '현금현재잔액': item.userCashCurrent || 0
               }));
               allData = allData.concat(chunkExcelData);
@@ -593,9 +593,9 @@ const MemberAssetDetailsForm = () => {
       // 결과 표시
       const totalCount = selectedMembers.length;
       if (successCount > 0 && failCount === 0) {
-        showToast("success", `${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
+        showToast("success", `${isPayment ? 'TS 지급' : 'TS 회수'} 처리가 ${totalCount}명의 회원에 대해 완료되었습니다.`);
       } else if (successCount > 0 && failCount > 0) {
-        showToast("warning", `${isPayment ? 'CM 지급' : 'CM 회수'} 처리가 완료되었습니다.`);
+        showToast("warning", `${isPayment ? 'TS 지급' : 'TS 회수'} 처리가 완료되었습니다.`);
       } else {
         showToast("error", `처리 실패:\n성공: ${successCount}명\n실패: ${failCount}명`);
       }

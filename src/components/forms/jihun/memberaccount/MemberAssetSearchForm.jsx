@@ -328,7 +328,7 @@ const MemberAssetSearchForm = () => {
           'TO ID': row.toId || '',
           'TO 이름': row.toName || '',
           '거래유형': row.transactionType || '',
-          '거래금액': row.amount || '0',
+          'TS': row.amount || '0',
           '단위': row.unit || '원',
           '사용금액': row.usedValue || '0',
           '쿠폰사용금액': row.couponUsedValue || '0',
@@ -350,7 +350,7 @@ const MemberAssetSearchForm = () => {
             const allData = data.content.map((item, index) => ({
               'No.': index + 1,
               '거래번호': item.userCmLogIndex || '',
-              '거래금액': item.userCmLogValue || 0,
+              'TS': item.userCmLogValue || 0,
               '거래사유': item.userCmLogReason || '',
               '거래시간': item.userCmLogCreateTime || '',
               '쿠폰금액': item.userCouponValue || 0,
@@ -375,7 +375,7 @@ const MemberAssetSearchForm = () => {
               const chunkExcelData = chunkData.content.map((item, index) => ({
                 'No.': allData.length + index + 1,
                 '거래번호': item.userCmLogIndex || '',
-                '거래금액': item.userCmLogValue || 0,
+                'TS': item.userCmLogValue || 0,
                 '거래사유': item.userCmLogReason || '',
                 '거래시간': item.userCmLogCreateTime || '',
                 '쿠폰금액': item.userCouponValue || 0,

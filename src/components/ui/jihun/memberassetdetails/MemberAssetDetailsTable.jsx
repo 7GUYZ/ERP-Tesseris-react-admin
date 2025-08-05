@@ -132,7 +132,7 @@ const MemberAssetDetailsTable = ({
     { field: "franchiseName", headerName: "가맹점 명", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     {
       field: "cmHeld",
-      headerName: "보유 CM",
+      headerName: "보유 TS",
       width: 120,
       minWidth: 120,
       flex: 1,

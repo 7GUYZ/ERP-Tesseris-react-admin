@@ -4,7 +4,7 @@ import MainHeader from "./MainHeader";
 import MainNavi from "./MainNavi";
 import "../../../../styles/jihun/maintemple/maintempleside.css";
 import RealTimeChat from '../../../chat/RealTimeChat';
-import WebSocketChatProvider from "../../../chat/WebSocketConfig";
+import { ChatWebSocketProvider } from "../../../../context/ChatWebSocketContext";
 const MainLayout = () => {
   return (
     <div className="dashboard-container">
@@ -30,9 +30,9 @@ const MainLayout = () => {
         pointerEvents: 'none',
         zIndex: 1000 
       }}>
-        <WebSocketChatProvider>
+        <ChatWebSocketProvider>
           <RealTimeChat /> 
-        </WebSocketChatProvider>
+        </ChatWebSocketProvider>
       </div>
     </div>
   );

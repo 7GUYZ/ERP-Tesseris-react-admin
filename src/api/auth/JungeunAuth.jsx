@@ -92,8 +92,8 @@ export function setupInterceptors(navigate) {
 }
 
 
-// 월 CM 한도 설정
-// 월 CM 한도 조회 ( 첫 화면 )
+// 월 TS 한도 설정
+// 월 TS 한도 조회 ( 첫 화면 )
 export const cmLimit = () => 
   api.get("/cmLimit")
 
