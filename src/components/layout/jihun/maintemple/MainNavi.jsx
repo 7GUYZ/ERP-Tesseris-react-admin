@@ -19,7 +19,10 @@ import "../../../../styles/jihun/maintemple/maintempleside.css";
 import "../../../../styles/jihun/maintemple/navigation-scrollbar.css";
 import { menuAuthority } from "../../../../api/auth/JungeunAuth";
 import { useToast } from "../../../../context/jungeun/ToastContext";
-import { refreshAuthority, setCurrentPermissionContext } from "../../../../utils/authorityUtils";
+import {
+  refreshAuthority,
+  setCurrentPermissionContext,
+} from "../../../../utils/authorityUtils";
 import { getPermissionByPath } from "../../../../constants/permissionMapping";
 
 const MainNavi = () => {
@@ -442,14 +445,20 @@ const MainNavi = () => {
         // 페이지 이동
         setActiveMenuId(item.id);
         setActiveSubMenuId(null);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(item.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, item.href);
-          console.log(`권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            item.href
+          );
+          console.log(
+            `권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(item.href);
         break;
       case "expand":
@@ -507,14 +516,20 @@ const MainNavi = () => {
           setActiveMenuId(parentMenu.id);
         }
         setActiveSubMenuId(subItem.id);
-        
+
         // 권한 컨텍스트 설정
         const permission = getPermissionByPath(subItem.href);
         if (permission) {
-          setCurrentPermissionContext(permission.menuIndex, permission.programIndex, subItem.href);
-          console.log(`서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`);
+          setCurrentPermissionContext(
+            permission.menuIndex,
+            permission.programIndex,
+            subItem.href
+          );
+          console.log(
+            `서브메뉴 권한 컨텍스트 설정: ${permission.name} (${permission.menuIndex}, ${permission.programIndex})`
+          );
         }
-        
+
         navigate(subItem.href);
         break;
       case "list":
