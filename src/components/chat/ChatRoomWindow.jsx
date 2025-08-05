@@ -525,6 +525,7 @@ function ChatRoomWindow({
           id: receivedMessage.userId || 'system',
           name: 'System'
         },
+        active: true, // 시스템 메시지는 항상 active
         isLocal: false
       };
       console.log('📢 시스템 메시지 추가:', systemMessage);
@@ -2456,8 +2457,8 @@ function ChatRoomWindow({
               const messageSenderId = String(message.sender?.id || '');
               const currentUserId = String(userInfo?.id || '');
               const isMyMessage = messageSenderId === currentUserId && messageSenderId !== '';
-              // active 상태를 안전하게 확인 (undefined, null, false, 0 모두 삭제된 것으로 처리)
-              const isDeletedMessage = message.active === false || message.active === 0 || message.active === null || message.active === undefined;
+              // active 상태를 안전하게 확인 (시스템 메시지는 제외하고, undefined, null, false, 0 모두 삭제된 것으로 처리)
+              const isDeletedMessage = message.type !== 'system' && (message.active === false || message.active === 0 || message.active === null || message.active === undefined);
               const canDelete = isMyMessage && !isDeletedMessage;
 
               // 삭제된 메시지는 "삭제된 메시지"로 표시하거나 완전히 숨김
