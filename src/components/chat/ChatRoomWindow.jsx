@@ -146,10 +146,26 @@ function ChatRoomWindow({
 
   // 발신자 이름 해결 함수
   const resolveSenderName = useCallback((userId, senderName) => {
-    if (senderName) return senderName;
+    console.log('🔍 발신자 이름 해결:', { userId, senderName, adminListLength: adminListRef.current?.length });
+    
+    if (senderName) {
+      console.log('✅ sender_name 사용:', senderName);
+      return senderName;
+    }
+
+    if (!adminListRef.current || adminListRef.current.length === 0) {
+      console.warn('⚠️ adminList가 비어있음, userId 반환:', userId);
+      return userId;
+    }
 
     const admin = adminListRef.current.find(admin => admin.userId === userId);
-    return admin ? admin.name : userId;
+    if (admin) {
+      console.log('✅ adminList에서 이름 찾음:', admin.name);
+      return admin.name;
+    }
+
+    console.warn('⚠️ adminList에서 사용자를 찾을 수 없음:', userId);
+    return userId;
   }, []);
 
   // 인덱스 기반 비교 함수
@@ -663,7 +679,7 @@ function ChatRoomWindow({
   // };
 
   // 명시적 입장 알림 전송 (초대된 사용자가 방에 입장할 때)
-  const sendEnterMessage = () => {
+  const sendEnterMessage = (specificUserId = null) => {
     if (stompClient && stompClient.connected && roomId) {
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       if (userInfo) {
@@ -683,17 +699,20 @@ function ChatRoomWindow({
           return;
         }
         
+        // 특정 사용자 ID가 있으면 사용, 없으면 현재 사용자 ID 사용
+        const userId = specificUserId || userInfo.id;
+        
         // 명시적 입장 알림 전송
         stompClient.publish({
           destination: `/app/adminchat.enterRoom/${roomIndex}`,
           body: JSON.stringify({
             type: 'ENTER',
-            user_id: userInfo.id,
+            user_id: userId,
             room_index: roomIndex,
             timestamp: new Date().toISOString()
           })
         });
-        console.log('🚪 채팅방 명시적 입장 알림 전송:', roomIndex);
+        console.log('🚪 채팅방 명시적 입장 알림 전송:', roomIndex, '사용자:', userId);
       }
     }
   };
@@ -931,6 +950,8 @@ function ChatRoomWindow({
 
               // 관리자 정보를 상태에 저장
               setAdminList(adminData);
+              adminListRef.current = adminData; // ref도 업데이트
+              console.log('👥 관리자 목록 업데이트:', adminData.length, '명');
 
             // 참가자 정보 설정 (기존 방의 경우)
             if (chatData.participants) {
@@ -1799,9 +1820,9 @@ function ChatRoomWindow({
 
         // 초대된 사용자들에게 명시적 입장 알림 전송
         selectedAdminList.forEach(admin => {
-          console.log('📨 초대된 사용자에게 입장 알림 전송:', admin.name);
-          // 사용자 초대 시 입장 알림 전송
-          sendEnterMessage();
+          console.log('📨 초대된 사용자에게 입장 알림 전송:', admin.name, 'ID:', admin.userId);
+          // 사용자 초대 시 입장 알림 전송 (초대된 사용자의 ID 전달)
+          sendEnterMessage(admin.userId);
         });
 
         // 채팅방 목록 새로고침
