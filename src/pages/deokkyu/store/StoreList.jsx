@@ -31,7 +31,7 @@ const columns = [
   { field: 'storeRequestStatusName', headerName: '승인 여부', width: 100 },
   { field: 'storeTransactionStatus', headerName: '거래 상태', width: 100 },
   { field: 'userCmpInit', headerName: '초기지급 CMP', width: 100 },
-  { field: 'totalCM', headerName: '보유 CM', width: 100 },
+  { field: 'totalCM', headerName: '보유 TS', width: 100 },
   { field: 'storeCreateDate', headerName: '신청일', width: 120 },
 ];
 
