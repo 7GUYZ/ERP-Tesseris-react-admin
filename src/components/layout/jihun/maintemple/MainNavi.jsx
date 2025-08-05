@@ -178,9 +178,9 @@ const MainNavi = () => {
           {
             id: "monthly-cm-limit",
             programIndex: 38,
-            label: "월 CM사용한도",
+            label: "월 TS사용한도",
             type: "link",
-            href: "/MonthlyCmLimit",
+            href: "/MonthlyTsLimit",
           },
           {
             id: "admin_type",
@@ -499,6 +499,13 @@ const MainNavi = () => {
 
     switch (subItem.type) {
       case "link":
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenu = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenu) {
+          setActiveMenuId(parentMenu.id);
+        }
         setActiveSubMenuId(subItem.id);
         
         // 권한 컨텍스트 설정
@@ -512,6 +519,13 @@ const MainNavi = () => {
         break;
       case "list":
         // 리스트 박스 - 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForList = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForList) {
+          setActiveMenuId(parentMenuForList.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
@@ -519,6 +533,13 @@ const MainNavi = () => {
         break;
       case "action":
         // 액션 실행
+        // 하위메뉴 클릭 시 해당 상위메뉴도 활성화 상태로 설정
+        const parentMenuForAction = menuConfig.items.find(item => 
+          item.submenu && item.submenu.some(sub => sub.id === subItem.id)
+        );
+        if (parentMenuForAction) {
+          setActiveMenuId(parentMenuForAction.id);
+        }
         setActiveSubMenuId(subItem.id);
         if (subItem.action) {
           subItem.action();
