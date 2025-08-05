@@ -973,6 +973,7 @@ function ChatRoomWindow({
                         },
                         timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
                         messageindex: msg.messageindex || null,
+                        active: msg.active !== undefined ? msg.active : true, // active 상태 포함
                 isLocal: false,
                 files: msg.files || null
               };
@@ -2455,8 +2456,29 @@ function ChatRoomWindow({
               const messageSenderId = String(message.sender?.id || '');
               const currentUserId = String(userInfo?.id || '');
               const isMyMessage = messageSenderId === currentUserId && messageSenderId !== '';
-              const isDeletedMessage = message.active === false || message.active === 0;
+              // active 상태를 안전하게 확인 (undefined, null, false, 0 모두 삭제된 것으로 처리)
+              const isDeletedMessage = message.active === false || message.active === 0 || message.active === null || message.active === undefined;
               const canDelete = isMyMessage && !isDeletedMessage;
+
+              // 삭제된 메시지는 "삭제된 메시지"로 표시하거나 완전히 숨김
+              if (isDeletedMessage) {
+                return (
+                  <Box key={safeKey} sx={{ mb: 1 }}>
+                    <Box sx={{ textAlign: 'center', my: 1 }}>
+                      <Chip
+                        label="삭제된 메시지"
+                        size="small"
+                        sx={{ 
+                          fontSize: '0.7rem', 
+                          backgroundColor: '#f5f5f5',
+                          color: '#999',
+                          fontStyle: 'italic'
+                        }}
+                      />
+                    </Box>
+                  </Box>
+                );
+              }
 
               return (
                 <Box key={safeKey} sx={{ mb: 1 }}>
