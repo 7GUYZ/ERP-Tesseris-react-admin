@@ -4,7 +4,7 @@ import { useState } from "react"
 import '../../../../styles/dabin/SalesPerformanceSearchForm.css';
 
 const SalesPerformanceSearchForm = ({ onSearch, businessGrades, storeRequestStatuses, onParamsChange }) => {
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [form, setForm] = useState({
     businessUserId: "",
     businessGradeIndex: "",

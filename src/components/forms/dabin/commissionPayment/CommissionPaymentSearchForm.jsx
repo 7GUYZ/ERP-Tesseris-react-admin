@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import "../../../../styles/dabin/CommissionPaymentSearchForm.css";
 
 const CommissionPaymentSearchForm = ({ onSearch, onParamsChange, onDateErrorsChange }) => {
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [searchParams, setSearchParams] = useState({
     userId: "",
     userName: "",

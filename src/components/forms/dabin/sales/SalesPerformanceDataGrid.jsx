@@ -29,8 +29,8 @@ const SalesPerformanceDataGrid = ({ data, onSelectionChange }) => {
     { field: "storeName", headerName: "가맹점 명", width: 150, align: 'center', headerAlign: 'center' },
     { field: "storeRequestStatusName", headerName: "가맹점 승인 여부", width: 150, align: 'center', headerAlign: 'center' },
     { field: "storeTransactionStatus", headerName: "가맹점 상태", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "cmrockStatus", headerName: "가맹점 CM락", width: 120, align: 'center', headerAlign: 'center' },
-    { field: "sellrockStatus", headerName: "가맹점 판매락", width: 120, align: 'center', headerAlign: 'center' },
+    // { field: "cmrockStatus", headerName: "가맹점 TS락", width: 120, align: 'center', headerAlign: 'center' },
+    // { field: "sellrockStatus", headerName: "가맹점 판매락", width: 120, align: 'center', headerAlign: 'center' },
     { 
       field: "storeRegistrationDate", 
       headerName: "가맹점 등록일", 

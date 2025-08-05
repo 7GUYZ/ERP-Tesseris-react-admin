@@ -95,7 +95,7 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
       }
     },
     { field: "description", headerName: "충전내역", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "cmValue", headerName: "충전CM", width: 100, align: 'right', headerAlign: 'center' },
+    { field: "cmValue", headerName: "충전TS", width: 100, align: 'right', headerAlign: 'center' },
     { field: "cashValue", headerName: "결제금액", width: 120, align: 'right', headerAlign: 'center' },
     { field: "regularCashValue", headerName: "수당지급", width: 130, align: 'right', headerAlign: 'center' },
     { field: "suggestionUserId", headerName: "추천인 아이디", width: 200, align: 'left', headerAlign: 'center' },

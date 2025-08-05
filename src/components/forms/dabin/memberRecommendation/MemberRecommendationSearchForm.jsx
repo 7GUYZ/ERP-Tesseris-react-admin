@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import '../../../../styles/dabin/MemberRecommendationSearchForm.css';
 
 const MemberRecommendationSearchForm = ({ onSearch, userRoles, onParamsChange, onDateErrorsChange }) => {
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [formData, setFormData] = useState({
     suggestionUserId: "",
     suggestionUserName: "",

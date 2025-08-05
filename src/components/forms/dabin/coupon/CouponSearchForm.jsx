@@ -5,7 +5,7 @@ import { Grid, TextField, Select, MenuItem, FormControl, Typography, Paper, Box 
 import '../../../../styles/dabin/CouponSearchForm.css';
 
 const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsChange, onDateErrorsChange }) => {
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [form, setForm] = useState({
     issuanceStart: "",
     issuanceEnd: "",
