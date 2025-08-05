@@ -5,7 +5,7 @@ import { Grid, TextField, Select, MenuItem, FormControl, Typography, Paper, Box 
 import '../../../../styles/dabin/CouponSearchForm.css';
 
 const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsChange, onDateErrorsChange }) => {
-  const [isSearchFormOpen, setIsSearchFormOpen] = useState(false);
+  const [isSearchFormOpen, setIsSearchFormOpen] = useState(true);
   const [form, setForm] = useState({
     issuanceStart: "",
     issuanceEnd: "",
@@ -224,22 +224,22 @@ const CouponSearchForm = ({ onSearch, issuanceStatus, providedStatus, onParamsCh
         {/* 3줄: 발행자/지급자/쿠폰명/쿠폰가격 */}
         <div className="dabin-page-layout-search-row">
           <div className="dabin-page-layout-search-field">
-            <label className="dabin-page-layout-search-label">발행자ID</label>
+            <label className="dabin-page-layout-search-label">발행자 이메일</label>
             <input
               name="issuanceUserId"
               value={form.issuanceUserId}
               onChange={handleChange}
-              placeholder="발행자ID"
+              placeholder="발행자 이메일"
               className="dabin-page-layout-search-input"
             />
           </div>
           <div className="dabin-page-layout-search-field">
-            <label className="dabin-page-layout-search-label">지급자ID</label>
+            <label className="dabin-page-layout-search-label">지급자 이메일</label>
             <input
               name="providedUserId"
               value={form.providedUserId}
               onChange={handleChange}
-              placeholder="지급자ID"
+              placeholder="지급자 이메일"
               className="dabin-page-layout-search-input"
             />
           </div>

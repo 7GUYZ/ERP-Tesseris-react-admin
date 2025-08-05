@@ -98,8 +98,8 @@ const SalesPerformanceExcelDownloadButton = ({ data, selectedRows }) => {
       orderedData["가맹점명"] = item.storeName || "";
       orderedData["가맹점 승인 여부"] = item.storeRequestStatusName || "";
       orderedData["가맹점 상태"] = item.storeTransactionStatus || "";
-      orderedData["가맹점 CM락"] = item.cmrockStatus || "";
-      orderedData["가맹점 판매락"] = item.sellrockStatus || "";
+      // orderedData["가맹점 CM락"] = item.cmrockStatus || "";
+      // orderedData["가맹점 판매락"] = item.sellrockStatus || "";
       orderedData["가맹점 등록일"] = formatDate(item.storeRegistrationDate);
       
       console.log(`매핑 결과 ${index + 1}번째:`, orderedData);
@@ -117,8 +117,8 @@ const SalesPerformanceExcelDownloadButton = ({ data, selectedRows }) => {
       "가맹점명",
       "가맹점 승인 여부",
       "가맹점 상태",
-      "가맹점 CM락",
-      "가맹점 판매락",
+      // "가맹점 CM락",
+      // "가맹점 판매락",
       "가맹점 등록일"
     ];
     
@@ -151,7 +151,6 @@ const SalesPerformanceExcelDownloadButton = ({ data, selectedRows }) => {
     <Button
       onClick={handleDownload}
       variant="contained"
-      startIcon={<Download />}
       data-button-type="excel"
       style={{
         backgroundColor: "#10b981",

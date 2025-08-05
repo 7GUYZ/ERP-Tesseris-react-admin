@@ -13,24 +13,23 @@ import {
 } from '@mui/icons-material';
 import { adminlist } from './ChatService';
 import { SearchRoom, CheckRoom } from '../../api/auth/JihunAuth';
-import { useWebSocket } from './WebSocketConfig';
+import { useChatWebSocket } from '../../context/ChatWebSocketContext';
 import { generateRoomName } from '../../utils/roomNameUtils';
 
 
 function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionChange, currentSize, currentPosition }) {
-  const { subscribeToRoom, connectWebSocket } = useWebSocket();
+  const { connectWebSocket, subscribeToRoom } = useChatWebSocket();
   
-  // WebSocket 연결 설정
+  // WebSocket 연결 설정 (무한 루프 방지)
   useEffect(() => {
     if (open) {
-      const token = localStorage.getItem('access-token');
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
-      if (token && userInfo) {
-        connectWebSocket(token, userInfo.user_index);
+      if (userInfo) {
+        connectWebSocket(userInfo);
       }
     }
-  }, [open, connectWebSocket]); // connectWebSocket 의존성 다시 추가
+  }, [open]); // connectWebSocket 의존성 제거
   // ============================================================================
   const [activeTab, setActiveTab] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -96,7 +95,19 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('admin-info'));
         console.log("관리자 목록 원본 데이터:", data);
-        const filteredData = data.filter(admin => admin.userId !== userInfo?.id);
+        const filteredData = data.filter(admin => {
+          // 본인 제외
+          if (admin.userId === userInfo?.id) {
+            return false;
+          }
+          
+          // userIndex가 있는 경우에도 확인
+          if (admin.userIndex === userInfo?.user_index) {
+            return false;
+          }
+          
+          return true;
+        });
         setAdminList(filteredData);
         setLoading(false);
       }).catch(error => {
@@ -475,7 +486,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         adminData: selectedAdminList,
         adminList: adminList,
         participants: participants, // 참가자 목록 추가
-        subscribeToRoom: subscribeToRoom,
+                 subscribeToRoom: subscribeToRoom,
         refreshChatRooms: refreshChatRooms,
         isExistingRoom: false,
         isExisting: false,
@@ -566,7 +577,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             >
               <Tab label="홈" />
               <Tab label="채팅방" />
-              <Tab label="설정" />
             </Tabs>
           </Box>
 
@@ -985,27 +995,7 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
             )}
 
             {/* 설정 탭 */}
-            {activeTab === 2 && (
-              <Box sx={{ height: '100%', overflowY: 'auto', p: 2 }} className="no-drag">
-                <Typography variant="h6" gutterBottom>
-                  채팅 설정
-                </Typography>
-
-                <List>
-                  <ListItem>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={notifications}
-                          onChange={(e) => setNotifications(e.target.checked)}
-                        />
-                      }
-                      label="알림 받기"
-                    />
-                  </ListItem>
-                </List>
-              </Box>
-            )}
+            {/* 설정 탭 렌더링 완전 삭제 (activeTab === 2) */}
           </Box>
         </>
       )}

@@ -7,7 +7,6 @@ import SalesPerformanceSearchForm from "../../components/forms/dabin/sales/Sales
 import SalesPerformanceDataGrid from "../../components/forms/dabin/sales/SalesPerformanceDataGrid";
 import SalesPerformanceExcelDownloadButton from "../../components/forms/dabin/sales/SalesPerformanceExcelDownloadButton";
 import { getBusinessGradeList, getStoreRequestStatusList, searchSalesPerformance } from "../../api/auth/DabinAuth";
-import '../../styles/dabin/dabinPageLayout.css';
 
 const SalesPerformancePage = () => {
   const [searchParams, setSearchParams] = useState({})
@@ -79,13 +78,32 @@ const SalesPerformancePage = () => {
   }
 
   return (
-    <Box className="dabin-page-layout-container">
+    <div style={{ 
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: '#fff'
+    }}>
       {/* 페이지 헤더 */}
-      <Box className="dabin-page-layout-titleRow">
-        <Typography variant="h4" className="dabin-page-layout-title">
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '2px solid #F4F6FA'
+      }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontSize: '28px',
+            fontWeight: 700,
+            color: '#222E3C',
+            margin: 0
+          }}
+        >
           영업실적 조회
         </Typography>
-        <Box className="dabin-page-layout-buttonGroup">
+        <div style={{ display: 'flex', gap: '12px' }}>
           <SalesPerformanceExcelDownloadButton data={salesData} selectedRows={selectedRows} />
           <Button
             variant="contained"
@@ -95,20 +113,33 @@ const SalesPerformancePage = () => {
           >
             조회
           </Button>
-        </Box>
-      </Box>
+        </div>
+      </div>
 
-      {/* 검색 폼 */}
-      <SalesPerformanceSearchForm
-        onSearch={handleSearch}
-        businessGrades={businessGrades}
-        storeRequestStatuses={storeRequestStatuses}
-        onParamsChange={setCurrentForm}
-      />
+      {/* 검색 조건 섹션 */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        marginBottom: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        padding: '20px'
+      }}>
+        <SalesPerformanceSearchForm
+          onSearch={handleSearch}
+          businessGrades={businessGrades}
+          storeRequestStatuses={storeRequestStatuses}
+          onParamsChange={setCurrentForm}
+        />
+      </div>
 
-      {/* 데이터 그리드 또는 로딩 표시 */}
+      {/* 결과 테이블 섹션 */}
       {loading ? (
-        <Box className="dabin-page-layout-loading">
+        <Box style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px'
+        }}>
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>로딩중...</Typography>
         </Box>
@@ -118,7 +149,7 @@ const SalesPerformancePage = () => {
           onSelectionChange={handleSelectionChange}
         />
       )}
-    </Box>
+    </div>
   )
 }
 

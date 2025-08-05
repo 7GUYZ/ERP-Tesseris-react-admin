@@ -6,7 +6,7 @@ import { useToast } from '../../../../context/jungeun/ToastContext';
  * 지급 및 회수 모달 컴포넌트
  * 
  * 주요 기능:
- * 1. CM 지급/회수 모달
+ * 1. TS 지급/회수 모달
  * 2. 선택된 회원 정보 표시
  * 3. 지급/회수 처리
  */
@@ -120,13 +120,13 @@ const PaymentCollectionModal = ({
             className={`payment-collection-modal-tab ${activeTab === 'cm-payment' ? 'active' : ''}`}
             onClick={() => setActiveTab('cm-payment')}
           >
-            CM 지급
+            TS 지급
           </button>
           <button
             className={`payment-collection-modal-tab ${activeTab === 'cm-collection' ? 'active' : ''}`}
             onClick={() => setActiveTab('cm-collection')}
           >
-            CM 회수
+            TS 회수
           </button>
         </div>
 
@@ -135,7 +135,7 @@ const PaymentCollectionModal = ({
           <div className="payment-collection-modal-row">
             <div className="payment-collection-modal-field">
               <label className="payment-collection-modal-label">
-                {activeTab === 'cm-payment' ? '지급 CM' : '회수 CM'}
+                {activeTab === 'cm-payment' ? '지급 TS' : '회수 TS'}
               </label>
               <input
                 className="payment-collection-modal-input"
@@ -143,7 +143,7 @@ const PaymentCollectionModal = ({
                 name="paymentAmount"
                 value={formData.paymentAmount}
                 onChange={handleInputChange}
-                placeholder={activeTab === 'cm-payment' ? '지급할 CM을 입력하세요.' : '회수할 CM을 입력하세요.'}
+                                  placeholder={activeTab === 'cm-payment' ? '지급할 TS를 입력하세요.' : '회수할 TS를 입력하세요.'}
                 min="0"
               />
             </div>
