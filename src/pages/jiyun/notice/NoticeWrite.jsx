@@ -6,6 +6,7 @@ import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeWrite() {
   const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -15,12 +16,15 @@ export default function NoticeWrite() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await noticeInsert(form);
       showToast("success", "공지사항이 등록되었습니다.");
       navigate("/notice/list");
     } catch {
       showToast("error", "등록 실패");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -30,7 +34,18 @@ export default function NoticeWrite() {
 
   return (
     <div className="notice-write-page">
-      <h1 className="notice-title">공지사항 등록</h1>
+      <div className="notice-page-header">
+        <h1 className="notice-title">공지사항 등록</h1>
+        <div className="notice-header-actions">
+          <button 
+            className="notice-write-btn notice-write-btn-primary" 
+            onClick={handleSubmit}
+            disabled={loading}
+          >
+            {loading ? '저장 중...' : '저장'}
+          </button>
+        </div>
+      </div>
       <form className="notice-write-form" onSubmit={handleSubmit}>
         <div className="notice-write-form-group">
           <label htmlFor="noticeTitle">

@@ -78,23 +78,26 @@ export default function NoticeList() {
 
   return (
     <div className="notice-list-page">
-      <h1 className="notice-title">공지사항 목록</h1>
-      <div className="notice-list-top-bar">
-        <button
-          className="notice-list-btn-n notice-list-btn-primary"
-          onClick={() => {
-            if (!canInsert) {
-              showToast("error", "등록 권한이 없습니다.");
-              return;
-            }
-            navigate("/notice/write");
-          }}
-          disabled={!canInsert}
-          style={!canInsert ? { opacity: 0.5, cursor: "not-allowed" } : {}}
-        >
-          공지사항 등록
-        </button>
+      <div className="notice-page-header">
+        <h1 className="notice-title">공지사항 목록</h1>
+        <div className="notice-header-actions">
+          <button 
+            className="notice-list-btn-n notice-list-btn-primary" 
+            onClick={() => {
+              if (!canInsert) {
+                showToast("error", "등록 권한이 없습니다.");
+                return;
+              }
+              navigate("/notice/write");
+            }}
+            disabled={!canInsert}
+            style={!canInsert ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+          >
+            등록
+          </button>
+        </div>
       </div>
+
       <div className="notice-list-table-wrapper">
         <table className="notice-list-table">
           <thead>
