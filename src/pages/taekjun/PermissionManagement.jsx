@@ -77,7 +77,19 @@ const PermissionManagement = () => {
   
   const userIndex = getUserIndex();
   
-
+  // 현재 사용자의 관리자 타입 가져오기
+  const getCurrentUserAdminType = () => {
+    try {
+      const adminInfo = localStorage.getItem('admin-info');
+      if (adminInfo) {
+        const parsedAdminInfo = JSON.parse(adminInfo);
+        return parsedAdminInfo.admin_type_index || null;
+      }
+    } catch (error) {
+      console.error('Error parsing admin-info:', error);
+    }
+    return null;
+  };
   
   // 권한 체크 훅 사용
   const { checkPermission, hasPermission } = usePermissionStore();
@@ -127,6 +139,12 @@ const PermissionManagement = () => {
       const data = response.data || response;
       if (Array.isArray(data) && data.length > 0) {
         setAdminTypes(data);
+        
+        // 현재 사용자의 관리자 타입으로 초기 설정
+        const currentUserAdminType = getCurrentUserAdminType();
+        if (currentUserAdminType) {
+          setSelectedAdminType(currentUserAdminType.toString());
+        }
       } else {
         setAdminTypes([]);
       }
@@ -142,6 +160,24 @@ const PermissionManagement = () => {
       const data = response.data || response;
       if (Array.isArray(data) && data.length > 0) {
         setMenus(data);
+        
+        // 첫 번째 메뉴를 자동으로 선택
+        const firstMenuIndex = data[0]?.menuIndex;
+        if (firstMenuIndex) {
+          setSelectedMenus([firstMenuIndex]);
+          
+          // 첫 번째 메뉴의 프로그램도 자동으로 로드
+          try {
+            const programsResponse = await permissionApi.getProgram(firstMenuIndex);
+            const programs = programsResponse.data || programsResponse;
+            setMenuPrograms(prev => ({
+              ...prev,
+              [firstMenuIndex]: programs
+            }));
+          } catch (error) {
+            console.error('첫 번째 메뉴 프로그램 로드 실패:', error);
+          }
+        }
       } else {
         setMenus([]);
       }
@@ -523,6 +559,30 @@ const PermissionManagement = () => {
 
         
         await insertMultipleAuthorities(formData.authorities);
+      } else if (pendingAction === 'bulkDelete') {
+        // 일괄 삭제
+        const response = await permissionApi.bulkDeleteAuthorities({
+          authorityTypeIndexes: selectedAuthorities,
+          userIndex: parseInt(userIndex),
+          password: password
+        });
+        
+        if (response.status === 200 || response.statusText === 'OK') {
+          setSnackbar({ 
+            open: true, 
+            message: `${selectedAuthorities.length}개의 권한이 성공적으로 삭제되었습니다.`, 
+            severity: 'success' 
+          });
+          
+          setSelectedAuthorities([]);
+          
+          // 권한 목록 새로고침
+          if (selectedAdminType) {
+            await fetchAuthorities(selectedAdminType);
+          }
+        } else {
+          setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
+        }
       }
     } catch (error) {
       console.error("권한 처리 에러:", error);
@@ -804,39 +864,9 @@ const PermissionManagement = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      await permissionApi.bulkDeleteAuthorities({
-        authorityTypeIndexes: selectedAuthorities
-      });
-      
-      setSnackbar({ 
-        open: true, 
-        message: `${selectedAuthorities.length}개의 권한이 성공적으로 삭제되었습니다.`, 
-        severity: 'success' 
-      });
-      
-      setSelectedAuthorities([]);
-      
-      // 권한 목록 새로고침
-      if (selectedAdminType) {
-        await fetchAuthorities(selectedAdminType);
-      }
-      
-    } catch (error) {
-      console.error("일괄 삭제 에러:", error);
-      setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
-      
-      // 실패 시 선택 상태 초기화
-      setSelectedAuthorities([]);
-      
-      // 권한 목록 새로고침하여 원래 상태 복원
-      if (selectedAdminType) {
-        await fetchAuthorities(selectedAdminType);
-      }
-    } finally {
-      setLoading(false);
-    }
+    // 비밀번호 확인 모달 표시
+    setPendingAction('bulkDelete');
+    setShowPasswordModal(true);
   };
 
   return (
