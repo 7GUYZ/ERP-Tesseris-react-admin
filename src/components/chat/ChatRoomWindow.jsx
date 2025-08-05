@@ -39,6 +39,19 @@ function ChatRoomWindow({
     y: Math.max(0, window.innerHeight * 0.1)
   });
   const { sendMessage, subscribeToRoom, unsubscribeFromRoom, isConnected, deleteMessage, stompClient, connectWebSocket } = useChatWebSocket();
+  
+  // stompClient 상태를 직접 추적 (useRef로 최신 상태 참조)
+  const [localStompClient, setLocalStompClient] = useState(null);
+  const localStompClientRef = useRef(null);
+  
+  // stompClient 상태 동기화
+  useEffect(() => {
+    if (stompClient) {
+      setLocalStompClient(stompClient);
+      localStompClientRef.current = stompClient;
+      console.log('🔄 localStompClient 업데이트:', !!stompClient, stompClient?.connected);
+    }
+  }, [stompClient]);
 
   // roomId 추출 유틸리티 함수 (강화된 버전)
   const extractNumericRoomId = useCallback((roomIdValue) => {
@@ -277,6 +290,7 @@ function ChatRoomWindow({
 
   // 수신된 메시지 처리 함수
   const handleIncomingMessage = useCallback((receivedMessage) => {
+    console.log('🚀 handleIncomingMessage 함수 시작');
     const userInfo = JSON.parse(localStorage.getItem('admin-info'));
 
     console.log('📨 수신된 메시지 전체:', receivedMessage);
@@ -295,8 +309,25 @@ function ChatRoomWindow({
       receivedUserIdType: typeof receivedMessage.user_id
     });
 
-    // 새 방 생성 응답 처리
-    if (receivedMessage.type === 'chat' && receivedMessage.room_index && !roomId) {
+    // 새 방 생성 응답 처리 (보낸 사람만 구독 변경)
+    console.log('🔍 새 방 생성 응답 조건 확인:', {
+      messageType: receivedMessage.type,
+      messageTypeField: receivedMessage.message_type,
+      hasRoomIndex: !!receivedMessage.room_index,
+      roomIndexValue: receivedMessage.room_index,
+      currentRoomId: roomId,
+      isMyMessage: receivedMessage.user_id === userInfo.id,
+      conditionResult: (receivedMessage.type === 'chat' || receivedMessage.message_type === 'chat') && 
+                      receivedMessage.room_index && 
+                      !roomId && 
+                      receivedMessage.user_id === userInfo.id // 내가 보낸 메시지인 경우만
+    });
+    
+    // 보낸 사람만 구독 변경 (받는 사람은 이미 room_index로 구독 중)
+    if ((receivedMessage.type === 'chat' || receivedMessage.message_type === 'chat') && 
+        receivedMessage.room_index && 
+        !roomId && 
+        receivedMessage.user_id === userInfo.id) { // 내가 보낸 메시지인 경우만
       console.log('🆕 새 방 생성 응답 감지:', receivedMessage.room_index);
       console.log('📋 전체 응답 구조:', JSON.stringify(receivedMessage, null, 2));
       console.log('🔍 응답 타입:', typeof receivedMessage.room_index);
@@ -324,18 +355,101 @@ function ChatRoomWindow({
       setRoomId(extractedRoomIndex);
       
       // 새 방 생성 시 구독을 room_index로 변경
-      console.log('🔄 구독을 room_index로 변경:', extractedRoomIndex);
+      console.log('🔄 구독 상태 변화 시작: admin → room_index로 변경');
+      console.log('📊 현재 구독 상태: admin에서 room_index로 전환 중');
       
       // 기존 "admin" 구독 해제
       console.log('🔌 기존 admin 구독 해제 시도');
       unsubscribeFromRoom("admin");
+      console.log('✅ admin 구독 해제 완료');
+      
+      // WebSocket 연결 상태 확인 및 재연결
+      if (!isConnected || !localStompClient || !localStompClient.connected) {
+        console.log('🔌 WebSocket 연결 상태 확인:', { 
+          isConnected, 
+          hasStompClient: !!stompClient, 
+          hasLocalStompClient: !!localStompClient,
+          stompConnected: stompClient?.connected,
+          localStompConnected: localStompClient?.connected
+        });
+        console.log('🔄 WebSocket 재연결 시도');
+        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+        if (userInfo) {
+          connectWebSocket(userInfo);
+          // 간단하고 확실한 방법: 직접 구독 시도
+          console.log('🔄 간단한 구독 시도 방법으로 변경');
+          
+          // 0.5초 후에 직접 구독 시도 (빠른 구독 변환)
+          setTimeout(() => {
+            console.log('📡 직접 구독 시도:', extractedRoomIndex);
+            console.log('🔍 구독 시도 전 상태 확인:', {
+              hasStompClient: !!stompClient,
+              stompConnected: stompClient?.connected,
+              hasLocalStompClient: !!localStompClient,
+              localStompConnected: localStompClient?.connected,
+              hasLocalStompClientRef: !!localStompClientRef.current,
+              localStompClientRefConnected: localStompClientRef.current?.connected
+            });
+            
+            const directSubscribeSuccess = subscribeToRoom(extractedRoomIndex, (newRoomMessage) => {
+              console.log('📨 새 방 메시지 수신:', newRoomMessage);
+              // 무한 재귀 방지: 이미 처리된 메시지는 다시 처리하지 않음
+              if ((newRoomMessage.type === 'chat' || newRoomMessage.message_type === 'chat') && 
+                  newRoomMessage.room_index && 
+                  !roomId && 
+                  newRoomMessage.user_id === userInfo.id) {
+                console.log('⚠️ 이미 처리된 새 방 생성 응답이므로 무시');
+                return;
+              }
+              handleIncomingMessage(newRoomMessage);
+            });
+            
+            if (directSubscribeSuccess) {
+              console.log('✅ 직접 구독 성공:', extractedRoomIndex);
+              console.log('🔄 구독 상태 변화 완료: admin → room_index로 변경됨');
+              console.log('📊 최종 구독 상태: room_index', extractedRoomIndex, '로 구독 중');
+            } else {
+              console.error('❌ 직접 구독 실패:', extractedRoomIndex);
+              console.log('⚠️ 구독 상태 변화 실패: admin에서 room_index로 변경 실패');
+              
+              // 실패 시 한 번 더 시도
+              setTimeout(() => {
+                console.log('🔄 재시도 구독 시도:', extractedRoomIndex);
+                const retrySubscribeSuccess = subscribeToRoom(extractedRoomIndex, (newRoomMessage) => {
+                  console.log('📨 새 방 메시지 수신:', newRoomMessage);
+                  if ((newRoomMessage.type === 'chat' || newRoomMessage.message_type === 'chat') && 
+                      newRoomMessage.room_index && 
+                      !roomId && 
+                      newRoomMessage.user_id === userInfo.id) {
+                    console.log('⚠️ 이미 처리된 새 방 생성 응답이므로 무시');
+                    return;
+                  }
+                  handleIncomingMessage(newRoomMessage);
+                });
+                
+                if (retrySubscribeSuccess) {
+                  console.log('✅ 재시도 구독 성공:', extractedRoomIndex);
+                  console.log('🔄 구독 상태 변화 완료: admin → room_index로 변경됨');
+                  console.log('📊 최종 구독 상태: room_index', extractedRoomIndex, '로 구독 중');
+                } else {
+                  console.error('❌ 재시도 구독도 실패:', extractedRoomIndex);
+                }
+              }, 500); // 0.5초 대기
+            }
+          }, 500); // 0.5초 대기
+          return;
+        }
+      }
       
       // 새로운 room_index로 구독
       console.log('📡 새로운 room_index로 구독 시도:', extractedRoomIndex);
       const subscribeSuccess = subscribeToRoom(extractedRoomIndex, (newRoomMessage) => {
         console.log('📨 새 방 메시지 수신:', newRoomMessage);
         // 무한 재귀 방지: 이미 처리된 메시지는 다시 처리하지 않음
-        if (newRoomMessage.type === 'chat' && newRoomMessage.room_index && !roomId) {
+        if ((newRoomMessage.type === 'chat' || newRoomMessage.message_type === 'chat') && 
+            newRoomMessage.room_index && 
+            !roomId && 
+            newRoomMessage.user_id === userInfo.id) {
           console.log('⚠️ 이미 처리된 새 방 생성 응답이므로 무시');
           return;
         }
@@ -344,11 +458,16 @@ function ChatRoomWindow({
       
       if (subscribeSuccess) {
         console.log('✅ 새 방 구독 성공:', extractedRoomIndex);
+        console.log('🔄 구독 상태 변화 완료: admin → room_index로 변경됨');
+        console.log('📊 최종 구독 상태: room_index', extractedRoomIndex, '로 구독 중');
       } else {
         console.error('❌ 새 방 구독 실패:', extractedRoomIndex);
+        console.log('⚠️ 구독 상태 변화 실패: admin에서 room_index로 변경 실패');
       }
       
       console.log('✅ 새 방 room_index 저장 및 구독 변경 완료:', extractedRoomIndex);
+    } else {
+      console.log('⚠️ 새 방 생성 응답 조건 불일치 - 구독 변경 건너뜀');
     }
 
     // 메시지 삭제 이벤트 처리
@@ -950,27 +1069,29 @@ function ChatRoomWindow({
           // 새로운 방 생성 시 - 첫 메시지 전송 시 백엔드에서 방 생성
           console.log('🆕 새 방 생성 대기 중...');
           
-          // 새 방 생성 시 "admin"으로 구독하여 응답을 받음
-          console.log('📡 admin으로 구독하여 새 방 생성 응답 대기');
-          const adminSubscribeSuccess = subscribeToRoom("admin", (receivedMessage) => {
-            console.log('📨 admin 응답 수신:', receivedMessage);
-            handleIncomingMessage(receivedMessage);
-          });
-          
-          if (adminSubscribeSuccess) {
-            console.log('✅ admin 구독 성공');
-          } else {
-            console.error('❌ admin 구독 실패');
-          }
+                      // 새 방 생성 시 "admin"으로 구독하여 응답을 받음
+            console.log('📡 admin으로 구독하여 새 방 생성 응답 대기');
+            const adminSubscribeSuccess = subscribeToRoom("admin", (receivedMessage) => {
+              console.log('📨 admin 응답 수신:', receivedMessage);
+              console.log('🔄 구독 상태 변화: admin → room_index로 변경 예정');
+              handleIncomingMessage(receivedMessage);
+            });
+            
+            if (adminSubscribeSuccess) {
+              console.log('✅ admin 구독 성공 - 새 방 생성 응답 대기 중');
+            } else {
+              console.error('❌ admin 구독 실패');
+            }
         }
   }, [open, roomDataWithoutRefresh?.id, roomDataWithoutRefresh?.adminData?.userIndex, roomDataWithoutRefresh?.isExistingRoom, roomDataWithoutRefresh?.isExisting]);
 
-  // 컴포넌트 언마운트 시 구독 해제 (자동 leave 메시지 제거)
+  // 컴포넌트 언마운트 시 구독 해제만 (WebSocket 연결은 유지)
   useEffect(() => {
     return () => {
       if (roomId) {
-        console.log(`🔌 컴포넌트 언마운트 시 구독 해제: ${roomId}`);
+        console.log(`🔌 컴포넌트 언마운트 시 구독 해제만: ${roomId}`);
         unsubscribeFromRoom(roomId);
+        // WebSocket 연결은 유지 - 구독만 해제
         // 자동 leave 메시지 전송 제거 - 사용자가 명시적으로 나가기 버튼을 눌렀을 때만 전송
       }
     };
@@ -1503,7 +1624,7 @@ function ChatRoomWindow({
     }
   };
 
-  // 채팅방 나가기 시 구독 해제 (퇴장 알림 없음)
+  // 채팅방 나가기 시 구독 해제만 (WebSocket 연결 유지)
   const handleBack = () => {
     if (roomId) {
       // roomId를 안전하게 추출
@@ -1518,9 +1639,9 @@ function ChatRoomWindow({
       extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
       
       if (extractedRoomId) {
-        // 퇴장 알림 없이 구독만 해제 (명시적 퇴장 요청이 아니므로)
+        // 퇴장 알림 없이 구독만 해제 (WebSocket 연결은 유지)
         unsubscribeFromRoom(extractedRoomId);
-        console.log('🚪 채팅방 구독 해제 (퇴장 알림 없음):', extractedRoomId);
+        console.log('🚪 채팅방 구독 해제만 (WebSocket 연결 유지):', extractedRoomId);
       }
     }
 
@@ -1533,7 +1654,7 @@ function ChatRoomWindow({
     onBack();
   };
 
-  // 채팅방 닫기 시에도 구독 해제 (퇴장 알림 없음)
+  // 채팅방 닫기 시에도 구독 해제만 (WebSocket 연결 유지)
   const handleClose = () => {
     if (roomId) {
       // roomId를 안전하게 추출
@@ -1548,9 +1669,9 @@ function ChatRoomWindow({
       extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
       
       if (extractedRoomId) {
-        // 퇴장 알림 없이 구독만 해제 (명시적 퇴장 요청이 아니므로)
+        // 퇴장 알림 없이 구독만 해제 (WebSocket 연결은 유지)
         unsubscribeFromRoom(extractedRoomId);
-        console.log('🚪 채팅방 구독 해제 (퇴장 알림 없음):', extractedRoomId);
+        console.log('🚪 채팅방 구독 해제만 (WebSocket 연결 유지):', extractedRoomId);
       }
     }
 
