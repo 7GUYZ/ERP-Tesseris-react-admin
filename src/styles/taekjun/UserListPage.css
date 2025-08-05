@@ -921,4 +921,57 @@
 .date-range-inputs span {
   color: #64748B;
   font-weight: 500;
+}
+
+/* 검색 버튼들 */
+.search-conditions-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #E5E7EB;
+}
+
+.search-button,
+.reset-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.search-button {
+  background: #3B82F6;
+  color: white;
+}
+
+.search-button:hover {
+  background: #2563EB;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.search-button:disabled {
+  background: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.reset-button {
+  background: #F3F4F6;
+  color: #374151;
+  border: 1px solid #D1D5DB;
+}
+
+.reset-button:hover {
+  background: #E5E7EB;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 } 

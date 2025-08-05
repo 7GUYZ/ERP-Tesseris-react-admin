@@ -265,7 +265,32 @@ const PermissionManagement = () => {
       }
     } catch (error) {
       console.error("추가 에러:", error);
-      setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
+      
+      // 비밀번호 관련 에러 메시지 처리
+      let errorMessage = '권한 추가에 실패했습니다.';
+      
+      if (error.response) {
+        const responseData = error.response.data;
+        if (responseData && responseData.message) {
+          if (responseData.message.includes('비밀번호') || responseData.message.includes('password')) {
+            errorMessage = '비밀번호가 틀렸습니다.';
+          } else {
+            errorMessage = responseData.message;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else if (error.response.status === 400) {
+          errorMessage = '잘못된 요청입니다. 비밀번호를 확인해주세요.';
+        }
+      } else if (error.message) {
+        if (error.message.includes('비밀번호') || error.message.includes('password')) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -327,7 +352,32 @@ const PermissionManagement = () => {
     } catch (error) {
       console.error("일괄 추가 에러:", error);
       console.error("에러 상세:", error.response?.data);
-      setSnackbar({ open: true, message: '권한 추가에 실패했습니다.', severity: 'error' });
+      
+      // 비밀번호 관련 에러 메시지 처리
+      let errorMessage = '권한 추가에 실패했습니다.';
+      
+      if (error.response) {
+        const responseData = error.response.data;
+        if (responseData && responseData.message) {
+          if (responseData.message.includes('비밀번호') || responseData.message.includes('password')) {
+            errorMessage = '비밀번호가 틀렸습니다.';
+          } else {
+            errorMessage = responseData.message;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else if (error.response.status === 400) {
+          errorMessage = '잘못된 요청입니다. 비밀번호를 확인해주세요.';
+        }
+      } else if (error.message) {
+        if (error.message.includes('비밀번호') || error.message.includes('password')) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
       
       // 실패 시 폼 상태 초기화
       setShowForm(false);
@@ -367,7 +417,32 @@ const PermissionManagement = () => {
     } catch (error) {
       console.error("수정 에러:", error);
       console.error("수정 에러 상세:", error.response?.data);
-      setSnackbar({ open: true, message: '권한 업데이트에 실패했습니다.', severity: 'error' });
+      
+      // 비밀번호 관련 에러 메시지 처리
+      let errorMessage = '권한 업데이트에 실패했습니다.';
+      
+      if (error.response) {
+        const responseData = error.response.data;
+        if (responseData && responseData.message) {
+          if (responseData.message.includes('비밀번호') || responseData.message.includes('password')) {
+            errorMessage = '비밀번호가 틀렸습니다.';
+          } else {
+            errorMessage = responseData.message;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else if (error.response.status === 400) {
+          errorMessage = '잘못된 요청입니다. 비밀번호를 확인해주세요.';
+        }
+      } else if (error.message) {
+        if (error.message.includes('비밀번호') || error.message.includes('password')) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -404,7 +479,32 @@ const PermissionManagement = () => {
       }
     } catch (error) {
       console.error("삭제 에러:", error);
-      setSnackbar({ open: true, message: '권한 삭제에 실패했습니다.', severity: 'error' });
+      
+      // 비밀번호 관련 에러 메시지 처리
+      let errorMessage = '권한 삭제에 실패했습니다.';
+      
+      if (error.response) {
+        const responseData = error.response.data;
+        if (responseData && responseData.message) {
+          if (responseData.message.includes('비밀번호') || responseData.message.includes('password')) {
+            errorMessage = '비밀번호가 틀렸습니다.';
+          } else {
+            errorMessage = responseData.message;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else if (error.response.status === 400) {
+          errorMessage = '잘못된 요청입니다. 비밀번호를 확인해주세요.';
+        }
+      } else if (error.message) {
+        if (error.message.includes('비밀번호') || error.message.includes('password')) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
     } finally {
       setLoading(false);
     }
@@ -586,7 +686,32 @@ const PermissionManagement = () => {
       }
     } catch (error) {
       console.error("권한 처리 에러:", error);
-      setSnackbar({ open: true, message: '권한 처리에 실패했습니다.', severity: 'error' });
+      
+      // 비밀번호 관련 에러 메시지 처리
+      let errorMessage = '권한 처리에 실패했습니다.';
+      
+      if (error.response) {
+        const responseData = error.response.data;
+        if (responseData && responseData.message) {
+          if (responseData.message.includes('비밀번호') || responseData.message.includes('password')) {
+            errorMessage = '비밀번호가 틀렸습니다.';
+          } else {
+            errorMessage = responseData.message;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else if (error.response.status === 400) {
+          errorMessage = '잘못된 요청입니다. 비밀번호를 확인해주세요.';
+        }
+      } else if (error.message) {
+        if (error.message.includes('비밀번호') || error.message.includes('password')) {
+          errorMessage = '비밀번호가 틀렸습니다.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setSnackbar({ open: true, message: errorMessage, severity: 'error' });
       
       // 실패 시 원래 상태로 되돌리기
       setAuthorityChanges({});
