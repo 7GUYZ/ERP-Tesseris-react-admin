@@ -573,24 +573,165 @@ function ChatRoomWindow({
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     if (isMyMessage) {
       console.log('🔄 내 메시지 서버 응답 - 로컬 메시지 교체');
+      console.log('📋 서버 응답 데이터:', {
+        tempMessageIndex: receivedMessage.tempMessageIndex,
+        messageindex: receivedMessage.messageindex,
+        files: receivedMessage.files
+      });
       
       // 임시 messageindex로 로컬 메시지 찾기
       const tempMessageIndex = receivedMessage.tempMessageIndex;
       if (tempMessageIndex) {
-        setMessages(prev => prev.map(msg => {
-          if (msg.messageindex === tempMessageIndex && msg.isLocal) {
-            console.log('✅ 로컬 메시지를 서버 메시지로 교체:', msg.id);
-            return {
-              ...msg,
-              id: `server_${Date.now()}_${Math.random()}`,
-              messageindex: receivedMessage.messageindex || null,
-              active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
-              isLocal: false,
-              files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
-            };
+        // 즉시 교체 시도
+        const messageUpdated = setMessages(prev => {
+          const updated = prev.map(msg => {
+            if (msg.messageindex === tempMessageIndex && msg.isLocal) {
+              console.log('✅ 로컬 메시지를 서버 메시지로 교체:', {
+                oldId: msg.id,
+                oldMessageIndex: msg.messageindex,
+                newMessageIndex: receivedMessage.messageindex
+              });
+              return {
+                ...msg,
+                id: `server_${Date.now()}_${Math.random()}`,
+                messageindex: receivedMessage.messageindex || null,
+                active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
+                isLocal: false,
+                files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
+              };
+            }
+            return msg;
+          });
+          
+          // 교체된 메시지가 있는지 확인
+          const replacedMessage = updated.find(msg => 
+            msg.messageindex === (receivedMessage.messageindex || null) && !msg.isLocal
+          );
+          
+          if (replacedMessage) {
+            console.log('✅ 메시지 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
+          } else {
+            console.warn('⚠️ 메시지 교체 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
           }
-          return msg;
-        }));
+          
+          return updated;
+        });
+        
+        // 0.5초 후 강제 교체 (room_index와 동일한 메커니즘)
+        setTimeout(() => {
+          console.log('🔄 0.5초 후 강제 메시지 교체 시도:', tempMessageIndex);
+          setMessages(prev => {
+            const updated = prev.map(msg => {
+              if (msg.messageindex === tempMessageIndex && msg.isLocal) {
+                console.log('✅ 강제 교체 실행:', {
+                  oldId: msg.id,
+                  oldMessageIndex: msg.messageindex,
+                  newMessageIndex: receivedMessage.messageindex
+                });
+                return {
+                  ...msg,
+                  id: `server_${Date.now()}_${Math.random()}`,
+                  messageindex: receivedMessage.messageindex || null,
+                  active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
+                  isLocal: false,
+                  files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
+                };
+              }
+              return msg;
+            });
+            
+            // 교체된 메시지가 있는지 확인
+            const replacedMessage = updated.find(msg => 
+              msg.messageindex === (receivedMessage.messageindex || null) && !msg.isLocal
+            );
+            
+            if (replacedMessage) {
+              console.log('✅ 강제 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
+            } else {
+              console.warn('⚠️ 강제 교체도 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
+              
+              // 실패 시 한 번 더 시도 (room_index와 동일한 패턴)
+              setTimeout(() => {
+                console.log('🔄 재시도 강제 교체 시도:', tempMessageIndex);
+                setMessages(prev => {
+                  const updated = prev.map(msg => {
+                    if (msg.messageindex === tempMessageIndex && msg.isLocal) {
+                      console.log('✅ 재시도 강제 교체 실행:', {
+                        oldId: msg.id,
+                        oldMessageIndex: msg.messageindex,
+                        newMessageIndex: receivedMessage.messageindex
+                      });
+                      return {
+                        ...msg,
+                        id: `server_${Date.now()}_${Math.random()}`,
+                        messageindex: receivedMessage.messageindex || null,
+                        active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
+                        isLocal: false,
+                        files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
+                      };
+                    }
+                    return msg;
+                  });
+                  
+                  // 교체된 메시지가 있는지 확인
+                  const replacedMessage = updated.find(msg => 
+                    msg.messageindex === (receivedMessage.messageindex || null) && !msg.isLocal
+                  );
+                  
+                  if (replacedMessage) {
+                    console.log('✅ 재시도 강제 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
+                  } else {
+                    console.warn('⚠️ 재시도 강제 교체도 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
+                    
+                    // 최종 시도: 1초 후 한 번 더 시도
+                    setTimeout(() => {
+                      console.log('🔄 최종 강제 교체 시도:', tempMessageIndex);
+                      setMessages(prev => {
+                        const updated = prev.map(msg => {
+                          if (msg.messageindex === tempMessageIndex && msg.isLocal) {
+                            console.log('✅ 최종 강제 교체 실행:', {
+                              oldId: msg.id,
+                              oldMessageIndex: msg.messageindex,
+                              newMessageIndex: receivedMessage.messageindex
+                            });
+                            return {
+                              ...msg,
+                              id: `server_${Date.now()}_${Math.random()}`,
+                              messageindex: receivedMessage.messageindex || null,
+                              active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
+                              isLocal: false,
+                              files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
+                            };
+                          }
+                          return msg;
+                        });
+                        
+                        // 교체된 메시지가 있는지 확인
+                        const replacedMessage = updated.find(msg => 
+                          msg.messageindex === (receivedMessage.messageindex || null) && !msg.isLocal
+                        );
+                        
+                        if (replacedMessage) {
+                          console.log('✅ 최종 강제 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
+                        } else {
+                          console.error('❌ 모든 강제 교체 시도 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
+                        }
+                        
+                        return updated;
+                      });
+                    }, 1000); // 1초 대기
+                  }
+                  
+                  return updated;
+                });
+              }, 500); // 0.5초 대기
+            }
+            
+            return updated;
+          });
+        }, 500); // 0.5초 대기 (room_index와 동일)
+        
+        return messageUpdated;
       } else {
         // 임시 messageindex가 없으면 새로 추가
         const senderName = resolveSenderName(receivedMessage.user_id, receivedMessage.sender_name);
@@ -1739,6 +1880,15 @@ function ChatRoomWindow({
 
     setIsUploading(true);
     
+    // 임시 messageindex 생성 (음수로 구분)
+    const tempMessageIndex = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // 로컬 메시지 즉시 UI에 추가 (사용자 경험 향상)
+    const messageId = `local_${Date.now()}_${Math.random()}`;
+    
+    // 현재 선택된 파일들을 복사 (try 블록에서 사용)
+    const filesToUpload = [...selectedFiles];
+    
     try {
       const userInfo = JSON.parse(localStorage.getItem('admin-info'));
       
@@ -1747,35 +1897,43 @@ function ChatRoomWindow({
                               roomDataWithoutRefresh?.room_index || 
                               roomDataWithoutRefresh?.id || 
                               roomId;
+      const localMessage = {
+        id: messageId,
+        text: '',
+        sender: { id: userInfo.id, name: userInfo.name },
+        timestamp: new Date().toISOString(),
+        messageindex: tempMessageIndex,
+        isLocal: true,
+        active: true,
+        files: filesToUpload.map(file => ({
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          url: URL.createObjectURL(file) // 임시 URL
+        }))
+      };
+      
+      // 즉시 UI에 추가
+      addMessage(localMessage);
 
       // FormData 생성
       const formData = new FormData();
       formData.append('room_index', currentRoomIndex);
       formData.append('user_id', userInfo.id);
       formData.append('message', '');
+      formData.append('tempMessageIndex', tempMessageIndex); // 임시 messageindex 전송
       
       // 파일들 추가
-      selectedFiles.forEach(file => {
+      filesToUpload.forEach(file => {
         formData.append('files', file);
       });
 
       // HTTP 파일 업로드 (JihunAuth 사용)
       const result = await UploadFiles(formData);
       
-      // 성공 시 메시지 추가
-      const messageId = `msg_${Date.now()}_${Math.random()}`;
-      const message = {
-        id: messageId,
-        text: '',
-        sender: { id: userInfo.id, name: userInfo.name },
-        timestamp: new Date().toISOString(),
-        messageindex: result.messageIndex,
-        isLocal: false, // 로컬 플래그 제거
-        files: result.files || []
-      };
+      console.log('📁 파일 업로드 완료:', { messageIndex: result.messageIndex, files: result.files });
       
-      addMessage(message);
-      showToast("success", `${selectedFiles.length}개 파일이 업로드되었습니다.`);
+      showToast("success", `${filesToUpload.length}개 파일이 업로드되었습니다.`);
       
       // 선택된 파일 초기화
       setSelectedFiles([]);
@@ -1783,6 +1941,9 @@ function ChatRoomWindow({
     } catch (error) {
       console.error('파일 업로드 오류:', error);
       showToast("error", "파일 업로드 중 오류가 발생했습니다.");
+      
+      // 실패 시 로컬 메시지 제거
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
     } finally {
       setIsUploading(false);
     }
@@ -2086,7 +2247,16 @@ function ChatRoomWindow({
         return;
       }
 
-      // 모든 메시지는 서버 삭제 시도
+      // 임시 messageindex인지 확인 (temp_로 시작하는 경우)
+      const isTempMessageIndex = selectedMessage.messageindex && 
+                                typeof selectedMessage.messageindex === 'string' && 
+                                selectedMessage.messageindex.startsWith('temp_');
+      
+      if (isTempMessageIndex) {
+        console.log('⚠️ 임시 messageindex 감지 - 서버 응답 대기 중:', selectedMessage.messageindex);
+        showToast("warning", "메시지가 아직 서버에 저장 중입니다. 잠시 후 다시 시도해주세요.");
+        return;
+      }
 
       // 실제 messageindex가 있는 경우 서버 삭제 시도
       if (!selectedMessage.messageindex || 
