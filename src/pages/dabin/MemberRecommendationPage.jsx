@@ -7,7 +7,6 @@ import MemberRecommendationSearchForm from "../../components/forms/dabin/memberR
 import MemberRecommendationDataGrid from "../../components/forms/dabin/memberRecommendation/MemberRecommendationDataGrid";
 import MemberRecommendationExcelDownloadButton from "../../components/forms/dabin/memberRecommendation/MemberRecommendationExcelDownloadButton";
 import { getUserRoles, searchMemberRecommendations } from "../../api/auth/DabinAuth";
-import '../../styles/dabin/dabinPageLayout.css';
 
 const MemberRecommendationPage = () => {
   const [searchParams, setSearchParams] = useState({})
@@ -78,13 +77,32 @@ const MemberRecommendationPage = () => {
   const hasDateErrors = Object.values(dateErrors).some(error => error !== "");
 
   return (
-    <Box className="dabin-page-layout-container">
-      {/* 제목과 버튼들을 같은 줄에 배치 */}
-      <Box className="dabin-page-layout-titleRow">
-        <Typography variant="h4" className="dabin-page-layout-title">
+    <div style={{ 
+      minHeight: '100vh',
+      padding: '24px',
+      backgroundColor: '#fff'
+    }}>
+      {/* 페이지 헤더 */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '24px',
+        paddingBottom: '16px',
+        borderBottom: '2px solid #F4F6FA'
+      }}>
+        <Typography 
+          variant="h4" 
+          sx={{ 
+            fontSize: '28px',
+            fontWeight: 700,
+            color: '#222E3C',
+            margin: 0
+          }}
+        >
           회원 추천현황
         </Typography>
-        <Box className="dabin-page-layout-buttonGroup">
+        <div style={{ display: 'flex', gap: '12px' }}>
           <MemberRecommendationExcelDownloadButton data={recommendations} selectedRows={selectedRows} />
           <Button
             variant="contained"
@@ -111,16 +129,33 @@ const MemberRecommendationPage = () => {
           >
             조회
           </Button>
-        </Box>
-      </Box>
-      <MemberRecommendationSearchForm
-        onSearch={handleSearch}
-        userRoles={userRoles}
-        onParamsChange={setCurrentForm}
-        onDateErrorsChange={handleDateErrorsChange}
-      />
+        </div>
+      </div>
+
+      {/* 검색 조건 섹션 */}
+      <div style={{
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        marginBottom: '20px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+        padding: '20px'
+      }}>
+        <MemberRecommendationSearchForm
+          onSearch={handleSearch}
+          userRoles={userRoles}
+          onParamsChange={setCurrentForm}
+          onDateErrorsChange={handleDateErrorsChange}
+        />
+      </div>
+
+      {/* 결과 테이블 섹션 */}
       {loading ? (
-        <Box className="dabin-page-layout-loading">
+        <Box style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '40px'
+        }}>
           <CircularProgress />
           <Typography sx={{ ml: 2 }}>로딩중...</Typography>
         </Box>
@@ -130,7 +165,7 @@ const MemberRecommendationPage = () => {
           onSelectionChange={handleSelectionChange}
         />
       )}
-    </Box>
+    </div>
   )
 }
 

@@ -30,9 +30,9 @@ html, body, #root, .dashboard-root {
 }
 
 .dashboard-title {
-    font-size: 28px;
+    font-size: 10rem;
     font-weight: 700;
-    color: #1e293b;
+    color: #222e3c;
     margin: 0 0 8px 0;
 }
 
@@ -76,10 +76,12 @@ html, body, #root, .dashboard-root {
 }
 
 .section-title {
-    font-size: 20px;
+    font-size: 1.2rem;
     font-weight: 600;
-    color: #1e293b;
+    color: #222e3c;
     margin: 0 0 24px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #fff;
 }
 
 /* 핵심 지표 그리드 */
@@ -105,16 +107,16 @@ html, body, #root, .dashboard-root {
 }
 
 .stat-card-title {
-    font-size: 14px;
+    font-size: 0.9rem;
     font-weight: 500;
-    color: #64748b;
+    color: #6b7280;
     margin-bottom: 8px;
 }
 
 .stat-card-value {
-    font-size: 28px;
-    font-weight: 700;
-    color: #1e293b;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #222e3c;
     margin-bottom: 4px;
 }
 

@@ -10,23 +10,23 @@ import '../../styles/taekjun/UserListPage.css';
 
 // DataGrid 컬럼 정의
 const columns = [
-  { field: 'email', headerName: '아이디', width: 150, sortable: true },
-  { field: 'name', headerName: '이름', width: 120, sortable: true },
-  { field: 'phone', headerName: '핸드폰 번호', width: 140, sortable: true },
-  { field: 'userRole', headerName: '등급', width: 100, sortable: true },
+  { field: 'email', headerName: '아이디', width: 200, sortable: true },
+  { field: 'name', headerName: '이름', width: 150, sortable: true },
+  { field: 'phone', headerName: '핸드폰 번호', width: 180, sortable: true },
+  { field: 'userRole', headerName: '등급', width: 120, sortable: true },
   { 
     field: 'cmBalance', 
-    headerName: '보유 CM', 
-    width: 120, 
+    headerName: '보유 TS', 
+    width: 150, 
     sortable: true, 
     type: 'number',
     headerAlign: 'left',
     align: 'left'
   },
-  { field: 'registrationDate', headerName: '등록일', width: 120, sortable: true },
-  { field: 'recommenderEmail', headerName: '추천인 아이디', width: 150, sortable: true },
-  { field: 'recommenderName', headerName: '추천인 이름', width: 120, sortable: true },
-  { field: 'bankName', headerName: '은행', width: 120, sortable: true },
+  { field: 'registrationDate', headerName: '등록일', width: 250, sortable: true },
+  { field: 'recommenderEmail', headerName: '추천인 아이디', width: 200, sortable: true },
+  { field: 'recommenderName', headerName: '추천인 이름', width: 150, sortable: true },
+  { field: 'bankName', headerName: '은행', width: 150, sortable: true },
 ];
 
 // 카카오 주소 API 스크립트 로드
@@ -69,7 +69,10 @@ const UserListPage = () => {
     phone: '',
     userRole: '',
     startDate: '',
-    endDate: ''
+    endDate: '',
+    recommenderEmail: '',
+    recommenderName: '',
+    recommenderGrade: ''
   });
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
@@ -86,6 +89,7 @@ const UserListPage = () => {
     canDelete: false,
     canAdd: false
   });
+  const [isSearchConditionsExpanded, setIsSearchConditionsExpanded] = useState(true);
 
   // 권한 체크 함수
   const checkButtonPermission = async (action) => {
@@ -188,7 +192,7 @@ const UserListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchFilters]);
+  }, []); // searchFilters 의존성 제거
 
   // 초기 로딩 시 모든 데이터 표시
   useEffect(() => {
@@ -200,11 +204,56 @@ const UserListPage = () => {
 
 
 
+  // 날짜 유효성 검사 함수
+  const isValidDate = (dateString) => {
+    if (!dateString) return true;
+    
+    const date = new Date(dateString);
+    return !isNaN(date.getTime()) && dateString === date.toISOString().split('T')[0];
+  };
+
+  // 년도 4자리 제한 함수
+  const validateYearFormat = (dateString) => {
+    if (!dateString) return true;
+    
+    const parts = dateString.split('-');
+    if (parts.length !== 3) return false;
+    
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    
+    // 년도가 4자리가 아니면 false
+    if (year.length !== 4) return false;
+    
+    // 월이 01-12 범위가 아니면 false
+    if (month < '01' || month > '12') return false;
+    
+    // 일이 01-31 범위가 아니면 false
+    if (day < '01' || day > '31') return false;
+    
+    return true;
+  };
+
   // 검색 필터 변경 핸들러
   const handleFilterChange = (field, value) => {
+    let processedValue = value;
+    
+    // 날짜 필드에 유효성 검사 적용
+    if ((field === 'startDate' || field === 'endDate') && value) {
+      if (!validateYearFormat(value)) {
+        alert('년도는 4자리, 월은 01-12, 일은 01-31 범위로 입력해주세요.');
+        return; // 잘못된 날짜면 상태 업데이트하지 않음
+      }
+      if (!isValidDate(value)) {
+        alert('올바른 날짜 형식을 입력해주세요. (YYYY-MM-DD)');
+        return; // 잘못된 날짜면 상태 업데이트하지 않음
+      }
+    }
+    
     setSearchFilters(prev => ({
       ...prev,
-      [field]: value
+      [field]: processedValue
     }));
   };
 
@@ -238,8 +287,37 @@ const UserListPage = () => {
       console.log('CSV 다운로드 시작...');
       console.log('검색 필터:', searchFilters);
       
-      // 현재 검색 필터를 사용하여 CSV 다운로드 요청
-      const response = await userListApi.downloadUserList(searchFilters);
+      let downloadFilters = { ...searchFilters };
+      
+      // 선택된 항목이 있는지 확인
+      if (selectedRows.size > 0) {
+        const confirmMessage = `선택된 ${selectedRows.size}개의 항목만 다운로드하시겠습니까?\n\n선택된 항목만 다운로드하면 빠르게 처리되지만, 전체 다운로드가 필요하시면 '취소'를 눌러주세요.`;
+        const isSelectedOnly = window.confirm(confirmMessage);
+        
+        if (isSelectedOnly) {
+          // 선택된 항목만 다운로드
+          const selectedUserIds = Array.from(selectedRows);
+          downloadFilters.selectedIds = selectedUserIds;
+          console.log('선택된 항목만 다운로드:', selectedUserIds);
+        } else {
+          // 전체 다운로드 확인
+          const confirmFullDownload = window.confirm('전체 데이터를 다운로드하시겠습니까?\n\n전체 다운로드는 시간이 오래 걸릴 수 있습니다.');
+          if (!confirmFullDownload) {
+            setLoading(false);
+            return;
+          }
+        }
+      } else {
+        // 선택된 항목이 없으면 전체 다운로드 확인
+        const confirmFullDownload = window.confirm('전체 데이터를 다운로드하시겠습니까?\n\n전체 다운로드는 시간이 오래 걸릴 수 있습니다.');
+        if (!confirmFullDownload) {
+          setLoading(false);
+          return;
+        }
+      }
+      
+      // CSV 다운로드 요청
+      const response = await userListApi.downloadUserList(downloadFilters);
       console.log('CSV 다운로드 응답:', response);
       
       // Blob 생성 및 다운로드
@@ -252,7 +330,9 @@ const UserListPage = () => {
       const dateStr = now.getFullYear() + 
         String(now.getMonth() + 1).padStart(2, '0') + 
         String(now.getDate()).padStart(2, '0');
-      const fileName = `회원목록_${dateStr}.csv`;
+      const fileName = selectedRows.size > 0 ? 
+        `회원목록_선택항목_${dateStr}.csv` : 
+        `회원목록_전체_${dateStr}.csv`;
       
       // 다운로드 링크 생성 및 클릭
       const url = window.URL.createObjectURL(blob);
@@ -448,75 +528,128 @@ const UserListPage = () => {
         </div>
       </div>
 
-      {/* 검색 필터 */}
-      <div className="user-list-search-section">
-        <div className="user-list-search-grid">
-          <div className="user-list-search-row">
-            <div className="user-list-search-item">
-              <label>아이디</label>
-              <input
-                type="text"
-                placeholder="검색명을 입력하세요."
-                value={searchFilters.email}
-                onChange={(e) => handleFilterChange('email', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="user-list-search-item">
-              <label>이름</label>
-              <input
-                type="text"
-                placeholder="검색명을 입력하세요."
-                value={searchFilters.name}
-                onChange={(e) => handleFilterChange('name', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
-            <div className="user-list-search-item">
-              <label>핸드폰 번호</label>
-              <input
-                type="text"
-                placeholder="검색명을 입력하세요."
-                value={searchFilters.phone}
-                onChange={(e) => handleFilterChange('phone', e.target.value)}
-                onKeyPress={handleKeyPress}
-              />
-            </div>
+      {/* 검색 조건 */}
+      <div className="search-conditions-section">
+        <div 
+          className="search-conditions-header"
+          onClick={() => setIsSearchConditionsExpanded(!isSearchConditionsExpanded)}
+        >
+          <h3>검색 조건</h3>
+          <div className="search-conditions-toggle">
+            <span>{isSearchConditionsExpanded ? '▲' : '▼'}</span>
           </div>
-          <div className="user-list-search-row">
-            <div className="user-list-search-item">
-              <label>등록일</label>
-              <div className="user-list-date-inputs">
+        </div>
+        
+        {isSearchConditionsExpanded && (
+          <div className="search-conditions-content">
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>ID</label>
                 <input
-                  type="date"
-                  value={searchFilters.startDate}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  type="text"
+                  placeholder="ID를 입력하세요"
+                  value={searchFilters.email}
+                  onChange={(e) => handleFilterChange('email', e.target.value)}
                   onKeyPress={handleKeyPress}
                 />
-                <span>~</span>
+              </div>
+              <div className="search-conditions-item">
+                <label>이름</label>
                 <input
-                  type="date"
-                  value={searchFilters.endDate}
-                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  type="text"
+                  placeholder="이름을 입력하세요"
+                  value={searchFilters.name}
+                  onChange={(e) => handleFilterChange('name', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>핸드폰 번호</label>
+                <input
+                  type="text"
+                  placeholder="핸드폰 번호를 입력하세요"
+                  value={searchFilters.phone}
+                  onChange={(e) => handleFilterChange('phone', e.target.value)}
                   onKeyPress={handleKeyPress}
                 />
               </div>
             </div>
-            <div className="user-list-search-item">
-              <label>등급</label>
-              <select
-                value={searchFilters.userRole}
-                onChange={(e) => handleFilterChange('userRole', e.target.value)}
-              >
-                {userRoleOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+            
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>등록일</label>
+                <div className="date-range-inputs">
+                  <input
+                    type="date"
+                    placeholder="연도-월-일"
+                    value={searchFilters.startDate}
+                    onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    onKeyPress={handleKeyPress}
+                  />
+                  <span>~</span>
+                  <input
+                    type="date"
+                    placeholder="연도-월-일"
+                    value={searchFilters.endDate}
+                    onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    onKeyPress={handleKeyPress}
+                  />
+                </div>
+              </div>
+              <div className="search-conditions-item">
+                <label>등급</label>
+                <select
+                  value={searchFilters.userRole}
+                  onChange={(e) => handleFilterChange('userRole', e.target.value)}
+                >
+                  <option value="">등급 선택</option>
+                  {userRoleOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="search-conditions-row">
+              <div className="search-conditions-item">
+                <label>추천인 ID</label>
+                <input
+                  type="text"
+                  placeholder="추천인 ID를 입력하세요"
+                  value={searchFilters.recommenderEmail || ''}
+                  onChange={(e) => handleFilterChange('recommenderEmail', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>추천인 이름</label>
+                <input
+                  type="text"
+                  placeholder="추천인 이름을 입력하세요"
+                  value={searchFilters.recommenderName || ''}
+                  onChange={(e) => handleFilterChange('recommenderName', e.target.value)}
+                  onKeyPress={handleKeyPress}
+                />
+              </div>
+              <div className="search-conditions-item">
+                <label>추천인 등급</label>
+                <select
+                  value={searchFilters.recommenderGrade || ''}
+                  onChange={(e) => handleFilterChange('recommenderGrade', e.target.value)}
+                >
+                  <option value="">추천인 등급 선택</option>
+                  {userRoleOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
             {/* 회원 목록 DataGrid */}

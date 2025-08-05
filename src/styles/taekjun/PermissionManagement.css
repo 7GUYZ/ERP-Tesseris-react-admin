@@ -15,7 +15,7 @@ body, #root, .permission-management {
 /* 중앙 카드 */
 .permission-filter-section {
   background: #fff;
-  border-radius: 24px;
+  border-radius: 24px 24px 0 0;
   box-shadow: 0 4px 24px rgba(34, 46, 60, 0.08);
   padding: 40px 32px 32px 32px;
   max-width: 1400px;
@@ -120,9 +120,9 @@ body, #root, .permission-management {
 /* 권한 목록 테이블 */
 .permission-authority-section {
   max-width: 1400px;
-  margin: 32px auto 0 auto;
+  margin: 0 auto 48px auto;
   background: #fff;
-  border-radius: 24px;
+  border-radius: 0 0 24px 24px;
   box-shadow: 0 4px 24px rgba(34, 46, 60, 0.08);
   padding: 32px;
   min-height: auto;

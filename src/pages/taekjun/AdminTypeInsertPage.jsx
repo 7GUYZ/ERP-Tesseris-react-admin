@@ -136,6 +136,12 @@ const AdminTypeInsertPage = () => {
       adminTypeName: adminType.adminTypeName,
       newOrder: adminType.adminTypeOrder
     });
+    
+    // 수정 버튼을 클릭한 행을 자동으로 펼치기
+    const adminTypeIndex = adminTypes.filter((_, index) => index !== 0).findIndex(type => type.adminTypeIndex === adminType.adminTypeIndex);
+    if (adminTypeIndex !== -1) {
+      setExpandedRow(adminTypeIndex);
+    }
   };
 
   const handleEditCancel = () => {
@@ -145,6 +151,8 @@ const AdminTypeInsertPage = () => {
       adminTypeName: '',
       newOrder: null
     });
+    // 수정 모드 취소 시 펼쳐진 행 닫기
+    setExpandedRow(null);
   };
 
   const handleEditSave = async (adminTypeIndex) => {
@@ -222,18 +230,17 @@ const AdminTypeInsertPage = () => {
   };
 
   const toggleRow = (index) => {
-    setExpandedRow(expandedRow === index ? null : index);
+    // 수정 모드일 때만 토글 허용
+    if (editMode !== null) {
+      setExpandedRow(expandedRow === index ? null : index);
+    }
   };
 
   return (
     <div className="admin-type-insert-page">
-      <div className="admin-type-insert-header">
-        <h1 className="admin-type-insert-title">권한 타입 관리</h1>
-      </div>
-
       <div className="admin-type-insert-container">
         <div className="admin-type-insert-header">
-            <h2>권한 리스트</h2>
+            <h1 className="admin-type-insert-title">권한 타입 관리</h1>
             {hasPermission(40, 'insert') === 1 && (
                 <button 
                     className="admin-type-insert-add-btn"
@@ -250,7 +257,7 @@ const AdminTypeInsertPage = () => {
             <div className="admin-type-insert-error">{error}</div>
         ) : (
             <div className="admin-type-list">
-                {adminTypes.map((adminType, index) => (
+                {adminTypes.filter((adminType, index) => index !== 0).map((adminType, index) => (
                     <div key={adminType.adminTypeIndex} className="admin-type-item">
                         <div 
                             className="admin-type-header"
@@ -258,7 +265,7 @@ const AdminTypeInsertPage = () => {
                             aria-expanded={expandedRow === index}
                         >
                             <div className="admin-type-info">
-                                <span className="admin-type-order">{index}</span>
+                                <span className="admin-type-order">{index + 1}</span>
                                 <span className="admin-type-name">
                                     {editMode === adminType.adminTypeIndex ? (
                                         <input
@@ -292,26 +299,22 @@ const AdminTypeInsertPage = () => {
                                     </>
                                 ) : (
                                     <>
-                                        {index !== 0 && ( // 대표(index 0)가 아닌 경우에만 수정/삭제 버튼 표시
-                                            <>
-                                                {hasPermission(40, 'update') === 1 && (
-                                                    <button
-                                                        onClick={() => handleEditStart(adminType)}
-                                                        className="admin-type-insert-edit-btn"
-                                                    >
-                                                        수정
-                                                    </button>
-                                                )}
-                                                {hasPermission(40, 'delete') === 1 && (
-                                                    <button
-                                                        onClick={() => handleDelete(adminType.adminTypeIndex, adminType.adminTypeName)}
-                                                        className="admin-type-insert-delete-btn"
-                                                        disabled={isSubmitting}
-                                                    >
-                                                        삭제
-                                                    </button>
-                                                )}
-                                            </>
+                                        {hasPermission(40, 'update') === 1 && (
+                                            <button
+                                                onClick={() => handleEditStart(adminType)}
+                                                className="admin-type-insert-edit-btn"
+                                            >
+                                                수정
+                                            </button>
+                                        )}
+                                        {hasPermission(40, 'delete') === 1 && (
+                                            <button
+                                                onClick={() => handleDelete(adminType.adminTypeIndex, adminType.adminTypeName)}
+                                                className="admin-type-insert-delete-btn"
+                                                disabled={isSubmitting}
+                                            >
+                                                삭제
+                                            </button>
                                         )}
                                     </>
                                 )}

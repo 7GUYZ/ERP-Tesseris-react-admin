@@ -77,7 +77,6 @@ const Dashboard = () => {
         <div className="dashboard-root">
             <div className="dashboard-header">
                 <h1 className="dashboard-title">대시보드</h1>
-                <p className="dashboard-subtitle">실시간 통계</p>
             </div>
 
             {loading ? (
@@ -91,17 +90,17 @@ const Dashboard = () => {
                         <h2 className="section-title">상세 통계</h2>
                         <div className="dashboard-detail-grid">
                             <div className="detail-card">
-                                <h3>CM 현황</h3>
+                                <h3>TS 현황</h3>
                                 <div className="detail-item">
-                                    <span>충전 CM:</span>
+                                    <span>충전 TS:</span>
                                     <span>{formatNumber(stats?.chargedCmTotal || 0)}</span>
                                 </div>
                                 <div className="detail-item">
-                                    <span>지급 CM:</span>
+                                    <span>지급 TS:</span>
                                     <span>{formatNumber(stats?.companyPaidCmTotal || 0)}</span>
                                 </div>
                                 <div className="detail-item">
-                                    <span>회수 CM:</span>
+                                    <span>회수 TS:</span>
                                     <span>{formatNumber(stats?.companyCollectedCmTotal || 0)}</span>
                                 </div>
                             </div>
@@ -129,7 +128,7 @@ const Dashboard = () => {
                                     <span>{formatNumber(stats?.businessCmCommissionTotal || 0)}</span>
                                 </div>
                                 <div className="detail-item">
-                                    <span>본사 CM Cash:</span>
+                                    <span>본사 TS Cash:</span>
                                     <span>{formatNumber(stats?.companyCmCashTotal || 0)}</span>
                                 </div>
                                 <div className="detail-item">
