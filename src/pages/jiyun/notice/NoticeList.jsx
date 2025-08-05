@@ -20,14 +20,17 @@ export default function NoticeList() {
         const response = await permissionCheckApi.checkPermission(25); // programIndex: 25 (공지사항 관리)
         if (response.data) {
           setCanInsert(response.data.hasInsertAuthority === 1);
-          console.log('공지사항 등록 권한 체크 결과:', response.data.hasInsertAuthority);
+          console.log(
+            "공지사항 등록 권한 체크 결과:",
+            response.data.hasInsertAuthority
+          );
         }
       } catch (error) {
-        console.error('권한 체크 실패:', error);
+        console.error("권한 체크 실패:", error);
         setCanInsert(false);
       }
     };
-    
+
     checkPermission();
   }, []);
 
@@ -75,8 +78,7 @@ export default function NoticeList() {
 
   return (
     <div className="notice-list-page">
-      <div className="notice-list-breadcrumb">고객센터 관리 &gt; 공지사항 관리</div>
-      <h1>공지사항 목록</h1>
+      <h1 className="notice-title">공지사항 목록</h1>
       <div className="notice-list-top-bar">
         <button
           className="notice-list-btn-n notice-list-btn-primary"
@@ -88,7 +90,7 @@ export default function NoticeList() {
             navigate("/notice/write");
           }}
           disabled={!canInsert}
-          style={!canInsert ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+          style={!canInsert ? { opacity: 0.5, cursor: "not-allowed" } : {}}
         >
           공지사항 등록
         </button>

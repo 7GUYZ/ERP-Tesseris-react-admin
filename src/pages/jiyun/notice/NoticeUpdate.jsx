@@ -28,18 +28,18 @@ export default function NoticeUpdate() {
         if (response.data) {
           setCanUpdate(response.data.hasUpdateAuthority === 1);
           setCanDelete(response.data.hasDeleteAuthority === 1);
-          console.log('공지사항 수정/삭제 권한 체크 결과:', {
+          console.log("공지사항 수정/삭제 권한 체크 결과:", {
             update: response.data.hasUpdateAuthority,
-            delete: response.data.hasDeleteAuthority
+            delete: response.data.hasDeleteAuthority,
           });
         }
       } catch (error) {
-        console.error('권한 체크 실패:', error);
+        console.error("권한 체크 실패:", error);
         setCanUpdate(false);
         setCanDelete(false);
       }
     };
-    
+
     checkPermission();
   }, []);
 
@@ -121,10 +121,7 @@ export default function NoticeUpdate() {
 
   return (
     <div className="notice-update-page">
-      <div className="notice-update-breadcrumb">
-        고객센터 관리 &gt; 공지사항 관리 &gt; 공지사항 수정
-      </div>
-      <h1>공지사항 수정</h1>
+      <h1 className="notice-title">공지사항 수정</h1>
       <form className="notice-update-form" onSubmit={handleUpdateClick}>
         <div className="notice-update-form-group">
           <label htmlFor="noticeTitle">
@@ -138,7 +135,7 @@ export default function NoticeUpdate() {
             onChange={handleChange}
             required
             disabled={!canUpdate}
-            style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            style={!canUpdate ? { opacity: 0.5, cursor: "not-allowed" } : {}}
             className="notice-update-input"
           />
         </div>
@@ -155,7 +152,7 @@ export default function NoticeUpdate() {
             onChange={handleChange}
             required
             disabled={!canUpdate}
-            style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            style={!canUpdate ? { opacity: 0.5, cursor: "not-allowed" } : {}}
             className="notice-update-textarea"
           />
         </div>
@@ -173,15 +170,15 @@ export default function NoticeUpdate() {
             className="notice-update-btn notice-update-btn-danger"
             onClick={handleDeleteClick}
             disabled={!canDelete}
-            style={!canDelete ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            style={!canDelete ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             삭제
           </button>
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="notice-update-btn notice-update-btn-primary"
             disabled={!canUpdate}
-            style={!canUpdate ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+            style={!canUpdate ? { opacity: 0.5, cursor: "not-allowed" } : {}}
           >
             수정
           </button>
@@ -191,7 +188,9 @@ export default function NoticeUpdate() {
         isOpen={isPwModalOpen}
         onClose={handlePwModalClose}
         onConfirm={handlePwConfirm}
-        title={modalType === "delete" ? "삭제 비밀번호 확인" : "수정 비밀번호 확인"}
+        title={
+          modalType === "delete" ? "삭제 비밀번호 확인" : "수정 비밀번호 확인"
+        }
       />
     </div>
   );

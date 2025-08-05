@@ -5,6 +5,13 @@
   background-color: white;
 }
 
+.notice-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #222e3c;
+  margin: 0;
+}
+
 .notice-list-breadcrumb {
   font-size: 14px;
   margin-bottom: 8px;
