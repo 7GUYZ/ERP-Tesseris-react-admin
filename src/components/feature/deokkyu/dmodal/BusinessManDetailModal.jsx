@@ -165,15 +165,11 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
         userGenderIndex: detailData.userGenderIndex || null,
       };
       
-      // 조직 정보는 initialData에서 가져옴 (API에서 제공하지 않음)
+      // 조직 정보는 initialData에서 가져옴 (직급, 담당구역, 하위직원수만)
       const organizationInfo = {
-        name: initialData?.name || initialData?.businessUserName || initialData?.BusinessUsername || '',
-        userId: initialData?.BusinessUserId || initialData?.businessUserId || businessManId,
-        grade: initialData?.businessGradeName || '',
-        area: initialData?.businessAreaName || '',
-        parent: initialData?.bossUserId || null,
-        totalStore: initialData?.totalStore || 0,
-        totalCm: initialData?.totalCm || 0,
+        grade: initialData?.grade || initialData?.businessGradeName || '미지정',      // 직급
+        area: initialData?.area || initialData?.businessAreaName || '미지정',        // 담당구역
+        subordinateCount: initialData?.subordinateCount || 0,                        // 하위직원수
       };
       
       
@@ -417,10 +413,10 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
 
           <div className="detail-modal-field">
             <div className="detail-modal-field-label">
-              등급
+              직급
             </div>
             <div className="detail-modal-field-value">
-              {displayData.grade || displayData.businessGradeName || '-'}
+              {displayData.grade || '-'}
             </div>
           </div>
 
@@ -429,28 +425,16 @@ const BusinessManDetailModal = ({ isOpen, onClose, businessManId, initialData })
               담당구역
             </div>
             <div className="detail-modal-field-value">
-              {displayData.area || displayData.businessAreaName || '-'}
+              {displayData.area || '-'}
             </div>
           </div>
 
           <div className="detail-modal-field">
             <div className="detail-modal-field-label">
-              조직 위치
+              하위직원수
             </div>
             <div className="detail-modal-field-value">
-              {displayData.parent || displayData.bossUserId ? 
-                `상급자 ID: ${displayData.parent || displayData.bossUserId}` : 
-                '최고 책임자'
-              }
-            </div>
-          </div>
-
-          <div className="detail-modal-field">
-            <div className="detail-modal-field-label">
-              하위 직원 수
-            </div>
-            <div className="detail-modal-field-value">
-              {(displayData.totalSubordinates || 0).toLocaleString()}명
+              {(displayData.subordinateCount || 0).toLocaleString()}명
             </div>
           </div>
         </div>
