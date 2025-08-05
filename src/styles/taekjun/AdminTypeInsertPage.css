@@ -1,7 +1,7 @@
 /* 권한 타입 등록 페이지 전체 컨테이너 */
 .admin-type-insert-page {
   padding: 20px;
-  background-color: #f8f9fa;
+  background-color: transparent;
 }
 
 .admin-type-insert-container {
@@ -15,11 +15,12 @@
     margin-bottom: 24px;
 }
 
-.admin-type-insert-header h2 {
+.admin-type-insert-title {
     font-size: 24px;
     font-weight: 600;
     color: #1e293b;
     margin: 0;
+    margin-top: -20px;
 }
 
 .admin-type-insert-add-btn {
@@ -38,14 +39,13 @@
 }
 
 .admin-type-list {
-    background: white;
+    background: transparent;
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
 .admin-type-item {
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid transparent;
 }
 
 .admin-type-item:last-child {

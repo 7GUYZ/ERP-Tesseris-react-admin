@@ -77,7 +77,6 @@ const Dashboard = () => {
         <div className="dashboard-root">
             <div className="dashboard-header">
                 <h1 className="dashboard-title">대시보드</h1>
-                <p className="dashboard-subtitle">실시간 통계</p>
             </div>
 
             {loading ? (
