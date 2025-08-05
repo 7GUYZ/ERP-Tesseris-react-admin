@@ -509,6 +509,8 @@ function ChatRoomWindow({
       return;
     }
 
+
+
     // 내가 보낸 메시지인 경우 로컬 메시지를 서버 메시지로 교체
     // user_id 비교를 문자열로 통일
     const isMyMessage = String(receivedMessage.user_id) === String(userInfo.id);
@@ -600,41 +602,41 @@ function ChatRoomWindow({
     }
   }, [open, roomDataWithoutRefresh]);
 
-  // 방 입장 시 join 메시지 전송 함수
-  const sendJoinMessage = () => {
-    if (stompClient && stompClient.connected && roomId) {
-      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-      if (userInfo) {
-        // room_index를 안전하게 추출
-        let roomIndex = roomId;
-        
-        // room_index가 객체인 경우 처리
-        if (roomIndex && typeof roomIndex === 'object') {
-          roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
-        }
-        
-        // 문자열로 변환하고 숫자만 추출
-        roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
-        
-        if (!roomIndex) {
-          console.error('❌ 유효하지 않은 room_index:', roomId);
-          return;
-        }
-        
-        // 기존 방 입장 시에는 입장 알림 없이 조용히 입장
-        stompClient.publish({
-          destination: `/app/adminchat.joinRoom/${roomIndex}`,
-          body: JSON.stringify({
-            type: 'JOIN',
-            user_id: userInfo.id,
-            room_index: roomIndex,
-            timestamp: new Date().toISOString()
-          })
-        });
-        console.log('🚪 채팅방 조용히 입장 (알림 없음):', roomIndex);
-      }
-    }
-  };
+  // 방 입장 시 join 메시지 전송 함수 제거 (유령 메시지 방지)
+  // const sendJoinMessage = () => {
+  //   if (stompClient && stompClient.connected && roomId) {
+  //     const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+  //     if (userInfo) {
+  //       // room_index를 안전하게 추출
+  //       let roomIndex = roomId;
+  //       
+  //       // room_index가 객체인 경우 처리
+  //       if (roomIndex && typeof roomIndex === 'object') {
+  //         roomIndex = roomIndex.room_index || roomIndex.id || roomIndex.roomId;
+  //       }
+  //       
+  //       // 문자열로 변환하고 숫자만 추출
+  //       roomIndex = String(roomIndex || '').replace(/[^0-9]/g, '');
+  //       
+  //       if (!roomIndex) {
+  //         console.error('❌ 유효하지 않은 room_index:', roomId);
+  //         return;
+  //       }
+  //       
+  //       // 기존 방 입장 시에는 입장 알림 없이 조용히 입장
+  //       stompClient.publish({
+  //         destination: `/app/adminchat.joinRoom/${roomIndex}`,
+  //         body: JSON.stringify({
+  //           type: 'JOIN',
+  //           user_id: userInfo.id,
+  //           room_index: roomIndex,
+  //           timestamp: new Date().toISOString()
+  //         })
+  //       });
+  //       console.log('🚪 채팅방 조용히 입장 (알림 없음):', roomIndex);
+  //     }
+  //   }
+  // };
 
   // 명시적 입장 알림 전송 (초대된 사용자가 방에 입장할 때)
   const sendEnterMessage = () => {
@@ -708,16 +710,16 @@ function ChatRoomWindow({
     }
   };
 
-  // 채팅방이 열릴 때 join 메시지 전송
-  useEffect(() => {
-    if (open && roomDataWithoutRefresh && roomDataWithoutRefresh.room_index && sendMessageRef.current) {
-      const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-      if (userInfo) {
-        // 연결 대기 후 전송
-        setTimeout(sendJoinMessage, 1000);
-      }
-    }
-  }, [open, roomDataWithoutRefresh]);
+  // 채팅방이 열릴 때 join 메시지 전송 제거 (유령 메시지 방지)
+  // useEffect(() => {
+  //   if (open && roomDataWithoutRefresh && roomDataWithoutRefresh.room_index && sendMessageRef.current) {
+  //     const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+  //     if (userInfo) {
+  //       // 연결 대기 후 전송
+  //       setTimeout(sendJoinMessage, 1000);
+  //     }
+  //   }
+  // }, [open, roomDataWithoutRefresh]);
 
   // 메뉴 외부 클릭 시 닫기
   useEffect(() => {
@@ -983,18 +985,18 @@ function ChatRoomWindow({
             return;
           }
           
-          // 백엔드에 방 입장 요청 (방 존재 확인 + 구독 설정 + 기존 메시지 전송)
-          if (userInfo && stompClient && stompClient.connected) {
-            stompClient.publish({
-              destination: `/app/adminchat.joinRoom/${numericExistingRoomId}`,
-              body: JSON.stringify({
-                type: 'JOIN',
-                user_id: userInfo.id,
-                timestamp: new Date().toISOString()
-              })
-            });
-            console.log('🚪 기존 방 입장 요청 전송:', numericExistingRoomId);
-          }
+          // 백엔드에 방 입장 요청 제거 (유령 메시지 방지)
+          // if (userInfo && stompClient && stompClient.connected) {
+          //   stompClient.publish({
+          //     destination: `/app/adminchat.joinRoom/${numericExistingRoomId}`,
+          //     body: JSON.stringify({
+          //       type: 'JOIN',
+          //       user_id: userInfo.id,
+          //       timestamp: new Date().toISOString()
+          //     })
+          //   });
+          //   console.log('🚪 기존 방 입장 요청 전송:', numericExistingRoomId);
+          // }
           
           // 해당 방에 구독 설정 (백엔드 응답을 받기 위해)
           const subscribeSuccess = subscribeToRoom(numericExistingRoomId, (receivedMessage) => {
@@ -1761,7 +1763,8 @@ function ChatRoomWindow({
         // 초대된 사용자들에게 명시적 입장 알림 전송
         selectedAdminList.forEach(admin => {
           console.log('📨 초대된 사용자에게 입장 알림 전송:', admin.name);
-          // 실제로는 초대된 사용자가 방에 입장할 때 알림이 발생하도록 구현
+          // 사용자 초대 시 입장 알림 전송
+          sendEnterMessage();
         });
 
         // 채팅방 목록 새로고침
@@ -2434,7 +2437,7 @@ function ChatRoomWindow({
                       {!isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, flex: 1 }}>
                           <Typography variant="caption" sx={{ color: '#666', ml: 1, mb: 0.5 }}>
-                            {message.sender?.name && message.sender.name !== message.sender.id ? message.sender.name : 'Unknown'}
+                            {message.sender?.name && message.sender.name !== message.sender.id ? message.sender.name : message.sender?.id || '알 수 없음'}
                           </Typography>
                           <Paper
                             sx={{
