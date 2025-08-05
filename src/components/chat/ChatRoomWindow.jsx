@@ -114,6 +114,9 @@ function ChatRoomWindow({
   const [showInviteSelection, setShowInviteSelection] = useState(false);
   const [selectedInviteAdmins, setSelectedInviteAdmins] = useState(new Set());
   const [expandedInviteGroups, setExpandedInviteGroups] = useState(new Set());
+  
+  // 실시간 참가자 정보 업데이트를 위한 ref
+  const roomParticipantsRef = useRef([]);
 
   // 파일 업로드 관련 상태
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -946,7 +949,50 @@ function ChatRoomWindow({
             if (response.data && response.data.resultCode === 200 && response.data.data) {
               const chatData = response.data.data;
               const existingMessages = chatData.messages || chatData; // 새로운 구조 또는 기존 구조 지원
-              const adminData = chatData.adminList || []; // 관리자 정보
+              let adminData = chatData.adminList || []; // 관리자 정보
+
+              console.log('🔍 adminData 원본 구조 확인:', adminData);
+
+              // adminData를 { userId, name } 형태로 정규화
+              if (Array.isArray(adminData) && adminData.length > 0) {
+                console.log('🔍 adminData 원본 구조:', adminData[0]);
+                
+                // AdminListDTO 형태로 들어온 데이터를 정규화
+                adminData = adminData.map(item => {
+                  if (typeof item === 'object' && item !== null) {
+                    // AdminListDTO 형태: { userIndex, userId, adminTypeName, adminTypeOrder, name }
+                    if (item.userId && item.name) {
+                      return {
+                        userId: item.userId,
+                        name: item.name,
+                        userIndex: item.userIndex,
+                        adminTypeName: item.adminTypeName,
+                        adminTypeOrder: item.adminTypeOrder
+                      };
+                    }
+                    // 다른 형태의 객체인 경우
+                    return {
+                      userId: item.userId || item.id || item.uuid || item.name,
+                      name: item.name || item.userName || item.id || item.userId
+                    };
+                  } else if (typeof item === 'string') {
+                    // "이름 (UUID)" 형태 파싱 시도
+                    const match = item.match(/(.+)\s\((.+)\)/);
+                    if (match) {
+                      return { name: match[1], userId: match[2] };
+                    }
+                    // 이름만 있는 경우
+                    return { name: item, userId: item };
+                  }
+                  // 그 외의 경우
+                  return { name: String(item), userId: String(item) };
+                });
+                
+                console.log('✅ adminData 정규화 완료:', adminData);
+              } else {
+                console.warn('⚠️ adminData가 배열이 아니거나 비어있습니다:', adminData);
+                adminData = [];
+              }
 
               // 관리자 정보를 상태에 저장
               setAdminList(adminData);
@@ -954,26 +1000,75 @@ function ChatRoomWindow({
               console.log('👥 관리자 목록 업데이트:', adminData.length, '명');
 
             // 참가자 정보 설정 (기존 방의 경우)
+            let participants = [];
+            const userInfo = JSON.parse(localStorage.getItem('admin-info'));
+            
+            console.log('🔍 참가자 정보 설정 시작:', {
+              chatDataKeys: Object.keys(chatData),
+              hasParticipants: !!chatData.participants,
+              hasRoomParticipants: !!chatData.roomParticipants,
+              adminDataLength: adminData.length,
+              currentUser: userInfo
+            });
+            
             if (chatData.participants) {
-              setRoomParticipants(chatData.participants);
+              participants = chatData.participants;
+              console.log('👥 참가자 정보 설정 (participants):', participants);
             } else if (chatData.roomParticipants) {
-              setRoomParticipants(chatData.roomParticipants);
+              participants = chatData.roomParticipants;
+              console.log('👥 참가자 정보 설정 (roomParticipants):', participants);
             } else {
-              // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
-              const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-              const participants = [];
+              // 백엔드에서 참가자 정보가 없는 경우, 1:1 채팅방 참가자만 구성
+              console.log('👥 백엔드 참가자 정보 없음, 1:1 채팅방 참가자만 구성');
               
-              // 본인 추가
-              participants.push({ userId: userInfo.id, name: userInfo.name || userInfo.id });
+              // 채팅방 제목에서 상대방 이름 추출
+              const chatTitle = roomDataWithoutRefresh?.name || '';
+              const nameMatch = chatTitle.match(/^(.+?)와의 채팅방$/);
+              const otherUserName = nameMatch ? nameMatch[1] : null;
               
-              // 상대방 찾기 (adminData에서 본인이 아닌 사람)
-              const otherUser = adminData.find(admin => admin.userId !== userInfo.id);
-              if (otherUser) {
-                participants.push({ userId: otherUser.userId, name: otherUser.name });
+              console.log('🔍 채팅방 제목:', chatTitle);
+              console.log('🔍 추출된 상대방 이름:', otherUserName);
+              
+              // adminData에서 본인 찾기 (localStorage의 userInfo.name으로 매칭)
+              const currentUser = adminData.find(admin => admin.name === userInfo.name);
+              if (currentUser) {
+                participants.push({ 
+                  userId: currentUser.userId,
+                  name: currentUser.name 
+                });
+                console.log('👥 본인 추가:', currentUser);
+              } else {
+                // adminData에서 찾지 못한 경우 localStorage 정보 사용
+                participants.push({ 
+                  userId: userInfo.id, 
+                  name: userInfo.name || userInfo.id 
+                });
+                console.log('👥 본인 추가 (localStorage 사용):', userInfo);
               }
               
-              setRoomParticipants(participants);
+              // adminData에서 상대방 찾기 (채팅방 제목에서 추출한 이름으로 매칭)
+              if (otherUserName) {
+                const otherUser = adminData.find(admin => admin.name === otherUserName);
+                if (otherUser) {
+                  participants.push({ 
+                    userId: otherUser.userId, 
+                    name: otherUser.name 
+                  });
+                  console.log('👥 상대방 추가:', otherUser);
+                } else {
+                  console.warn('⚠️ 상대방을 adminData에서 찾을 수 없음:', otherUserName);
+                }
+              } else {
+                console.warn('⚠️ 채팅방 제목에서 상대방 이름을 추출할 수 없음');
+              }
+              
+              console.log('👥 1:1 채팅방 참가자 구성:', participants);
             }
+            
+            // 참가자 정보를 상태에 저장
+            setRoomParticipants(participants);
+            roomParticipantsRef.current = participants; // ref도 함께 업데이트
+            console.log('👥 최종 참가자 정보 저장:', participants);
 
               // 관리자 정보를 Map으로 변환하여 빠른 검색 가능하게 함
               const adminMap = new Map();
@@ -1818,6 +1913,22 @@ function ChatRoomWindow({
         setShowInviteSelection(false);
         setSelectedInviteAdmins(new Set());
 
+        // 초대된 사용자들을 참가자 목록에 추가
+        const newParticipants = [...roomParticipantsRef.current];
+        selectedAdminList.forEach(admin => {
+          // 이미 있는지 확인
+          const exists = newParticipants.some(p => p.userId === admin.userId);
+          if (!exists) {
+            newParticipants.push({ userId: admin.userId, name: admin.name });
+            console.log('👥 초대된 사용자를 참가자 목록에 추가:', admin.name, admin.userId);
+          }
+        });
+        
+        // 참가자 정보 업데이트
+        setRoomParticipants(newParticipants);
+        roomParticipantsRef.current = newParticipants;
+        console.log('👥 업데이트된 참가자 목록:', newParticipants);
+
         // 초대된 사용자들에게 명시적 입장 알림 전송
         selectedAdminList.forEach(admin => {
           console.log('📨 초대된 사용자에게 입장 알림 전송:', admin.name, 'ID:', admin.userId);
@@ -2226,87 +2337,131 @@ function ChatRoomWindow({
                   <List sx={{ py: 0 }}>
                                          {(() => {
                        const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-                       // 현재 방의 참가자 목록 가져오기 - 더 안정적인 로직
-                       let currentParticipants = [];
+                       console.log('🔍 localStorage에서 가져온 사용자 정보:', userInfo);
                        
-                       if (roomId) {
-                         // 기존 방인 경우 - 여러 소스에서 참가자 정보 확인
-                         if (roomParticipants && roomParticipants.length > 0) {
-                           currentParticipants = roomParticipants.map(p => p.userId || p.id || p.userid);
-                         } else if (roomDataWithoutRefresh.roomData?.participants) {
-                           currentParticipants = roomDataWithoutRefresh.roomData.participants.map(p => p.userId || p.id || p.userid);
-                         } else if (roomDataWithoutRefresh.participants) {
-                           currentParticipants = roomDataWithoutRefresh.participants.map(p => p.userId || p.id || p.userid);
-                         } else if (roomDataWithoutRefresh.adminData?.userId) {
-                           // 1:1 채팅방인 경우 상대방과 본인을 참가자로 설정
-                           currentParticipants = [userInfo.id, roomDataWithoutRefresh.adminData.userId];
-                           console.log("🔍 1:1 채팅방 참가자 설정:", currentParticipants);
-                         } else if (roomDataWithoutRefresh.adminData?.userIndex) {
-                           // userIndex로도 상대방 찾기
-                           const otherUser = adminList.find(admin => admin.userIndex === roomDataWithoutRefresh.adminData.userIndex);
+                       // 채팅방 제목에서 상대방 이름 추출
+                       const chatTitle = roomDataWithoutRefresh?.name || '';
+                       console.log('🔍 채팅방 제목:', chatTitle);
+                       
+                       // "홍길동1와의 채팅방" 형태에서 "홍길동1" 추출
+                       const nameMatch = chatTitle.match(/^(.+?)와의 채팅방$/);
+                       const otherUserName = nameMatch ? nameMatch[1] : null;
+                       console.log('🔍 채팅방 제목에서 추출한 상대방 이름:', otherUserName);
+                       
+                       // adminList에서 상대방 찾기
+                       const otherUser = adminList.find(admin => admin.name === otherUserName);
+                       console.log('🔍 adminList에서 찾은 상대방:', otherUser);
+                       
+                       // 현재 사용자는 localStorage의 userInfo 사용 (실제 로그인한 사용자)
+                       const currentUserInfo = userInfo;
+                       console.log('🔍 현재 사용자 정보 (localStorage 기반):', currentUserInfo);
+                       // 현재 방의 참가자 목록 가져오기 - 실시간 업데이트된 정보 사용
+                       let currentParticipants = [];
+                       let currentParticipantNames = []; // 이름도 함께 저장
+                       
+                       // 실시간 참가자 정보 우선 사용 (ref에서 가져오기)
+                       if (roomParticipantsRef.current && roomParticipantsRef.current.length > 0) {
+                         currentParticipants = roomParticipantsRef.current.map(p => p.userId || p.id || p.userid);
+                         currentParticipantNames = roomParticipantsRef.current.map(p => p.name || p.userName).filter(Boolean);
+                         console.log("🔍 실시간 참가자 정보 (ref):", {
+                           userIds: currentParticipants,
+                           names: currentParticipantNames
+                         });
+                       } else if (roomParticipants && roomParticipants.length > 0) {
+                         currentParticipants = roomParticipants.map(p => p.userId || p.id || p.userid);
+                         currentParticipantNames = roomParticipants.map(p => p.name || p.userName).filter(Boolean);
+                         console.log("🔍 roomParticipants에서 참가자 정보:", {
+                           userIds: currentParticipants,
+                           names: currentParticipantNames
+                         });
+                       } else {
+                         // 참가자 정보가 없는 경우, 현재 채팅방의 실제 참가자만 구성
+                         console.log("🔍 참가자 정보 없음, 현재 채팅방 참가자만 구성");
+                         
+                         // 본인 추가
+                         currentParticipants = [currentUserInfo.userId];
+                         currentParticipantNames = [currentUserInfo.name || currentUserInfo.id];
+                         
+                         // 1:1 채팅방인 경우 상대방만 추가 (채팅방 제목에서 추출한 상대방)
+                         if (otherUserName && otherUserName !== currentUserInfo.name) {
+                           const otherUser = adminList.find(admin => admin.name === otherUserName);
                            if (otherUser) {
-                             currentParticipants = [userInfo.id, otherUser.userId];
-                             console.log("🔍 userIndex로 찾은 1:1 채팅방 참가자:", currentParticipants);
+                             currentParticipants.push(otherUser.userId);
+                             currentParticipantNames.push(otherUser.name);
+                             console.log("🔍 상대방 추가:", otherUser);
                            }
-                         } else if (adminList && adminList.length > 0) {
-                           // adminList에서 상대방 찾기 (1:1 채팅방)
-                           const otherUser = adminList.find(admin => admin.userId !== userInfo.id);
+                         } else {
+                           // 채팅방 제목에서 상대방을 찾지 못한 경우, adminList에서 본인이 아닌 첫 번째 사용자
+                           const otherUser = adminList.find(admin => admin.userId !== currentUserInfo.userId);
                            if (otherUser) {
-                             currentParticipants = [userInfo.id, otherUser.userId];
+                             currentParticipants.push(otherUser.userId);
+                             currentParticipantNames.push(otherUser.name);
+                             console.log("🔍 상대방 추가 (fallback):", otherUser);
                            }
                          }
-                       } else {
-                         // 새 방인 경우
-                         currentParticipants = roomDataWithoutRefresh.roomData?.participants || roomDataWithoutRefresh.participants || [];
+                         
+                         console.log("🔍 현재 채팅방 참가자 구성:", {
+                           userIds: currentParticipants,
+                           names: currentParticipantNames
+                         });
                        }
                        
                        console.log("🔍 초대하기 - 현재 방 ID:", roomId);
                        console.log("🔍 초대하기 - roomParticipants 상태:", roomParticipants);
                        console.log("🔍 초대하기 - 현재 참가자 목록:", currentParticipants);
+                       console.log("🔍 초대하기 - 현재 참가자 이름:", currentParticipantNames);
                        console.log("🔍 초대하기 - 전체 관리자 목록:", adminList.map(a => ({ name: a.name, userId: a.userId })));
                        
                        // 본인과 이미 방에 있는 사람들을 제외한 관리자 목록
                        const filteredAdminList = adminList.filter(admin => {
-                         // 본인 제외
-                         if (admin.userId === userInfo.id) {
+                         // 본인 제외 (실제 사용자 정보 사용)
+                         if (admin.userId === currentUserInfo.userId) {
+                           console.log(`🚫 본인 제외: ${admin.name} (${admin.userId}) - 현재 사용자: ${currentUserInfo.name}`);
                            return false;
                          }
                          
-                         // 현재 방에 있는 참가자들 제외
+                         // 현재 방에 있는 참가자들 제외 (currentParticipants - userId 기반)
                          if (currentParticipants && currentParticipants.includes(admin.userId)) {
+                           console.log(`🚫 현재 참가자 제외 (userId): ${admin.name} (${admin.userId})`);
+                           return false;
+                         }
+                         
+                         // 현재 방에 있는 참가자들 제외 (currentParticipantNames - 이름 기반)
+                         if (currentParticipantNames && currentParticipantNames.includes(admin.name)) {
+                           console.log(`🚫 현재 참가자 제외 (이름): ${admin.name} (${admin.userId})`);
                            return false;
                          }
                          
                          // roomParticipants 상태에도 있는지 확인
-                         if (roomParticipants && roomParticipants.includes(admin.userId)) {
+                         if (roomParticipants && roomParticipants.some(p => 
+                           (p.userId || p.id || p.userid) === admin.userId
+                         )) {
+                           console.log(`🚫 roomParticipants 제외: ${admin.name} (${admin.userId})`);
                            return false;
                          }
                          
-                         // 1:1 채팅방인 경우 상대방 제외
+                         // 1:1 채팅방인 경우 상대방 제외 (adminData.userId)
                          if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.userId === admin.userId) {
+                           console.log(`🚫 1:1 채팅방 상대방 제외 (userId): ${admin.name} (${admin.userId})`);
                            return false;
                          }
                          
                          // 1:1 채팅방인 경우 상대방의 userIndex도 확인
                          if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.userIndex === admin.userIndex) {
+                           console.log(`🚫 1:1 채팅방 상대방 제외 (userIndex): ${admin.name} (${admin.userId})`);
                            return false;
                          }
                          
                          // 1:1 채팅방인 경우 상대방의 이름도 확인
                          if (roomDataWithoutRefresh.adminData && roomDataWithoutRefresh.adminData.name === admin.name) {
+                           console.log(`🚫 1:1 채팅방 상대방 제외 (name): ${admin.name} (${admin.userId})`);
                            return false;
                          }
                          
-                         // 채팅방 이름에서 상대방 이름 추출하여 필터링
-                         if (roomDataWithoutRefresh.name) {
-                           const roomName = roomDataWithoutRefresh.name;
-                           // "김수고와의 채팅방" 형태에서 "김수고" 추출
-                           const nameMatch = roomName.match(/^(.+?)와의 채팅방$/);
-                           if (nameMatch && nameMatch[1] === admin.name) {
-                             return false;
-                           }
-                         }
+                         // 참가자 정보 기반 필터링만 사용 (UUID 기반)
+                         // 채팅방 이름 분석은 제거 - 실제 참가자 정보가 더 정확함
                          
+                         console.log(`✅ 초대 가능: ${admin.name} (${admin.userId})`);
                          return true;
                        });
                        
