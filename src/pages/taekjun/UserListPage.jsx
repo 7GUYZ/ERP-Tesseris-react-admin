@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
 import { useLocation } from 'react-router-dom';
-import { userListApi, permissionCheckApi } from '../../api/auth/TaekjunAuth';
+import { userListApi, permissionCheckApi, businessmanListApi } from '../../api/auth/TaekjunAuth';
 
 
 
@@ -56,6 +56,15 @@ const getAdminUserIndex = () => {
   }
 };
 
+// 사용자 등급 옵션
+const userRoleOptions = [
+  { value: '', label: '전체' },
+  { value: '일반 회원', label: '일반 회원' },
+  { value: '정회원', label: '정회원' },
+  { value: 'VIP 회원', label: 'VIP 회원' },
+  { value: '관리자', label: '관리자' }
+];
+
 const UserListPage = () => {
   const location = useLocation();
 
@@ -64,7 +73,7 @@ const UserListPage = () => {
   const [error, setError] = useState(null);
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [searchFilters, setSearchFilters] = useState({
-    email: '',
+    id: '',
     name: '',
     phone: '',
     userRole: '',
@@ -90,6 +99,7 @@ const UserListPage = () => {
     canAdd: false
   });
   const [isSearchConditionsExpanded, setIsSearchConditionsExpanded] = useState(true);
+  const [banks, setBanks] = useState([]);
 
   // 권한 체크 함수
   const checkButtonPermission = async (action) => {
@@ -160,22 +170,14 @@ const UserListPage = () => {
 
 
 
-  // 데이터 조회
-  const fetchUserList = useCallback(async (filters = searchFilters) => {
+  // 초기 데이터 조회 (검색 필터 적용 안함)
+  const fetchUserList = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('API 호출 시작...');
+      console.log('초기 데이터 조회 시작...');
       
-      // 검색 필터가 있으면 필터링된 데이터 조회
-      let response;
-      if (filters && Object.values(filters).some(value => value !== '')) {
-        console.log('검색 필터:', filters);
-        // 검색 API 사용
-        response = await userListApi.searchUserList(filters);
-      } else {
-        response = await userListApi.getUserList();
-      }
+      const response = await userListApi.getUserList();
       
       console.log('API 응답:', response);
       
@@ -192,12 +194,28 @@ const UserListPage = () => {
     } finally {
       setLoading(false);
     }
-  }, []); // searchFilters 의존성 제거
+  }, []); // 의존성 제거 - 초기 로딩만 담당
+
+  // 은행 목록 가져오기
+  const fetchBanks = useCallback(async () => {
+    try {
+      console.log('은행 목록 조회 시작...');
+      const response = await businessmanListApi.getBanks();
+      console.log('은행 목록 API 응답:', response);
+      console.log('은행 목록 데이터:', response.data);
+      setBanks(response.data || []);
+      console.log('은행 목록 상태 업데이트 완료:', response.data || []);
+    } catch (err) {
+      console.error('은행 목록 조회 실패:', err);
+      console.error('은행 목록 에러 상세:', err.response || err.message);
+    }
+  }, []);
 
   // 초기 로딩 시 모든 데이터 표시
   useEffect(() => {
     fetchUserList();
-  }, [fetchUserList]);
+    fetchBanks();
+  }, [fetchUserList, fetchBanks]);
 
 
 
@@ -268,11 +286,31 @@ const UserListPage = () => {
   const handleSearch = async () => {
     try {
       setLoading(true);
-      // 검색 필터를 사용하여 데이터 다시 조회
-      await fetchUserList();
+      setError(null);
+      console.log('검색 실행 - 필터:', searchFilters);
+      
+      // 검색 필터가 있으면 필터링된 데이터 조회
+      let response;
+      if (searchFilters && Object.values(searchFilters).some(value => value !== '')) {
+        console.log('검색 필터 적용:', searchFilters);
+        response = await userListApi.searchUserList(searchFilters);
+      } else {
+        console.log('전체 데이터 조회');
+        response = await userListApi.getUserList();
+      }
+      
+      console.log('검색 결과:', response);
+      
+      const data = response.data.map((item, index) => ({
+        id: index + 1,
+        ...item,
+      }));
+      
+      setRows(data);
     } catch (err) {
       console.error('검색 실패:', err);
-      setError('검색에 실패했습니다.');
+      console.error('에러 상세:', err.response || err.message);
+      setError(`검색에 실패했습니다. (${err.message})`);
     } finally {
       setLoading(false);
     }
@@ -287,7 +325,15 @@ const UserListPage = () => {
       console.log('CSV 다운로드 시작...');
       console.log('검색 필터:', searchFilters);
       
-      let downloadFilters = { ...searchFilters };
+      // 백엔드 DTO에 맞는 필드만 전송
+      let downloadFilters = {
+        id: searchFilters.id,
+        name: searchFilters.name,
+        phone: searchFilters.phone,
+        userRole: searchFilters.userRole,
+        startDate: searchFilters.startDate,
+        endDate: searchFilters.endDate
+      };
       
       // 선택된 항목이 있는지 확인
       if (selectedRows.size > 0) {
@@ -548,8 +594,8 @@ const UserListPage = () => {
                 <input
                   type="text"
                   placeholder="ID를 입력하세요"
-                  value={searchFilters.email}
-                  onChange={(e) => handleFilterChange('email', e.target.value)}
+                                  value={searchFilters.id}
+                onChange={(e) => handleFilterChange('id', e.target.value)}
                   onKeyPress={handleKeyPress}
                 />
               </div>
@@ -647,6 +693,35 @@ const UserListPage = () => {
                   ))}
                 </select>
               </div>
+            </div>
+            
+            {/* 검색 버튼들 */}
+            <div className="search-conditions-buttons">
+              <button 
+                className="search-button" 
+                onClick={handleSearch}
+                disabled={loading}
+              >
+                {loading ? '검색 중...' : '검색'}
+              </button>
+              <button 
+                className="reset-button" 
+                onClick={() => {
+                  setSearchFilters({
+                    id: '',
+                    name: '',
+                    phone: '',
+                    userRole: '',
+                    startDate: '',
+                    endDate: '',
+                    recommenderEmail: '',
+                    recommenderName: '',
+                    recommenderGrade: ''
+                  });
+                }}
+              >
+                초기화
+              </button>
             </div>
           </div>
         )}
@@ -800,14 +875,11 @@ const UserListPage = () => {
                       onChange={(e) => setEditForm(prev => ({ ...prev, bankName: e.target.value }))}
                     >
                       <option value="">은행명을 선택하세요.</option>
-                      <option value="신한은행">신한은행</option>
-                      <option value="국민은행">국민은행</option>
-                      <option value="우리은행">우리은행</option>
-                      <option value="하나은행">하나은행</option>
-                      <option value="기업은행">기업은행</option>
-                      <option value="농협은행">농협은행</option>
-                      <option value="새마을금고">새마을금고</option>
-                      <option value="신협">신협</option>
+                      {banks.map((bank) => (
+                        <option key={bank.userBankIndex} value={bank.userBankName}>
+                          {bank.userBankName}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div className="user-list-form-item">
