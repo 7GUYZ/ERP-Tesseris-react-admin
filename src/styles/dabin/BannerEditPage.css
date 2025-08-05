@@ -1,6 +1,6 @@
 .banner-edit-page {
     padding: 20px;
-    background-color: #f5f5f5;
+    background-color: #ffffff;
     min-height: 100vh;
 }
 
@@ -46,9 +46,9 @@
 
 /* Button */
 .banner-edit-cancel-button {
-    background-color: #6c757d;
-    color: white;
-    border: none;
+    background-color: #f9fafb;
+    color: #374151;
+    border: 1px solid #d1d5db;
     padding: 10px 20px;
     border-radius: 4px;
     cursor: pointer;
@@ -57,7 +57,7 @@
 }
 
 .banner-edit-cancel-button:hover {
-    background-color: #545b62;
+    background-color: #f3f4f6;
 }
 
 .banner-edit-delete-button {

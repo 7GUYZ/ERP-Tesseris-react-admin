@@ -114,6 +114,17 @@
   box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
 }
 
+/* dabin-page-layout-search-input 클래스에 대한 에러 스타일 추가 */
+.dabin-page-layout-search-input.error {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 1px #d32f2f !important;
+}
+
+.dabin-page-layout-search-input.error:focus {
+  border-color: #d32f2f !important;
+  box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1) !important;
+}
+
 .error-message {
   color: #d32f2f;
   font-size: 12px;
