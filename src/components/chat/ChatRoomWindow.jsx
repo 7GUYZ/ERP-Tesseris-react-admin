@@ -342,8 +342,15 @@ function ChatRoomWindow({
       filesLength: receivedMessage.files ? receivedMessage.files.length : 0,
       filesContent: receivedMessage.files,
       filesKeys: receivedMessage.files ? Object.keys(receivedMessage.files[0] || {}) : [],
-      messageKeys: Object.keys(receivedMessage)
+      messageKeys: Object.keys(receivedMessage),
+      messageContent: receivedMessage.message,
+      messageEmpty: !receivedMessage.message || receivedMessage.message.trim() === ''
     });
+    
+    // 파일 메시지 여부 확인 (메시지가 비어있고 파일이 있으면 파일 메시지)
+    const isFileMessage = (!receivedMessage.message || receivedMessage.message.trim() === '') && 
+                         receivedMessage.files && receivedMessage.files.length > 0;
+    console.log('🔍 파일 메시지 여부:', isFileMessage);
     console.log('🔍 사용자 정보:', { 
       userInfoId: userInfo.id, 
       userInfoIdType: typeof userInfo.id,
@@ -577,6 +584,7 @@ function ChatRoomWindow({
               ...msg,
               id: `server_${Date.now()}_${Math.random()}`,
               messageindex: receivedMessage.messageindex || null,
+              active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
               isLocal: false,
               files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
             };
@@ -595,7 +603,7 @@ function ChatRoomWindow({
           },
           timestamp: receivedMessage.timestamp || new Date().toISOString(),
           messageindex: receivedMessage.messageindex || null,
-          active: receivedMessage.active !== undefined ? receivedMessage.active : true,
+          active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
           isLocal: false,
           files: receivedMessage.files || null
         };
@@ -614,7 +622,7 @@ function ChatRoomWindow({
         },
         timestamp: receivedMessage.timestamp || new Date().toISOString(),
         messageindex: receivedMessage.messageindex || null,
-        active: receivedMessage.active !== undefined ? receivedMessage.active : true,
+        active: isFileMessage ? true : (receivedMessage.active !== undefined ? receivedMessage.active : true),
         isLocal: false,
         files: receivedMessage.files && Array.isArray(receivedMessage.files) ? receivedMessage.files : null
       };
@@ -1090,7 +1098,7 @@ function ChatRoomWindow({
                         },
                         timestamp: msg.sentat || msg.timestamp || new Date().toISOString(),
                         messageindex: msg.messageindex || null,
-                        active: msg.active !== undefined ? msg.active : true, // active 상태 포함
+                        active: msg.files && msg.files.length > 0 ? true : (msg.active !== undefined ? msg.active : true), // 파일이 있으면 항상 active: true
                 isLocal: false,
                 files: msg.files || null
               };
@@ -2634,7 +2642,31 @@ function ChatRoomWindow({
               const currentUserId = String(userInfo?.id || '');
               const isMyMessage = messageSenderId === currentUserId && messageSenderId !== '';
               // active 상태를 안전하게 확인 (시스템 메시지는 제외하고, undefined, null, false, 0 모두 삭제된 것으로 처리)
-              const isDeletedMessage = message.type !== 'system' && (message.active === false || message.active === 0 || message.active === null || message.active === undefined);
+              // 파일이 있는 메시지는 절대 삭제된 것으로 처리하지 않음
+    const hasFiles = message.files && Array.isArray(message.files) && message.files.length > 0;
+    
+    // 파일 메시지 디버깅 로그
+    if (message.files) {
+      console.log('🔍 파일 메시지 디버깅:', {
+        messageId: message.id,
+        hasFiles: hasFiles,
+        filesType: typeof message.files,
+        filesLength: message.files ? message.files.length : 0,
+        originalActive: message.active,
+        messageType: message.type,
+        files: message.files
+      });
+    }
+    
+    const isDeletedMessage = message.type !== 'system' && 
+                            !hasFiles && // 파일이 있으면 삭제된 것으로 처리하지 않음
+                            (message.active === false || message.active === 0 || message.active === null || message.active === undefined);
+    
+    // 파일이 있는 메시지는 강제로 active: true로 설정
+    if (hasFiles) {
+      message.active = true;
+      console.log('✅ 파일 메시지 active 강제 설정:', message.active);
+    }
               const canDelete = isMyMessage && !isDeletedMessage;
 
               // 삭제된 메시지는 "삭제된 메시지"로 표시하거나 완전히 숨김
