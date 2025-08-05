@@ -16,7 +16,7 @@ const columns = [
   { field: 'userRole', headerName: '등급', width: 120, sortable: true },
   { 
     field: 'cmBalance', 
-    headerName: '보유 CM', 
+    headerName: '보유 TS', 
     width: 150, 
     sortable: true, 
     type: 'number',

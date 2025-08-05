@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import SockJS from 'sockjs-client';
-import { Stomp } from '@stomp/stompjs';
+import { Client as StompClient } from '@stomp/stompjs';
 
 const ChatWebSocketContext = createContext();
 
@@ -17,15 +17,52 @@ export const ChatWebSocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const subscriptionsRef = useRef(new Map()); // 채팅방별 구독 관리
+  const reconnectAttemptsRef = useRef(0);
+  const maxReconnectAttempts = 5;
+  const reconnectIntervalRef = useRef(null);
+
+  // 자동 재연결 처리
+  const handleReconnect = () => {
+    if (reconnectAttemptsRef.current >= maxReconnectAttempts) {
+      console.error('❌ 최대 재연결 시도 횟수 초과');
+      return;
+    }
+
+    if (reconnectIntervalRef.current) {
+      clearTimeout(reconnectIntervalRef.current);
+    }
+
+    reconnectIntervalRef.current = setTimeout(() => {
+      console.log(`🔄 재연결 시도 ${reconnectAttemptsRef.current + 1}/${maxReconnectAttempts}`);
+      reconnectAttemptsRef.current++;
+      
+      if (currentUser) {
+        connectWebSocket(currentUser);
+      }
+    }, 1000 * Math.pow(2, reconnectAttemptsRef.current)); // 지수 백오프
+  };
 
   // WebSocket 연결 함수
   const connectWebSocket = (user) => {
+    // 이미 연결되어 있으면 재사용
     if (stompClient && stompClient.connected) {
       console.log('🔗 채팅 WebSocket이 이미 연결되어 있습니다.');
       return;
     }
+    
+    // 기존 연결이 있지만 연결되지 않은 경우에만 해제
+    if (stompClient && !stompClient.connected) {
+      console.log('🔌 연결되지 않은 기존 WebSocket 정리');
+      try {
+        stompClient.deactivate();
+      } catch (error) {
+        console.error('기존 연결 해제 중 에러:', error);
+      }
+      setStompClient(null);
+      setIsConnected(false);
+    }
 
-    console.log('🔗 채팅 WebSocket 연결 시작...');
+    console.log('🔗 채팅 WebSocket 연결 시작...', user);
     
     // WebSocket URL 설정 - 배포환경 최적화
     const getWebSocketUrl = () => {
@@ -34,61 +71,97 @@ export const ChatWebSocketProvider = ({ children }) => {
       
       // 개발 환경 (localhost)
       if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
-        return `${currentProtocol}//${currentHost}:19091/ws/chat`;
+        return `${currentProtocol}//${currentHost}:19091/ws/adminchat`;
       }
       
       // 배포 환경 (kschost.ddns.net)
       if (currentHost === 'kschost.ddns.net') {
-        return `${currentProtocol}//${currentHost}/ws/chat`;
+        return `${currentProtocol}//${currentHost}/springboot/api/ws/adminchat`;
       }
       
       // 기타 배포 환경
-      return `${currentProtocol}//${currentHost}/ws/chat`;
+      return `${currentProtocol}//${currentHost}/api/ws/adminchat`;
     };
     
     const socket = new SockJS(getWebSocketUrl());
-    const client = Stomp.over(socket);
+    const client = new StompClient({
+      webSocketFactory: () => socket,
+      reconnectDelay: 5000,
+      heartbeatIncoming: 30000,
+      heartbeatOutgoing: 30000
+    });
     
-    client.connect(
-      {},
-      (frame) => {
-        console.log('✅ 채팅 WebSocket 연결 성공:', frame);
-        setIsConnected(true);
-        setCurrentUser(user);
-        setStompClient(client);
+    client.onConnect = () => {
+      console.log('✅ 채팅 WebSocket 연결 성공!');
+      setIsConnected(true);
+      setCurrentUser(user);
+      setStompClient(client);
+      reconnectAttemptsRef.current = 0; // 연결 성공 시 재연결 시도 횟수 초기화
+
+      // 연결 성공 후 기존 구독 복구
+      if (subscriptionsRef.current.size > 0) {
+        console.log('🔄 기존 구독 복구 중...');
+        // 기존 구독 정보를 임시로 저장
+        const existingSubscriptions = new Map(subscriptionsRef.current);
+        subscriptionsRef.current.clear();
         
-        // 로그인 알림 전송
-        client.send('/app/chat/login', {}, JSON.stringify({
-          user: user,
-          timestamp: new Date().toISOString()
-        }));
-      },
-      (error) => {
-        console.error('❌ 채팅 WebSocket 연결 실패:', error);
-        setIsConnected(false);
-        setStompClient(null);
+        // 각 구독을 다시 생성
+        existingSubscriptions.forEach((subscription, roomId) => {
+          console.log(`📡 구독 복구 시도: ${roomId}`);
+          // 구독 복구는 실제로는 ChatRoomWindow에서 처리됨
+        });
       }
-    );
+      
+      console.log(`📊 WebSocket 연결 완료 - 현재 구독 수: ${subscriptionsRef.current.size}`);
+    };
+
+    client.onStompError = (frame) => {
+      console.error('❌ 채팅 WebSocket STOMP 에러:', frame);
+      setIsConnected(false);
+      setStompClient(null);
+      handleReconnect();
+    };
+
+    client.onDisconnect = () => {
+      console.log('🔌 채팅 WebSocket 연결 해제');
+      setIsConnected(false);
+      // 구독 정보는 유지 (재연결 시 복구를 위해)
+      setStompClient(null);
+      // 자동 재연결 비활성화 - 무한 루프 방지
+      // handleReconnect();
+    };
+
+    client.onWebSocketError = (error) => {
+      console.error('❌ 채팅 WebSocket 에러:', error);
+      setIsConnected(false);
+      setStompClient(null);
+      // 자동 재연결 비활성화 - 무한 루프 방지
+      // handleReconnect();
+    };
+
+    // 연결 시작
+    client.activate();
   };
 
   // WebSocket 연결 해제 함수
   const disconnectWebSocket = () => {
+    if (reconnectIntervalRef.current) {
+      clearTimeout(reconnectIntervalRef.current);
+      reconnectIntervalRef.current = null;
+    }
+    
     if (stompClient) {
       // 모든 구독 해제
       subscriptionsRef.current.forEach((subscription) => {
-        subscription.unsubscribe();
+        try {
+          subscription.unsubscribe();
+        } catch (error) {
+          console.error('구독 해제 중 에러:', error);
+        }
       });
       subscriptionsRef.current.clear();
       
-      // 로그아웃 알림 전송
-      if (currentUser) {
-        stompClient.send('/app/chat/logout', {}, JSON.stringify({
-          user: currentUser,
-          timestamp: new Date().toISOString()
-        }));
-      }
-      
-      stompClient.disconnect();
+      stompClient.deactivate();
       setStompClient(null);
       setIsConnected(false);
       setCurrentUser(null);
@@ -103,94 +176,190 @@ export const ChatWebSocketProvider = ({ children }) => {
       return false;
     }
 
-    const topic = `/topic/room/${roomId}`;
+    // roomId를 안전하게 추출 (객체인 경우 처리)
+    let extractedRoomId = roomId;
     
+    // admin 구독은 특별 처리 (새 방 생성 응답을 받기 위한 것)
+    if (extractedRoomId === 'admin') {
+      extractedRoomId = 'admin';
+    } else {
+      // roomId가 객체인 경우 room_index 필드 추출
+      if (extractedRoomId && typeof extractedRoomId === 'object') {
+        extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
+      }
+      
+      // 문자열로 변환하고 숫자만 추출
+      extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+      
+      if (!extractedRoomId) {
+        console.error('❌ 유효하지 않은 roomId:', roomId);
+        return false;
+      }
+    }
+
     // 이미 구독 중인지 확인
-    if (subscriptionsRef.current.has(roomId)) {
-      console.log(`📡 채팅방 ${roomId}는 이미 구독 중입니다.`);
+    if (subscriptionsRef.current.has(extractedRoomId)) {
+      console.log(`📡 채팅방 ${extractedRoomId}는 이미 구독 중입니다.`);
       return true;
     }
 
     try {
-      const subscription = stompClient.subscribe(topic, (message) => {
+      // admin 구독은 특별한 경로 사용
+      const subscriptionPath = extractedRoomId === 'admin' ? '/queue/admin' : `/queue/${extractedRoomId}`;
+      console.log(`📡 구독 시도: ${subscriptionPath} (원본 roomId: ${roomId}, 추출된 roomId: ${extractedRoomId})`);
+      
+      const subscription = stompClient.subscribe(subscriptionPath, (message) => {
         const chatMessage = JSON.parse(message.body);
-        console.log(`📨 채팅방 ${roomId} 메시지 수신:`, chatMessage);
+        console.log(`📨 ${extractedRoomId} 메시지 수신:`, chatMessage);
         onMessageReceived(chatMessage);
       });
 
-      subscriptionsRef.current.set(roomId, subscription);
-      console.log(`✅ 채팅방 ${roomId} 구독 성공`);
+      subscriptionsRef.current.set(extractedRoomId, subscription);
+      console.log(`✅ ${extractedRoomId} 구독 성공 (경로: ${subscriptionPath})`);
       return true;
     } catch (error) {
-      console.error(`❌ 채팅방 ${roomId} 구독 실패:`, error);
+      console.error(`❌ ${extractedRoomId} 구독 실패:`, error);
       return false;
     }
   };
 
   // 채팅방 구독 해제 함수
   const unsubscribeFromRoom = (roomId) => {
-    const subscription = subscriptionsRef.current.get(roomId);
-    if (subscription) {
-      subscription.unsubscribe();
-      subscriptionsRef.current.delete(roomId);
-      console.log(`🔌 채팅방 ${roomId} 구독 해제`);
+    // roomId를 안전하게 추출 (객체인 경우 처리)
+    let extractedRoomId = roomId;
+    
+    // roomId가 객체인 경우 room_index 필드 추출
+    if (extractedRoomId && typeof extractedRoomId === 'object') {
+      extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
     }
+    
+    // 문자열로 변환하고 숫자만 추출
+    extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    
+    if (!extractedRoomId) {
+      console.error('❌ 유효하지 않은 roomId:', roomId);
+      return;
+    }
+
+    const subscription = subscriptionsRef.current.get(extractedRoomId);
+    if (subscription) {
+      try {
+        console.log(`🔌 채팅방 ${extractedRoomId} 구독 해제 시도`);
+        subscription.unsubscribe();
+        subscriptionsRef.current.delete(extractedRoomId);
+        console.log(`✅ 채팅방 ${extractedRoomId} 구독 해제 성공`);
+      } catch (error) {
+        console.error(`❌ 채팅방 ${extractedRoomId} 구독 해제 실패:`, error);
+        // 에러가 발생해도 Map에서 제거
+        subscriptionsRef.current.delete(extractedRoomId);
+      }
+    } else {
+      console.log(`📡 구독이 존재하지 않는 채팅방: ${extractedRoomId}`);
+    }
+    
+    // 구독 해제 후 연결 상태 확인
+    console.log(`📊 현재 구독 상태: ${subscriptionsRef.current.size}개 구독 중`);
   };
 
-  // 채팅방 메시지 전송 함수
-  const sendMessageToRoom = (roomId, message) => {
+  // 메시지 전송 함수
+  const sendMessage = (roomId, messageData) => {
     if (!stompClient || !stompClient.connected) {
       console.error('❌ 채팅 WebSocket이 연결되지 않았습니다.');
       return false;
     }
 
-    if (!currentUser) {
-      console.error('❌ 사용자 정보가 없습니다.');
+    // roomId를 안전하게 추출 (객체인 경우 처리)
+    let extractedRoomId = roomId;
+    
+    // roomId가 객체인 경우 room_index 필드 추출
+    if (extractedRoomId && typeof extractedRoomId === 'object') {
+      extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
+    }
+    
+    // 문자열로 변환하고 숫자만 추출
+    extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    
+    if (!extractedRoomId) {
+      console.error('❌ 유효하지 않은 roomId:', roomId);
       return false;
     }
 
-    const chatMessage = {
-      id: `${currentUser.id}_${Date.now()}`,
-      roomId: roomId,
-      text: message,
-      sender: currentUser,
-      timestamp: new Date().toISOString(),
-      type: 'chat'
-    };
-
     try {
-      stompClient.send('/app/chat/room', {}, JSON.stringify(chatMessage));
-      console.log(`📤 채팅방 ${roomId} 메시지 전송:`, chatMessage);
+      console.log('📤 채팅 메시지 전송:', { roomId, extractedRoomId, messageData });
+      stompClient.publish({
+        destination: `/app/adminchat.sendMessage/${extractedRoomId}`,
+        body: JSON.stringify(messageData)
+      });
+      console.log('✅ 채팅 메시지 전송 완료');
       return true;
     } catch (error) {
-      console.error(`❌ 채팅방 ${roomId} 메시지 전송 실패:`, error);
+      console.error('❌ 채팅 메시지 전송 실패:', error);
       return false;
     }
   };
 
+  // 메시지 삭제 함수
+  const deleteMessage = (roomId, messageIndex) => {
+    if (!stompClient || !stompClient.connected) {
+      console.error('❌ 채팅 WebSocket이 연결되지 않았습니다.');
+      return false;
+    }
 
+    // roomId를 안전하게 추출 (객체인 경우 처리)
+    let extractedRoomId = roomId;
+    
+    // roomId가 객체인 경우 room_index 필드 추출
+    if (extractedRoomId && typeof extractedRoomId === 'object') {
+      extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
+    }
+    
+    // 문자열로 변환하고 숫자만 추출
+    extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    
+    if (!extractedRoomId) {
+      console.error('❌ 유효하지 않은 roomId:', roomId);
+      return false;
+    }
 
-  // 컴포넌트 언마운트 시 연결 해제
+    try {
+      console.log('🗑️ 채팅 메시지 삭제:', { roomId, extractedRoomId, messageIndex });
+      stompClient.publish({
+        destination: `/app/adminchat.deleteMessage/${extractedRoomId}`,
+        body: JSON.stringify({
+          message_index: messageIndex
+        })
+      });
+      console.log('✅ 채팅 메시지 삭제 완료');
+      return true;
+    } catch (error) {
+      console.error('❌ 채팅 메시지 삭제 실패:', error);
+      return false;
+    }
+  };
+
+  // 컴포넌트 언마운트 시 정리
   useEffect(() => {
     return () => {
+      if (reconnectIntervalRef.current) {
+        clearTimeout(reconnectIntervalRef.current);
+      }
       disconnectWebSocket();
     };
   }, []);
 
-  const value = {
-    stompClient,
+  const contextValue = {
     isConnected,
-  
-    currentUser,
+    stompClient,
     connectWebSocket,
     disconnectWebSocket,
     subscribeToRoom,
     unsubscribeFromRoom,
-    sendMessageToRoom
+    sendMessage,
+    deleteMessage
   };
 
   return (
-    <ChatWebSocketContext.Provider value={value}>
+    <ChatWebSocketContext.Provider value={contextValue}>
       {children}
     </ChatWebSocketContext.Provider>
   );
