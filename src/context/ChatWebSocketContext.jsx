@@ -385,7 +385,8 @@ export const ChatWebSocketProvider = ({ children }) => {
       stompClient.publish({
         destination: `/app/adminchat.deleteMessage/${extractedRoomId}`,
         body: JSON.stringify({
-          message_index: messageIndex
+          roomId: extractedRoomId,
+          messageIndex: messageIndex
         })
       });
       console.log('✅ 채팅 메시지 삭제 완료');

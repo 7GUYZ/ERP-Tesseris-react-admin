@@ -275,8 +275,31 @@ function ChatRoomWindow({
       }
 
       console.log('✅ 새 메시지 추가됨');
-      // 새 메시지를 배열 끝에 추가 (정렬하지 않음)
-      const updatedMessages = [...prev, newMessage];
+      // 새 메시지를 올바른 위치에 삽입 (timestamp 기준 정렬)
+      const updatedMessages = [...prev];
+      
+      // 새 메시지의 timestamp
+      const newMessageTime = new Date(newMessage.timestamp).getTime();
+      
+      // 올바른 삽입 위치 찾기 (timestamp 기준 오름차순)
+      let insertIndex = updatedMessages.length;
+      for (let i = 0; i < updatedMessages.length; i++) {
+        const currentTime = new Date(updatedMessages[i].timestamp).getTime();
+        if (newMessageTime < currentTime) {
+          insertIndex = i;
+          break;
+        }
+      }
+      
+      // 해당 위치에 메시지 삽입
+      updatedMessages.splice(insertIndex, 0, newMessage);
+      
+      console.log('📊 메시지 삽입 위치:', {
+        insertIndex,
+        newMessageTime,
+        totalMessages: updatedMessages.length
+      });
+      
       messagesRef.current = updatedMessages;
       
       // 메시지 추가 후 자동 스크롤
@@ -964,7 +987,19 @@ function ChatRoomWindow({
               return formattedMessage;
             });
 
-            setMessages(formattedMessages);
+            // 메시지를 올바른 순서로 정렬 (messageindex 기준 오름차순)
+            const sortedMessages = formattedMessages.sort((a, b) => {
+              const aIndex = a.messageindex || 0;
+              const bIndex = b.messageindex || 0;
+              return aIndex - bIndex; // 오름차순 정렬
+            });
+
+            console.log('📊 메시지 정렬 완료:', {
+              beforeSort: formattedMessages.map(m => m.messageindex),
+              afterSort: sortedMessages.map(m => m.messageindex)
+            });
+
+            setMessages(sortedMessages);
             console.log('✅ 기존 메시지 로드 완료:', formattedMessages.length);
             }
           } catch (error) {
@@ -1926,7 +1961,16 @@ function ChatRoomWindow({
       // WebSocket을 통해 메시지 삭제 요청
       const currentRoomId = roomId || roomDataWithoutRefresh?.id || roomDataWithoutRefresh?.roomData?.id;
       console.log('메시지 삭제 요청:', { currentRoomId, messageIndex: selectedMessage.messageindex, selectedMessage });
-      const deleteSuccess = await deleteMessage(currentRoomId, String(selectedMessage.messageindex));
+      
+      // messageindex를 숫자로 변환하여 전달
+      const messageIndex = parseInt(selectedMessage.messageindex);
+      if (isNaN(messageIndex)) {
+        console.error('유효하지 않은 messageindex:', selectedMessage.messageindex);
+        showToast("error", "메시지 인덱스가 유효하지 않습니다.");
+        return;
+      }
+      
+      const deleteSuccess = await deleteMessage(currentRoomId, messageIndex);
       
       if (deleteSuccess) {
         showToast("success", "메시지가 삭제되었습니다.");
