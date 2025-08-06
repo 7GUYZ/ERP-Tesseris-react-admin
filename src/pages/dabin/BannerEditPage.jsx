@@ -152,13 +152,6 @@ const BannerEditPage = () => {
 
     return (
         <div className="banner-edit-page">
-            {/* Breadcrumb */}
-            <ul className="banner-edit-breadcrumb">
-                <li>배너 및 광고 관리</li>
-                <li>배너 관리</li>
-                <li>배너 수정</li>
-            </ul>
-
             {/* Header */}
             <div className="banner-edit-flex-between banner-edit-mb10">
                 <p className="banner-edit-font-20 banner-edit-bold">배너 수정</p>
@@ -186,10 +179,20 @@ const BannerEditPage = () => {
                             </div>
                             <div className="banner-edit-image-preview">
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="배너 이미지"
-                                    />
+                                    <div>
+                                        <img
+                                            src={previewImage}
+                                            alt="배너 이미지"
+                                            onError={(e) => {
+                                                console.log('이미지 로드 실패:', previewImage);
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                            }}
+                                        />
+                                        <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                            이미지를 불러올 수 없습니다
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="banner-edit-upload-area">
                                         <p>이미지를 드래그하거나 클릭하여 업로드</p>

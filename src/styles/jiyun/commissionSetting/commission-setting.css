@@ -56,29 +56,109 @@
 }
 
 .commission-container {
-  display: flex;
-  gap: 40px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
   background: white;
   border: 1px solid #dcdcdc;
   padding: 40px;
   border-radius: 12px;
   width: 100%;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  min-height: 600px;
 }
 
+/* 각 섹션 공통 스타일 */
+.commission-section {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+}
+
+.commission-section h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #334155;
+  text-align: center;
+}
+
+/* 도넛 차트 컨테이너 */
+.pie-chart-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+}
+
+.pie-chart-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 15px;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* 막대 차트 컨테이너 */
+.bar-chart-container {
+  height: 100%;
+  width: 100%;
+  flex: 1;
+}
+
+/* 전체 비율 설정 */
 .total-ratio {
-  flex: 1;
-}
-.grade-ratio {
-  flex: 1;
-  transform: translateX(-100px);
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 200px;
 }
 
-.total-ratio h2,
+.total-ratio h2 {
+  font-size: 1.1rem;
+  font-weight: bold;
+  margin-bottom: 20px;
+  color: #334155;
+  text-align: center;
+}
+
+/* 직급별 설정 */
+.grade-ratio {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 20px;
+  min-height: 400px;
+  overflow-y: auto;
+}
+
 .grade-ratio h2 {
   font-size: 1.1rem;
   font-weight: bold;
   margin-bottom: 20px;
+  color: #334155;
+  text-align: center;
 }
 
 .ratio-row,
@@ -87,22 +167,28 @@
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
-  justify-content: center;
+  justify-content: flex-start;
+  margin-left: 0;
 }
 
 .ratio-row label,
 .grade-row label {
-  width: 120px;
+  width: 100px;
   font-weight: 500;
+  color: #475569;
+  font-size: 14px;
+  text-align: right;
 }
 
 .ratio-total {
   margin-top: 10px;
   font-weight: bold;
+  color: #334155;
+  text-align: center;
 }
 
 .commission-input {
-  width: 80px;
+  width: 70px;
   padding: 6px 12px;
   border: 1px solid #ccc;
   border-radius: 6px;
@@ -114,22 +200,28 @@
 
 .commission-input:focus {
   outline: none;
+  border-color: #387ddd;
 }
 
 .grade-list {
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 12px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .grade-sum {
   font-weight: bold;
   margin-top: 24px;
   font-size: 16px;
+  text-align: center;
+  color: #334155;
 }
 
 .grade-sum.invalid {
-  color: red;
+  color: #dc2626;
 }
 
 /* 비밀번호 확인 모달 스타일 */
@@ -223,4 +315,19 @@
 
 .cancel-button:hover {
   background-color: #5a6268;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1400px) {
+  .commission-container {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .commission-container {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(4, auto);
+  }
 }
