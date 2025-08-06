@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import SockJS from 'sockjs-client';
 import { Client as StompClient } from '@stomp/stompjs';
 
@@ -20,6 +20,9 @@ export const ChatWebSocketProvider = ({ children }) => {
   const reconnectAttemptsRef = useRef(0);
   const maxReconnectAttempts = 5;
   const reconnectIntervalRef = useRef(null);
+  
+  // stompClient를 useRef로도 관리하여 최신 상태 보장
+  const stompClientRef = useRef(null);
 
   // 자동 재연결 처리
   const handleReconnect = () => {
@@ -88,7 +91,10 @@ export const ChatWebSocketProvider = ({ children }) => {
       webSocketFactory: () => socket,
       reconnectDelay: 5000,
       heartbeatIncoming: 30000,
-      heartbeatOutgoing: 30000
+      heartbeatOutgoing: 30000,
+      connectHeaders: {
+        'Authorization': `Bearer ${localStorage.getItem('admin-access-token')}`
+      }
     });
     
     client.onConnect = () => {
@@ -96,6 +102,7 @@ export const ChatWebSocketProvider = ({ children }) => {
       setIsConnected(true);
       setCurrentUser(user);
       setStompClient(client);
+      stompClientRef.current = client; // useRef도 함께 업데이트
       reconnectAttemptsRef.current = 0; // 연결 성공 시 재연결 시도 횟수 초기화
 
       // 연결 성공 후 기존 구독 복구
@@ -163,38 +170,57 @@ export const ChatWebSocketProvider = ({ children }) => {
       
       stompClient.deactivate();
       setStompClient(null);
+      stompClientRef.current = null; // useRef도 함께 업데이트
       setIsConnected(false);
       setCurrentUser(null);
       console.log('🔌 채팅 WebSocket 연결 해제');
     }
   };
 
-  // 채팅방 구독 함수
-  const subscribeToRoom = (roomId, onMessageReceived) => {
-    if (!stompClient || !stompClient.connected) {
+  // 채팅방 구독 함수 (useRef로 최신 상태 참조)
+  const subscribeToRoom = useCallback((roomId, onMessageReceived) => {
+    // useRef를 사용하여 최신 stompClient 상태 확인
+    const currentStompClient = stompClientRef.current;
+    const currentIsConnected = isConnected;
+    
+    console.log('🔍 subscribeToRoom 연결 상태 확인:', {
+      hasStompClient: !!currentStompClient,
+      stompConnected: currentStompClient?.connected,
+      isConnected: currentIsConnected,
+      stompClientId: currentStompClient ? 'exists' : 'null',
+      useRefValue: !!stompClientRef.current
+    });
+    
+    if (!currentStompClient || !currentStompClient.connected) {
       console.error('❌ 채팅 WebSocket이 연결되지 않았습니다.');
+      console.log('🔍 연결 실패 상세:', {
+        stompClientExists: !!currentStompClient,
+        stompConnected: currentStompClient?.connected,
+        isConnected: currentIsConnected,
+        useRefValue: !!stompClientRef.current
+      });
       return false;
     }
 
     // roomId를 안전하게 추출 (객체인 경우 처리)
     let extractedRoomId = roomId;
     
-    // admin 구독은 특별 처리 (새 방 생성 응답을 받기 위한 것)
+    // roomId가 객체인 경우 room_index 필드 추출
+    if (extractedRoomId && typeof extractedRoomId === 'object') {
+      extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
+    }
+    
+    // "admin"은 특별히 허용 (새 방 생성용)
     if (extractedRoomId === 'admin') {
-      extractedRoomId = 'admin';
+      console.log('📡 admin 구독 허용 (새 방 생성용)');
     } else {
-      // roomId가 객체인 경우 room_index 필드 추출
-      if (extractedRoomId && typeof extractedRoomId === 'object') {
-        extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
-      }
-      
       // 문자열로 변환하고 숫자만 추출
       extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
-      
-      if (!extractedRoomId) {
-        console.error('❌ 유효하지 않은 roomId:', roomId);
-        return false;
-      }
+    }
+    
+    if (!extractedRoomId) {
+      console.error('❌ 유효하지 않은 roomId:', roomId);
+      return false;
     }
 
     // 이미 구독 중인지 확인
@@ -204,11 +230,16 @@ export const ChatWebSocketProvider = ({ children }) => {
     }
 
     try {
-      // admin 구독은 특별한 경로 사용
-      const subscriptionPath = extractedRoomId === 'admin' ? '/queue/admin' : `/queue/${extractedRoomId}`;
+      // DB에서 생성되는 room_index로 직접 구독
+      const subscriptionPath = `/queue/${extractedRoomId}`;
       console.log(`📡 구독 시도: ${subscriptionPath} (원본 roomId: ${roomId}, 추출된 roomId: ${extractedRoomId})`);
+      console.log(`🔍 구독 시 사용할 stompClient:`, {
+        exists: !!currentStompClient,
+        connected: currentStompClient?.connected,
+        id: currentStompClient ? 'valid' : 'null'
+      });
       
-      const subscription = stompClient.subscribe(subscriptionPath, (message) => {
+      const subscription = currentStompClient.subscribe(subscriptionPath, (message) => {
         const chatMessage = JSON.parse(message.body);
         console.log(`📨 ${extractedRoomId} 메시지 수신:`, chatMessage);
         onMessageReceived(chatMessage);
@@ -221,7 +252,7 @@ export const ChatWebSocketProvider = ({ children }) => {
       console.error(`❌ ${extractedRoomId} 구독 실패:`, error);
       return false;
     }
-  };
+  }, [isConnected]); // stompClient 대신 isConnected만 의존성으로 사용
 
   // 채팅방 구독 해제 함수
   const unsubscribeFromRoom = (roomId) => {
@@ -233,8 +264,13 @@ export const ChatWebSocketProvider = ({ children }) => {
       extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
     }
     
-    // 문자열로 변환하고 숫자만 추출
-    extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    // "admin"은 특별히 허용 (새 방 생성용)
+    if (extractedRoomId === 'admin') {
+      console.log('🔌 admin 구독 해제 허용 (새 방 생성용)');
+    } else {
+      // 문자열로 변환하고 숫자만 추출
+      extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
+    }
     
     if (!extractedRoomId) {
       console.error('❌ 유효하지 않은 roomId:', roomId);
@@ -276,7 +312,30 @@ export const ChatWebSocketProvider = ({ children }) => {
       extractedRoomId = extractedRoomId.room_index || extractedRoomId.id || extractedRoomId.roomId;
     }
     
-    // 문자열로 변환하고 숫자만 추출
+    // 새로운 방 생성인지 확인 (room_index가 null이거나 "admin"인 경우)
+    const isNewRoomCreation = !extractedRoomId || 
+                             extractedRoomId === 'admin' || 
+                             extractedRoomId === 'null' || 
+                             (messageData && messageData.room_index === null);
+    
+    if (isNewRoomCreation) {
+      // 새로운 방 생성인 경우 "admin" 사용
+      console.log('📤 새 방 생성 메시지 전송 (admin 사용):', { roomId, messageData });
+      try {
+        stompClient.publish({
+          destination: `/app/adminchat.sendMessage/admin`,
+          body: JSON.stringify(messageData)
+        });
+        console.log('✅ 새 방 생성 메시지 전송 완료');
+        return true;
+      } catch (error) {
+        console.error('❌ 새 방 생성 메시지 전송 실패:', error);
+        return false;
+      }
+    }
+    
+    // 기존 방인 경우 숫자만 추출
+    console.log('📤 채팅 메시지 전송:', extractedRoomId);
     extractedRoomId = String(extractedRoomId || '').replace(/[^0-9]/g, '');
     
     if (!extractedRoomId) {
@@ -326,7 +385,8 @@ export const ChatWebSocketProvider = ({ children }) => {
       stompClient.publish({
         destination: `/app/adminchat.deleteMessage/${extractedRoomId}`,
         body: JSON.stringify({
-          message_index: messageIndex
+          roomId: extractedRoomId,
+          messageIndex: messageIndex
         })
       });
       console.log('✅ 채팅 메시지 삭제 완료');
