@@ -65,8 +65,10 @@ const MemberAssetSearchTable = ({
       headerAlign: 'center',
       renderHeader: () => (
         <Checkbox
+          key={`header-${selectAll}-${selectedRows.size}-${processedData.length}`}
           checked={selectAll}
           indeterminate={selectedRows.size > 0 && selectedRows.size < processedData.length}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
             if (e.target.checked) {
               const allIds = new Set(processedData.map((row) => row.id));
@@ -87,13 +89,16 @@ const MemberAssetSearchTable = ({
       ),
       renderCell: (params) => (
         <Checkbox
-          checked={selectedRows.has(params.row.id)}
+          key={`cb-${params.id}-${selectedRows.has(params.id)}`}
+          checked={selectedRows.has(params.id)}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
+            const targetId = params.id;
             const newSelection = new Set(selectedRows);
             if (e.target.checked) {
-              newSelection.add(params.row.id);
+              newSelection.add(targetId);
             } else {
-              newSelection.delete(params.row.id);
+              newSelection.delete(targetId);
             }
             setSelectedRows(newSelection);
             setSelectAll(newSelection.size === processedData.length);
@@ -220,7 +225,10 @@ const MemberAssetSearchTable = ({
     });
   };
 
-  const columns = useMemo(() => autoSizeColumns(rowsWithIds, baseColumns), [rowsWithIds]);
+  const columns = useMemo(
+    () => autoSizeColumns(rowsWithIds, baseColumns),
+    [rowsWithIds, baseColumns, selectedRows, selectAll]
+  );
 
 
 
@@ -264,6 +272,8 @@ const MemberAssetSearchTable = ({
           rowCount={totalCount > 0 ? totalCount : (rowsWithIds?.length || 0)}
           pageSizeOptions={[25, 50, 75, 100]}
           paginationMode="server"
+          rowHeight={44}
+          columnHeaderHeight={44}
           paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
           onPaginationModelChange={(model) => {
             if (model.page !== currentPage) {
@@ -309,6 +319,13 @@ const MemberAssetSearchTable = ({
             overflow: 'hidden',
             maxWidth: '100%',
             boxSizing: 'border-box',
+            '& .MuiDataGrid-row, & .MuiDataGrid-columnHeaders': {
+              minHeight: '44px !important',
+              maxHeight: '44px !important'
+            },
+            '& .MuiDataGrid-cell': {
+              lineHeight: '44px',
+            },
             // 모든 포커스, 아웃라인, 테두리 완전 제거
             '& *': {
               '&:focus': {
@@ -348,9 +365,17 @@ const MemberAssetSearchTable = ({
               color: 'black',
               fontWeight: 'bold',
               fontSize: '14px',
+              boxSizing: 'border-box',
+              '& .MuiDataGrid-columnSeparator': {
+                display: 'none !important'
+              },
+              // 헤더 전체 가운데 정렬
               '& .MuiDataGrid-columnHeader': {
-                outline: 'none !important',
-                border: 'none !important',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: '0 12px',
                 minWidth: '70px !important',
                 '&:focus': {
                   outline: 'none !important',
@@ -367,10 +392,13 @@ const MemberAssetSearchTable = ({
                 fontSize: '14px !important',
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
-                textOverflow: 'ellipsis'
+                textOverflow: 'ellipsis',
+                textAlign: 'center'
               },
               '& .MuiDataGrid-columnHeaderTitleContainer': {
-                color: 'black !important'
+                color: 'black !important',
+                display: 'flex',
+                justifyContent: 'center'
               }
             },
             '& .MuiDataGrid-cell': {
@@ -384,7 +412,8 @@ const MemberAssetSearchTable = ({
               color: '#334155',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center',
+              justifyContent: 'center', // 바디 가운데 정렬
+              textAlign: 'center',
               minWidth: '70px !important',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -432,6 +461,10 @@ const MemberAssetSearchTable = ({
             '& .MuiDataGrid-overlay': {
               backgroundColor: 'white',
               borderRadius: '12px'
+            },
+            // 셀/헤더 호버 시 뜨는 MUI Tooltip 제거 (겹침 현상 방지)
+            '& .MuiTooltip-popper': {
+              display: 'none !important'
             },
             '& .MuiDataGrid-virtualScroller': {
               overflow: 'auto !important',

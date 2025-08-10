@@ -13,6 +13,8 @@ const MemberAssetDetailsTable = ({
   loading = false
 }) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
+  // 실제 OS 스크롤바 두께 측정값 (헤더/바디 정렬용)
+  const [scrollbarSizePx, setScrollbarSizePx] = useState(0);
 
   // 전체 선택 상태
   const [selectAll, setSelectAll] = useState(false);
@@ -22,6 +24,29 @@ const MemberAssetDetailsTable = ({
     setSelectedRows(new Set());
     setSelectAll(false);
   }, [data]);
+
+  // 최초 마운트 시 scrollBar width를 계산하여 DataGrid에 전달
+  useEffect(() => {
+    try {
+      const scrollDiv = document.createElement('div');
+      scrollDiv.style.width = '100px';
+      scrollDiv.style.height = '100px';
+      scrollDiv.style.overflow = 'scroll';
+      scrollDiv.style.position = 'absolute';
+      scrollDiv.style.top = '-9999px';
+      document.body.appendChild(scrollDiv);
+      const measured = scrollDiv.offsetWidth - scrollDiv.clientWidth; // 스크롤바 두께
+      document.body.removeChild(scrollDiv);
+      if (measured && measured > 0 && measured < 50) {
+        setScrollbarSizePx(measured);
+      } else {
+        // 윈도우 기본값 보정 (공식문서 권장)
+        setScrollbarSizePx(17);
+      }
+    } catch (_) {
+      setScrollbarSizePx(17);
+    }
+  }, []);
 
   // 메모이제이션으로 성능 최적화 및 안정성 확보
   const processedData = useMemo(() => {
@@ -64,8 +89,10 @@ const MemberAssetDetailsTable = ({
       headerAlign: 'center',
       renderHeader: () => (
         <Checkbox
+          key={`header-${selectAll}-${selectedRows.size}-${processedData.length}`}
           checked={selectAll}
           indeterminate={selectedRows.size > 0 && selectedRows.size < processedData.length}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
             if (e.target.checked) {
               const allIds = new Set(processedData.map((row) => row.id));
@@ -86,14 +113,16 @@ const MemberAssetDetailsTable = ({
       ),
       renderCell: (params) => (
         <Checkbox
-          checked={selectedRows.has(params.row.id)}
+          key={`cb-${params.id}-${selectedRows.has(params.id)}`}
+          checked={selectedRows.has(params.id)}
+          onClick={(e) => e.stopPropagation()}
           onChange={(e) => {
-            const rowIndex = params.row.id;
+            const targetId = params.id;
             const newSelection = new Set(selectedRows);
             if (e.target.checked) {
-              newSelection.add(rowIndex);
+              newSelection.add(targetId);
             } else {
-              newSelection.delete(rowIndex);
+              newSelection.delete(targetId);
             }
             setSelectedRows(newSelection);
             setSelectAll(newSelection.size === processedData.length);
@@ -195,7 +224,10 @@ const MemberAssetDetailsTable = ({
     });
   };
 
-  const columns = useMemo(() => autoSizeColumns(rowsWithIds, baseColumns), [rowsWithIds]);
+  const columns = useMemo(
+    () => autoSizeColumns(rowsWithIds, baseColumns),
+    [rowsWithIds, selectedRows, selectAll, processedData.length]
+  );
 
   // 안전장치: data가 undefined나 null인 경우 처리
   if (data === undefined || data === null) {
@@ -233,6 +265,8 @@ const MemberAssetDetailsTable = ({
           rowCount={totalCount > 0 ? totalCount : (rowsWithIds?.length || 0)}
           pageSizeOptions={[25, 50, 75, 100]}
           paginationMode="server"
+          rowHeight={44}
+          columnHeaderHeight={44}
           paginationModel={{ page: currentPage || 0, pageSize: pageSize || 25 }}
           onPaginationModelChange={(model) => {
             if (model.page !== currentPage) {
@@ -282,6 +316,44 @@ const MemberAssetDetailsTable = ({
             width: '100%',
             minWidth: 'auto',
             overflow: 'hidden',
+            // 내역 테이블과 동일한 레이아웃 고정값 적용
+            '& .MuiDataGrid-root': {
+              overflow: 'hidden !important',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
+              border: 'none',
+              backgroundColor: 'white',
+              borderRadius: '12px',
+              boxShadow: 'none',
+              width: '100% !important',
+              maxWidth: '100% !important',
+              boxSizing: 'border-box !important',
+              scrollbarGutter: 'stable both-edges',
+              '& *:focus': {
+                outline: 'none !important',
+                border: 'none !important',
+                boxShadow: 'none !important',
+              }
+            },
+            '& .MuiDataGrid-main': {
+              overflow: 'auto !important',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
+              width: '100% !important',
+              maxWidth: '100% !important',
+              boxSizing: 'border-box !important'
+            },
+            '& .MuiDataGrid-virtualScrollerContent': {
+              overflow: 'visible !important'
+            },
+            // 행/헤더 높이와 패딩 일치로 미세 틀어짐 방지
+            '& .MuiDataGrid-row, & .MuiDataGrid-columnHeaders': {
+              minHeight: '44px !important',
+              maxHeight: '44px !important'
+            },
+            '& .MuiDataGrid-cell': {
+              lineHeight: '44px',
+            },
             // 모든 포커스, 아웃라인, 테두리 완전 제거
             '& *': {
               '&:focus': {
@@ -307,10 +379,6 @@ const MemberAssetDetailsTable = ({
                 boxShadow: 'none !important',
               }
             },
-            '& .MuiDataGrid-columnsContainer': {
-              border: 'none !important',
-              outline: 'none !important'
-            },
             '& .MuiDataGrid-cell': {
               borderBottom: 'none !important',
               borderRight: 'none !important',
@@ -324,6 +392,7 @@ const MemberAssetDetailsTable = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
+              textAlign: 'center',
               minWidth: '70px !important',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -369,7 +438,16 @@ const MemberAssetDetailsTable = ({
               color: 'black',
               fontWeight: 'bold',
               fontSize: '14px',
+              boxSizing: 'border-box',
+              '& .MuiDataGrid-columnSeparator': {
+                display: 'none !important'
+              },
               '& .MuiDataGrid-columnHeader': {
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textAlign: 'center',
+                padding: '0 12px',
                 outline: 'none !important',
                 border: 'none !important',
                 borderBottom: 'none !important',
@@ -389,7 +467,8 @@ const MemberAssetDetailsTable = ({
               '& .MuiDataGrid-columnHeaderTitle': {
                 color: 'black !important',
                 fontWeight: 'bold !important',
-                fontSize: '14px !important'
+                fontSize: '14px !important',
+                textAlign: 'center'
               },
             '& .MuiDataGrid-columnHeaderTitle': {
               whiteSpace: 'nowrap',
@@ -397,7 +476,9 @@ const MemberAssetDetailsTable = ({
               textOverflow: 'ellipsis'
             },
               '& .MuiDataGrid-columnHeaderTitleContainer': {
-                color: 'black !important'
+                color: 'black !important',
+                display: 'flex',
+                justifyContent: 'center'
               }
             },
 
@@ -421,7 +502,17 @@ const MemberAssetDetailsTable = ({
               backgroundColor: 'white',
               borderRadius: '12px'
             },
+            // 셀/헤더 호버 시 뜨는 MUI Tooltip 제거 (겹침 현상 방지)
+            '& .MuiTooltip-popper': {
+              display: 'none !important'
+            },
             '& .MuiDataGrid-virtualScroller': {
+              // 스크롤 항상 표시(폭 고정) + 높이 고정
+              overflowY: 'scroll',
+              overflowX: 'auto',
+              scrollbarGutter: 'stable both-edges',
+              maxHeight: '500px !important',
+              minHeight: '500px !important',
               '&::-webkit-scrollbar': {
                 width: '12px',
                 height: '12px'
