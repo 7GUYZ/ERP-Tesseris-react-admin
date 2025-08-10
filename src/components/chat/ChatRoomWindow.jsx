@@ -515,7 +515,7 @@ function ChatRoomWindow({
             
             if (replacedMessage) {
               console.log('✅ 강제 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
-            } else {
+      } else {
               console.warn('⚠️ 강제 교체도 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
               
               // 실패 시 한 번 더 시도 (room_index와 동일한 패턴)

@@ -16,6 +16,9 @@ export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdeta
 export const excelDownloadMemberAccount = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberaccount?page=${page}&size=${size}`);
 export const excelDownloadMemberAssetDetails = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberassetdetails?page=${page}&size=${size}`);
 // ============================================================================
+// 배너 관리
+export const BannerIsvisible = (bannerIndices) => api.put("/dabin/banner/banner_isvisible", bannerIndices);
+// ============================================================================
 // 채팅방 관리자 목록 호출
 export const GetAdminList = () => api.get("/adminchat/adminlist");
 // 채팅 및 방생성
