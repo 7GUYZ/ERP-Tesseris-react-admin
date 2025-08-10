@@ -4,7 +4,6 @@ import { DataGrid } from "@mui/x-data-grid"
 
 const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
   const [selectedRows, setSelectedRows] = useState(new Set());
-  const [selectAll, setSelectAll] = useState(false);
 
   console.log("DataGrid 컴포넌트에서 받은 데이터:", data);
   console.log("DataGrid 컴포넌트에서 받은 데이터 개수:", data.length);
@@ -35,114 +34,17 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
   useEffect(() => {
     // 데이터가 변경되면 선택 상태 초기화
     setSelectedRows(new Set());
-    setSelectAll(false);
   }, [data]);
 
-  const handleSelectAll = () => {
-    console.log('Select all clicked');
-    const newSelectAll = !selectAll;
 
-    if (newSelectAll) {
-      const allIds = new Set(processedData.map((row) => row.id));
-      setSelectedRows(allIds);
-      setSelectAll(true);
-      if (onSelectionChange) {
-        onSelectionChange(allIds);
-      }
-    } else {
-      setSelectedRows(new Set());
-      setSelectAll(false);
-      if (onSelectionChange) {
-        onSelectionChange(new Set());
-      }
-    }
-  };
-
-  const handleRowSelect = (rowId) => {
-    console.log('Row select clicked:', rowId);
-    const newSelection = new Set(selectedRows);
-    if (newSelection.has(rowId)) {
-      newSelection.delete(rowId);
-    } else {
-      newSelection.add(rowId);
-    }
-    setSelectedRows(newSelection);
-    setSelectAll(newSelection.size === processedData.length);
-    if (onSelectionChange) {
-      onSelectionChange(newSelection);
-    }
-  };
 
   const columns = [
-    {
-      field: "checkbox",
-      headerName: "",
-      width: 60,
-      minWidth: 60,
-      maxWidth: 60,
-      sortable: false,
-      disableColumnMenu: true,
-      align: 'center',
-      headerAlign: 'center',
-      renderHeader: () => (
-        <div
-          onClick={handleSelectAll}
-          style={{
-            width: '20px',
-            height: '20px',
-            border: '2px solid #ccc',
-            borderRadius: '3px',
-            backgroundColor: selectAll ? '#1976d2' : 'white',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto'
-          }}
-        >
-          {selectAll && (
-            <div style={{
-              width: '12px',
-              height: '12px',
-              backgroundColor: 'white',
-              borderRadius: '1px'
-            }} />
-          )}
-        </div>
-      ),
-      renderCell: (params) => (
-        <div
-          onClick={() => handleRowSelect(params.row.id)}
-          style={{
-            width: '20px',
-            height: '20px',
-            border: '2px solid #ccc',
-            borderRadius: '3px',
-            backgroundColor: selectedRows.has(params.row.id) ? '#1976d2' : 'white',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto'
-          }}
-        >
-          {selectedRows.has(params.row.id) && (
-            <div style={{
-              width: '12px',
-              height: '12px',
-              backgroundColor: 'white',
-              borderRadius: '1px'
-            }} />
-          )}
-        </div>
-      ),
-    },
     { field: "lineNo", headerName: "No", width: 40, align: 'center', headerAlign: 'center' },
-    { field: "userIndex", headerName: "userIndex", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "userId", headerName: "아이디", width: 120, align: 'left', headerAlign: 'center' },
-    { field: "userName", headerName: "이름", width: 120, align: 'left', headerAlign: 'center' },
-    { field: "userPhone", headerName: "핸드폰 번호", width: 130, align: 'center', headerAlign: 'center' },
-    { field: "transactionName", headerName: "거래명", width: 130, align: 'left', headerAlign: 'center' },
+    { field: "userIndex", headerName: "충전 회원 인덱스", width: 130, align: 'left', headerAlign: 'center' },
+    { field: "userId", headerName: "충전 회원 이메일", width: 200, align: 'left', headerAlign: 'center' },
+    { field: "userName", headerName: "충전 회원 이름", width: 120, align: 'left', headerAlign: 'center' },
+    { field: "userPhone", headerName: "충전 회원 번호", width: 130, align: 'center', headerAlign: 'center' },
+    { field: "transactionName", headerName: "거래명", width: 180, align: 'left', headerAlign: 'center' },
     { field: "advanceMsg", headerName: "승인여부", width: 100, align: 'center', headerAlign: 'center' },
     { field: "chargeTime", headerName: "충전 시간", width: 200, align: 'center', headerAlign: 'center',
       valueFormatter: (params) => {
@@ -193,31 +95,52 @@ const CommissionPaymentDataGrid = ({ data, onSelectionChange }) => {
       }
     },
     { field: "description", headerName: "충전내역", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "cmValue", headerName: "충전CM", width: 100, align: 'right', headerAlign: 'center' },
+    { field: "cmValue", headerName: "충전TS", width: 100, align: 'right', headerAlign: 'center' },
     { field: "cashValue", headerName: "결제금액", width: 120, align: 'right', headerAlign: 'center' },
     { field: "regularCashValue", headerName: "수당지급", width: 130, align: 'right', headerAlign: 'center' },
-    { field: "suggestionUserId", headerName: "추천인 아이디", width: 320, align: 'left', headerAlign: 'center' },
+    { field: "suggestionUserId", headerName: "추천인 아이디", width: 200, align: 'left', headerAlign: 'center' },
     { field: "suggestionUserName", headerName: "추천인 이름", width: 120, align: 'left', headerAlign: 'center' },
     { field: "suggestionUserPhone", headerName: "추천인 연락처", width: 140, align: 'center', headerAlign: 'center' },
-    { field: "userRoleKorNm", headerName: "등급", width: 100, align: 'center', headerAlign: 'center' },
-    { field: "userBankNumber", headerName: "계좌번호", width: 150, align: 'left', headerAlign: 'center' },
-    { field: "userBankName", headerName: "은행", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "userBankHolder", headerName: "예금주", width: 100, align: 'left', headerAlign: 'center' },
-    { field: "paymentStatus", headerName: "지급여부", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "userRoleKorNm", headerName: "추천인 등급", width: 100, align: 'center', headerAlign: 'center' },
+    { field: "userBankNumber", headerName: "추천인 계좌번호", width: 150, align: 'left', headerAlign: 'center' },
+    { field: "userBankName", headerName: "추천인 은행", width: 100, align: 'left', headerAlign: 'center' },
+    { field: "userBankHolder", headerName: "추천인 예금주", width: 100, align: 'left', headerAlign: 'center' },
   ]
 
   return (
-    <div style={{ height: 600, width: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid lightgray" }}>
-      <div style={{ padding: '10px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f8f9fa' }}>
-        <strong>선택된 항목: {selectedRows.size}개</strong>
-      </div>
+    <div style={{ width: "100%", backgroundColor: "white", borderRadius: "12px", border: "1px solid lightgray" }}>
       <DataGrid
         rows={processedData}
         columns={columns}
-        pageSize={10}
-        rowsPerPageOptions={[10, 25, 50]}
+        initialState={{
+          pagination: {
+            paginationModel: { page: 0, pageSize: 25 }
+          }
+        }}
+        pageSizeOptions={[25, 50, 100]}
         disableRowSelectionOnClick={true}
-        autoHeight={false}
+        checkboxSelection
+        onRowSelectionModelChange={(newSelection) => {
+          if (newSelection && typeof newSelection === 'object' && newSelection.ids) {
+            const selectionSet = new Set(newSelection.ids);
+            setSelectedRows(selectionSet);
+            if (onSelectionChange) {
+              onSelectionChange(selectionSet);
+            }
+          } else if (Array.isArray(newSelection)) {
+            const selectionSet = new Set(newSelection);
+            setSelectedRows(selectionSet);
+            if (onSelectionChange) {
+              onSelectionChange(selectionSet);
+            }
+          } else {
+            const emptySet = new Set();
+            setSelectedRows(emptySet);
+            if (onSelectionChange) {
+              onSelectionChange(emptySet);
+            }
+          }
+        }}
         sx={{
           "& .MuiDataGrid-root": { border: "none" },
           "& .MuiDataGrid-cell": { borderBottom: "1px solid #f0f0f0" },

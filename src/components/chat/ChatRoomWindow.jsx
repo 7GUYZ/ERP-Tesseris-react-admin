@@ -85,9 +85,9 @@ function ChatRoomWindow({
     
     return numericOnly || null;
   }, []);
-  const [size, setSize] = useState(currentSize || {
-    width: Math.min(400, window.innerWidth * 0.9),
-    height: Math.min(600, window.innerHeight * 0.8)
+  const [size, setSize] = useState(currentSize || { 
+    width: Math.min(400, window.innerWidth * 0.9), 
+    height: Math.min(600, window.innerHeight * 0.8) 
   });
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -438,15 +438,15 @@ function ChatRoomWindow({
     if (receivedMessage.type === 'system') {
       const systemMessage = {
         id: `system_${Date.now()}_${Math.random()}`,
-        text: receivedMessage.message,
+                text: receivedMessage.message,
         type: 'system',
-        timestamp: receivedMessage.timestamp || new Date().toISOString(),
+                timestamp: receivedMessage.timestamp || new Date().toISOString(),
         sender: {
           id: receivedMessage.userId || 'system',
           name: 'System'
         },
         active: true, // 시스템 메시지는 항상 active
-        isLocal: false
+                isLocal: false
       };
       addMessage(systemMessage);
       return;
@@ -513,7 +513,11 @@ function ChatRoomWindow({
               msg.messageindex === (receivedMessage.messageindex || null) && !msg.isLocal
             );
             
-            if (!replacedMessage) {
+            if (replacedMessage) {
+              console.log('✅ 강제 교체 완료 - 이제 삭제 가능:', replacedMessage.messageindex);
+            } else {
+              console.warn('⚠️ 강제 교체도 실패 - tempMessageIndex를 찾을 수 없음:', tempMessageIndex);
+              
               // 실패 시 한 번 더 시도 (room_index와 동일한 패턴)
               setTimeout(() => {
                 setMessages(prev => {
@@ -862,8 +866,8 @@ function ChatRoomWindow({
             messagesContainer.scrollTop = scrollTop + heightDifference;
           }
         }, 100);
-      }
-    } catch (error) {
+        }
+      } catch (error) {
     } finally {
       setIsLoadingMore(false);
     }
@@ -1241,9 +1245,9 @@ function ChatRoomWindow({
         // 현재 room_index 확인 (roomId state 우선 사용) - 최적화된 함수 사용
         const currentRoomIndex = extractNumericRoomId(roomId || roomDataWithoutRefresh.id || roomDataWithoutRefresh.roomData?.id || roomDataWithoutRefresh.room_index || roomDataWithoutRefresh.roomindex);
         const hasValidRoomIndex = currentRoomIndex && currentRoomIndex !== '0';
-
+        
         if (hasValidRoomIndex) {
-          // 기존 방인 경우
+        // 기존 방인 경우
           const messageData = {
             room_index: currentRoomIndex,
             room_name: roomDataWithoutRefresh.name,
@@ -1279,14 +1283,14 @@ function ChatRoomWindow({
             
             const otherUser = adminList.find(admin => admin.userId === otherUserId);
             const roomName = otherUser ? `${otherUser.name}와의 채팅방` : generateRoomName([otherUserId, userInfo.id], null, adminList, userInfo.id, false);
-            
-            const messageData = {
+          
+          const messageData = {
               room_index: currentRoomId, // 받은 room_index 사용
               room_name: roomName,
-              user_id: userInfo.id,
+            user_id: userInfo.id,
               message: messageText,
               participants: [otherUserId, userInfo.id],
-              timestamp: null,
+            timestamp: null,
               tempMessageIndex: tempMessageIndex
             };
             
@@ -1348,7 +1352,7 @@ function ChatRoomWindow({
             if (!sendResult) {
               setMessages(prev => prev.filter(msg => msg.id !== messageId));
               showToast("error", "메시지 전송에 실패했습니다. 연결을 확인해주세요.");
-            } else {
+          } else {
               console.log('✅ 첫 메시지 전송 요청 완료');
               
               // 백엔드에서 방 생성 후 해당 room_index로 응답을 보낼 예정
@@ -1361,7 +1365,7 @@ function ChatRoomWindow({
         setTimeout(() => {
           inputRef.current?.focus();
         }, 100);
-
+        
       } catch (error) {
         console.error('❌ 메시지 전송 중 오류:', error);
         // 에러 발생 시 로컬 메시지 제거
@@ -1574,7 +1578,7 @@ function ChatRoomWindow({
     if (messages.length > 0) {
       console.log('📜 메시지 추가됨, 자동 스크롤 실행');
       setTimeout(() => {
-        scrollToBottom();
+    scrollToBottom();
       }, 100);
     }
   }, [messages]);
@@ -1736,7 +1740,7 @@ function ChatRoomWindow({
     setCurrentPage(0);
     setHasMoreMessages(true);
     setIsLoadingMore(false);
-
+    
     onBack();
   };
 
@@ -1765,7 +1769,7 @@ function ChatRoomWindow({
     setCurrentPage(0);
     setHasMoreMessages(true);
     setIsLoadingMore(false);
-
+    
     onClose();
   };
 
@@ -2151,8 +2155,8 @@ function ChatRoomWindow({
           </IconButton>
           <DragIndicator />
           <Box>
-            <Typography variant="subtitle1" sx={{
-              fontSize: '1rem',
+            <Typography variant="subtitle1" sx={{ 
+              fontSize: '1rem', 
               lineHeight: 1.2,
               // 반응형 채팅방 이름
               '@media (max-width: 768px)': {
@@ -2201,21 +2205,21 @@ function ChatRoomWindow({
         </Box>
 
         <Box className="no-drag" sx={{ display: 'flex', alignItems: 'center' }}>
-          <IconButton
-            size="small"
+            <IconButton
+              size="small"
             onClick={handleMoreOptionsClick}
             data-more-options="button"
-            sx={{
+              sx={{
               color: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.8)' : 'white',
-              mr: 0.5,
+                mr: 0.5,
               backgroundColor: moreOptionsAnchor ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              '&:hover': {
+                '&:hover': {
                 backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              }
-            }}
-          >
+                }
+              }}
+            >
             <MoreVert />
-          </IconButton>
+            </IconButton>
           <IconButton
             size="small"
             onClick={() => setIsMinimized(!isMinimized)}
@@ -2594,7 +2598,7 @@ function ChatRoomWindow({
                         width: '100%'
                       }}
                     >
-                      {!isMyMessage && (
+                        {!isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0, flex: 1 }}>
                           <Typography variant="caption" sx={{ color: '#666', ml: 1, mb: 0.5 }}>
                             {message.sender?.name && message.sender.name !== message.sender.id ? message.sender.name : message.sender?.id || '알 수 없음'}
@@ -2624,8 +2628,8 @@ function ChatRoomWindow({
                           {(!message.files || message.files.length === 0) && (
                                                             <Typography variant="body2" sx={{ fontStyle: 'normal' }}>
                                   {isDeletedMessage ? '삭제된 메시지입니다' : message.text}
-                            </Typography>
-                          )}
+                          </Typography>
+                        )}
                           
                           {/* 파일 첨부 표시 */}
                           {message.files && message.files.length > 0 && (
@@ -2762,31 +2766,31 @@ function ChatRoomWindow({
                       )}
                       {isMyMessage && (
                         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', minWidth: 0, flex: 1 }}>
-                          <Paper
+                        <Paper
                           onContextMenu={canDelete ? (e) => handleMessageContextMenu(e, message) : undefined}
-                            sx={{
-                              p: 1.5,
-                              maxWidth: 280,
+                          sx={{
+                            p: 1.5,
+                            maxWidth: 280,
                             backgroundColor: isDeletedMessage ? '#f5f5f5' : '#1976d2',
                             color: isDeletedMessage ? '#999' : 'white',
                               borderRadius: '18px 18px 4px 18px',
-                              boxShadow: 1,
+                            boxShadow: 1,
                               border: 'none',
                             cursor: canDelete ? 'pointer' : 'default',
                             '&:hover': {
                               backgroundColor: isDeletedMessage ? '#f5f5f5' : (canDelete ? '#1565c0' : '#1976d2'),
                             },
-                              // 반응형 메시지 버블
-                              '@media (max-width: 768px)': {
-                                maxWidth: '85%',
-                                p: 1,
-                              },
-                              '@media (max-width: 480px)': {
-                                maxWidth: '90%',
-                                p: 0.75,
-                              }
-                            }}
-                          >
+                            // 반응형 메시지 버블
+                            '@media (max-width: 768px)': {
+                              maxWidth: '85%',
+                              p: 1,
+                            },
+                            '@media (max-width: 480px)': {
+                              maxWidth: '90%',
+                              p: 0.75,
+                            }
+                          }}
+                        >
                           {/* 파일이 없을 때만 텍스트 표시 */}
                           {(!message.files || message.files.length === 0) && (
                             <Typography 
@@ -2797,7 +2801,7 @@ function ChatRoomWindow({
                               }}
                             >
                               {isDeletedMessage ? '삭제된 메시지입니다' : message.text}
-                            </Typography>
+                          </Typography>
                           )}
                           
                           {/* 파일 첨부 표시 */}
@@ -2910,13 +2914,13 @@ function ChatRoomWindow({
                               })}
                             </Box>
                           )}
-                            <Typography
-                              variant="caption"
-                              sx={{
-                                display: 'block',
-                                mt: 0.5,
-                                opacity: 0.7,
-                                fontSize: '0.6rem',
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              display: 'block',
+                              mt: 0.5,
+                              opacity: 0.7,
+                              fontSize: '0.6rem',
                                 textAlign: 'right'
                               }}
                             >
@@ -2925,9 +2929,9 @@ function ChatRoomWindow({
                                 minute: '2-digit',
                                 hour12: true
                               }) : ''}
-                            </Typography>
-                          </Paper>
-                        </Box>
+                          </Typography>
+                        </Paper>
+                      </Box>
                       )}
                     </Box>
                   )}

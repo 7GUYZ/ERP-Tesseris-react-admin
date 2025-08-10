@@ -94,12 +94,6 @@ const AdvertisementListPage = () => {
 
     return (
         <div className="ad-list-page">
-            {/* Breadcrumb */}
-            <ul className="ad-list-breadcrumb">
-                <li>팝업 및 배너 관리</li>
-                <li>팝업 관리</li>
-            </ul>
-
             {/* Header */}
             <div className="ad-list-flex-between ad-list-mb10">
                 <p className="ad-list-font-20 ad-list-bold">팝업 목록</p>
@@ -148,9 +142,14 @@ const AdvertisementListPage = () => {
                                                         src={ad.presignedUrl || ad.advertisementPhoto}
                                                         alt="팝업 이미지"
                                                         onError={(e) => {
-                                                            e.target.src = '/placeholder-image.png';
+                                                            console.log('이미지 로드 실패:', ad.advertisementPhoto);
+                                                            e.target.style.display = 'none';
+                                                            e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
                                                         }}
                                                     />
+                                                    <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                                        이미지를 불러올 수 없습니다
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td onClick={(e) => e.stopPropagation()}>

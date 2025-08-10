@@ -119,10 +119,15 @@ const BusinessmanListPage = () => {
   // 은행 데이터 로드
   const fetchBanks = useCallback(async () => {
     try {
+      console.log('은행 목록 조회 시작...');
       const response = await businessmanListApi.getBanks();
+      console.log('은행 목록 API 응답:', response);
+      console.log('은행 목록 데이터:', response.data);
       setBanks(response.data || []);
+      console.log('은행 목록 상태 업데이트 완료:', response.data || []);
     } catch (err) {
       console.error('은행 목록 조회 실패:', err);
+      console.error('은행 목록 에러 상세:', err.response || err.message);
     }
   }, []);
 

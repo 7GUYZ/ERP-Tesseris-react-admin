@@ -125,13 +125,6 @@ const AdvertisementDetailPage = () => {
 
     return (
         <div className="ad-detail-page">
-            {/* Breadcrumb */}
-            <ul className="ad-detail-breadcrumb">
-                <li>배너 및 팝업 관리</li>
-                <li>팝업 관리</li>
-                <li>팝업 상세</li>
-            </ul>
-
             {/* Header */}
             <div className="ad-detail-flex-between ad-detail-mb10">
                 <p className="ad-detail-font-20 ad-detail-bold">팝업 상세</p>
@@ -163,7 +156,19 @@ const AdvertisementDetailPage = () => {
                         <div className="ad-detail-form-item">
                             <span className="ad-detail-text">팝업 이미지</span>
                             <div className="ad-detail-banner-img">
-                                <img src={ad.presignedUrl || ad.advertisementPhoto} alt="팝업 이미지" style={{ maxWidth: 300 }} onError={e => {e.target.src='/placeholder-image.png'}} />
+                                <img 
+                                    src={ad.presignedUrl || ad.advertisementPhoto} 
+                                    alt="팝업 이미지" 
+                                    style={{ maxWidth: 300 }} 
+                                    onError={(e) => {
+                                        console.log('이미지 로드 실패:', ad.advertisementPhoto);
+                                        e.target.style.display = 'none';
+                                        e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                    }}
+                                />
+                                <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                    이미지를 불러올 수 없습니다
+                                </div>
                             </div>
                         </div>
                         <div className="ad-detail-form-item">

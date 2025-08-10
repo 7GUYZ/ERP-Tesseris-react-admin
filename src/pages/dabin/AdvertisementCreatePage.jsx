@@ -90,13 +90,6 @@ const AdvertisementCreatePage = () => {
 
     return (
         <div className="ad-create-page">
-            {/* Breadcrumb */}
-            <ul className="ad-create-breadcrumb">
-                <li>배너 및 팝업 관리</li>
-                <li>팝업 관리</li>
-                <li>팝업 등록</li>
-            </ul>
-
             {/* Header */}
             <div className="ad-create-flex-between ad-create-mb10">
                 <p className="ad-create-font-20 ad-create-bold">팝업 등록</p>
@@ -155,10 +148,20 @@ const AdvertisementCreatePage = () => {
                             </div>
                             <div className="ad-create-image-preview">
                                 {previewImage ? (
-                                    <img
-                                        src={previewImage}
-                                        alt="팝업 이미지 미리보기"
-                                    />
+                                    <div>
+                                        <img
+                                            src={previewImage}
+                                            alt="팝업 이미지 미리보기"
+                                            onError={(e) => {
+                                                console.log('이미지 로드 실패:', previewImage);
+                                                e.target.style.display = 'none';
+                                                e.target.nextSibling && (e.target.nextSibling.style.display = 'block');
+                                            }}
+                                        />
+                                        <div style={{ display: 'none', padding: '10px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+                                            이미지를 불러올 수 없습니다
+                                        </div>
+                                    </div>
                                 ) : (
                                     <div className="ad-create-upload-area">
                                         <p>이미지를 드래그하거나 클릭하여 업로드</p>

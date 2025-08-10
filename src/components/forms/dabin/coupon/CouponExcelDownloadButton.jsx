@@ -150,7 +150,6 @@ const CouponExcelDownloadButton = ({ data, selectedRows }) => {
     <Button
       onClick={handleDownload}
       variant="contained"
-      startIcon={<Download />}
       data-button-type="excel"
       style={{
         backgroundColor: "#10b981",
