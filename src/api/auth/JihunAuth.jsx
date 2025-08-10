@@ -11,6 +11,8 @@ export const ajgMemberAssetDetails = (page = 0, size = 25) => api.get(`/memberas
 export const ajgMemberAssetDetailsSearch = (data) => api.post("/memberassetdetails/search", data);
 export const ajgMemberAssetDetailsLookupGrades = () => api.get("/memberassetdetails/lookup/grades");
 export const ajgMemberAssetDetailsPayment = (data) => api.post("/memberassetdetails/payment", data);
+// 회수 전용 엔드포인트
+export const ajgMemberAssetDetailsCollection = (data) => api.post("/memberassetdetails/collection", data);
 
 // 엑셀 다운로드 API
 export const excelDownloadMemberAccount = (page = 0, size = 50000) => api.get(`/common/exceldownload/memberaccount?page=${page}&size=${size}`);

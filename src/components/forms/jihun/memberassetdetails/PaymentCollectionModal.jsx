@@ -64,7 +64,9 @@ const PaymentCollectionModal = ({
         memberId: selectedMember.usersId,
         amount: amount,
         reason: formData.reason,
-        currentCmHeld: parseInt(selectedMember.cmHeld.toString().replace(/,/g, '')) || 0
+        currentCmHeld: parseInt(selectedMember.cmHeld.toString().replace(/,/g, '')) || 0,
+        // 지급/회수 타입 전달 (cm-payment | cm-collection)
+        type: activeTab
       }
       
       // 부모 컴포넌트로 데이터 전달

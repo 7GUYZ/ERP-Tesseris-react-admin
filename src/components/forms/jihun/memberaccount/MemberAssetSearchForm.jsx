@@ -68,10 +68,11 @@ const MemberAssetSearchForm = () => {
       // 검색 조건 준비 - 백엔드에서 동적 쿼리 지원을 위한 표준 형식
       const searchRequest = {
         
-        // 사용자 ID 검색 (LIKE 검색을 위한 새로운 파라미터)
+        // 사용자 ID/이메일 검색 (LIKE)
         eventTriggerUserEmail: searchFormData.fromId ? searchFormData.fromId.trim() : null,
         eventPartyUserEmail: searchFormData.toId ? searchFormData.toId.trim() : null,
-        eventPartyUserName: searchFormData.toId ? searchFormData.toId.trim() : null, // 이름으로도 검색
+        // 이름 검색은 별도 필드가 있을 때만 전달 (현재 폼에는 없음)
+        eventPartyUserName: null,
         
         // 기존 검색 조건들
         userIndexEventTrigger: null,
@@ -110,7 +111,7 @@ const MemberAssetSearchForm = () => {
           toGrade: item.eventPartyUserRole || "알 수 없음",
           toId: extractEmailId(item.eventPartyUserEmail) || "",
           toName: item.eventPartyUserName || "",
-          transactionType: item.transactionTypeName || "",
+          transactionType: item.transactionTypeIndex || "",
           amount: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
           unit: "원",
           usedValue: item.userCmLogValue ? item.userCmLogValue.toString() : "0",
