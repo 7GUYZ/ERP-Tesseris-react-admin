@@ -52,8 +52,8 @@ const MemberAssetDetailsTable = ({
   // DataGrid에 id 필수 - 안전한 데이터 처리
   const rowsWithIds = processedData;
 
-  // Data Grid 컬럼 정의
-  const columns = [
+  // Data Grid 컬럼 정의 (기본 스펙)
+  const baseColumns = [
     {
       field: "checkbox",
       headerName: "",
@@ -107,7 +107,7 @@ const MemberAssetDetailsTable = ({
     { 
       field: "rowNumber", 
       headerName: "순번", 
-      width: 80, 
+      width: 100, 
       minWidth: 80, 
       flex: 1,
       sortable: false,
@@ -125,15 +125,15 @@ const MemberAssetDetailsTable = ({
         </div>
       )
     },
-    { field: "email", headerName: "아이디", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "name", headerName: "이름", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "phone", headerName: "전화번호", width: 130, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "grade", headerName: "등급", width: 100, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },
-    { field: "franchiseName", headerName: "가맹점 명", width: 120, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "email", headerName: "아이디", width: 140, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "name", headerName: "이름", width: 140, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "phone", headerName: "전화번호", width: 150, minWidth: 130, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "grade", headerName: "등급", width: 120, minWidth: 100, flex: 1, align: 'center', headerAlign: 'center' },
+    { field: "franchiseName", headerName: "가맹점 명", width: 160, minWidth: 120, flex: 1, align: 'center', headerAlign: 'center' },
     {
       field: "cmHeld",
       headerName: "보유 TS",
-      width: 120,
+      width: 140,
       minWidth: 120,
       flex: 1,
       align: 'center',
@@ -154,8 +154,48 @@ const MemberAssetDetailsTable = ({
         return result;
       }
     },
-    { field: "registrationDate", headerName: "등록일", width: 150, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
+    { field: "registrationDate", headerName: "등록일", width: 160, minWidth: 150, flex: 1, align: 'center', headerAlign: 'center' }
   ];
+
+  // 컬럼 자동 폭 계산 유틸
+  const autoSizeColumns = (rows, cols) => {
+    if (!Array.isArray(cols)) return cols || [];
+    let ctx = null;
+    try {
+      const canvas = document.createElement('canvas');
+      ctx = canvas.getContext('2d');
+      ctx.font = '14px Roboto, Pretendard, sans-serif';
+    } catch (_) {}
+
+    const measure = (text) => {
+      if (!ctx) return (String(text || '').length * 8);
+      return Math.ceil(ctx.measureText(String(text || '')).width);
+    };
+
+    const getCellText = (col, row) => {
+      const raw = row?.[col.field];
+      if (typeof col.valueFormatter === 'function') {
+        try { return String(col.valueFormatter({ value: raw })); } catch (_) {}
+      }
+      return raw == null ? '' : String(raw);
+    };
+
+    return cols.map((col) => {
+      if (col.field === 'checkbox') return { ...col, flex: undefined };
+      const headerText = col.headerName || col.field || '';
+      let maxWidthPx = measure(headerText);
+      for (let i = 0; i < Math.min(rows.length, 1000); i += 1) {
+        const t = getCellText(col, rows[i]);
+        const w = measure(t);
+        if (w > maxWidthPx) maxWidthPx = w;
+      }
+      const padding = 32;
+      const computed = Math.min(420, Math.max(col.minWidth || 70, maxWidthPx + padding));
+      return { ...col, width: computed, minWidth: computed, flex: undefined };
+    });
+  };
+
+  const columns = useMemo(() => autoSizeColumns(rowsWithIds, baseColumns), [rowsWithIds]);
 
   // 안전장치: data가 undefined나 null인 경우 처리
   if (data === undefined || data === null) {
@@ -269,7 +309,7 @@ const MemberAssetDetailsTable = ({
             },
             '& .MuiDataGrid-columnsContainer': {
               border: 'none !important',
-              outline: 'none !important',
+              outline: 'none !important'
             },
             '& .MuiDataGrid-cell': {
               borderBottom: 'none !important',
@@ -285,6 +325,9 @@ const MemberAssetDetailsTable = ({
               alignItems: 'center',
               justifyContent: 'center',
               minWidth: '70px !important',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
               '&:focus': {
                 outline: 'none !important',
                 border: 'none !important',
@@ -348,6 +391,11 @@ const MemberAssetDetailsTable = ({
                 fontWeight: 'bold !important',
                 fontSize: '14px !important'
               },
+            '& .MuiDataGrid-columnHeaderTitle': {
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            },
               '& .MuiDataGrid-columnHeaderTitleContainer': {
                 color: 'black !important'
               }
