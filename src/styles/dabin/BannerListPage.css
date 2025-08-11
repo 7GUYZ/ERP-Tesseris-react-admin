@@ -148,6 +148,19 @@ tbody tr:hover {
     color: #666;
 }
 
+/* Save button next to '배너 등록' */
+.banner-list-save-button {
+    background-color: #007bff; /* 동일 색상 */
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 8px; /* 배너 등록 버튼과 간격 */
+}
+
+
 /* Responsive */
 @media (max-width: 768px) {
     .banner-list-page {
@@ -171,3 +184,86 @@ tbody tr:hover {
         padding: 8px 4px;
     }
 } 
+
+/* jiun toggle styles (scoped to BannerList only) */
+.jiun-toggle-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jiun-toggle-header {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.jiun-toggle-label-text {
+    font-size: 12px;
+    color: #555;
+    margin-right: 4px;
+}
+
+.jiun-toggle {
+    position: relative;
+    display: inline-block;
+    width: 46px;
+    height: 24px;
+}
+
+.jiun-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.jiun-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: 0.2s;
+    border-radius: 9999px;
+}
+
+.jiun-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    top: 3px;
+    background-color: white;
+    transition: 0.2s;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.jiun-toggle input:checked + .jiun-toggle-slider {
+    background-color: rgb(36, 187, 247);
+}
+
+.jiun-toggle input:focus + .jiun-toggle-slider {
+    box-shadow: 0 0 1px rgb(36, 187, 247);
+}
+
+.jiun-toggle input:checked + .jiun-toggle-slider:before {
+    transform: translateX(22px);
+}
+
+.jiun-toggle-text {
+    font-size: 12px;
+    min-width: 24px;
+}
+
+.jiun-toggle-text.on {
+    color: rgb(36, 187, 247);
+    font-weight: 600;
+}
+
+.jiun-toggle-text.off {
+    color: #888;
+}
