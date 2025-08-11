@@ -6,6 +6,7 @@ import {
   ajgMemberAssetDetailsSearch,
   ajgMemberAssetDetailsLookupGrades,
   ajgMemberAssetDetailsPayment,
+  ajgMemberAssetDetailsCollection,
   excelDownloadMemberAssetDetails
 } from "../../../../api/auth/JihunAuth.jsx"
 import { downloadExcel } from "../../../feature/jihun/common/ExcelCommon.jsx"
@@ -571,12 +572,15 @@ const MemberAssetDetailsForm = () => {
       for (const member of selectedMembers) {
         try {
           // memberId로 반드시 userIndex(숫자)만 넘김
-          const response = await ajgMemberAssetDetailsPayment({
+          const payload = {
             memberId: member.userIndex,
             amount: amount,
             reason: paymentData.reason,
-            type: paymentData.type
-          });
+            currentCmHeld: member.cmHeld ? (typeof member.cmHeld === 'string' ? parseInt(member.cmHeld.replace(/,/g, '')) : member.cmHeld) : 0
+          };
+          const response = paymentData.type === 'cm-collection'
+            ? await ajgMemberAssetDetailsCollection(payload)
+            : await ajgMemberAssetDetailsPayment(payload);
           if (response.data && response.data.success) {
             results.push({ member, success: true, message: '성공' });
             successCount++;

@@ -63,6 +63,7 @@ const BannerDetailPage = () => {
     const fetchBanner = async () => {
         try {
             const response = await getBanner(bannerIndex);
+            console.log("response", response);
             if (response.data && response.data.resultCode === 200 && response.data.data) {
                 const bannerData = response.data.data;
                 

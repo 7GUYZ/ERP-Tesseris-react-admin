@@ -94,7 +94,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-        console.log("관리자 목록 원본 데이터:", data);
         const filteredData = data.filter(admin => {
           // 본인 제외
           if (admin.userId === userInfo?.id) {
@@ -346,63 +345,89 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
       try {
         const checkResponse = await CheckRoom(checkRoomData);
         
-        // 성공 응답이고 data가 존재하는 경우 (기존 방 발견)
+        // 성공 응답이고 data가 존재하는 경우
         if (checkResponse?.data?.resultCode === 200 && 
             checkResponse?.data?.data && typeof checkResponse.data.data === 'object' && 
             Object.keys(checkResponse.data.data).length > 0) {
-          // 기존 1:1 채팅방이 존재하는 경우
+          
           const existingRoom = checkResponse.data.data;
           
           // 백엔드에서 반환하는 Map의 키들을 확인하고 안전하게 접근
           const roomId = existingRoom.id || existingRoom.room_index || existingRoom.roomindex;
           const roomName = existingRoom.name || existingRoom.roomname || `${admin.name}와의 채팅방`;
+          const isNewRoom = existingRoom.isNewRoom || false;
           
+          console.log('CheckRoom 응답:', existingRoom);
+          console.log('isNewRoom:', isNewRoom);
+          
+          if (isNewRoom) {
+            // 새로운 방인 경우 - 백엔드에서 생성한 room_index 사용
+            console.log('새로운 채팅방 생성 - room_index:', roomId);
+            const roomData = {
+              name: `${admin.name}와의 채팅방`,
+              adminData: admin,
+              adminList: adminList,
+              subscribeToRoom: subscribeToRoom,
+              refreshChatRooms: refreshChatRooms,
+              isExistingRoom: false,
+              isExisting: false,
+              participants: [admin.userId, userInfo.id],
+              newRoomIndex: null  // 새로운 방이므로 null로 설정
+            };
+            
+            onRoomSelect(roomData);
+          } else {
+            // 기존 방인 경우
+            console.log('기존 채팅방 발견 - room_index:', roomId);
+            const roomData = {
+              id: roomId,
+              name: roomName,
+              adminData: admin,
+              adminList: adminList,
+              subscribeToRoom: subscribeToRoom,
+              refreshChatRooms: refreshChatRooms,
+              isExistingRoom: true,
+              isExisting: true,
+              participants: [admin.userId, userInfo.id],
+              room_index: roomId
+            };
+            
+            onRoomSelect(roomData);
+          }
+        } else {
+          // 응답이 실패한 경우 기본 처리
+          console.log('CheckRoom 응답 실패, 기본 채팅방 생성');
           const roomData = {
-            id: roomId,
-            name: roomName,
+            name: `${admin.name}와의 채팅방`,
             adminData: admin,
             adminList: adminList,
             subscribeToRoom: subscribeToRoom,
             refreshChatRooms: refreshChatRooms,
-            isExistingRoom: true,
-            isExisting: true,  // 추가: ChatRoomWindow에서 사용하는 속성
-            participants: [admin.userId, userInfo.id]  // participants 정보 추가
+            isExistingRoom: false,
+            isExisting: false,
+            participants: [admin.userId, userInfo.id]
           };
-          
-          // 기존 채팅방에 입장
-          onRoomSelect(roomData);
-        } else {
-          // 새로운 1:1 채팅방 생성
-           const roomData = {
-             name: `${admin.name}와의 채팅방`,
-             adminData: admin,
-             adminList: adminList,
-             subscribeToRoom: subscribeToRoom,
-             refreshChatRooms: refreshChatRooms,
-             isExistingRoom: false,
-             isExisting: false,  // 추가: ChatRoomWindow에서 사용하는 속성
-             participants: [admin.userId, userInfo.id]  // participants 정보 추가
-           };
           
           onRoomSelect(roomData);
         }
       } catch (checkError) {
         // 확인 실패 시 새로운 채팅방 생성으로 진행
-         const roomData = {
-           name: `${admin.name}와의 채팅방`,
-           adminData: admin,
-           adminList: adminList,
-           subscribeToRoom: subscribeToRoom,
-           refreshChatRooms: refreshChatRooms,
-           isExistingRoom: false,
-           isExisting: false,  // 추가: ChatRoomWindow에서 사용하는 속성
-           participants: [admin.userId, userInfo.id]  // participants 정보 추가
-         };
+        console.log('CheckRoom 에러:', checkError);
+        const roomData = {
+          name: `${admin.name}와의 채팅방`,
+          adminData: admin,
+          adminList: adminList,
+          subscribeToRoom: subscribeToRoom,
+          refreshChatRooms: refreshChatRooms,
+          isExistingRoom: false,
+          isExisting: false,
+          participants: [admin.userId, userInfo.id]
+        };
         
         onRoomSelect(roomData);
       }
     } catch (error) {
-      // 에러 처리
+      console.error('handleAdminClick 에러:', error);
     }
   };
 
