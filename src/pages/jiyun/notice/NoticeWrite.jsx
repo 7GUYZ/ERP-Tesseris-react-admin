@@ -5,7 +5,7 @@ import "../../../styles/jiyun/notice/notice-write.css";
 import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeWrite() {
-  const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
+  const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "", noticeType: "일반" });
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -34,6 +34,23 @@ export default function NoticeWrite() {
         <h1 className="notice-page-title">공지사항 등록</h1>
       </div>
       <form className="notice-write-form" onSubmit={handleSubmit}>
+        <div className="notice-write-form-group">
+          <label htmlFor="noticeType">
+            공지 타입 <span className="notice-write-required">*</span>
+          </label>
+          <select
+            name="noticeType"
+            id="noticeType"
+            value={form.noticeType}
+            onChange={handleChange}
+            required
+            className="notice-write-input"
+          >
+            <option value="일반">일반</option>
+            <option value="중요">중요</option>
+          </select>
+        </div>
+
         <div className="notice-write-form-group">
           <label htmlFor="noticeTitle">
             제목 <span className="notice-write-required">*</span>
