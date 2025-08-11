@@ -12,7 +12,7 @@ import { useToast } from "../../../context/jungeun/ToastContext";
 
 export default function NoticeUpdate() {
   const { noticeIndex } = useParams();
-  const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "" });
+  const [form, setForm] = useState({ noticeTitle: "", noticeDesc: "", noticeType: "일반" });
   const [modalType, setModalType] = useState(null); // 'update' | 'delete' | null
   const [isPwModalOpen, setIsPwModalOpen] = useState(false);
   const [canUpdate, setCanUpdate] = useState(false);
@@ -48,9 +48,16 @@ export default function NoticeUpdate() {
     const fetchNotice = async () => {
       try {
         const res = await noticeDetail(noticeIndex);
+        console.log("공지사항 상세 데이터:", res.data);
         setForm({
           noticeTitle: res.data.noticeTitle || "",
           noticeDesc: res.data.noticeDesc || "",
+          noticeType: res.data.noticeType || "일반",
+        });
+        console.log("설정된 폼 데이터:", {
+          noticeTitle: res.data.noticeTitle || "",
+          noticeDesc: res.data.noticeDesc || "",
+          noticeType: res.data.noticeType || "NORMAL",
         });
       } catch {
         alert("공지사항을 불러오지 못했습니다.");
@@ -65,6 +72,7 @@ export default function NoticeUpdate() {
       showToast("error", "수정 권한이 없습니다.");
       return;
     }
+    console.log("필드 변경:", e.target.name, e.target.value);
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -92,6 +100,7 @@ export default function NoticeUpdate() {
   const handlePwConfirm = async (password) => {
     if (modalType === "update") {
       try {
+        console.log("수정 요청 데이터:", { ...form, noticeIndex, password });
         await noticeUpdate({ ...form, noticeIndex, password });
         showToast("success", "공지사항이 수정되었습니다.");
         setIsPwModalOpen(false);
@@ -123,6 +132,25 @@ export default function NoticeUpdate() {
     <div className="notice-update-page">
       <h1 className="notice-page-title">공지사항 수정</h1>
       <form className="notice-update-form" onSubmit={handleUpdateClick}>
+        <div className="notice-update-form-group">
+          <label htmlFor="noticeType">
+            공지 타입 <span className="notice-update-required">*</span>
+          </label>
+          <select
+            id="noticeType"
+            name="noticeType"
+            value={form.noticeType}
+            onChange={handleChange}
+            required
+            disabled={!canUpdate}
+            style={!canUpdate ? { opacity: 0.5, cursor: "not-allowed" } : {}}
+            className="notice-update-input"
+          >
+            <option value="일반">일반</option>
+            <option value="중요">중요</option>
+          </select>
+        </div>
+
         <div className="notice-update-form-group">
           <label htmlFor="noticeTitle">
             제목 <span className="notice-update-required">*</span>

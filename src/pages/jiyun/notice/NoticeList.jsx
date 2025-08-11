@@ -10,6 +10,7 @@ export default function NoticeList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [canInsert, setCanInsert] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const { showToast } = useToast();
 
@@ -71,10 +72,19 @@ export default function NoticeList() {
 
   if (error) return <div>{error}</div>;
 
-  // 등록일 내림차순 정렬
-  const sortedList = [...list].sort(
-    (a, b) => new Date(b.noticeCreateTime) - new Date(a.noticeCreateTime)
+  // 백엔드에서 최신순으로 정렬되어 옴
+  const sortedList = list;
+  
+  // 검색어에 따라 공지사항 필터링
+  const filteredList = sortedList.filter(notice => 
+    notice.noticeTitle.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  
+  // 중요공지사항 3개 추출 (검색된 결과에서)
+  const importantNotices = filteredList.filter(notice => notice.noticeType === '중요').slice(0, 3);
+  
+  // 전체 공지사항 리스트 (검색된 결과에서)
+  const allNotices = filteredList;
 
   return (
     <div className="notice-list-page">
@@ -97,20 +107,67 @@ export default function NoticeList() {
           </button>
         </div>
       </div>
+      
+      {/* 검색 입력창 */}
+      <div className="notice-search-container">
+        <input
+          type="text"
+          placeholder="제목으로 검색..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="notice-search-input"
+        />
+      </div>
+      
+      {/* 통합 공지사항 리스트 */}
       <div className="notice-list-table-wrapper">
         <table className="notice-list-table">
           <thead>
             <tr>
               <th>#</th>
+              <th>분류</th>
               <th>제목</th>
               <th>작성자</th>
               <th>등록일</th>
             </tr>
           </thead>
           <tbody>
-            {sortedList.map((notice, idx) => (
-              <tr key={notice.noticeIndex}>
+            {/* 중요공지사항 (번호 없음) */}
+            {importantNotices.map((notice) => (
+              <tr 
+                key={notice.noticeIndex}
+                className="important-notice"
+              >
+                <td>-</td>
+                <td>
+                  <span className="notice-type-badge important">중요</span>
+                </td>
+                <td>
+                  <span
+                    className="notice-list-link"
+                    onClick={() =>
+                      navigate(`/notice/update/${notice.noticeIndex}`)
+                    }
+                  >
+                    {notice.noticeTitle}
+                  </span>
+                </td>
+                <td>{notice.userEmail}</td>
+                <td>{formatDate(notice.noticeCreateTime)}</td>
+              </tr>
+            ))}
+            
+            {/* 전체 공지사항 (번호 있음) */}
+            {allNotices.map((notice, idx) => (
+              <tr 
+                key={notice.noticeIndex}
+              >
                 <td>{idx + 1}</td>
+                <td>
+                  <span className={`notice-type-badge ${notice.noticeType === '중요' ? 'important' : 'normal'}`}>
+                    {notice.noticeType === '중요' ? '중요' : '일반'}
+                  </span>
+                </td>
                 <td>
                   <span
                     className="notice-list-link"
