@@ -94,7 +94,6 @@ function ChatMainWindow({ open, onClose, onRoomSelect, onSizeChange, onPositionC
         
         // 본인 제외하기
         const userInfo = JSON.parse(localStorage.getItem('admin-info'));
-        console.log("관리자 목록 원본 데이터:", data);
         const filteredData = data.filter(admin => {
           // 본인 제외
           if (admin.userId === userInfo?.id) {

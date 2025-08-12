@@ -341,8 +341,12 @@ const UserListPage = () => {
         const isSelectedOnly = window.confirm(confirmMessage);
         
         if (isSelectedOnly) {
-          // 선택된 항목만 다운로드
-          const selectedUserIds = Array.from(selectedRows);
+          // 선택된 항목만 다운로드 - 실제 사용자 ID 사용
+          const selectedUserIds = Array.from(selectedRows).map(index => {
+            const user = rows[index - 1]; // index는 1부터 시작하므로 -1
+            return user?.userIndex || user?.email; // userIndex가 없으면 email 사용
+          }).filter(id => id != null);
+          
           downloadFilters.selectedIds = selectedUserIds;
           console.log('선택된 항목만 다운로드:', selectedUserIds);
         } else {
