@@ -39,4 +39,4 @@ npm install eslint-plugin-react-hooks --save-dev
 npm install @mui/lab
 npm install date-fns
 
-운영환경 배포버전: 202508060930 배포
+운영환경 배포버전: 202508111230 배포
